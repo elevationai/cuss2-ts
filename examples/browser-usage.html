@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUSS2 Browser Example</title>
+  </head>
+  <body>
+    <h1>CUSS2 JavaScript Client Example</h1>
+    <div id="output"></div>
+
+    <!-- Include the CUSS2 browser bundle -->
+    <script src="../dist/cuss2.js"></script>
+
+    <script>
+      // Access the global Cuss2 object
+      document.addEventListener("DOMContentLoaded", () => {
+        const output = document.getElementById("output");
+
+        // Log available properties on the Cuss2 object
+        output.innerHTML += "<h2>Cuss2 Object Properties</h2>";
+        output.innerHTML += "<pre>" + JSON.stringify(Object.keys(Cuss2), null, 2) + "</pre>";
+
+        // Example usage showing connection
+        output.innerHTML += "<h2>Example Connection Code</h2>";
+        output.innerHTML += `
+      <pre>
+// Example code to connect to CUSS2 platform
+async function connectToCuss2() {
+  try {
+    const cuss2 = await Cuss2.connect(
+      'wss://your-cuss2-platform.com',
+      'your-device-id',
+      'your-client-id',
+      'your-client-secret'
+    );
+
+    // Listen for state changes
+    cuss2.on('stateChange', (stateChange) => {
+      console.log('State changed:', stateChange);
+    });
+
+    // Request available state
+    await cuss2.requestAvailableState();
+
+    // Example: Enable barcode reader if available
+    if (cuss2.barcodeReader) {
+      await cuss2.barcodeReader.enable();
+
+      // Listen for barcode data
+      cuss2.barcodeReader.on('data', (data) => {
+        console.log('Barcode data:', data);
+      });
+    }
+  } catch (error) {
+    console.error('Connection error:', error);
+  }
+}
+      </pre>
+      `;
+      });
+    </script>
+  </body>
+</html>

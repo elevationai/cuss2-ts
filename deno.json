@@ -1,0 +1,26 @@
+{
+  "name": "@cuss/cuss2-typescript",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": "./mod.ts",
+  "tasks": {
+    "build": "deno run --allow-read --allow-write --allow-env --allow-run --allow-net scripts/build-js.ts",
+    "test": "deno test --allow-net --allow-read"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window", "deno.ns", "esnext", "dom"],
+    "checkJs": true
+  },
+  "imports": {
+    "@types/node": "npm:@types/node@^22.15.17",
+    "cuss2-typescript-models": "jsr:@cuss/cuss2-typescript-models@2.0.1",
+    "events": "node:events",
+    "async/retry": "jsr:@std/async@^1.0.13/retry"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "nextControlFlowPosition": "nextLine"
+  },
+  "exclude": ["dist"]
+}

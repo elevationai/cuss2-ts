@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assertRejects, assertStringIncludes, fail as _fail } from "jsr:@std/assert";
+import { assertEquals, assertExists, assertRejects, assertStringIncludes, type fail as _fail } from "jsr:@std/assert";
 import { delay } from "jsr:@std/async/delay";
 
 import { Connection, global } from "./connection.ts";

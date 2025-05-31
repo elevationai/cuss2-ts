@@ -3,7 +3,7 @@ import { helpers } from "./helper.ts";
 import { PlatformResponseError } from "./models/platformResponseError.ts";
 import { AuthenticationError } from "./models/Errors.ts";
 import type { ApplicationData, PlatformData, UniqueId } from "cuss2-typescript-models";
-import { AuthResponse } from "./models/authResponse.ts";
+import type { AuthResponse } from "./models/authResponse.ts";
 import { retry } from "async/retry";
 
 // const log = console.log

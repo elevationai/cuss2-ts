@@ -1,18 +1,18 @@
 import { EventEmitter } from "events";
 import {
-  ApplicationData,
-  ApplicationDataMeta,
-  ApplicationDataPayload,
-  ApplicationState,
-  ApplicationTransfer,
-  BaggageData,
-  CommonUseBiometricMessage,
-  CommonUsePaymentMessage,
-  DataRecordList,
-  IlluminationData,
+  type ApplicationData,
+  type ApplicationDataMeta,
+  type ApplicationDataPayload,
+  type ApplicationState,
+  type ApplicationTransfer,
+  type BaggageData,
+  type CommonUseBiometricMessage,
+  type CommonUsePaymentMessage,
+  type DataRecordList,
+  type IlluminationData,
   MessageCodes,
   PlatformDirectives,
-  ScreenResolution,
+  type ScreenResolution,
 } from "cuss2-typescript-models";
 
 export class LogMessage {

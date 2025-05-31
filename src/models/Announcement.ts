@@ -1,5 +1,5 @@
 import { Component } from "./Component.ts";
-import { PlatformData } from "cuss2-typescript-models";
+import type { PlatformData } from "cuss2-typescript-models";
 
 export class Announcement extends Component {
   say(text: string, lang: string = "en-US"): Promise<PlatformData> {

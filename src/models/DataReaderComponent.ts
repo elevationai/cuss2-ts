@@ -1,5 +1,5 @@
 import { Component } from "./Component.ts";
-import { DataRecord, MessageCodes, PlatformData } from "cuss2-typescript-models";
+import { type DataRecord, MessageCodes, type PlatformData } from "cuss2-typescript-models";
 
 export class DataReaderComponent extends Component {
   previousData: string[] = [];

@@ -1,9 +1,9 @@
 import {
-  ComponentCharacteristics,
+  type ComponentCharacteristics,
   ComponentTypes,
   CussDataTypes,
   DeviceTypes,
-  EnvironmentComponent,
+  type EnvironmentComponent,
   MediaTypes,
 } from "cuss2-typescript-models";
 

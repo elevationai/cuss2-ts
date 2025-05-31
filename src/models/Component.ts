@@ -1,19 +1,19 @@
 import { EventEmitter } from "events";
-import { Cuss2 } from "../cuss2.ts";
+import type { Cuss2 } from "../cuss2.ts";
 import {
-  BaggageData,
-  CommonUseBiometricMessage,
-  CommonUsePaymentMessage,
+  type BaggageData,
+  type CommonUseBiometricMessage,
+  type CommonUsePaymentMessage,
   ComponentState,
-  DataRecordList,
-  EnvironmentComponent,
-  IlluminationData,
+  type DataRecordList,
+  type EnvironmentComponent,
+  type IlluminationData,
   MessageCodes,
-  PlatformData,
-  ScreenResolution,
+  type PlatformData,
+  type ScreenResolution,
 } from "cuss2-typescript-models";
 import { DeviceType } from "./deviceType.ts";
-import { ComponentAPI } from "./ComponentAPI.ts";
+import type { ComponentAPI } from "./ComponentAPI.ts";
 
 export class Component extends EventEmitter {
   _component: EnvironmentComponent;

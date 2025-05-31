@@ -31,20 +31,20 @@ import {
 import {
   ApplicationStateChangeReasonCodes as ChangeReason,
   ApplicationStateCodes as AppState,
-  BaggageData,
-  CommonUseBiometricMessage,
-  CommonUsePaymentMessage,
-  ComponentList,
+  type BaggageData,
+  type CommonUseBiometricMessage,
+  type CommonUsePaymentMessage,
+  type ComponentList,
   CussDataTypes,
-  DataRecordList,
-  EnvironmentLevel,
-  IlluminationData,
+  type DataRecordList,
+  type EnvironmentLevel,
+  type IlluminationData,
   MessageCodes,
-  PlatformData,
+  type PlatformData,
   PlatformDirectives,
-  ScreenResolution,
+  type ScreenResolution,
 } from "cuss2-typescript-models";
-import { ComponentAPI } from "./models/ComponentAPI.ts";
+import type { ComponentAPI } from "./models/ComponentAPI.ts";
 
 const {
   isAnnouncement,

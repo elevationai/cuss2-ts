@@ -1,8 +1,8 @@
 import { Component } from "./Component.ts";
 import { DeviceType } from "./deviceType.ts";
-import { Cuss2 } from "../cuss2.ts";
-import { EnvironmentComponent, MessageCodes } from "cuss2-typescript-models";
-import { Printer } from "./Printer.ts";
+import type { Cuss2 } from "../cuss2.ts";
+import { type EnvironmentComponent, MessageCodes } from "cuss2-typescript-models";
+import type { Printer } from "./Printer.ts";
 
 export class Dispenser extends Component {
   printer?: Printer;

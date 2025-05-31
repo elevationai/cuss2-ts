@@ -1,7 +1,7 @@
 import { Component } from "./Component.ts";
 import { DeviceType } from "./deviceType.ts";
-import { Cuss2 } from "../cuss2.ts";
-import { EnvironmentComponent, IlluminationData, PlatformData } from "cuss2-typescript-models";
+import type { Cuss2 } from "../cuss2.ts";
+import type { EnvironmentComponent, IlluminationData, PlatformData } from "cuss2-typescript-models";
 
 // Define enum for light colors
 enum LightColorNameEnum {

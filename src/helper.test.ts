@@ -3,11 +3,11 @@ import { Build, helpers, log, logger, LogMessage } from "./helper.ts";
 import {
   ApplicationStateChangeReasonCodes,
   ApplicationStateCodes,
-  ApplicationTransfer,
+  type ApplicationTransfer,
   MessageCodes,
   PlatformDirectives,
 } from "cuss2-typescript-models";
-import { ApplicationState } from "cuss2-typescript-models";
+import type { ApplicationState } from "cuss2-typescript-models";
 
 Deno.test("LogMessage class should initialize with correct properties", () => {
   const logMessage = new LogMessage("info", "test", { foo: "bar" });

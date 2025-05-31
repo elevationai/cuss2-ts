@@ -1,20 +1,20 @@
 import { assert, assertEquals, assertExists } from "jsr:@std/assert";
 import { EventEmitter } from "events";
 import { Component } from "./Component.ts";
-import { Cuss2 } from "../cuss2.ts";
-import { ComponentAPI } from "./ComponentAPI.ts";
+import type { Cuss2 } from "../cuss2.ts";
+import type { ComponentAPI } from "./ComponentAPI.ts";
 import { DeviceType } from "./deviceType.ts";
 import {
-  ApplicationState,
+  type ApplicationState,
   ApplicationStateChangeReasonCodes,
   ApplicationStateCodes,
-  ComponentList,
+  type ComponentList,
   ComponentState,
-  EnvironmentComponent,
-  EnvironmentLevel,
+  type EnvironmentComponent,
+  type EnvironmentLevel,
   MessageCodes,
-  PlatformData,
-  PlatformDataMeta,
+  type PlatformData,
+  type PlatformDataMeta,
 } from "cuss2-typescript-models";
 
 const createMeta = (componentID: number, messageCode = MessageCodes.OK) => ({

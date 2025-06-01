@@ -1,4 +1,4 @@
-var Cuss2Lib = (() => {
+var Cuss2 = (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -532,93 +532,93 @@ var Cuss2Lib = (() => {
     BiometricsCharacteristics2["PALM"] = "PALM";
     return BiometricsCharacteristics2;
   })(BiometricsCharacteristics || {});
-  var CussDataTypes = /* @__PURE__ */ ((CussDataTypes2) => {
-    CussDataTypes2["DS_TYPES_ISO"] = "DS_TYPES_ISO";
-    CussDataTypes2["DS_TYPES_VING"] = "DS_TYPES_VING";
-    CussDataTypes2["DS_TYPES_TESSA"] = "DS_TYPES_TESSA";
-    CussDataTypes2["DS_TYPES_SAFLOK"] = "DS_TYPES_SAFLOK";
-    CussDataTypes2["DS_TYPES_TIMELOX"] = "DS_TYPES_TIMELOX";
-    CussDataTypes2["DS_TYPES_KABA_ILCO"] = "DS_TYPES_KABA_ILCO";
-    CussDataTypes2["DS_TYPES_KABA_ILCO_FOLIO"] = "DS_TYPES_KABA_ILCO_FOLIO";
-    CussDataTypes2["DS_TYPES_IMAGE_IR"] = "DS_TYPES_IMAGE_IR";
-    CussDataTypes2["DS_TYPES_IMAGE_VIS"] = "DS_TYPES_IMAGE_VIS";
-    CussDataTypes2["DS_TYPES_IMAGE_UV"] = "DS_TYPES_IMAGE_UV";
-    CussDataTypes2["DS_TYPES_IMAGE_PHOTO"] = "DS_TYPES_IMAGE_PHOTO";
-    CussDataTypes2["DS_TYPES_IMAGE_COAX"] = "DS_TYPES_IMAGE_COAX";
-    CussDataTypes2["DS_TYPES_IMAGE_RED"] = "DS_TYPES_IMAGE_RED";
-    CussDataTypes2["DS_TYPES_IMAGE_GREEN"] = "DS_TYPES_IMAGE_GREEN";
-    CussDataTypes2["DS_TYPES_IMAGE_BLUE"] = "DS_TYPES_IMAGE_BLUE";
-    CussDataTypes2["DS_TYPES_IMAGE_GS"] = "DS_TYPES_IMAGE_GS";
-    CussDataTypes2["DS_TYPES_IMAGE_BW"] = "DS_TYPES_IMAGE_BW";
-    CussDataTypes2["DS_TYPES_IMAGE_BMP"] = "DS_TYPES_IMAGE_BMP";
-    CussDataTypes2["DS_TYPES_IMAGE_GIF"] = "DS_TYPES_IMAGE_GIF";
-    CussDataTypes2["DS_TYPES_IMAGE_TIF"] = "DS_TYPES_IMAGE_TIF";
-    CussDataTypes2["DS_TYPES_IMAGE_PNG"] = "DS_TYPES_IMAGE_PNG";
-    CussDataTypes2["DS_TYPES_IMAGE_JPG"] = "DS_TYPES_IMAGE_JPG";
-    CussDataTypes2["DS_TYPES_IMAGE_XBM"] = "DS_TYPES_IMAGE_XBM";
-    CussDataTypes2["DS_TYPES_IMAGE_XPM"] = "DS_TYPES_IMAGE_XPM";
-    CussDataTypes2["DS_TYPES_IMAGE_PPM"] = "DS_TYPES_IMAGE_PPM";
-    CussDataTypes2["DS_TYPES_VIDEO_AVI"] = "DS_TYPES_VIDEO_AVI";
-    CussDataTypes2["DS_TYPES_VIDEO_MP4"] = "DS_TYPES_VIDEO_MP4";
-    CussDataTypes2["DS_TYPES_VIDEO_MOV"] = "DS_TYPES_VIDEO_MOV";
-    CussDataTypes2["DS_TYPES_VIDEO_MKV"] = "DS_TYPES_VIDEO_MKV";
-    CussDataTypes2["DS_TYPES_VIDEO_WMV"] = "DS_TYPES_VIDEO_WMV";
-    CussDataTypes2["DS_TYPES_CODELINE"] = "DS_TYPES_CODELINE";
-    CussDataTypes2["DS_TYPES_BARCODE"] = "DS_TYPES_BARCODE";
-    CussDataTypes2["DS_TYPES_MIWA"] = "DS_TYPES_MIWA";
-    CussDataTypes2["DS_TYPES_SCAN_PDF417"] = "DS_TYPES_SCAN_PDF417";
-    CussDataTypes2["DS_TYPES_SCAN_AZTEC"] = "DS_TYPES_SCAN_AZTEC";
-    CussDataTypes2["DS_TYPES_SCAN_DMATRIX"] = "DS_TYPES_SCAN_DMATRIX";
-    CussDataTypes2["DS_TYPES_SCAN_QR"] = "DS_TYPES_SCAN_QR";
-    CussDataTypes2["DS_TYPES_SCAN_CODE39"] = "DS_TYPES_SCAN_CODE39";
-    CussDataTypes2["DS_TYPES_SCAN_CODE128"] = "DS_TYPES_SCAN_CODE128";
-    CussDataTypes2["DS_TYPES_SCAN_CODE2OF5"] = "DS_TYPES_SCAN_CODE2OF5";
-    CussDataTypes2["DS_TYPES_ISO7816"] = "DS_TYPES_ISO7816";
-    CussDataTypes2["DS_TYPES_PRINT_2S_PAGE"] = "DS_TYPES_PRINT_2S_PAGE";
-    CussDataTypes2["DS_TYPES_PRINT_2S_MULTI"] = "DS_TYPES_PRINT_2S_MULTI";
-    CussDataTypes2["DS_TYPES_PRINT_PDF"] = "DS_TYPES_PRINT_PDF";
-    CussDataTypes2["DS_TYPES_MIFARE"] = "DS_TYPES_MIFARE";
-    CussDataTypes2["DS_TYPES_SUICA"] = "DS_TYPES_SUICA";
-    CussDataTypes2["DS_TYPES_ISO15961"] = "DS_TYPES_ISO15961";
-    CussDataTypes2["DS_TYPES_RP1745"] = "DS_TYPES_RP1745";
-    CussDataTypes2["DS_TYPES_WEIGHT"] = "DS_TYPES_WEIGHT";
-    CussDataTypes2["DS_TYPES_DIMENSION"] = "DS_TYPES_DIMENSION";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG1"] = "DS_TYPES_EPASSPORT_DG1";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG2"] = "DS_TYPES_EPASSPORT_DG2";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG3"] = "DS_TYPES_EPASSPORT_DG3";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG4"] = "DS_TYPES_EPASSPORT_DG4";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG5"] = "DS_TYPES_EPASSPORT_DG5";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG6"] = "DS_TYPES_EPASSPORT_DG6";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG7"] = "DS_TYPES_EPASSPORT_DG7";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG8"] = "DS_TYPES_EPASSPORT_DG8";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG9"] = "DS_TYPES_EPASSPORT_DG9";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG10"] = "DS_TYPES_EPASSPORT_DG10";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG11"] = "DS_TYPES_EPASSPORT_DG11";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG12"] = "DS_TYPES_EPASSPORT_DG12";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG13"] = "DS_TYPES_EPASSPORT_DG13";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG14"] = "DS_TYPES_EPASSPORT_DG14";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG15"] = "DS_TYPES_EPASSPORT_DG15";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG16"] = "DS_TYPES_EPASSPORT_DG16";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG17"] = "DS_TYPES_EPASSPORT_DG17";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG18"] = "DS_TYPES_EPASSPORT_DG18";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG19"] = "DS_TYPES_EPASSPORT_DG19";
-    CussDataTypes2["DS_TYPES_EPASSPORT_DG20"] = "DS_TYPES_EPASSPORT_DG20";
-    CussDataTypes2["DS_TYPES_EPAYMENT"] = "DS_TYPES_EPAYMENT";
-    CussDataTypes2["DS_TYPES_ILLUMINATION"] = "DS_TYPES_ILLUMINATION";
-    CussDataTypes2["DS_TYPES_SSML"] = "DS_TYPES_SSML";
-    CussDataTypes2["DS_TYPES_KEY"] = "DS_TYPES_KEY";
-    CussDataTypes2["DS_TYPES_KEY_UP"] = "DS_TYPES_KEY_UP";
-    CussDataTypes2["DS_TYPES_KEY_DOWN"] = "DS_TYPES_KEY_DOWN";
-    CussDataTypes2["DS_TYPES_BIOMETRIC"] = "DS_TYPES_BIOMETRIC";
-    CussDataTypes2["DS_TYPES_PRINT_SVG"] = "DS_TYPES_PRINT_SVG";
-    CussDataTypes2["DS_TYPES_ITPS"] = "DS_TYPES_ITPS";
-    return CussDataTypes2;
+  var CussDataTypes = /* @__PURE__ */ ((CussDataTypes3) => {
+    CussDataTypes3["DS_TYPES_ISO"] = "DS_TYPES_ISO";
+    CussDataTypes3["DS_TYPES_VING"] = "DS_TYPES_VING";
+    CussDataTypes3["DS_TYPES_TESSA"] = "DS_TYPES_TESSA";
+    CussDataTypes3["DS_TYPES_SAFLOK"] = "DS_TYPES_SAFLOK";
+    CussDataTypes3["DS_TYPES_TIMELOX"] = "DS_TYPES_TIMELOX";
+    CussDataTypes3["DS_TYPES_KABA_ILCO"] = "DS_TYPES_KABA_ILCO";
+    CussDataTypes3["DS_TYPES_KABA_ILCO_FOLIO"] = "DS_TYPES_KABA_ILCO_FOLIO";
+    CussDataTypes3["DS_TYPES_IMAGE_IR"] = "DS_TYPES_IMAGE_IR";
+    CussDataTypes3["DS_TYPES_IMAGE_VIS"] = "DS_TYPES_IMAGE_VIS";
+    CussDataTypes3["DS_TYPES_IMAGE_UV"] = "DS_TYPES_IMAGE_UV";
+    CussDataTypes3["DS_TYPES_IMAGE_PHOTO"] = "DS_TYPES_IMAGE_PHOTO";
+    CussDataTypes3["DS_TYPES_IMAGE_COAX"] = "DS_TYPES_IMAGE_COAX";
+    CussDataTypes3["DS_TYPES_IMAGE_RED"] = "DS_TYPES_IMAGE_RED";
+    CussDataTypes3["DS_TYPES_IMAGE_GREEN"] = "DS_TYPES_IMAGE_GREEN";
+    CussDataTypes3["DS_TYPES_IMAGE_BLUE"] = "DS_TYPES_IMAGE_BLUE";
+    CussDataTypes3["DS_TYPES_IMAGE_GS"] = "DS_TYPES_IMAGE_GS";
+    CussDataTypes3["DS_TYPES_IMAGE_BW"] = "DS_TYPES_IMAGE_BW";
+    CussDataTypes3["DS_TYPES_IMAGE_BMP"] = "DS_TYPES_IMAGE_BMP";
+    CussDataTypes3["DS_TYPES_IMAGE_GIF"] = "DS_TYPES_IMAGE_GIF";
+    CussDataTypes3["DS_TYPES_IMAGE_TIF"] = "DS_TYPES_IMAGE_TIF";
+    CussDataTypes3["DS_TYPES_IMAGE_PNG"] = "DS_TYPES_IMAGE_PNG";
+    CussDataTypes3["DS_TYPES_IMAGE_JPG"] = "DS_TYPES_IMAGE_JPG";
+    CussDataTypes3["DS_TYPES_IMAGE_XBM"] = "DS_TYPES_IMAGE_XBM";
+    CussDataTypes3["DS_TYPES_IMAGE_XPM"] = "DS_TYPES_IMAGE_XPM";
+    CussDataTypes3["DS_TYPES_IMAGE_PPM"] = "DS_TYPES_IMAGE_PPM";
+    CussDataTypes3["DS_TYPES_VIDEO_AVI"] = "DS_TYPES_VIDEO_AVI";
+    CussDataTypes3["DS_TYPES_VIDEO_MP4"] = "DS_TYPES_VIDEO_MP4";
+    CussDataTypes3["DS_TYPES_VIDEO_MOV"] = "DS_TYPES_VIDEO_MOV";
+    CussDataTypes3["DS_TYPES_VIDEO_MKV"] = "DS_TYPES_VIDEO_MKV";
+    CussDataTypes3["DS_TYPES_VIDEO_WMV"] = "DS_TYPES_VIDEO_WMV";
+    CussDataTypes3["DS_TYPES_CODELINE"] = "DS_TYPES_CODELINE";
+    CussDataTypes3["DS_TYPES_BARCODE"] = "DS_TYPES_BARCODE";
+    CussDataTypes3["DS_TYPES_MIWA"] = "DS_TYPES_MIWA";
+    CussDataTypes3["DS_TYPES_SCAN_PDF417"] = "DS_TYPES_SCAN_PDF417";
+    CussDataTypes3["DS_TYPES_SCAN_AZTEC"] = "DS_TYPES_SCAN_AZTEC";
+    CussDataTypes3["DS_TYPES_SCAN_DMATRIX"] = "DS_TYPES_SCAN_DMATRIX";
+    CussDataTypes3["DS_TYPES_SCAN_QR"] = "DS_TYPES_SCAN_QR";
+    CussDataTypes3["DS_TYPES_SCAN_CODE39"] = "DS_TYPES_SCAN_CODE39";
+    CussDataTypes3["DS_TYPES_SCAN_CODE128"] = "DS_TYPES_SCAN_CODE128";
+    CussDataTypes3["DS_TYPES_SCAN_CODE2OF5"] = "DS_TYPES_SCAN_CODE2OF5";
+    CussDataTypes3["DS_TYPES_ISO7816"] = "DS_TYPES_ISO7816";
+    CussDataTypes3["DS_TYPES_PRINT_2S_PAGE"] = "DS_TYPES_PRINT_2S_PAGE";
+    CussDataTypes3["DS_TYPES_PRINT_2S_MULTI"] = "DS_TYPES_PRINT_2S_MULTI";
+    CussDataTypes3["DS_TYPES_PRINT_PDF"] = "DS_TYPES_PRINT_PDF";
+    CussDataTypes3["DS_TYPES_MIFARE"] = "DS_TYPES_MIFARE";
+    CussDataTypes3["DS_TYPES_SUICA"] = "DS_TYPES_SUICA";
+    CussDataTypes3["DS_TYPES_ISO15961"] = "DS_TYPES_ISO15961";
+    CussDataTypes3["DS_TYPES_RP1745"] = "DS_TYPES_RP1745";
+    CussDataTypes3["DS_TYPES_WEIGHT"] = "DS_TYPES_WEIGHT";
+    CussDataTypes3["DS_TYPES_DIMENSION"] = "DS_TYPES_DIMENSION";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG1"] = "DS_TYPES_EPASSPORT_DG1";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG2"] = "DS_TYPES_EPASSPORT_DG2";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG3"] = "DS_TYPES_EPASSPORT_DG3";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG4"] = "DS_TYPES_EPASSPORT_DG4";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG5"] = "DS_TYPES_EPASSPORT_DG5";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG6"] = "DS_TYPES_EPASSPORT_DG6";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG7"] = "DS_TYPES_EPASSPORT_DG7";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG8"] = "DS_TYPES_EPASSPORT_DG8";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG9"] = "DS_TYPES_EPASSPORT_DG9";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG10"] = "DS_TYPES_EPASSPORT_DG10";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG11"] = "DS_TYPES_EPASSPORT_DG11";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG12"] = "DS_TYPES_EPASSPORT_DG12";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG13"] = "DS_TYPES_EPASSPORT_DG13";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG14"] = "DS_TYPES_EPASSPORT_DG14";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG15"] = "DS_TYPES_EPASSPORT_DG15";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG16"] = "DS_TYPES_EPASSPORT_DG16";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG17"] = "DS_TYPES_EPASSPORT_DG17";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG18"] = "DS_TYPES_EPASSPORT_DG18";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG19"] = "DS_TYPES_EPASSPORT_DG19";
+    CussDataTypes3["DS_TYPES_EPASSPORT_DG20"] = "DS_TYPES_EPASSPORT_DG20";
+    CussDataTypes3["DS_TYPES_EPAYMENT"] = "DS_TYPES_EPAYMENT";
+    CussDataTypes3["DS_TYPES_ILLUMINATION"] = "DS_TYPES_ILLUMINATION";
+    CussDataTypes3["DS_TYPES_SSML"] = "DS_TYPES_SSML";
+    CussDataTypes3["DS_TYPES_KEY"] = "DS_TYPES_KEY";
+    CussDataTypes3["DS_TYPES_KEY_UP"] = "DS_TYPES_KEY_UP";
+    CussDataTypes3["DS_TYPES_KEY_DOWN"] = "DS_TYPES_KEY_DOWN";
+    CussDataTypes3["DS_TYPES_BIOMETRIC"] = "DS_TYPES_BIOMETRIC";
+    CussDataTypes3["DS_TYPES_PRINT_SVG"] = "DS_TYPES_PRINT_SVG";
+    CussDataTypes3["DS_TYPES_ITPS"] = "DS_TYPES_ITPS";
+    return CussDataTypes3;
   })(CussDataTypes || {});
-  var ComponentState = /* @__PURE__ */ ((ComponentState3) => {
-    ComponentState3["READY"] = "READY";
-    ComponentState3["BUSY"] = "BUSY";
-    ComponentState3["UNAVAILABLE"] = "UNAVAILABLE";
-    return ComponentState3;
+  var ComponentState = /* @__PURE__ */ ((ComponentState2) => {
+    ComponentState2["READY"] = "READY";
+    ComponentState2["BUSY"] = "BUSY";
+    ComponentState2["UNAVAILABLE"] = "UNAVAILABLE";
+    return ComponentState2;
   })(ComponentState || {});
   var ComponentTypes = /* @__PURE__ */ ((ComponentTypes2) => {
     ComponentTypes2["CAPTURE"] = "CAPTURE";
@@ -692,31 +692,31 @@ var Cuss2Lib = (() => {
     EventTypes2["PLATFORM"] = "PLATFORM";
     return EventTypes2;
   })(EventTypes || {});
-  var MediaTypes = /* @__PURE__ */ ((MediaTypes2) => {
-    MediaTypes2["CARD"] = "CARD";
-    MediaTypes2["CHIP"] = "CHIP";
-    MediaTypes2["BARCODE"] = "BARCODE";
-    MediaTypes2["TICKET"] = "TICKET";
-    MediaTypes2["RECEIPT"] = "RECEIPT";
-    MediaTypes2["BOARDINGPASS"] = "BOARDINGPASS";
-    MediaTypes2["BAGGAGETAG"] = "BAGGAGETAG";
-    MediaTypes2["HEAVYTAG"] = "HEAVYTAG";
-    MediaTypes2["RFID_BAGGAGETAG"] = "RFID_BAGGAGETAG";
-    MediaTypes2["BAGGAGE"] = "BAGGAGE";
-    MediaTypes2["PASSPORT"] = "PASSPORT";
-    MediaTypes2["IDCARD"] = "IDCARD";
-    MediaTypes2["VISA"] = "VISA";
-    MediaTypes2["DRIVERLICENSE"] = "DRIVERLICENSE";
-    MediaTypes2["RFID"] = "RFID";
-    MediaTypes2["NFC"] = "NFC";
-    MediaTypes2["OCR"] = "OCR";
-    MediaTypes2["IMAGE"] = "IMAGE";
-    MediaTypes2["PRINTED"] = "PRINTED";
-    MediaTypes2["AUDIO"] = "AUDIO";
-    MediaTypes2["VISUAL"] = "VISUAL";
-    MediaTypes2["TOUCH"] = "TOUCH";
-    MediaTypes2["DATASTRUCTURE"] = "DATASTRUCTURE";
-    return MediaTypes2;
+  var MediaTypes = /* @__PURE__ */ ((MediaTypes3) => {
+    MediaTypes3["CARD"] = "CARD";
+    MediaTypes3["CHIP"] = "CHIP";
+    MediaTypes3["BARCODE"] = "BARCODE";
+    MediaTypes3["TICKET"] = "TICKET";
+    MediaTypes3["RECEIPT"] = "RECEIPT";
+    MediaTypes3["BOARDINGPASS"] = "BOARDINGPASS";
+    MediaTypes3["BAGGAGETAG"] = "BAGGAGETAG";
+    MediaTypes3["HEAVYTAG"] = "HEAVYTAG";
+    MediaTypes3["RFID_BAGGAGETAG"] = "RFID_BAGGAGETAG";
+    MediaTypes3["BAGGAGE"] = "BAGGAGE";
+    MediaTypes3["PASSPORT"] = "PASSPORT";
+    MediaTypes3["IDCARD"] = "IDCARD";
+    MediaTypes3["VISA"] = "VISA";
+    MediaTypes3["DRIVERLICENSE"] = "DRIVERLICENSE";
+    MediaTypes3["RFID"] = "RFID";
+    MediaTypes3["NFC"] = "NFC";
+    MediaTypes3["OCR"] = "OCR";
+    MediaTypes3["IMAGE"] = "IMAGE";
+    MediaTypes3["PRINTED"] = "PRINTED";
+    MediaTypes3["AUDIO"] = "AUDIO";
+    MediaTypes3["VISUAL"] = "VISUAL";
+    MediaTypes3["TOUCH"] = "TOUCH";
+    MediaTypes3["DATASTRUCTURE"] = "DATASTRUCTURE";
+    return MediaTypes3;
   })(MediaTypes || {});
   var MessageCodes = /* @__PURE__ */ ((MessageCodes2) => {
     MessageCodes2["OK"] = "OK";
@@ -1344,6 +1344,10 @@ var Cuss2Lib = (() => {
     }
   };
 
+  // src/types/modelExtensions.ts
+  var MediaTypes2 = MediaTypes;
+  var CussDataTypes2 = CussDataTypes;
+
   // src/componentInterrogation.ts
   var dsTypesHas = (charac0, type) => {
     return charac0?.dsTypesList?.find((d) => d === type);
@@ -1369,27 +1373,27 @@ var Cuss2Lib = (() => {
       if (!charac0)
         return;
       const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, "BAGGAGETAG" /* BAGGAGETAG */);
+      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, MediaTypes2.BAGGAGETAG);
     };
     static isBoardingPassPrinter = (component) => {
       const charac0 = component.componentCharacteristics?.[0];
       if (!charac0)
         return;
       const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, "BOARDINGPASS" /* BOARDINGPASS */);
+      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, MediaTypes2.BOARDINGPASS);
     };
     static isDocumentReader = (component) => {
       const charac0 = component.componentCharacteristics?.[0];
       if (!charac0)
         return;
       const mediaTypes = charac0.mediaTypesList;
-      return mediaTypesHas(mediaTypes, "PASSPORT" /* PASSPORT */);
+      return mediaTypesHas(mediaTypes, MediaTypes2.PASSPORT);
     };
     static isBarcodeReader = (component) => {
       const charac0 = component.componentCharacteristics?.[0];
       if (!charac0)
         return;
-      return dsTypesHas(charac0, "DS_TYPES_BARCODE" /* DS_TYPES_BARCODE */);
+      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_BARCODE);
     };
     static isCardReader = (component) => {
       const charac0 = component.componentCharacteristics?.[0];
@@ -1402,7 +1406,7 @@ var Cuss2Lib = (() => {
       const charac0 = component.componentCharacteristics?.[0];
       if (!charac0)
         return;
-      return dsTypesHas(charac0, "DS_TYPES_KEY" /* DS_TYPES_KEY */) || dsTypesHas(charac0, "DS_TYPES_KEY_UP" /* DS_TYPES_KEY_UP */) || dsTypesHas(charac0, "DS_TYPES_KEY_DOWN" /* DS_TYPES_KEY_DOWN */);
+      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY) || dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY_UP) || dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY_DOWN);
     };
     static isIllumination = (component) => {
       const charac0 = component.componentCharacteristics?.[0];
@@ -1417,7 +1421,7 @@ var Cuss2Lib = (() => {
       if (!charac0)
         return;
       const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "ASSISTIVE" /* ASSISTIVE */) && mediaTypesHas(mediaTypes, "AUDIO" /* AUDIO */);
+      return deviceTypesHas(charac0.deviceTypesList, "ASSISTIVE" /* ASSISTIVE */) && mediaTypesHas(mediaTypes, MediaTypes2.AUDIO);
     };
     static isScale = (component) => {
       if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
@@ -1431,7 +1435,7 @@ var Cuss2Lib = (() => {
       const charac0 = component.componentCharacteristics?.[0];
       if (!charac0)
         return;
-      return dsTypesHas(charac0, "DS_TYPES_BIOMETRIC" /* DS_TYPES_BIOMETRIC */);
+      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_BIOMETRIC);
     };
     static isCamera = (component) => {
       if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
@@ -1440,7 +1444,7 @@ var Cuss2Lib = (() => {
       if (!charac0)
         return;
       const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "CAMERA" /* CAMERA */) && mediaTypesHas(mediaTypes, "IMAGE" /* IMAGE */);
+      return deviceTypesHas(charac0.deviceTypesList, "CAMERA" /* CAMERA */) && mediaTypesHas(mediaTypes, MediaTypes2.IMAGE);
     };
     static isRFIDReader = (component) => {
       if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
@@ -1449,7 +1453,7 @@ var Cuss2Lib = (() => {
       if (!charac0)
         return false;
       const mediaTypes = charac0.mediaTypesList;
-      return !!deviceTypesHas(charac0.deviceTypesList, "CONTACTLESS" /* CONTACTLESS */) && !!mediaTypesHas(mediaTypes, "RFID" /* RFID */);
+      return !!deviceTypesHas(charac0.deviceTypesList, "CONTACTLESS" /* CONTACTLESS */) && !!mediaTypesHas(mediaTypes, MediaTypes2.RFID);
     };
     static isInsertionBelt = (component) => {
       const charac0 = component.componentCharacteristics?.[0];
@@ -1483,7 +1487,7 @@ var Cuss2Lib = (() => {
       const charac0 = component.componentCharacteristics?.[0];
       if (!charac0)
         return false;
-      return !!dsTypesHas(charac0, "DS_TYPES_RP1745" /* DS_TYPES_RP1745 */);
+      return !!dsTypesHas(charac0, CussDataTypes2.DS_TYPES_RP1745);
     };
   };
 
@@ -1493,10 +1497,10 @@ var Cuss2Lib = (() => {
   // src/models/deviceType.ts
   var DeviceType = {
     UNKNOWN: "UNKNOWN",
-    BAG_TAG_PRINTER: "BAG_TAG_PRINTED",
+    BAG_TAG_PRINTER: "BAG_TAG_PRINTER",
     BAG_TAG_FEEDER: "BAG_TAG_FEEDER",
     BAG_TAG_DISPENSER: "BAG_TAG_DISPENSER",
-    BOARDING_PASS_PRINTER: "BOARDING_PASS_PRINTED",
+    BOARDING_PASS_PRINTER: "BOARDING_PASS_PRINTER",
     BOARDING_PASS_FEEDER: "BOARDING_PASS_FEEDER",
     BOARDING_PASS_DISPENSER: "BOARDING_PASS_DISPENSER",
     BARCODE_READER: "BARCODE_READER",
@@ -1515,7 +1519,8 @@ var Cuss2Lib = (() => {
     VERIFICATION_BELT: "VERIFICATION_BELT",
     PARKING_BELT: "PARKING_BELT",
     RFID: "RFID",
-    AEASBD: "AEASBD"
+    AEASBD: "AEASBD",
+    BHS: "BHS"
   };
 
   // src/models/Component.ts
@@ -2456,20 +2461,21 @@ var Cuss2Lib = (() => {
 
 // Appended wrapper to expose Cuss2Lib exports onto a global Cuss2 object
 ;(function(globalCtx) {
-  if (typeof Cuss2Lib === 'undefined') {
-    console.error('Cuss2Lib not found. The bundle might have failed to load or was not generated correctly.');
+  if (typeof Cuss2 === 'undefined') {
+    console.error('Cuss2 not found. The bundle might have failed to load or was not generated correctly.');
     return;
   }
   // Create global Cuss2 object, assigning the main Cuss2 export to it.
-  globalCtx.Cuss2 = Cuss2Lib.Cuss2;
+  const _c2 = Cuss2;
+  globalCtx.Cuss2 = _c2.Cuss2;
 
   // Add all other exports from Cuss2Lib as properties of globalCtx.Cuss2
-  for (const key in Cuss2Lib) {
-    if (key !== 'Cuss2' && Object.prototype.hasOwnProperty.call(Cuss2Lib, key)) {
-      globalCtx.Cuss2[key] = Cuss2Lib[key];
+  for (const key in _c2) {
+    if (key !== 'Cuss2' && Object.prototype.hasOwnProperty.call(_c2, key)) {
+      globalCtx.Cuss2[key] = _c2[key];
     }
   }
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "1.0.0";
+  globalCtx.Cuss2.version = "0.1.0";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

@@ -2459,7 +2459,7 @@ var Cuss2 = (() => {
   return __toCommonJS(bundle_entry_exports);
 })();
 
-// Appended wrapper to expose Cuss2Lib exports onto a global Cuss2 object
+// Appended wrapper to expose Cuss2 exports onto a global Cuss2 object
 ;(function(globalCtx) {
   if (typeof Cuss2 === 'undefined') {
     console.error('Cuss2 not found. The bundle might have failed to load or was not generated correctly.');
@@ -2469,12 +2469,16 @@ var Cuss2 = (() => {
   const _c2 = Cuss2;
   globalCtx.Cuss2 = _c2.Cuss2;
 
-  // Add all other exports from Cuss2Lib as properties of globalCtx.Cuss2
+  // Add all other exports from Cuss2 as properties of globalCtx.Cuss2
   for (const key in _c2) {
     if (key !== 'Cuss2' && Object.prototype.hasOwnProperty.call(_c2, key)) {
       globalCtx.Cuss2[key] = _c2[key];
     }
   }
+  Cuss2.Models.StateChange = _c2.StateChange;
+  delete Cuss2.StateChange;
+  Cuss2.Models.LogMessage = _c2.LogMessage;
+  delete Cuss2.LogMessage;
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
   globalCtx.Cuss2.version = "0.1.0";

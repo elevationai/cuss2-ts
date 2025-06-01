@@ -34,13 +34,6 @@ export { Cuss2 };
 
 // Also create named exports for everything from cuss2-typescript-models
 import * as Models from "cuss2-typescript-models";
-// export const AppState = Models.ApplicationStateCodes;
-// export const AppStateChangeReason = Models.ApplicationStateChangeReasonCodes;
-// export const ExecutionMode = Models.ApplicationActivationExecutionModeEnum;
-// export const ComponentState = Models.ComponentState;
-// export const MessageCodes = Models.MessageCodes;
-// export const PlatformDirectives = Models.PlatformDirectives;
-// export const CUSSDataTypes = Models.CUSSDataTypes;
 
 // Add all models under a 'Models' namespace
 export { Models };
@@ -117,6 +110,10 @@ try {
       globalCtx.Cuss2[key] = _c2[key];
     }
   }
+  Cuss2.Models.StateChange = _c2.StateChange;
+  delete Cuss2.StateChange;
+  Cuss2.Models.LogMessage = _c2.LogMessage;
+  delete Cuss2.LogMessage;
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
   globalCtx.Cuss2.version = "${denoConfig.version}";

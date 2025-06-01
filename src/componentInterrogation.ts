@@ -5,10 +5,10 @@ import {
   DeviceTypes,
   type EnvironmentComponent,
   MediaTypes,
-} from "cuss2-typescript-models";
+} from "./types/modelExtensions.ts";
 
 const dsTypesHas = (charac0: ComponentCharacteristics, type: CussDataTypes) => {
-  return charac0?.dsTypesList?.find((d) => d === type);
+  return (charac0?.dsTypesList as Array<CussDataTypes>)?.find((d) => d === type);
 };
 const mediaTypesHas = (mediaTypes: MediaTypes[], type: MediaTypes) => {
   return mediaTypes?.find((m) => m === type);
@@ -67,7 +67,7 @@ export class ComponentInterrogation {
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0) return;
     const mediaTypes = charac0.mediaTypesList;
-    return mediaTypesHas(mediaTypes, "MAGCARD" as MediaTypes);
+    return mediaTypesHas(mediaTypes, "MAGCARD");
   };
 
   static isKeypad = (component: EnvironmentComponent) => {
@@ -145,7 +145,7 @@ export class ComponentInterrogation {
     if (component.componentType !== ComponentTypes.USER_OUTPUT) return false;
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0) return false;
-    return !!dsTypesHas(charac0, "SBDAEA" as CussDataTypes);
+    return !!dsTypesHas(charac0, "SBDAEA");
   };
 
   static isBHS = (component: EnvironmentComponent): boolean => {

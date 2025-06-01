@@ -17,13 +17,13 @@ peripheral devices.
 This is a Deno project. You can import it directly in your Deno application:
 
 ```typescript
-import { Cuss2 } from "https://deno.land/x/cuss2/mod.ts";
+import { Cuss2 } from "jsr:@cuss/cuss2-ts@latest";
 ```
 
 ## Quick Start
 
 ```typescript
-import { Cuss2 } from "https://deno.land/x/cuss2/mod.ts";
+import { Cuss2 } from "jsr:@cuss/cuss2-ts@latest";
 
 // Connect to the CUSS2 platform
 const cuss2 = await Cuss2.connect(
@@ -163,6 +163,27 @@ else {
 }
 ```
 
+### Components Collection
+
+The `components` property provides access to all discovered components:
+
+```typescript
+// Access the components collection after initialization
+const components = cuss2.components;
+
+// Iterate through all components
+Object.entries(components).forEach(([id, component]) => {
+  console.log(`Component ${id}:`, {
+    type: component.componentType,
+    name: component.componentName,
+    state: component.componentState,
+    location: component.componentLocation
+  });
+});
+```
+
+Components are automatically discovered during initialization and stored in the `components` object keyed by their component ID.
+
 ### Component Types
 
 The SDK supports all CUSS2 peripherals:
@@ -229,6 +250,29 @@ await cuss2.boardingPassPrinter.disable();
 ```
 
 ## Advanced Usage
+
+### Environment Information
+
+The `environment` property provides access to platform environment details:
+
+```typescript
+// Access environment information after connection
+const environment = cuss2.environment;
+
+console.log("Device ID:", environment.deviceID);
+console.log("Platform ID:", environment.platformID);
+console.log("Platform Version:", environment.cuss2Version);
+console.log("Location:", environment.locationCode);
+console.log("Capabilities:", environment.platformCapabilities);
+```
+
+The environment object includes:
+- `deviceID`: Unique identifier for the device
+- `platformID`: Platform implementation identifier
+- `cuss2Version`: Version of the CUSS2 standard
+- `locationCode`: IATA location code
+- `platformCapabilities`: Available platform features
+- And more platform-specific information
 
 ### Required Components
 

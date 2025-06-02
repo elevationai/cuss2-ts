@@ -15,6 +15,7 @@ interface ConnectionEvents {
   error: [unknown];
   close: [CloseEvent];
   open: [];
+  connecting: [number];
 }
 
 // These are needed for overriding during testing
@@ -26,7 +27,7 @@ export const global = {
 };
 
 export class Connection extends EventEmitter {
-  declare on: <K extends keyof ConnectionEvents>(event: K, listener: (data: PlatformData) => void) => this;
+  declare on: <K extends keyof ConnectionEvents>(event: K, listener: (...args: ConnectionEvents[K]) => void) => this;
 
   _auth: { url: string; client_id: string; client_secret: string };
   _baseURL: string;
@@ -189,7 +190,7 @@ export class Connection extends EventEmitter {
   }
 
   _createWebSocketAndAttachEventHandlers(): Promise<boolean> {
-    let retrying = true;
+    let attempts = 0;
 
     return retry(() =>
       new Promise<boolean>((resolve, reject) => {
@@ -197,14 +198,14 @@ export class Connection extends EventEmitter {
           log("error", "open socket already exists");
           return resolve(true);
         }
-
+        this.emit("connecting", attempts++);
         // This can create synchronous Errors and will reject the promise
         const socket = new global.WebSocket(this._socketURL);
 
         socket.onopen = () => {
           log("info", "Socket opened: ", this._socketURL);
           this._socket = socket;
-          retrying = false;
+          attempts = 0;
           resolve(true);
           this.emit("open");
         };
@@ -250,7 +251,7 @@ export class Connection extends EventEmitter {
           // normal close (probably from calling the close() method)
           if (e.code === 1000) return;
 
-          if (retrying) {
+          if (attempts > 0) {
             reject(e); // cause retry to try again
           }
         };

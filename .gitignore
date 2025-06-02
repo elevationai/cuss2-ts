@@ -48,3 +48,5 @@ deno.lock
 CLAUDE.local.md
 CLAUDE.md
 scratch.ts
+
+specs/

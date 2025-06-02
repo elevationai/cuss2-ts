@@ -24,5 +24,8 @@
   "fmt": {
     "lineWidth": 120,
     "nextControlFlowPosition": "nextLine"
-  }
+  },
+  "exclude": [
+    "dist/"
+  ]
 }

@@ -3,12 +3,19 @@ import { ensureDir } from "https://deno.land/std/fs/mod.ts";
 import * as path from "https://deno.land/std/path/mod.ts";
 import * as esbuild from "npm:esbuild@0.20.2";
 import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.11.1";
+import { parse } from "jsr:@std/jsonc";
 
 const outDir = "./dist";
 const tempDir = "./.temp";
 
-import { parse } from "jsr:@std/jsonc";
-const denoConfig = parse(await Deno.readTextFile("./deno.jsonc"));
+interface DenoConfig {
+  version?: string;
+  imports?: Record<string, string>;
+  [key: string]: unknown;
+}
+
+const denoConfig = parse(await Deno.readTextFile("./deno.jsonc")) as DenoConfig;
+
 
 const importMap = {
   imports: {

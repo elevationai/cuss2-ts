@@ -209,10 +209,10 @@ Deno.test(
 Deno.test("_cleanBaseURL should remove query parameters and trailing slashes", () => {
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // @ts-ignore - Accessing private method for testing
@@ -228,10 +228,10 @@ Deno.test("_cleanBaseURL should remove query parameters and trailing slashes", (
 Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // @ts-ignore - Accessing private method for testing
@@ -262,10 +262,10 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
 Deno.test("Connection constructor should set URLs correctly", () => {
   const connection = new Connection(
     "https://example.com/api/?param=value",
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // Check that internal state is set correctly
@@ -277,10 +277,10 @@ Deno.test("Connection constructor should set URLs correctly", () => {
   // Test with WebSocket URL
   const wsConnection = new Connection(
     "ws://example.com/api/",
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // @ts-ignore - Accessing private property for testing
@@ -314,9 +314,9 @@ Deno.test(
 
     const connection = new Connection(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -346,10 +346,10 @@ Deno.test(
 
     const connection = new Connection(
       testBaseUrl,
-      testTokenUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
+      testTokenUrl,
     );
 
     // Verify authenticate throws error
@@ -378,10 +378,10 @@ Deno.test(
 
     const connection = new Connection(
       testBaseUrl,
-      testTokenUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
+      testTokenUrl,
     );
 
     // @ts-ignore - Accessing private method for testing
@@ -427,10 +427,10 @@ Deno.test(
 
     const connection = new Connection(
       testBaseUrl,
-      testTokenUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
+      testTokenUrl,
     );
 
     // @ts-ignore - Accessing private property for testing
@@ -463,9 +463,9 @@ Deno.test(
 
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -486,9 +486,9 @@ Deno.test(
 
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -520,9 +520,9 @@ Deno.test(
 
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -555,9 +555,9 @@ Deno.test(
     });
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -576,9 +576,9 @@ Deno.test(
 
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -646,9 +646,9 @@ Deno.test(
     // Start connection process
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -682,9 +682,9 @@ Deno.test(
     // Start connection process
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
       {
         minTimeout: 10,
@@ -708,9 +708,9 @@ Deno.test(
 
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -772,9 +772,9 @@ Deno.test(
       async () => {
         await Connection.connect(
           testBaseUrl,
-          testDeviceId,
           testClientId,
           testClientSecret,
+          testDeviceId,
           testTokenUrl,
         );
       },
@@ -791,9 +791,9 @@ Deno.test("send should add missing oauthToken and deviceID to data", async () =>
 
   const connection = await Connection.connect(
     testBaseUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
     testTokenUrl,
   );
 
@@ -833,10 +833,10 @@ Deno.test("send should not override existing oauthToken and deviceID", async () 
 
   const connection = await Connection.connect(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // Set access token (this should not be used)
@@ -878,10 +878,10 @@ Deno.test("send should not override existing oauthToken and deviceID", async () 
 Deno.test("sendAndGetResponse should throw error if socket is not connected", async () => {
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // Set access token
@@ -916,10 +916,10 @@ Deno.test("sendAndGetResponse should send data and wait for response", async () 
 
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // Set access token
@@ -991,10 +991,10 @@ Deno.test("sendAndGetResponse should throw PlatformResponseError for critical er
 
   const connection = await Connection.connect(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // Mock the waitFor method to return error
@@ -1043,9 +1043,9 @@ Deno.test(
 
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -1075,9 +1075,9 @@ Deno.test(
 Deno.test("sendAndGetResponse should set deviceID if it's null or default", async () => {
   const connection = new Connection(
     testBaseUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
     testTokenUrl,
   );
 
@@ -1177,9 +1177,9 @@ Deno.test(
     // Create connection
     const connection = await Connection.connect(
       testBaseUrl,
-      testDeviceId,
       testClientId,
       testClientSecret,
+      testDeviceId,
       testTokenUrl,
     );
 
@@ -1218,10 +1218,10 @@ Deno.test("close should handle missing socket gracefully", () => {
   // Create connection without socket
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // Verify no socket exists
@@ -1235,10 +1235,10 @@ Deno.test("close should handle missing socket gracefully", () => {
 Deno.test("close handler should clean up listeners and socket event handlers", () => {
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   const mockWs = mockWebSocket();
@@ -1274,10 +1274,10 @@ Deno.test("close handler should clean up listeners and socket event handlers", (
 Deno.test("waitFor should resolve when event is emitted", async () => {
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   const testEventName = "test-event";
@@ -1295,10 +1295,10 @@ Deno.test("waitFor should reject when close event is emitted", async () => {
   // Create connection
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   // Create test event name
@@ -1320,10 +1320,10 @@ Deno.test("waitFor should reject when close event is emitted", async () => {
 Deno.test("waitFor should clean up listeners after resolution", async () => {
   const connection = new Connection(
     testBaseUrl,
-    testTokenUrl,
-    testDeviceId,
     testClientId,
     testClientSecret,
+    testDeviceId,
+    testTokenUrl,
   );
 
   const testEventName = "test-event";
@@ -1410,10 +1410,10 @@ Deno.test(
       // Create the connection
       const connection = new Connection(
         testBaseUrl,
-        testTokenUrl,
-        testDeviceId,
         testClientId,
         testClientSecret,
+        testDeviceId,
+        testTokenUrl,
       );
 
       // Initialize authentication

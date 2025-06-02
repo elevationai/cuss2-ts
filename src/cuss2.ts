@@ -121,16 +121,16 @@ export class Cuss2 extends EventEmitter {
 
   static async connect(
     wss: string,
-    deviceID: string = "00000000-0000-0000-0000-000000000000",
     client_id: string,
     client_secret: string,
+    deviceID: string = "00000000-0000-0000-0000-000000000000",
     tokenURL?: string,
   ): Promise<Cuss2> {
     const connection = await Connection.connect(
       wss,
-      deviceID,
       client_id,
       client_secret,
+      deviceID,
       tokenURL,
     );
     const cuss2 = new Cuss2(connection);

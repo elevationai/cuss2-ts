@@ -49,9 +49,9 @@ export class Connection extends EventEmitter {
 
   constructor(
     baseURL: string,
-    deviceID: UniqueId,
     client_id: string,
     client_secret: string,
+    deviceID: UniqueId,
     tokenURL?: string,
     retryOptions?: typeof Connection.prototype._retryOptions,
   ) {
@@ -115,17 +115,17 @@ export class Connection extends EventEmitter {
 
   static async connect(
     baseURL: string,
-    deviceID: string,
     client_id: string,
     client_secret: string,
+    deviceID: string,
     tokenURL?: string,
     retryOptions?: typeof Connection.prototype._retryOptions,
   ): Promise<Connection> {
     using connection = new Connection(
       baseURL,
-      deviceID,
       client_id,
       client_secret,
+      deviceID,
       tokenURL,
       retryOptions,
     );

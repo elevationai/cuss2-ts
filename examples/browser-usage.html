@@ -30,9 +30,9 @@ async function connectToCuss2() {
   try {
     const cuss2 = await Cuss2.connect(
       'wss://your-cuss2-platform.com',
-      'your-device-id',
       'your-client-id',
-      'your-client-secret'
+      'your-client-secret',
+      'your-device-id'
     );
 
     // Listen for state changes

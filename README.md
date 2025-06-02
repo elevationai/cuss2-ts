@@ -28,9 +28,9 @@ import { Cuss2 } from "jsr:@cuss/cuss2-ts@latest";
 // Connect to the CUSS2 platform
 const cuss2 = await Cuss2.connect(
   "wss://cuss-platform.example.com",
-  "device-id",
   "client-id",
   "client-secret",
+  "device-id",
   "https://oauth.example.com/token", // Optional token URL
 );
 
@@ -96,10 +96,10 @@ sequenceDiagram
 // Instantiating a connection
 const cuss2 = await Cuss2.connect(
   cuss2URL,
-  oauthURL,
-  deviceID,
   clientId,
   clientSecret,
+  deviceID,
+  oauthURL,
 );
 
 // Moving to unavailable

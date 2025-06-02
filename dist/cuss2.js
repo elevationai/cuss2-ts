@@ -1123,7 +1123,7 @@ var Cuss2 = (() => {
     get isOpen() {
       return !!this._socket && this._socket.readyState === 1;
     }
-    constructor(baseURL, deviceID, client_id, client_secret, tokenURL, retryOptions) {
+    constructor(baseURL, client_id, client_secret, deviceID, tokenURL, retryOptions) {
       super();
       this.deviceID = deviceID;
       this.setMaxListeners(0);
@@ -1168,12 +1168,12 @@ var Cuss2 = (() => {
         token_type: data.token_type
       };
     }
-    static async connect(baseURL, deviceID, client_id, client_secret, tokenURL, retryOptions) {
+    static async connect(baseURL, client_id, client_secret, deviceID, tokenURL, retryOptions) {
       using connection = new _Connection(
         baseURL,
-        deviceID,
         client_id,
         client_secret,
+        deviceID,
         tokenURL,
         retryOptions
       );
@@ -2082,12 +2082,12 @@ var Cuss2 = (() => {
       connection.on("message", (e) => this._handleWebSocketMessage(e));
       connection.on("open", () => this._initialize());
     }
-    static async connect(wss, deviceID = "00000000-0000-0000-0000-000000000000", client_id, client_secret, tokenURL) {
+    static async connect(wss, client_id, client_secret, deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
       const connection = await Connection.connect(
         wss,
-        deviceID,
         client_id,
         client_secret,
+        deviceID,
         tokenURL
       );
       const cuss2 = new _Cuss2(connection);
@@ -2481,5 +2481,5 @@ var Cuss2 = (() => {
   delete Cuss2.LogMessage;
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "0.2.0";
+  globalCtx.Cuss2.version = "0.3.0";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

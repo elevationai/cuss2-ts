@@ -7,7 +7,8 @@ import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.11.1";
 const outDir = "./dist";
 const tempDir = "./.temp";
 
-import denoConfig from "../deno.json" with { type: "json" };
+import { parse } from "jsr:@std/jsonc";
+const denoConfig = parse(await Deno.readTextFile("./deno.jsonc"));
 
 const importMap = {
   imports: {

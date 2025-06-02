@@ -2481,5 +2481,5 @@ var Cuss2 = (() => {
   delete Cuss2.LogMessage;
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "0.1.0";
+  globalCtx.Cuss2.version = "0.2.0";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

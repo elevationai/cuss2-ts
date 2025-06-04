@@ -1,5 +1,5 @@
 import { Build, log } from "./helper.ts";
-import { EventEmitter } from "events";
+import { EventEmitter } from "./models/EventEmitter.ts";
 
 import { Connection } from "./connection.ts";
 import { StateChange } from "./models/stateChange.ts";
@@ -114,28 +114,26 @@ export class Cuss2 extends EventEmitter {
   private constructor(connection: Connection) {
     super();
     this.connection = connection;
-    // Subscribe to messages from the CUSS 2 platform
+    // Subscribe to messages from the connection
     connection.on("message", (e) => this._handleWebSocketMessage(e));
     connection.on("open", () => this._initialize());
   }
 
-  static async connect(
+  static connect(
     wss: string,
     client_id: string,
     client_secret: string,
     deviceID: string = "00000000-0000-0000-0000-000000000000",
-    tokenURL?: string,
-  ): Promise<Cuss2> {
-    const connection = await Connection.connect(
+    tokenURL?: string
+  ): Cuss2 {
+    const connection = Connection.connect(
       wss,
       client_id,
       client_secret,
       deviceID,
       tokenURL,
     );
-    const cuss2 = new Cuss2(connection);
-    await cuss2._initialize();
-    return cuss2;
+    return new Cuss2(connection);
   }
 
   async _initialize(): Promise<undefined> {
@@ -161,6 +159,7 @@ export class Cuss2 extends EventEmitter {
       log("error", "error querying components", e);
       super.emit("queryError", e);
     });
+    this.emit('connected', this);
   }
 
   async _handleWebSocketMessage(platformData: PlatformData) {
@@ -537,24 +536,13 @@ export class Cuss2 extends EventEmitter {
     return okToChange ? this.api.staterequest(AppState.AVAILABLE) : Promise.resolve(undefined);
   }
 
-  async requestUnavailableState(): Promise<PlatformData | undefined> {
-    const okToChange = this.state === AppState.INITIALIZE || this.state === AppState.AVAILABLE ||
-      this.state === AppState.ACTIVE;
-
-    if (okToChange && this.state === AppState.ACTIVE) {
-      await this._disableAllComponents();
-    }
-
-    return okToChange ? this.api.staterequest(AppState.UNAVAILABLE) : Promise.resolve(undefined);
+  async requestActiveState(): Promise<PlatformData | undefined> {
+    const okToChange = this.state === AppState.AVAILABLE || this.state === AppState.ACTIVE;
+    return await (okToChange ? this.api.staterequest(AppState.ACTIVE) : Promise.resolve(undefined));
   }
 
   async requestStoppedState(): Promise<PlatformData | undefined> {
     return await this.api.staterequest(AppState.STOPPED);
-  }
-
-  async requestActiveState(): Promise<PlatformData | undefined> {
-    const okToChange = this.state === AppState.AVAILABLE || this.state === AppState.ACTIVE;
-    return await (okToChange ? this.api.staterequest(AppState.ACTIVE) : Promise.resolve(undefined));
   }
 
   async requestReload(): Promise<boolean> {

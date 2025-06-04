@@ -507,6 +507,22 @@ export class Cuss2 extends EventEmitter {
     }
   }
 
+  async requestInitializeState(): Promise<PlatformData | undefined> {
+    const okToChange = this.state === AppState.STOPPED;
+    return okToChange ? await this.api.staterequest(AppState.INITIALIZE) : Promise.resolve(undefined);
+  }
+
+  async requestUnavailableState(): Promise<PlatformData | undefined> {
+    const okToChange = this.state === AppState.INITIALIZE || this.state === AppState.AVAILABLE ||
+      this.state === AppState.ACTIVE;
+
+    if (okToChange && this.state === AppState.ACTIVE) {
+      await this._disableAllComponents();
+    }
+
+    return okToChange ? this.api.staterequest(AppState.UNAVAILABLE) : Promise.resolve(undefined);
+  }
+
   async requestAvailableState(): Promise<PlatformData | undefined> {
     // allow hopping directly to AVAILABLE from INITIALIZE
     if (this.state === AppState.INITIALIZE) {

@@ -126,7 +126,7 @@ export class Cuss2 extends EventEmitter {
     deviceID: string = "00000000-0000-0000-0000-000000000000",
     tokenURL?: string
   ): Cuss2 {
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       wss,
       client_id,
       client_secret,

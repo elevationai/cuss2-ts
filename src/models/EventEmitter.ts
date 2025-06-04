@@ -2,18 +2,27 @@ import { EventEmitter as EE } from "events";
 
 
 export class EventEmitter extends EE {
-  waitFor(event: string): Promise<unknown> {
+  waitFor(event: string, errorEvents = ['error']): Promise<unknown> {
     return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        this.off(event, resolver);
+        for(const errorEvent of errorEvents) {
+          this.off(errorEvent, catcher);
+        }
+      }
       const resolver = (e: unknown) => {
-        this.off("close", catcher);
+        cleanup();
         resolve(e);
       };
       const catcher = (e: unknown) => {
-        this.off(event, resolver);
+        cleanup();
         reject(e);
       };
+
       this.once(event, resolver);
-      this.once("close", catcher);
+      for(const errorEvent of errorEvents) {
+        this.once(errorEvent, catcher);
+      }
     });
   }
 }

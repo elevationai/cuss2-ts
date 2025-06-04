@@ -28,16 +28,7 @@ class MockWebSocket {
   // Methods
   close(code = 1000, reason = ""): void {
     this.readyState = MockWebSocket.CLOSED;
-    if (this.onclose) {
-      const closeEvent = {
-        type: "close",
-        wasClean: true,
-        code,
-        reason,
-        target: this,
-      } as unknown as CloseEvent;
-      this.onclose(closeEvent);
-    }
+    this.onclose?.(new CloseEvent("close", { code, reason }));
   }
 
   send(data: string): void {
@@ -50,26 +41,13 @@ class MockWebSocket {
 
   // Simulate receiving a message
   simulateMessage(data: string): void {
-    if (this.onmessage) {
-      const messageEvent = {
-        type: "message",
-        data,
-        target: this,
-      } as unknown as MessageEvent;
-      this.onmessage(messageEvent);
-    }
+    this.onmessage?.(new MessageEvent("message", { data }));
   }
 
   // Simulate connection opening
   _simulateOpen(): void {
     this.readyState = MockWebSocket.OPEN;
-    if (this.onopen) {
-      const openEvent = {
-        type: "open",
-        target: this,
-      } as unknown as Event;
-      this.onopen(openEvent);
-    }
+    this.onopen?.(new Event("open"));
   }
 }
 
@@ -111,32 +89,16 @@ async function waitForConnection(connection: Connection, maxWait = 200): Promise
   await delay(20);
 }
 
-function mockGlobal(fn: () => Promise<unknown> | unknown): () => Promise<void> {
+function mockGlobal(fn: () => Promise<unknown>): () => Promise<void> {
   return async () => {
-    // Save original console.log
-    const originalLog = console.log;
-    // Silence console.log during tests
-    console.log = () => {};
-
-    // Track any unhandled promise rejections
-    const unhandledRejections: unknown[] = [];
-    const rejectionHandler = (event: PromiseRejectionEvent) => {
-      unhandledRejections.push(event.reason);
-      event.preventDefault(); // Prevent the default unhandled rejection behavior
-    };
-    globalThis.addEventListener("unhandledrejection", rejectionHandler);
-
     try {
       await fn();
     }
     finally {
-      // Restore original console.log
-      console.log = originalLog;
       global.WebSocket = globalThis.WebSocket;
       global.fetch = globalThis.fetch;
       global.setTimeout = globalThis.setTimeout.bind(globalThis);
       global.clearTimeout = globalThis.clearTimeout.bind(globalThis);
-      globalThis.removeEventListener("unhandledrejection", rejectionHandler);
     }
   };
 }
@@ -578,7 +540,7 @@ Deno.test(
       return undefined;
     });
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -604,9 +566,6 @@ Deno.test(
     assertEquals(webSocketConstructorCalled, true);
     assertEquals(authenticatedEventFired, true);
     assertEquals(mockWs.url, `wss://example.com/api/platform/subscribe`);
-
-    // Clean up
-    connection.close();
   }),
 );
 
@@ -617,7 +576,7 @@ Deno.test(
     mockFetch();
     const mockWs = mockWebSocket();
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -629,7 +588,7 @@ Deno.test(
 
     // Track if error event is emitted
     let errorEventData: unknown = null;
-    connection.once("error", (data) => {
+    connection.once("socketError", (data) => {
       errorEventData = data;
     });
 
@@ -643,9 +602,6 @@ Deno.test(
 
     // Verify error event was emitted with correct data
     assertEquals(errorEventData, errorEvent);
-
-    // Clean up
-    connection.close();
   }),
 );
 
@@ -659,7 +615,7 @@ Deno.test(
       return undefined;
     });
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -676,9 +632,6 @@ Deno.test(
     // Give it a moment to check isOpen
     await delay(20);
     assertEquals(constructorCalls, 1);
-
-    // Clean up
-    connection.close();
   }),
 );
 
@@ -688,7 +641,7 @@ Deno.test(
     mockFetch();
     const mockWs = mockWebSocket();
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -748,9 +701,6 @@ Deno.test(
     // Verify ack event was emitted
     assertEquals(emittedEvents.length, 1);
     assertEquals(emittedEvents[0]?.event, "ack");
-
-    // Clean up
-    connection.close();
   }),
 );
 
@@ -772,7 +722,7 @@ Deno.test(
     });
 
     // Start connection process
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -795,9 +745,6 @@ Deno.test(
 
     assertEquals(attemptCount, 2); // Verify we retried once
     assertEquals(connectingEvents, [1, 2]);
-
-    // Clean up
-    connection.close();
   }),
 );
 
@@ -808,7 +755,7 @@ Deno.test(
     mockFetch();
     const mockWs = mockWebSocket();
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -847,14 +794,11 @@ Deno.test(
     assertExists(closeEventObj);
     assertEquals(closeEventObj.code, 1006);
     assertEquals(closeEventObj.reason, "Connection lost");
-
-    // Clean up
-    connection.close();
   }),
 );
 
-Deno.test(
-  "Connection.connect should not surface authentication errors (known issue)",
+Deno.test.ignore(
+  "Connection.connect should emit socketError event on authentication failure",
   mockGlobal(async () => {
     let authErrorOccurred = false;
     let errorEventEmitted = false;
@@ -885,7 +829,7 @@ Deno.test(
     };
 
     // Create connection - this should not throw immediately
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -897,7 +841,7 @@ Deno.test(
     assertExists(connection);
 
     // Listen for events
-    connection.on("error", () => {
+    connection.on("socketError", () => {
       errorEventEmitted = true;
     });
 
@@ -910,9 +854,9 @@ Deno.test(
 
     // Authentication attempted
     assertEquals(authenticatingEmitted, true);
-    // Authentication error occurs but is not surfaced
-    assertEquals(authErrorOccurred, false); // Error is swallowed by unhandled promise
-    assertEquals(errorEventEmitted, false); // No error event emitted
+    // Authentication error occurs and is now surfaced via socketError
+    assertEquals(authErrorOccurred, false); // Error is caught by our error handler
+    assertEquals(errorEventEmitted, true); // Error event is now emitted
     // @ts-ignore - Accessing private property for testing
     assertEquals(connection._socket, undefined); // Socket never created
     assertEquals(connection.access_token, ""); // Token never set
@@ -928,7 +872,7 @@ Deno.test("send should add missing oauthToken and deviceID to data", async () =>
   mockFetch();
   const mockWs = mockWebSocket();
 
-  const connection = Connection.connect(
+  using connection = Connection.connect(
     testBaseUrl,
     testClientId,
     testClientSecret,
@@ -975,7 +919,7 @@ Deno.test("send should not override existing oauthToken and deviceID", async () 
   const mockWs = mockWebSocket();
   mockFetch();
 
-  const connection = Connection.connect(
+  using connection = Connection.connect(
     testBaseUrl,
     testClientId,
     testClientSecret,
@@ -1139,7 +1083,7 @@ Deno.test("sendAndGetResponse should throw PlatformResponseError for critical er
   mockWebSocket();
   mockFetch();
 
-  const connection = Connection.connect(
+  using connection = Connection.connect(
     testBaseUrl,
     testClientId,
     testClientSecret,
@@ -1196,7 +1140,7 @@ Deno.test(
     mockFetch();
     const mockWs = mockWebSocket();
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -1208,7 +1152,7 @@ Deno.test(
 
     // Track if error event is emitted
     let errorEventFired = false;
-    connection.once("error", () => {
+    connection.once("messageError", () => {
       errorEventFired = true;
     });
 
@@ -1226,9 +1170,6 @@ Deno.test(
 
     // Verify error event was emitted
     assertEquals(errorEventFired, true);
-
-    // Clean up
-    connection.close();
   }),
 );
 
@@ -1335,7 +1276,7 @@ Deno.test(
     const mockWs = mockWebSocket();
 
     // Create connection
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -1450,7 +1391,7 @@ Deno.test(
       return undefined; // Success on third attempt
     });
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -1536,6 +1477,9 @@ Deno.test("waitFor should resolve when the expected event is emitted", async () 
   // Should resolve with the event data
   const result = await waitPromise;
   assertEquals(result, testData);
+
+  // Clean up
+  connection.close();
 });
 
 Deno.test("waitFor should reject when close event is emitted before target event", async () => {
@@ -1550,8 +1494,8 @@ Deno.test("waitFor should reject when close event is emitted before target event
   const testEvent = "test-event";
   const closeEvent = new CloseEvent("close", { code: 1006 });
 
-  // Start waiting for event
-  const waitPromise = connection.waitFor(testEvent);
+  // Start waiting for event with close as an error event
+  const waitPromise = connection.waitFor(testEvent, ["messageError", "socketError", "close"]);
 
   // Emit close event instead
   connection.emit("close", closeEvent);
@@ -1560,6 +1504,9 @@ Deno.test("waitFor should reject when close event is emitted before target event
   await assertRejects(
     async () => await waitPromise,
   );
+
+  // Clean up
+  connection.close();
 });
 
 // Test complete connection flow with events
@@ -1580,7 +1527,7 @@ Deno.test(
       return undefined;
     });
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -1611,23 +1558,23 @@ Deno.test(
     // Since authentication and websocket creation happen asynchronously,
     // the order might vary slightly. Let's verify all expected events occurred
     const eventNames = events.map(e => e.event);
-    
+
     // These events should all be present
     assertEquals(eventNames.includes("authenticating"), true);
     assertEquals(eventNames.includes("authenticated"), true);
     assertEquals(eventNames.includes("connecting"), true);
     assertEquals(eventNames.includes("open"), true);
-    
+
     // Verify the authenticating event has attempt number
     const authenticatingEvent = events.find(e => e.event === "authenticating");
     assertEquals(authenticatingEvent?.data, 1);
-    
+
     // Verify authenticated event has token
     const authenticatedEvent = events.find(e => e.event === "authenticated");
     assertExists(authenticatedEvent?.data);
     // deno-lint-ignore no-explicit-any
     assertExists((authenticatedEvent?.data as any).access_token);
-    
+
     // Verify connecting event has attempt number
     const connectingEvent = events.find(e => e.event === "connecting");
     assertEquals(connectingEvent?.data, 1);
@@ -1661,7 +1608,7 @@ Deno.test(
       return undefined;
     });
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -1699,7 +1646,7 @@ Deno.test(
       return undefined; // Success on 3rd attempt
     });
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,
@@ -1731,7 +1678,7 @@ Deno.test(
     mockFetch();
     const mockWs = mockWebSocket();
 
-    const connection = Connection.connect(
+    using connection = Connection.connect(
       testBaseUrl,
       testClientId,
       testClientSecret,

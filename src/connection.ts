@@ -1,6 +1,6 @@
 import { EventEmitter } from "./models/EventEmitter.ts";
 import { helpers } from "./helper.ts";
-import { PlatformResponseError } from "./models/platformResponseError.ts";
+import { PlatformResponseError } from "./models/index.ts";
 import { AuthenticationError } from "./models/Errors.ts";
 import type { ApplicationData, PlatformData, UniqueId } from "cuss2-typescript-models";
 import type { AuthResponse } from "./models/authResponse.ts";
@@ -10,12 +10,12 @@ import { retry } from "async/retry";
 import { WebSocket } from "npm:ws@8";
 
 // const log = console.log
-// Unused parameters are intentionally ignoreddeno cache --clear
 const log = (..._args: unknown[]) => {};
 
 interface ConnectionEvents {
   message: [PlatformData];
-  error: [unknown];
+  messageError: [unknown];
+  socketError: [unknown];
   close: [CloseEvent];
   open: [];
   authenticating: [number];
@@ -25,7 +25,7 @@ interface ConnectionEvents {
 
 // These are needed for overriding during testing
 export const global = {
-  WebSocket: WebSocket,
+  WebSocket,
   fetch: globalThis.fetch,
   clearTimeout: globalThis.clearTimeout.bind(globalThis),
   setTimeout: globalThis.setTimeout.bind(globalThis),
@@ -99,7 +99,7 @@ export class Connection extends EventEmitter {
     let attempts = 0;
 
     const result = await retry(async () => {
-      console.log(`Retrying client '${this._auth.client_id}'`);
+      log("info", `Retrying client '${this._auth.client_id}'`);
       this.emit('authenticating', ++attempts);
       const response = await global.fetch(this._auth.url, {
         method: "POST",
@@ -212,7 +212,6 @@ export class Connection extends EventEmitter {
 
     retry(() => new Promise<boolean>((resolve, reject) => {
       if (this.isOpen) {
-        log("error", "open socket already exists");
         return resolve(true);
       }
       this.emit("connecting", ++attempts);
@@ -256,7 +255,7 @@ export class Connection extends EventEmitter {
         }
         catch (error) {
           log("error", "Error processing message:", error);
-          this.emit("error", error);
+          this.emit("messageError", error);
         }
       };
 
@@ -279,7 +278,7 @@ export class Connection extends EventEmitter {
 
       socket.onerror = (e: Event) => {
         log("Websocket Error:", e);
-        this.emit("error", e);
+        this.emit("socketError", e);
       };
     }), this._retryOptions);
   }
@@ -308,7 +307,7 @@ export class Connection extends EventEmitter {
     ) {
       meta.deviceID = this.deviceID;
     }
-    const promise = this.waitFor(reqId);
+    const promise = this.waitFor(reqId, ["messageError", "socketError", "close"]);
     this._socket.send(JSON.stringify(applicationData));
     const message = (await promise) as PlatformData;
     const messageCode = message.meta?.messageCode;

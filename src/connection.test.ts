@@ -797,7 +797,7 @@ Deno.test(
   }),
 );
 
-Deno.test.ignore(
+Deno.test(
   "Connection.connect should emit socketError event on authentication failure",
   mockGlobal(async () => {
     let authErrorOccurred = false;
@@ -841,7 +841,7 @@ Deno.test.ignore(
     assertExists(connection);
 
     // Listen for events
-    connection.on("socketError", () => {
+    connection.on("authenticationError", () => {
       errorEventEmitted = true;
     });
 
@@ -997,7 +997,7 @@ Deno.test("sendAndGetResponse should throw error if socket is not connected", as
       await connection.sendAndGetResponse(testData);
     },
     Error,
-    "WebSocket is not connected",
+    "WebSocket connection not established",
   );
 });
 
@@ -1022,6 +1022,8 @@ Deno.test("sendAndGetResponse should send data and wait for response", async () 
   const mockWs = mockWebSocket();
   // @ts-ignore - Accessing private property for testing
   connection._socket = mockWs;
+  // Set the WebSocket to OPEN state
+  mockWs.readyState = MockWebSocket.OPEN;
 
   // Mock the waitFor method
   connection.waitFor = (event: string) => {
@@ -1189,6 +1191,8 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
   const mockWs = mockWebSocket();
   // @ts-ignore - Accessing private property for testing
   connection._socket = mockWs;
+  // Set the WebSocket to OPEN state
+  mockWs.readyState = MockWebSocket.OPEN;
 
   // Mock the waitFor method
   connection.waitFor = () => {

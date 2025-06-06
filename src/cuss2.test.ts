@@ -6,7 +6,6 @@ import { StateChange } from "./models/stateChange.ts";
 import { EventEmitter } from "./models/EventEmitter.ts";
 import {
   ApplicationStateCodes as AppState,
-  type ApplicationData,
   type ComponentList,
   type EnvironmentLevel,
   type PlatformData,
@@ -409,6 +408,54 @@ Deno.test("1.1 - Connected getter should reject on authentication error", async 
 
 // Test Category 2: State Management Tests
 
+// Helper to simulate state change via platform message
+async function simulateStateChange(
+  cuss2: Cuss2, 
+  newState: AppState, 
+  payload?: unknown
+): Promise<void> {
+  await cuss2._handleWebSocketMessage({
+    meta: {
+      currentApplicationState: { applicationStateCode: newState },
+      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
+    },
+    payload: payload || {}
+  } as unknown as PlatformData);
+}
+
+// Helper to set current state
+function setCurrentState(cuss2: Cuss2, state: AppState): void {
+  // @ts-ignore - accessing private property for testing
+  cuss2._currentState = new StateChange(state, state);
+}
+
+// Helper to create mock cuss2 with state request tracking
+function createMockCuss2WithStateTracking() {
+  const { cuss2, mockConnection } = createMockCuss2();
+  
+  // Mock sendAndGetResponse for state requests
+  mockConnection.sendAndGetResponse = (_data: unknown) => {
+    return Promise.resolve({
+      meta: { messageCode: "OK" },
+      payload: {}
+    } as PlatformData);
+  };
+  
+  return { cuss2, mockConnection };
+}
+
+// Helper to test invalid state transition
+async function testInvalidStateTransition(
+  cuss2: Cuss2, 
+  fromState: AppState, 
+  requestMethod: () => Promise<PlatformData | undefined>
+): Promise<void> {
+  setCurrentState(cuss2, fromState);
+  const result = await requestMethod();
+  assertEquals(result, undefined);
+  assertEquals(cuss2.state, fromState);
+}
+
 Deno.test("2.1 - Initial state should be STOPPED", () => {
   const mockConnection = new MockConnection();
   // @ts-ignore - accessing private constructor for testing
@@ -419,7 +466,7 @@ Deno.test("2.1 - Initial state should be STOPPED", () => {
 });
 
 Deno.test("2.2 - State transitions should handle valid state transitions correctly", async () => {
-  const { cuss2, mockConnection } = createMockCuss2();
+  const { cuss2 } = createMockCuss2WithStateTracking();
 
   // Track state change events
   const stateChanges: StateChange[] = [];
@@ -427,140 +474,98 @@ Deno.test("2.2 - State transitions should handle valid state transitions correct
     stateChanges.push(change);
   });
 
-  // Mock sendAndGetResponse for state requests
-  mockConnection.sendAndGetResponse = (_data: unknown) => {
-    return Promise.resolve({
-      meta: { messageCode: "OK" },
-      payload: {}
-    } as PlatformData);
-  };
+  // Helper to test a state transition
+  async function testStateTransition(
+    fromState: AppState,
+    toState: AppState,
+    requestMethod: () => Promise<PlatformData | undefined>,
+    expectedIndex: number,
+    payload?: unknown
+  ) {
+    setCurrentState(cuss2, fromState);
+    await requestMethod();
+    await simulateStateChange(cuss2, toState, payload);
+    
+    assertEquals(cuss2.state, toState);
+    assertEquals(stateChanges.length, expectedIndex + 1);
+    assertEquals(stateChanges[expectedIndex].previous, fromState);
+    assertEquals(stateChanges[expectedIndex].current, toState);
+  }
+
+  // Mock disable for components
+  cuss2._disableAllComponents = () => Promise.resolve();
 
   // Test STOPPED → INITIALIZE
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.STOPPED, AppState.STOPPED);
-  await cuss2.requestInitializeState();
-
-  // Simulate platform response
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.INITIALIZE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {}
-  } as unknown as PlatformData);
-
-  assertEquals(cuss2.state, AppState.INITIALIZE);
-  assertEquals(stateChanges.length, 1);
-  assertEquals(stateChanges[0].previous, AppState.STOPPED);
-  assertEquals(stateChanges[0].current, AppState.INITIALIZE);
+  await testStateTransition(
+    AppState.STOPPED,
+    AppState.INITIALIZE,
+    () => cuss2.requestInitializeState(),
+    0
+  );
 
   // Test INITIALIZE → UNAVAILABLE
-  await cuss2.requestUnavailableState();
-
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.UNAVAILABLE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {}
-  } as unknown as PlatformData);
-
-  assertEquals(cuss2.state, AppState.UNAVAILABLE);
-  assertEquals(stateChanges.length, 2);
-  assertEquals(stateChanges[1].previous, AppState.INITIALIZE);
-  assertEquals(stateChanges[1].current, AppState.UNAVAILABLE);
+  await testStateTransition(
+    AppState.INITIALIZE,
+    AppState.UNAVAILABLE,
+    () => cuss2.requestUnavailableState(),
+    1
+  );
 
   // Test UNAVAILABLE → AVAILABLE
-  await cuss2.requestAvailableState();
-
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.AVAILABLE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {}
-  } as unknown as PlatformData);
-
-  assertEquals(cuss2.state, AppState.AVAILABLE);
-  assertEquals(stateChanges.length, 3);
-  assertEquals(stateChanges[2].previous, AppState.UNAVAILABLE);
-  assertEquals(stateChanges[2].current, AppState.AVAILABLE);
+  await testStateTransition(
+    AppState.UNAVAILABLE,
+    AppState.AVAILABLE,
+    () => cuss2.requestAvailableState(),
+    2
+  );
 
   // Test AVAILABLE → ACTIVE
-  await cuss2.requestActiveState();
-
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.ACTIVE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {
+  await testStateTransition(
+    AppState.AVAILABLE,
+    AppState.ACTIVE,
+    () => cuss2.requestActiveState(),
+    3,
+    {
       applicationActivation: {
         executionMode: "SAM",
         accessibleMode: false,
         languageID: "en-US"
       }
     }
-  } as unknown as PlatformData);
-
-  assertEquals(cuss2.state, AppState.ACTIVE);
-  assertEquals(stateChanges.length, 4);
-  assertEquals(stateChanges[3].previous, AppState.AVAILABLE);
-  assertEquals(stateChanges[3].current, AppState.ACTIVE);
+  );
 
   // Test ACTIVE → AVAILABLE
-  await cuss2.requestAvailableState();
-
-  // Mock disable for components
-  cuss2._disableAllComponents = () => {
-    return Promise.resolve();
-  };
-
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.AVAILABLE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {}
-  } as unknown as PlatformData);
-
-  assertEquals(cuss2.state, AppState.AVAILABLE);
-  assertEquals(stateChanges.length, 5);
-  assertEquals(stateChanges[4].previous, AppState.ACTIVE);
-  assertEquals(stateChanges[4].current, AppState.AVAILABLE);
+  await testStateTransition(
+    AppState.ACTIVE,
+    AppState.AVAILABLE,
+    () => cuss2.requestAvailableState(),
+    4
+  );
 });
 
 Deno.test("2.3 - Invalid state transitions should not allow invalid state transitions", async () => {
-  const { cuss2, mockConnection } = createMockCuss2();
-
-  // Mock sendAndGetResponse
-  mockConnection.sendAndGetResponse = (_data: unknown) => {
-    return Promise.resolve({
-      meta: { messageCode: "OK" },
-      payload: {}
-    } as PlatformData);
-  };
+  const { cuss2 } = createMockCuss2WithStateTracking();
 
   // Test STOPPED → AVAILABLE (invalid, should return undefined)
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.STOPPED, AppState.STOPPED);
-  const result1 = await cuss2.requestAvailableState();
-  assertEquals(result1, undefined);
-  assertEquals(cuss2.state, AppState.STOPPED);
+  await testInvalidStateTransition(
+    cuss2,
+    AppState.STOPPED,
+    () => cuss2.requestAvailableState()
+  );
 
   // Test INITIALIZE → ACTIVE (invalid)
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.INITIALIZE, AppState.INITIALIZE);
-  const result2 = await cuss2.requestActiveState();
-  assertEquals(result2, undefined);
-  assertEquals(cuss2.state, AppState.INITIALIZE);
+  await testInvalidStateTransition(
+    cuss2,
+    AppState.INITIALIZE,
+    () => cuss2.requestActiveState()
+  );
 
   // Test UNAVAILABLE → ACTIVE (invalid, must go through AVAILABLE)
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
-  const result3 = await cuss2.requestActiveState();
-  assertEquals(result3, undefined);
-  assertEquals(cuss2.state, AppState.UNAVAILABLE);
+  await testInvalidStateTransition(
+    cuss2,
+    AppState.UNAVAILABLE,
+    () => cuss2.requestActiveState()
+  );
 });
 
 Deno.test("2.4 - State change events should emit stateChange events with proper StateChange objects", async () => {
@@ -574,13 +579,7 @@ Deno.test("2.4 - State change events should emit stateChange events with proper 
   });
 
   // Simulate state change from UNAVAILABLE to AVAILABLE
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.AVAILABLE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {}
-  } as unknown as PlatformData);
+  await simulateStateChange(cuss2, AppState.AVAILABLE);
 
   // Verify event was emitted
   assertEquals(emittedChanges.length, 1);
@@ -640,31 +639,22 @@ Deno.test("2.2 - State transitions should emit activated event when entering ACT
   });
 
   // Set state to AVAILABLE (required for ACTIVE transition)
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.AVAILABLE, AppState.AVAILABLE);
+  setCurrentState(cuss2, AppState.AVAILABLE);
+
+  const activationPayload = {
+    applicationActivation: {
+      executionMode: "MAM",
+      accessibleMode: true,
+      languageID: "fr-FR"
+    }
+  };
 
   // Simulate transition to ACTIVE
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.ACTIVE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {
-      applicationActivation: {
-        executionMode: "MAM",
-        accessibleMode: true,
-        languageID: "fr-FR"
-      }
-    }
-  } as unknown as PlatformData);
+  await simulateStateChange(cuss2, AppState.ACTIVE, activationPayload);
 
   // Verify activated event was emitted
   assertEquals(activatedEmitted, true);
-  assertEquals(activationData, {
-    executionMode: "MAM",
-    accessibleMode: true,
-    languageID: "fr-FR"
-  });
+  assertEquals(activationData, activationPayload.applicationActivation);
 
   // Verify instance properties were set
   assertEquals(cuss2.multiTenant, true);
@@ -685,17 +675,10 @@ Deno.test("2.2 - State transitions should emit deactivated event when leaving AC
   });
 
   // Set state to ACTIVE
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.ACTIVE, AppState.ACTIVE);
+  setCurrentState(cuss2, AppState.ACTIVE);
 
   // Simulate transition from ACTIVE to AVAILABLE
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: AppState.AVAILABLE },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
-    },
-    payload: {}
-  } as unknown as PlatformData);
+  await simulateStateChange(cuss2, AppState.AVAILABLE);
 
   // Verify deactivated event was emitted
   assertEquals(deactivatedEmitted, true);
@@ -703,15 +686,7 @@ Deno.test("2.2 - State transitions should emit deactivated event when leaving AC
 });
 
 Deno.test("2.2 - State transitions should disable all components when transitioning from ACTIVE", async () => {
-  const { cuss2, mockConnection } = createMockCuss2();
-
-  // Mock sendAndGetResponse
-  mockConnection.sendAndGetResponse = () => {
-    return Promise.resolve({
-      meta: { messageCode: "OK" },
-      payload: {}
-    } as PlatformData);
-  };
+  const { cuss2 } = createMockCuss2WithStateTracking();
 
   // Track if _disableAllComponents was called
   let disableAllCalled = false;
@@ -721,8 +696,7 @@ Deno.test("2.2 - State transitions should disable all components when transition
   };
 
   // Set state to ACTIVE
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.ACTIVE, AppState.ACTIVE);
+  setCurrentState(cuss2, AppState.ACTIVE);
 
   // Request transition to AVAILABLE
   await cuss2.requestAvailableState();

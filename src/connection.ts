@@ -14,13 +14,14 @@ const log = (..._args: unknown[]) => {};
 
 interface ConnectionEvents {
   message: [PlatformData];
-  messageError: [unknown];
-  socketError: [unknown];
   close: [CloseEvent];
   open: [];
   authenticating: [number];
   connecting: [number];
   authenticated: [typeof Connection.prototype._auth];
+  messageError: [unknown];
+  socketError: [unknown];
+  authenticationError: [AuthenticationError];
 }
 
 // These are needed for overriding during testing
@@ -129,7 +130,8 @@ export class Connection extends EventEmitter {
 
     // Check if the result is an authentication error
     if (result instanceof AuthenticationError) {
-      throw result;
+      this.emit('authenticationError', result);
+      throw result; // Re-throw the error to stop further processing
     }
 
     attempts = 0; // Reset attempts on successful authentication
@@ -195,15 +197,11 @@ export class Connection extends EventEmitter {
 
       if (expires > 0) {
         log("info", `access_token expires in ${expires} seconds`);
-        this._refresher = global.setTimeout(
-          () => this._authenticateAndQueueTokenRefresh(),
-          (expires - 1) * 1000,
-        );
+        this._refresher = global.setTimeout(() => this._authenticateAndQueueTokenRefresh(), (expires - 1) * 1000);
       }
     }
     catch (error) {
       log("error", "Authentication failed:", error);
-      throw error;
     }
   }
 

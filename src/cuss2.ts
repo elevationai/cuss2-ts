@@ -111,6 +111,13 @@ export class Cuss2 extends EventEmitter {
     return this._currentState.current;
   }
 
+  get connected(): Promise<unknown> {
+    if (this.connection.isOpen && this.components) {
+      return Promise.resolve();
+    }
+    return this.waitFor('connected', ['connection.authenticationError']);
+  }
+
   private constructor(connection: Connection) {
     super();
     this.connection = connection;
@@ -138,12 +145,12 @@ export class Cuss2 extends EventEmitter {
 
   async _initialize(): Promise<undefined> {
     log("info", "Getting Environment Information");
-    const level = await this.api.getEnvironment();
+    const environment = await this.api.getEnvironment();
 
     // hydrate device id if none provided
     const deviceID = this.connection.deviceID;
     if (deviceID === "00000000-0000-0000-0000-000000000000" || deviceID === null) {
-      this.connection.deviceID = level.deviceID;
+      this.connection.deviceID = environment.deviceID;
     }
     if (!this.state) {
       throw new Error("Platform in abnormal state.");

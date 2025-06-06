@@ -404,8 +404,7 @@ Deno.test(
   }),
 );
 
-Deno.test(
-  "_authenticateAndQueueTokenRefresh should throw error when authorization fails",
+Deno.test("_authenticateAndQueueTokenRefresh should emit authenticationError event when authorization fails",
   mockGlobal(async () => {
     global.fetch = () => {
       return Promise.resolve(new MockResponse(401, { error: "invalid_client" }) as unknown as Response);
@@ -419,15 +418,27 @@ Deno.test(
       testTokenUrl,
     );
 
-    // Verify authenticate throws error
-    await assertRejects(
-      async () => {
-        // @ts-ignore - Accessing private method for testing
-        await connection._authenticateAndQueueTokenRefresh();
-      },
-      AuthenticationError,
-      "Invalid Credentials",
-    );
+    let authErrorEmitted = false;
+    let emittedError: AuthenticationError | null = null;
+
+    connection.on("authenticationError", (error) => {
+      authErrorEmitted = true;
+      emittedError = error;
+    });
+
+    // Call the method - it should not throw but emit an event
+    // @ts-ignore - Accessing private method for testing
+    await connection._authenticateAndQueueTokenRefresh();
+
+    // Verify the authenticationError event was emitted
+    assertEquals(authErrorEmitted, true);
+    assertExists(emittedError);
+    // Type assertion to allow instanceof check
+    const error = emittedError as unknown;
+    assertEquals(error instanceof AuthenticationError, true);
+    const authError = emittedError as AuthenticationError;
+    assertEquals(authError.message, "Invalid Credentials");
+    assertEquals(authError.status, 401);
   }),
 );
 

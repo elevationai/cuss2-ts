@@ -30,7 +30,7 @@ async function main() {
 
   try {
     console.log('Waiting for connection to be established...');
-    await cuss2.waitFor('connected');
+    await cuss2.connected;
 
     // Now the connection is established.
     // cuss2.environment & cuss2.components will now be populated

@@ -3,11 +3,8 @@ import { delay } from "jsr:@std/async/delay";
 import { Cuss2 } from "./cuss2.ts";
 import { Connection } from "./connection.ts";
 import { StateChange } from "./models/stateChange.ts";
-import { EventEmitter } from "./models/EventEmitter.ts";
 import {
   ApplicationStateCodes as AppState,
-  type ComponentList,
-  type EnvironmentLevel,
   type PlatformData,
 } from "cuss2-typescript-models";
 import {
@@ -15,127 +12,25 @@ import {
   ComponentTypes,
   CussDataTypes,
   DeviceTypes,
-  type EnvironmentComponent,
   MediaTypes,
 } from "./types/modelExtensions.ts";
+import {
+  createMockCharacteristics,
+  createMockComponent,
+  createMockComponentList,
+  createMockCuss2,
+  createMockCuss2WithStateTracking,
+  createMockEnvironment,
+  DEFAULT_DEVICE_ID,
+  MockConnection,
+  setCurrentState,
+  simulateStateChange,
+  testApiMethodRejectsWhenDisconnected,
+  testInitializationThrowsForState,
+  testInvalidStateTransition,
+} from "./test-helpers.ts";
 
-// Test constants
-const DEFAULT_DEVICE_ID = "00000000-0000-0000-0000-000000000000";
-const TEST_DEVICE_ID = "test-device-123";
-const CONNECTION_ERROR = "Connection not established. Please await cuss2.connected before making API calls.";
 
-// Mock Connection class
-class MockConnection extends EventEmitter {
-  isOpen = true;
-  deviceID = DEFAULT_DEVICE_ID;
-  _socket = {
-    close: (_code?: number, _reason?: string) => {},
-  };
-
-  sendAndGetResponse(_data: unknown): Promise<PlatformData> {
-    return Promise.resolve({
-      meta: { messageCode: "OK" },
-      payload: {}
-    } as unknown as PlatformData);
-  }
-
-  static connect(
-    _wss: string,
-    _client_id: string,
-    _client_secret: string,
-    _deviceID: string,
-    _tokenURL?: string,
-  ): MockConnection {
-    return new MockConnection();
-  }
-}
-
-// Helper to create mock environment
-function createMockEnvironment(overrides?: Partial<EnvironmentLevel>): EnvironmentLevel {
-  return {
-    deviceID: TEST_DEVICE_ID,
-    platformVersionNumber: "2.0",
-    sessionTimeout: 300,
-    killTimeout: 60,
-    deviceLocation: "TEST",
-    cussVersions: ["2.0"],
-    platformID: "test-platform",
-    ...overrides,
-  } as unknown as EnvironmentLevel;
-}
-
-// Helper function to create mock ComponentCharacteristics
-function createMockCharacteristics(overrides: Partial<ComponentCharacteristics> = {}): ComponentCharacteristics {
-  return {
-    dsTypesList: [] as CussDataTypes[],
-    mediaTypesList: [] as MediaTypes[],
-    deviceTypesList: [] as DeviceTypes[],
-    ...overrides,
-  } as ComponentCharacteristics;
-}
-
-// Helper function to create a mock EnvironmentComponent
-function createMockComponent(overrides: Partial<EnvironmentComponent> = {}): EnvironmentComponent {
-  return {
-    componentID: 1,
-    componentType: ComponentTypes.DATA_INPUT,
-    componentDescription: "Test Component",
-    componentCharacteristics: [],
-    linkedComponentIDs: overrides.linkedComponentIDs || [],
-    ...overrides,
-  } as EnvironmentComponent;
-}
-
-// Helper to create mock component list
-function createMockComponentList(): ComponentList {
-  return [
-    createMockComponent({
-      componentID: 1,
-      componentCharacteristics: [
-        createMockCharacteristics({
-          deviceTypesList: [DeviceTypes.PRINT],
-          mediaTypesList: [MediaTypes.BAGGAGETAG],
-        }),
-      ],
-    }),
-    createMockComponent({
-      componentID: 2,
-      componentCharacteristics: [
-        createMockCharacteristics({
-          deviceTypesList: [DeviceTypes.PRINT],
-          mediaTypesList: [MediaTypes.BOARDINGPASS],
-        }),
-      ],
-    }),
-  ] as unknown as ComponentList;
-}
-
-// Helper to create a Cuss2 instance with mocked dependencies
-function createMockCuss2(connection?: MockConnection) {
-  const mockConnection = connection || new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
-
-  // Mock the api methods
-  cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment());
-  cuss2.api.getComponents = () => Promise.resolve(createMockComponentList());
-  cuss2.queryComponents = () => Promise.resolve(true);
-
-  // Set initial state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
-
-  return { cuss2, mockConnection };
-}
-
-// Helper to test API method rejection when connection is closed
-async function testApiMethodRejectsWhenDisconnected(_cuss2: Cuss2, methodCall: () => Promise<unknown>) {
-  await assertRejects(
-    methodCall,
-    Error,
-    CONNECTION_ERROR,
-  );
-}
 
 // Test Category 1: Connection and Initialization Tests
 
@@ -313,22 +208,6 @@ Deno.test("1.2 - Initialization should throw error when platform is in abnormal 
   );
 });
 
-async function testInitializationThrowsForState(state: AppState) {
-  const { cuss2 } = createMockCuss2();
-
-  // Set state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(state, state);
-
-  // Trigger initialization and expect error
-  await assertRejects(
-    // @ts-ignore - accessing private method for testing
-    () => cuss2._initialize(),
-    Error,
-    `Platform has ${state} the application`,
-  );
-}
-
 Deno.test("1.2 - Initialization should throw error when platform has SUSPENDED the application", async () => {
   await testInitializationThrowsForState(AppState.SUSPENDED);
 });
@@ -450,54 +329,6 @@ Deno.test("1.1 - Connected getter should reject on authentication error", async 
 });
 
 // Test Category 2: State Management Tests
-
-// Helper to simulate state change via platform message
-async function simulateStateChange(
-  cuss2: Cuss2,
-  newState: AppState,
-  payload?: unknown,
-): Promise<void> {
-  await cuss2._handleWebSocketMessage({
-    meta: {
-      currentApplicationState: { applicationStateCode: newState },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST",
-    },
-    payload: payload || {},
-  } as unknown as PlatformData);
-}
-
-// Helper to set current state
-function setCurrentState(cuss2: Cuss2, state: AppState): void {
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(state, state);
-}
-
-// Helper to create mock cuss2 with state request tracking
-function createMockCuss2WithStateTracking() {
-  const { cuss2, mockConnection } = createMockCuss2();
-
-  // Mock sendAndGetResponse for state requests
-  mockConnection.sendAndGetResponse = (_data: unknown) => {
-    return Promise.resolve({
-      meta: { messageCode: "OK" },
-      payload: {},
-    } as PlatformData);
-  };
-
-  return { cuss2, mockConnection };
-}
-
-// Helper to test invalid state transition
-async function testInvalidStateTransition(
-  cuss2: Cuss2,
-  fromState: AppState,
-  requestMethod: () => Promise<PlatformData | undefined>,
-): Promise<void> {
-  setCurrentState(cuss2, fromState);
-  const result = await requestMethod();
-  assertEquals(result, undefined);
-  assertEquals(cuss2.state, fromState);
-}
 
 Deno.test("2.1 - Initial state should be STOPPED", () => {
   const mockConnection = new MockConnection();

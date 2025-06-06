@@ -12,23 +12,23 @@ const config = {
 };
 
 async function main() {
+  // Connect to the CUSS2 platform
+  console.log("Connecting to CUSS2 platform...");
+  const cuss2 = Cuss2.connect(
+    config.wss,
+    config.clientId,
+    config.clientSecret,
+    config.deviceID,
+    config.tokenURL,
+  );
+
+  // At this point, you have a Cuss2 instance - but it will be in the process
+  // of trying to connect. You can listen for events to know when it's ready.
+  cuss2.connection.on('connecting', (attemptCount) => console.log('Connecting to WebSocket... Attempt:', attemptCount))
+  cuss2.connection.on('authenticating', (attemptCount) => console.log('Authenticating... Attempt:', attemptCount))
+  cuss2.connection.once('authenticated', (auth) => console.log('Authenticated:', auth))
+
   try {
-    // Connect to the CUSS2 platform
-    console.log("Connecting to CUSS2 platform...");
-    const cuss2 = Cuss2.connect(
-      config.wss,
-      config.clientId,
-      config.clientSecret,
-      config.deviceID,
-      config.tokenURL,
-    );
-
-    // At this point, you have a Cuss2 instance - but it will be in the process
-    // of trying to connect. You can listen for events to know when it's ready.
-    cuss2.connection.on('connecting', (attemptCount) => console.log('Connecting to WebSocket... Attempt:', attemptCount))
-    cuss2.connection.on('authenticating', (attemptCount) => console.log('Authenticating... Attempt:', attemptCount))
-    cuss2.connection.once('authenticated', (auth) => console.log('Authenticated:', auth))
-
     console.log('Waiting for connection to be established...');
     await cuss2.waitFor('connected');
 

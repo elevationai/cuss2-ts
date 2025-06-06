@@ -11,10 +11,15 @@ import {
   type PlatformData,
 } from "cuss2-typescript-models";
 
+// Test constants
+const DEFAULT_DEVICE_ID = "00000000-0000-0000-0000-000000000000";
+const TEST_DEVICE_ID = "test-device-123";
+const CONNECTION_ERROR = "Connection not established. Please await cuss2.connected before making API calls.";
+
 // Mock Connection class
 class MockConnection extends EventEmitter {
   isOpen = true;
-  deviceID = "00000000-0000-0000-0000-000000000000";
+  deviceID = DEFAULT_DEVICE_ID;
   _socket = {
     close: (_code?: number, _reason?: string) => {},
   };
@@ -34,17 +39,17 @@ class MockConnection extends EventEmitter {
   }
 }
 
-
 // Helper to create mock environment
-function createMockEnvironment(): EnvironmentLevel {
+function createMockEnvironment(overrides?: Partial<EnvironmentLevel>): EnvironmentLevel {
   return {
-    deviceID: "test-device-123",
+    deviceID: TEST_DEVICE_ID,
     platformVersionNumber: "2.0",
     sessionTimeout: 300,
     killTimeout: 60,
     deviceLocation: "TEST",
     cussVersions: ["2.0"],
     platformID: "test-platform",
+    ...overrides,
   } as unknown as EnvironmentLevel;
 }
 
@@ -60,6 +65,33 @@ function createMockComponentList(): ComponentList {
       componentType: { componentCode: "BPP" },
     },
   ] as unknown as ComponentList;
+}
+
+// Helper to create a Cuss2 instance with mocked dependencies
+function createMockCuss2(connection?: MockConnection) {
+  const mockConnection = connection || new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  // Mock the api methods
+  cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment());
+  cuss2.api.getComponents = () => Promise.resolve(createMockComponentList());
+  cuss2.queryComponents = () => Promise.resolve(true);
+
+  // Set initial state
+  // @ts-ignore - accessing private property for testing
+  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
+
+  return { cuss2, mockConnection };
+}
+
+// Helper to test API method rejection when connection is closed
+async function testApiMethodRejectsWhenDisconnected(_cuss2: Cuss2, methodCall: () => Promise<unknown>) {
+  await assertRejects(
+    methodCall,
+    Error,
+    CONNECTION_ERROR,
+  );
 }
 
 // Test Category 1: Connection and Initialization Tests
@@ -102,15 +134,13 @@ Deno.test("1.1 - Static connect() method should create a new Cuss2 instance with
 });
 
 Deno.test("1.2 - Connection event handling should handle 'open' event and initialize properly", async () => {
-  const mockConnection = new MockConnection();
   let getEnvironmentCalled = false;
   let getComponentsCalled = false;
   let queryComponentsCalled = false;
 
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
+  const { cuss2, mockConnection } = createMockCuss2();
 
-  // Mock the api methods
+  // Override mocks to track calls
   cuss2.api.getEnvironment = () => {
     getEnvironmentCalled = true;
     return Promise.resolve(createMockEnvironment());
@@ -125,10 +155,6 @@ Deno.test("1.2 - Connection event handling should handle 'open' event and initia
     queryComponentsCalled = true;
     return Promise.resolve(true);
   };
-
-  // Set initial state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
 
   // Trigger open event
   mockConnection.emit("open");
@@ -150,136 +176,39 @@ Deno.test("1.3 - Connection not established error should throw when API calls ma
   const cuss2 = new Cuss2(mockConnection);
 
   // Test various API methods
-  await assertRejects(
+  const apiMethods = [
     () => cuss2.api.getEnvironment(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.getComponents(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.getStatus(1),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.send(1, []),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.setup(1, []),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.cancel(1),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.enable(1),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.disable(1),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.offer(1),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.api.staterequest(AppState.AVAILABLE),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.requestInitializeState(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.requestUnavailableState(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.requestAvailableState(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.requestActiveState(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.requestStoppedState(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
-
-  await assertRejects(
     () => cuss2.requestReload(),
-    Error,
-    "Connection not established. Please await cuss2.connected before making API calls.",
-  );
+  ];
+
+  for (const method of apiMethods) {
+    await testApiMethodRejectsWhenDisconnected(cuss2, method);
+  }
 });
 
 Deno.test("1.4 - Device ID hydration should update deviceID from environment when default ID is used", async () => {
   const mockConnection = new MockConnection();
-  mockConnection.deviceID = "00000000-0000-0000-0000-000000000000";
-
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
+  mockConnection.deviceID = DEFAULT_DEVICE_ID;
+  const { cuss2 } = createMockCuss2(mockConnection);
 
   const testDeviceId = "actual-device-id-123";
 
   // Mock getEnvironment to return specific device ID
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve({
-      deviceID: testDeviceId,
-      platformVersionNumber: "2.0",
-      sessionTimeout: 300,
-      killTimeout: 60,
-      deviceLocation: "TEST",
-      cussVersions: ["2.0"],
-      platformID: "test-platform",
-    } as unknown as EnvironmentLevel);
-  };
-
-  // Mock getComponents
-  cuss2.api.getComponents = () => {
-    return Promise.resolve(createMockComponentList());
-  };
-
-  // Mock queryComponents
-  cuss2.queryComponents = () => Promise.resolve(true);
-
-  // Set initial state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
+  cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment({ deviceID: testDeviceId }));
 
   // Trigger initialization
   // @ts-ignore - accessing private method for testing
@@ -293,34 +222,10 @@ Deno.test("1.4 - Device ID hydration should not update deviceID when non-default
   const customDeviceId = "custom-device-id-456";
   const mockConnection = new MockConnection();
   mockConnection.deviceID = customDeviceId;
-
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
+  const { cuss2 } = createMockCuss2(mockConnection);
 
   // Mock getEnvironment to return different device ID
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve({
-      deviceID: "platform-device-id-789",
-      platformVersionNumber: "2.0",
-      sessionTimeout: 300,
-      killTimeout: 60,
-      deviceLocation: "TEST",
-      cussVersions: ["2.0"],
-      platformID: "test-platform",
-    } as unknown as EnvironmentLevel);
-  };
-
-  // Mock getComponents
-  cuss2.api.getComponents = () => {
-    return Promise.resolve(createMockComponentList());
-  };
-
-  // Mock queryComponents
-  cuss2.queryComponents = () => Promise.resolve(true);
-
-  // Set initial state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
+  cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment({ deviceID: "platform-device-id-789" }));
 
   // Trigger initialization
   // @ts-ignore - accessing private method for testing
@@ -334,36 +239,12 @@ Deno.test("1.4 - Device ID hydration should handle null deviceID", async () => {
   const mockConnection = new MockConnection();
   // @ts-ignore - setting to null for testing
   mockConnection.deviceID = null;
-
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
+  const { cuss2 } = createMockCuss2(mockConnection);
 
   const testDeviceId = "actual-device-id-123";
 
   // Mock getEnvironment to return specific device ID
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve({
-      deviceID: testDeviceId,
-      platformVersionNumber: "2.0",
-      sessionTimeout: 300,
-      killTimeout: 60,
-      deviceLocation: "TEST",
-      cussVersions: ["2.0"],
-      platformID: "test-platform",
-    } as unknown as EnvironmentLevel);
-  };
-
-  // Mock getComponents
-  cuss2.api.getComponents = () => {
-    return Promise.resolve(createMockComponentList());
-  };
-
-  // Mock queryComponents
-  cuss2.queryComponents = () => Promise.resolve(true);
-
-  // Set initial state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
+  cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment({ deviceID: testDeviceId }));
 
   // Trigger initialization
   // @ts-ignore - accessing private method for testing
@@ -374,15 +255,7 @@ Deno.test("1.4 - Device ID hydration should handle null deviceID", async () => {
 });
 
 Deno.test("1.2 - Initialization should throw error when platform is in abnormal state", async () => {
-  const mockConnection = new MockConnection();
-
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
-
-  // Mock getEnvironment
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve(createMockEnvironment());
-  };
+  const { cuss2 } = createMockCuss2();
 
   // Set state to undefined to simulate abnormal state
   // @ts-ignore - accessing private property for testing
@@ -397,59 +270,32 @@ Deno.test("1.2 - Initialization should throw error when platform is in abnormal 
   );
 });
 
-Deno.test("1.2 - Initialization should throw error when platform has SUSPENDED the application", async () => {
-  const mockConnection = new MockConnection();
+async function testInitializationThrowsForState(state: AppState) {
+  const { cuss2 } = createMockCuss2();
 
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
-
-  // Mock getEnvironment
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve(createMockEnvironment());
-  };
-
-  // Set state to SUSPENDED
+  // Set state
   // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.SUSPENDED, AppState.SUSPENDED);
+  cuss2._currentState = new StateChange(state, state);
 
   // Trigger initialization and expect error
   await assertRejects(
     // @ts-ignore - accessing private method for testing
     () => cuss2._initialize(),
     Error,
-    `Platform has ${AppState.SUSPENDED} the application`,
+    `Platform has ${state} the application`,
   );
+}
+
+Deno.test("1.2 - Initialization should throw error when platform has SUSPENDED the application", async () => {
+  await testInitializationThrowsForState(AppState.SUSPENDED);
 });
 
 Deno.test("1.2 - Initialization should throw error when platform has DISABLED the application", async () => {
-  const mockConnection = new MockConnection();
-
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
-
-  // Mock getEnvironment
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve(createMockEnvironment());
-  };
-
-  // Set state to DISABLED
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.DISABLED, AppState.DISABLED);
-
-  // Trigger initialization and expect error
-  await assertRejects(
-    // @ts-ignore - accessing private method for testing
-    () => cuss2._initialize(),
-    Error,
-    `Platform has ${AppState.DISABLED} the application`,
-  );
+  await testInitializationThrowsForState(AppState.DISABLED);
 });
 
 Deno.test("1.2 - Initialization should emit queryError when component query fails", async () => {
-  const mockConnection = new MockConnection();
-
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
+  const { cuss2 } = createMockCuss2();
 
   let queryErrorEmitted = false;
   let emittedError: unknown;
@@ -460,25 +306,9 @@ Deno.test("1.2 - Initialization should emit queryError when component query fail
     emittedError = error;
   });
 
-  // Mock getEnvironment
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve(createMockEnvironment());
-  };
-
-  // Mock getComponents
-  cuss2.api.getComponents = () => {
-    return Promise.resolve(createMockComponentList());
-  };
-
   // Mock queryComponents to fail
   const testError = new Error("Query failed");
-  cuss2.queryComponents = () => {
-    return Promise.reject(testError);
-  };
-
-  // Set initial state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
+  cuss2.queryComponents = () => Promise.reject(testError);
 
   // Trigger initialization
   // @ts-ignore - accessing private method for testing
@@ -490,10 +320,7 @@ Deno.test("1.2 - Initialization should emit queryError when component query fail
 });
 
 Deno.test("1.2 - Initialization should emit connected event after successful initialization", async () => {
-  const mockConnection = new MockConnection();
-
-  // @ts-ignore - accessing private constructor for testing
-  const cuss2 = new Cuss2(mockConnection);
+  const { cuss2 } = createMockCuss2();
 
   let connectedEmitted = false;
   let emittedInstance: unknown;
@@ -503,23 +330,6 @@ Deno.test("1.2 - Initialization should emit connected event after successful ini
     connectedEmitted = true;
     emittedInstance = instance;
   });
-
-  // Mock getEnvironment
-  cuss2.api.getEnvironment = () => {
-    return Promise.resolve(createMockEnvironment());
-  };
-
-  // Mock getComponents
-  cuss2.api.getComponents = () => {
-    return Promise.resolve(createMockComponentList());
-  };
-
-  // Mock queryComponents
-  cuss2.queryComponents = () => Promise.resolve(true);
-
-  // Set initial state
-  // @ts-ignore - accessing private property for testing
-  cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
 
   // Trigger initialization
   // @ts-ignore - accessing private method for testing

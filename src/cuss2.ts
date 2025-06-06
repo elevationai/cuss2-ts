@@ -210,9 +210,7 @@ export class Cuss2 extends EventEmitter {
         }
       }
       else if (currentState === AppState.ACTIVE) {
-        if (!payload?.applicationActivation) {
-          this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
-        }
+        this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
         this.accessibleMode = payload?.applicationActivation?.accessibleMode || false;
         this.language = payload?.applicationActivation?.languageID || "en-US";
         super.emit("activated", payload?.applicationActivation);
@@ -553,10 +551,6 @@ export class Cuss2 extends EventEmitter {
 
   async requestAvailableState(): Promise<PlatformData | undefined> {
     this._ensureConnected();
-    // allow hopping directly to AVAILABLE from INITIALIZE
-    if (this.state === AppState.INITIALIZE) {
-      await this.requestUnavailableState();
-    }
     const okToChange = this.state === AppState.UNAVAILABLE || this.state === AppState.ACTIVE;
 
     if (okToChange && this.state === AppState.ACTIVE) {

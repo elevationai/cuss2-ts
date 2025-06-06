@@ -16,7 +16,6 @@ interface DenoConfig {
 
 const denoConfig = parse(await Deno.readTextFile("./deno.jsonc")) as DenoConfig;
 
-
 const importMap = {
   imports: {
     ...denoConfig.imports,

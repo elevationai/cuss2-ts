@@ -256,7 +256,7 @@ Deno.test(
       {
         minTimeout: 10,
         maxTimeout: 50,
-      }
+      },
     );
 
     connection.on("authenticating", (attempt) => {
@@ -404,7 +404,8 @@ Deno.test(
   }),
 );
 
-Deno.test("_authenticateAndQueueTokenRefresh should emit authenticationError event when authorization fails",
+Deno.test(
+  "_authenticateAndQueueTokenRefresh should emit authenticationError event when authorization fails",
   mockGlobal(async () => {
     global.fetch = () => {
       return Promise.resolve(new MockResponse(401, { error: "invalid_client" }) as unknown as Response);
@@ -558,7 +559,7 @@ Deno.test(
     });
 
     // Wait for authentication and websocket creation
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // @ts-ignore - Accessing private property for testing
     assertEquals(connection._socket, mockWs);
@@ -584,7 +585,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // Track if error event is emitted
     let errorEventData: unknown = null;
@@ -623,7 +624,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     assertEquals(connection.isOpen, true);
 
@@ -649,7 +650,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // Track emitted events
     const emittedEvents: { event: string; data: unknown }[] = [];
@@ -737,7 +738,7 @@ Deno.test(
       connectingEvents.push(attempt);
     });
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // Verify connection succeeded after retry
     assertExists(connection);
@@ -763,7 +764,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // Track if close event is emitted
     let closeEventFired = false;
@@ -819,7 +820,8 @@ Deno.test(
           if (typeof callback === "function") {
             callback();
           }
-        } catch (_e) {
+        }
+        catch (_e) {
           authErrorOccurred = true;
           // Swallow the error to prevent test failure
         }
@@ -862,7 +864,7 @@ Deno.test(
     assertEquals(connection.access_token, ""); // Token never set
 
     // Clean up timers
-    timeouts.forEach(id => clearTimeout(id));
+    timeouts.forEach((id) => clearTimeout(id));
     connection.close();
   }),
 );
@@ -880,7 +882,7 @@ Deno.test("send should add missing oauthToken and deviceID to data", async () =>
     testTokenUrl,
   );
 
-  await connection.waitFor('open');
+  await connection.waitFor("open");
 
   // Create test data without oauthToken and deviceID
   // @ts-ignore - Using simplified test data structure
@@ -927,7 +929,7 @@ Deno.test("send should not override existing oauthToken and deviceID", async () 
     testTokenUrl,
   );
 
-  await connection.waitFor('open');
+  await connection.waitFor("open");
 
   // Set access token (this should not be used)
   connection.access_token = testToken;
@@ -1093,7 +1095,7 @@ Deno.test("sendAndGetResponse should throw PlatformResponseError for critical er
     testTokenUrl,
   );
 
-  await connection.waitFor('open');
+  await connection.waitFor("open");
 
   // Mock the waitFor method to return error
   connection.waitFor = () => {
@@ -1150,7 +1152,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // Track if error event is emitted
     let errorEventFired = false;
@@ -1288,7 +1290,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // Set a fake refresher
     // @ts-ignore - Accessing private property for testing
@@ -1369,7 +1371,8 @@ Deno.test("Symbol.dispose should clear refresher timeout", () => {
     connection[Symbol.dispose]();
 
     assertEquals(timeoutCleared, true);
-  } finally {
+  }
+  finally {
     // Restore original clearTimeout
     globalThis.clearTimeout = originalClearTimeout;
   }
@@ -1404,14 +1407,14 @@ Deno.test(
       {
         minTimeout: 10,
         maxTimeout: 50,
-      }
+      },
     );
 
     connection.on("connecting", (attempt) => {
       connectingEvents.push(attempt);
     });
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     assertEquals(connectingEvents, [1, 2, 3]);
     assertEquals(connection.isOpen, true);
@@ -1442,7 +1445,7 @@ Deno.test(
       {
         maxAttempts: maxAttempts,
         minTimeout: 10,
-      }
+      },
     );
 
     // Should fail after maxAttempts
@@ -1451,7 +1454,7 @@ Deno.test(
         // @ts-ignore - Accessing private method for testing
         await connection.authorize();
       },
-      Error
+      Error,
     );
 
     // Verify it respected maxAttempts
@@ -1557,11 +1560,11 @@ Deno.test(
     });
 
     // Wait for connection to be established
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     // Since authentication and websocket creation happen asynchronously,
     // the order might vary slightly. Let's verify all expected events occurred
-    const eventNames = events.map(e => e.event);
+    const eventNames = events.map((e) => e.event);
 
     // These events should all be present
     assertEquals(eventNames.includes("authenticating"), true);
@@ -1570,17 +1573,17 @@ Deno.test(
     assertEquals(eventNames.includes("open"), true);
 
     // Verify the authenticating event has attempt number
-    const authenticatingEvent = events.find(e => e.event === "authenticating");
+    const authenticatingEvent = events.find((e) => e.event === "authenticating");
     assertEquals(authenticatingEvent?.data, 1);
 
     // Verify authenticated event has token
-    const authenticatedEvent = events.find(e => e.event === "authenticated");
+    const authenticatedEvent = events.find((e) => e.event === "authenticated");
     assertExists(authenticatedEvent?.data);
     // deno-lint-ignore no-explicit-any
     assertExists((authenticatedEvent?.data as any).access_token);
 
     // Verify connecting event has attempt number
-    const connectingEvent = events.find(e => e.event === "connecting");
+    const connectingEvent = events.find((e) => e.event === "connecting");
     assertEquals(connectingEvent?.data, 1);
 
     // Verify counts
@@ -1620,7 +1623,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     assertEquals(authCalled, true);
     assertEquals(wsCreated, true);
@@ -1659,14 +1662,14 @@ Deno.test(
       {
         minTimeout: 10,
         maxTimeout: 20,
-      }
+      },
     );
 
     connection.on("connecting", (attempt) => {
       connectingEvents.push(attempt);
     });
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     assertEquals(connectingEvents, [1, 2, 3]);
     assertEquals(wsAttempts, 3);
@@ -1690,7 +1693,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    await connection.waitFor('open');
+    await connection.waitFor("open");
 
     const requestId = "test-request-123";
     const responseData = {
@@ -1708,7 +1711,7 @@ Deno.test(
         directive: PlatformDirectives.PLATFORM_COMPONENTS,
       },
       payload: {},
-    // deno-lint-ignore no-explicit-any
+      // deno-lint-ignore no-explicit-any
     } as any);
 
     // Wait a bit for the message to be sent

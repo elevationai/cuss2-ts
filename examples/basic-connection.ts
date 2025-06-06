@@ -8,7 +8,7 @@ const config = {
   clientId: "KAP",
   clientSecret: "secret",
   deviceID: undefined, // Optional, defaults to "00000000-0000-0000-0000-000000000000"
-  tokenURL: 'http://localhost:22222/oauth/token', // Optional - will default the wss location if not provided
+  tokenURL: "http://localhost:22222/oauth/token", // Optional - will default the wss location if not provided
 };
 
 async function main() {
@@ -24,12 +24,12 @@ async function main() {
 
   // At this point, you have a Cuss2 instance - but it will be in the process
   // of trying to connect. You can listen for events to know when it's ready.
-  cuss2.connection.on('connecting', (attemptCount) => console.log('Connecting to WebSocket... Attempt:', attemptCount))
-  cuss2.connection.on('authenticating', (attemptCount) => console.log('Authenticating... Attempt:', attemptCount))
-  cuss2.connection.once('authenticated', (auth) => console.log('Authenticated:', auth))
+  cuss2.connection.on("connecting", (attemptCount) => console.log("Connecting to WebSocket... Attempt:", attemptCount));
+  cuss2.connection.on("authenticating", (attemptCount) => console.log("Authenticating... Attempt:", attemptCount));
+  cuss2.connection.once("authenticated", (auth) => console.log("Authenticated:", auth));
 
   try {
-    console.log('Waiting for connection to be established...');
+    console.log("Waiting for connection to be established...");
     await cuss2.connected;
 
     // Now the connection is established.
@@ -47,7 +47,8 @@ async function main() {
     // Keep the connection alive for demonstration
     // In a real application, you would continue with your business logic
     console.log("Connection established. Press Ctrl+C to exit.");
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error:", error);
   }
 }

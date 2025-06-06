@@ -89,7 +89,6 @@ export class Connection extends EventEmitter {
     };
   }
 
-
   private async authorize(): Promise<AuthResponse> {
     log("info", `Authorizing client '${this._auth.client_id}'`, this._auth.url);
 
@@ -101,7 +100,7 @@ export class Connection extends EventEmitter {
 
     const result = await retry(async () => {
       log("info", `Retrying client '${this._auth.client_id}'`);
-      this.emit('authenticating', ++attempts);
+      this.emit("authenticating", ++attempts);
       const response = await global.fetch(this._auth.url, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -123,14 +122,14 @@ export class Connection extends EventEmitter {
         access_token: data.access_token,
         expires_in: data.expires_in,
         token_type: data.token_type,
-      }
-      this.emit('authenticated', auth);
+      };
+      this.emit("authenticated", auth);
       return auth;
     }, this._retryOptions);
 
     // Check if the result is an authentication error
     if (result instanceof AuthenticationError) {
-      this.emit('authenticationError', result);
+      this.emit("authenticationError", result);
       throw result; // Re-throw the error to stop further processing
     }
 
@@ -154,7 +153,7 @@ export class Connection extends EventEmitter {
       tokenURL,
       retryOptions,
     );
-    connection.once('authenticated', () => connection._createWebSocketAndAttachEventHandlers());
+    connection.once("authenticated", () => connection._createWebSocketAndAttachEventHandlers());
     setTimeout(() => connection._authenticateAndQueueTokenRefresh(), 10);
     return connection;
   }
@@ -208,77 +207,78 @@ export class Connection extends EventEmitter {
   _createWebSocketAndAttachEventHandlers(): void {
     let attempts = 0;
 
-    retry(() => new Promise<boolean>((resolve, reject) => {
-      if (this.isOpen) {
-        return resolve(true);
-      }
-      this.emit("connecting", ++attempts);
-      // This can create synchronous Errors and will reject the promise
-      const socket = new global.WebSocket(this._socketURL, {
-        headers: {
-          "Origin": "http://0.0.0.0"  // or whatever origin your server expects
+    retry(() =>
+      new Promise<boolean>((resolve, reject) => {
+        if (this.isOpen) {
+          return resolve(true);
         }
-      });
+        this.emit("connecting", ++attempts);
+        // This can create synchronous Errors and will reject the promise
+        const socket = new global.WebSocket(this._socketURL, {
+          headers: {
+            "Origin": "http://0.0.0.0", // or whatever origin your server expects
+          },
+        });
 
-      socket.onopen = () => {
-        log("info", "Socket opened: ", this._socketURL);
-        this._socket = socket;
-        attempts = 0;
-        resolve(true);
-        this.emit("open");
-      };
+        socket.onopen = () => {
+          log("info", "Socket opened: ", this._socketURL);
+          this._socket = socket;
+          attempts = 0;
+          resolve(true);
+          this.emit("open");
+        };
 
-      socket.onmessage = (event: MessageEvent) => {
-        try {
-          const data = JSON.parse(event.data);
+        socket.onmessage = (event: MessageEvent) => {
+          try {
+            const data = JSON.parse(event.data);
 
-          if (data.ping) {
-            socket.send(`{ "pong": ${Date.now()} }`);
-            this.emit("ping", data);
-            return;
+            if (data.ping) {
+              socket.send(`{ "pong": ${Date.now()} }`);
+              this.emit("ping", data);
+              return;
+            }
+
+            if (data.ackCode) {
+              this.emit("ack", data);
+              return;
+            }
+
+            log("socket.onmessage", event);
+            const platformData = data as PlatformData;
+            this.emit("message", platformData);
+
+            if (platformData?.meta?.requestID) {
+              this.emit(String(platformData.meta.requestID), platformData);
+            }
           }
-
-          if (data.ackCode) {
-            this.emit("ack", data);
-            return;
+          catch (error) {
+            log("error", "Error processing message:", error);
+            this.emit("messageError", error);
           }
+        };
 
-          log("socket.onmessage", event);
-          const platformData = data as PlatformData;
-          this.emit("message", platformData);
+        socket.onclose = (e: CloseEvent) => {
+          log("Websocket Close:", e.reason);
+          socket.onopen = null;
+          socket.onclose = null;
+          socket.onerror = null;
+          socket.onmessage = null;
 
-          if (platformData?.meta?.requestID) {
-            this.emit(String(platformData.meta.requestID), platformData);
+          this.emit("close", e);
+
+          // normal close (probably from calling the close() method)
+          if (e.code === 1000) return;
+
+          if (attempts > 0) {
+            reject(e); // cause retry to try again
           }
-        }
-        catch (error) {
-          log("error", "Error processing message:", error);
-          this.emit("messageError", error);
-        }
-      };
+        };
 
-      socket.onclose = (e: CloseEvent) => {
-        log("Websocket Close:", e.reason);
-        socket.onopen = null;
-        socket.onclose = null;
-        socket.onerror = null;
-        socket.onmessage = null;
-
-        this.emit("close", e);
-
-        // normal close (probably from calling the close() method)
-        if (e.code === 1000) return;
-
-        if (attempts > 0) {
-          reject(e); // cause retry to try again
-        }
-      };
-
-      socket.onerror = (e: Event) => {
-        log("Websocket Error:", e);
-        this.emit("socketError", e);
-      };
-    }), this._retryOptions);
+        socket.onerror = (e: Event) => {
+          log("Websocket Error:", e);
+          this.emit("socketError", e);
+        };
+      }), this._retryOptions);
   }
 
   send(data: ApplicationData) {

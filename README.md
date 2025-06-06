@@ -177,12 +177,13 @@ Object.entries(components).forEach(([id, component]) => {
     type: component.componentType,
     name: component.componentName,
     state: component.componentState,
-    location: component.componentLocation
+    location: component.componentLocation,
   });
 });
 ```
 
-Components are automatically discovered during initialization and stored in the `components` object keyed by their component ID.
+Components are automatically discovered during initialization and stored in the `components` object keyed by their
+component ID.
 
 ### Component Types
 
@@ -267,6 +268,7 @@ console.log("Capabilities:", environment.platformCapabilities);
 ```
 
 The environment object includes:
+
 - `deviceID`: Unique identifier for the device
 - `platformID`: Platform implementation identifier
 - `cuss2Version`: Version of the CUSS2 standard

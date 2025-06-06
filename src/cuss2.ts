@@ -115,7 +115,7 @@ export class Cuss2 extends EventEmitter {
     if (this.connection.isOpen && this.components) {
       return Promise.resolve();
     }
-    return this.waitFor('connected', ['connection.authenticationError']);
+    return this.waitFor("connected", ["connection.authenticationError"]);
   }
 
   private constructor(connection: Connection) {
@@ -131,7 +131,7 @@ export class Cuss2 extends EventEmitter {
     client_id: string,
     client_secret: string,
     deviceID: string = "00000000-0000-0000-0000-000000000000",
-    tokenURL?: string
+    tokenURL?: string,
   ): Cuss2 {
     using connection = Connection.connect(
       wss,
@@ -172,7 +172,7 @@ export class Cuss2 extends EventEmitter {
       log("error", "error querying components", e);
       super.emit("queryError", e);
     });
-    this.emit('connected', this);
+    this.emit("connected", this);
   }
 
   async _handleWebSocketMessage(platformData: PlatformData) {

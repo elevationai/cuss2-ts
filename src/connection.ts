@@ -282,6 +282,9 @@ export class Connection extends EventEmitter {
   }
 
   send(data: ApplicationData) {
+    if (!this.isOpen) {
+      throw new Error("WebSocket connection not established");
+    }
     if (data instanceof Object && !data.meta?.oauthToken) {
       data.meta.oauthToken = this.access_token;
     }
@@ -294,8 +297,8 @@ export class Connection extends EventEmitter {
   async sendAndGetResponse(
     applicationData: ApplicationData,
   ): Promise<PlatformData> {
-    if (!this._socket) {
-      throw new Error("WebSocket is not connected");
+    if (!this.isOpen) {
+      throw new Error("WebSocket connection not established");
     }
     const meta = applicationData.meta;
     const reqId = meta.requestID as string;

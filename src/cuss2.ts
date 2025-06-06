@@ -143,6 +143,12 @@ export class Cuss2 extends EventEmitter {
     return new Cuss2(connection);
   }
 
+  private _ensureConnected(): void {
+    if (!this.connection.isOpen) {
+      throw new Error("Connection not established. Please await cuss2.connected before making API calls.");
+    }
+  }
+
   async _initialize(): Promise<undefined> {
     log("info", "Getting Environment Information");
     const environment = await this.api.getEnvironment();
@@ -241,6 +247,7 @@ export class Cuss2 extends EventEmitter {
 
   api: ComponentAPI = {
     getEnvironment: async (): Promise<EnvironmentLevel> => {
+      this._ensureConnected();
       const ad = Build.applicationData(PlatformDirectives.PLATFORM_ENVIRONMENT);
       const response = await this.connection.sendAndGetResponse(ad);
       log("verbose", "[getEnvironment()] response", response);
@@ -249,6 +256,7 @@ export class Cuss2 extends EventEmitter {
     },
 
     getComponents: async (): Promise<ComponentList> => {
+      this._ensureConnected();
       const ad = Build.applicationData(PlatformDirectives.PLATFORM_COMPONENTS);
       const response = await this.connection.sendAndGetResponse(ad);
       log("verbose", "[getComponents()] response", response);
@@ -347,6 +355,7 @@ export class Cuss2 extends EventEmitter {
     },
 
     getStatus: async (componentID: number): Promise<PlatformData> => {
+      this._ensureConnected();
       const ad = Build.applicationData(PlatformDirectives.PERIPHERALS_QUERY, {
         componentID: componentID,
       });
@@ -365,6 +374,7 @@ export class Cuss2 extends EventEmitter {
         | CommonUsePaymentMessage
         | CommonUseBiometricMessage,
     ): Promise<PlatformData> => {
+      this._ensureConnected();
       const ad = Build.applicationData(PlatformDirectives.PERIPHERALS_SEND, {
         componentID: componentID,
         dataObj,
@@ -376,6 +386,7 @@ export class Cuss2 extends EventEmitter {
       componentID: number,
       dataObj: DataRecordList,
     ): Promise<PlatformData> => {
+      this._ensureConnected();
       validateComponentId(componentID);
       const ad = Build.applicationData(PlatformDirectives.PERIPHERALS_SETUP, {
         componentID: componentID,
@@ -385,6 +396,7 @@ export class Cuss2 extends EventEmitter {
     },
 
     cancel: async (componentID: number): Promise<PlatformData> => {
+      this._ensureConnected();
       validateComponentId(componentID);
       const ad = Build.applicationData(PlatformDirectives.PERIPHERALS_CANCEL, {
         componentID: componentID,
@@ -393,6 +405,7 @@ export class Cuss2 extends EventEmitter {
     },
 
     enable: async (componentID: number): Promise<PlatformData> => {
+      this._ensureConnected();
       validateComponentId(componentID);
       const ad = Build.applicationData(
         PlatformDirectives.PERIPHERALS_USERPRESENT_ENABLE,
@@ -402,6 +415,7 @@ export class Cuss2 extends EventEmitter {
     },
 
     disable: async (componentID: number): Promise<PlatformData> => {
+      this._ensureConnected();
       validateComponentId(componentID);
       const ad = Build.applicationData(
         PlatformDirectives.PERIPHERALS_USERPRESENT_DISABLE,
@@ -410,6 +424,7 @@ export class Cuss2 extends EventEmitter {
       return await this.connection.sendAndGetResponse(ad);
     },
     offer: async (componentID: number): Promise<PlatformData> => {
+      this._ensureConnected();
       validateComponentId(componentID);
       const ad = Build.applicationData(
         PlatformDirectives.PERIPHERALS_USERPRESENT_OFFER,
@@ -423,6 +438,7 @@ export class Cuss2 extends EventEmitter {
       reasonCode = ChangeReason.NOT_APPLICABLE,
       reason = "",
     ): Promise<PlatformData | undefined> => {
+      this._ensureConnected();
       if (this.pendingStateChange) {
         return Promise.resolve(undefined);
       }
@@ -444,6 +460,7 @@ export class Cuss2 extends EventEmitter {
         componentID: number,
         rawData: string,
       ): Promise<PlatformData> => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const dataObj = [{
           data: rawData as string,
@@ -460,6 +477,7 @@ export class Cuss2 extends EventEmitter {
       },
 
       pause: async (componentID: number): Promise<PlatformData> => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData(
           PlatformDirectives.PERIPHERALS_ANNOUNCEMENT_PAUSE,
@@ -469,6 +487,7 @@ export class Cuss2 extends EventEmitter {
       },
 
       resume: async (componentID: number): Promise<PlatformData> => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData(
           PlatformDirectives.PERIPHERALS_ANNOUNCEMENT_RESUME,
@@ -478,6 +497,7 @@ export class Cuss2 extends EventEmitter {
       },
 
       stop: async (componentID: number): Promise<PlatformData> => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData(
           PlatformDirectives.PERIPHERALS_ANNOUNCEMENT_STOP,
@@ -514,11 +534,13 @@ export class Cuss2 extends EventEmitter {
   }
 
   async requestInitializeState(): Promise<PlatformData | undefined> {
+    this._ensureConnected();
     const okToChange = this.state === AppState.STOPPED;
     return okToChange ? await this.api.staterequest(AppState.INITIALIZE) : Promise.resolve(undefined);
   }
 
   async requestUnavailableState(): Promise<PlatformData | undefined> {
+    this._ensureConnected();
     const okToChange = this.state === AppState.INITIALIZE || this.state === AppState.AVAILABLE ||
       this.state === AppState.ACTIVE;
 
@@ -530,6 +552,7 @@ export class Cuss2 extends EventEmitter {
   }
 
   async requestAvailableState(): Promise<PlatformData | undefined> {
+    this._ensureConnected();
     // allow hopping directly to AVAILABLE from INITIALIZE
     if (this.state === AppState.INITIALIZE) {
       await this.requestUnavailableState();
@@ -544,15 +567,18 @@ export class Cuss2 extends EventEmitter {
   }
 
   async requestActiveState(): Promise<PlatformData | undefined> {
+    this._ensureConnected();
     const okToChange = this.state === AppState.AVAILABLE || this.state === AppState.ACTIVE;
     return await (okToChange ? this.api.staterequest(AppState.ACTIVE) : Promise.resolve(undefined));
   }
 
   async requestStoppedState(): Promise<PlatformData | undefined> {
+    this._ensureConnected();
     return await this.api.staterequest(AppState.STOPPED);
   }
 
   async requestReload(): Promise<boolean> {
+    this._ensureConnected();
     const okToChange = !this.state || this.state === AppState.UNAVAILABLE ||
       this.state === AppState.AVAILABLE || this.state === AppState.ACTIVE;
 

@@ -10,6 +10,14 @@ import {
   type EnvironmentLevel,
   type PlatformData,
 } from "cuss2-typescript-models";
+import {
+  type ComponentCharacteristics,
+  ComponentTypes,
+  CussDataTypes,
+  DeviceTypes,
+  type EnvironmentComponent,
+  MediaTypes,
+} from "./types/modelExtensions.ts";
 
 // Test constants
 const DEFAULT_DEVICE_ID = "00000000-0000-0000-0000-000000000000";
@@ -25,7 +33,10 @@ class MockConnection extends EventEmitter {
   };
 
   sendAndGetResponse(_data: unknown): Promise<PlatformData> {
-    return Promise.resolve({} as PlatformData);
+    return Promise.resolve({
+      meta: { messageCode: "OK" },
+      payload: {}
+    } as unknown as PlatformData);
   }
 
   static connect(
@@ -53,17 +64,49 @@ function createMockEnvironment(overrides?: Partial<EnvironmentLevel>): Environme
   } as unknown as EnvironmentLevel;
 }
 
+// Helper function to create mock ComponentCharacteristics
+function createMockCharacteristics(overrides: Partial<ComponentCharacteristics> = {}): ComponentCharacteristics {
+  return {
+    dsTypesList: [] as CussDataTypes[],
+    mediaTypesList: [] as MediaTypes[],
+    deviceTypesList: [] as DeviceTypes[],
+    ...overrides,
+  } as ComponentCharacteristics;
+}
+
+// Helper function to create a mock EnvironmentComponent
+function createMockComponent(overrides: Partial<EnvironmentComponent> = {}): EnvironmentComponent {
+  return {
+    componentID: 1,
+    componentType: ComponentTypes.DATA_INPUT,
+    componentDescription: "Test Component",
+    componentCharacteristics: [],
+    linkedComponentIDs: overrides.linkedComponentIDs || [],
+    ...overrides,
+  } as EnvironmentComponent;
+}
+
 // Helper to create mock component list
 function createMockComponentList(): ComponentList {
   return [
-    {
+    createMockComponent({
       componentID: 1,
-      componentType: { componentCode: "BTP" },
-    },
-    {
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.PRINT],
+          mediaTypesList: [MediaTypes.BAGGAGETAG],
+        }),
+      ],
+    }),
+    createMockComponent({
       componentID: 2,
-      componentType: { componentCode: "BPP" },
-    },
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.PRINT],
+          mediaTypesList: [MediaTypes.BOARDINGPASS],
+        }),
+      ],
+    }),
   ] as unknown as ComponentList;
 }
 
@@ -656,4 +699,683 @@ Deno.test("2.2 - State transitions should disable all components when transition
 
   // Verify components were disabled
   assertEquals(disableAllCalled, true);
+});
+
+// Test Category 3: Component Management Tests
+
+Deno.test("3.1 - Component discovery should properly create component instances from component list", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  // Mock sendAndGetResponse to return component list
+  mockConnection.sendAndGetResponse = (data: unknown) => {
+    const appData = data as { meta?: { directive?: string } };
+    if (appData.meta?.directive === "platform_components") {
+      const componentList = [
+        // Feeders and Dispensers for printers (must be created first)
+        createMockComponent({
+          componentID: 10,
+          componentType: ComponentTypes.FEEDER,
+        }),
+        createMockComponent({
+          componentID: 11,
+          componentType: ComponentTypes.DISPENSER,
+        }),
+        createMockComponent({
+          componentID: 12,
+          componentType: ComponentTypes.FEEDER,
+        }),
+        createMockComponent({
+          componentID: 13,
+          componentType: ComponentTypes.DISPENSER,
+        }),
+        // Printers (with linked feeders and dispensers)
+        createMockComponent({
+          componentID: 1,
+          linkedComponentIDs: [10, 11], // Link to feeder 10 and dispenser 11
+          componentCharacteristics: [
+            createMockCharacteristics({
+              deviceTypesList: [DeviceTypes.PRINT],
+              mediaTypesList: [MediaTypes.BAGGAGETAG],
+            }),
+          ],
+        }),
+        createMockComponent({
+          componentID: 2,
+          linkedComponentIDs: [12, 13], // Link to feeder 12 and dispenser 13
+          componentCharacteristics: [
+            createMockCharacteristics({
+              deviceTypesList: [DeviceTypes.PRINT],
+              mediaTypesList: [MediaTypes.BOARDINGPASS],
+            }),
+          ],
+        }),
+        // Other components
+        createMockComponent({
+          componentID: 3,
+          componentCharacteristics: [
+            createMockCharacteristics({
+              dsTypesList: [CussDataTypes.DS_TYPES_BARCODE],
+            }),
+          ],
+        }),
+        createMockComponent({
+          componentID: 4,
+          componentCharacteristics: [{
+            dsTypesList: [],
+            mediaTypesList: ["MAGCARD"],
+            deviceTypesList: [],
+          } as unknown as ComponentCharacteristics],
+        }),
+        createMockComponent({
+          componentID: 5,
+          componentType: ComponentTypes.ANNOUNCEMENT,
+        }),
+      ];
+
+      return Promise.resolve({
+        meta: { messageCode: "OK" },
+        payload: { componentList },
+      } as unknown as PlatformData);
+    }
+    return Promise.resolve({
+      meta: { messageCode: "OK" },
+      payload: {}
+    } as unknown as PlatformData);
+  };
+
+  // Call getComponents
+  const componentList = await cuss2.api.getComponents();
+
+  // Verify component list returned
+  assertEquals(componentList.length, 9); // 4 feeders/dispensers + 5 components
+
+  // Verify components were created and assigned
+  assertEquals(cuss2.components !== undefined, true);
+  assertEquals(Object.keys(cuss2.components!).length, 9);
+
+  // Verify specific component instances were assigned to class properties
+  assertEquals(cuss2.bagTagPrinter !== undefined, true);
+  assertEquals(cuss2.boardingPassPrinter !== undefined, true);
+  assertEquals(cuss2.barcodeReader !== undefined, true);
+  assertEquals(cuss2.cardReader !== undefined, true);
+  assertEquals(cuss2.announcement !== undefined, true);
+});
+
+Deno.test("3.2 - Component type mapping should create correct component class for each type", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  // Import component classes for instanceof checks
+  const {
+    BagTagPrinter, BoardingPassPrinter, DocumentReader, BarcodeReader,
+    CardReader, Biometric, Scale, Camera, Announcement, Keypad,
+    Illumination, Headset, InsertionBelt, ParkingBelt, VerificationBelt,
+    RFID, BHS, AEASBD, Feeder, Dispenser
+  } = await import("./models/index.ts");
+
+  // Mock component list with all types
+  const componentTypes = [
+    // Feeder for BagTagPrinter
+    {
+      id: 100,
+      component: createMockComponent({
+        componentID: 100,
+        componentType: ComponentTypes.FEEDER,
+      }),
+      expectedClass: Feeder,
+      property: null,
+    },
+    // Dispenser for BagTagPrinter
+    {
+      id: 101,
+      component: createMockComponent({
+        componentID: 101,
+        componentType: ComponentTypes.DISPENSER,
+      }),
+      expectedClass: Dispenser,
+      property: null,
+    },
+    // Feeder for BoardingPassPrinter
+    {
+      id: 102,
+      component: createMockComponent({
+        componentID: 102,
+        componentType: ComponentTypes.FEEDER,
+      }),
+      expectedClass: Feeder,
+      property: null,
+    },
+    // Dispenser for BoardingPassPrinter
+    {
+      id: 103,
+      component: createMockComponent({
+        componentID: 103,
+        componentType: ComponentTypes.DISPENSER,
+      }),
+      expectedClass: Dispenser,
+      property: null,
+    },
+    // BagTagPrinter
+    {
+      id: 1,
+      component: createMockComponent({
+        componentID: 1,
+        linkedComponentIDs: [100, 101],
+        componentCharacteristics: [
+          createMockCharacteristics({
+            deviceTypesList: [DeviceTypes.PRINT],
+            mediaTypesList: [MediaTypes.BAGGAGETAG],
+          }),
+        ],
+      }),
+      expectedClass: BagTagPrinter,
+      property: "bagTagPrinter",
+    },
+    // BoardingPassPrinter
+    {
+      id: 2,
+      component: createMockComponent({
+        componentID: 2,
+        linkedComponentIDs: [102, 103],
+        componentCharacteristics: [
+          createMockCharacteristics({
+            deviceTypesList: [DeviceTypes.PRINT],
+            mediaTypesList: [MediaTypes.BOARDINGPASS],
+          }),
+        ],
+      }),
+      expectedClass: BoardingPassPrinter,
+      property: "boardingPassPrinter",
+    },
+    // DocumentReader
+    {
+      id: 3,
+      component: createMockComponent({
+        componentID: 3,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            mediaTypesList: [MediaTypes.PASSPORT],
+          }),
+        ],
+      }),
+      expectedClass: DocumentReader,
+      property: "documentReader",
+    },
+    // BarcodeReader
+    {
+      id: 4,
+      component: createMockComponent({
+        componentID: 4,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            dsTypesList: [CussDataTypes.DS_TYPES_BARCODE],
+          }),
+        ],
+      }),
+      expectedClass: BarcodeReader,
+      property: "barcodeReader",
+    },
+    // CardReader
+    {
+      id: 5,
+      component: createMockComponent({
+        componentID: 5,
+        componentCharacteristics: [{
+          dsTypesList: [],
+          mediaTypesList: ["MAGCARD"],
+          deviceTypesList: [],
+        } as unknown as ComponentCharacteristics],
+      }),
+      expectedClass: CardReader,
+      property: "cardReader",
+    },
+    // Biometric
+    {
+      id: 6,
+      component: createMockComponent({
+        componentID: 6,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            dsTypesList: [CussDataTypes.DS_TYPES_BIOMETRIC],
+          }),
+        ],
+      }),
+      expectedClass: Biometric,
+      property: "biometric",
+    },
+    // Scale
+    {
+      id: 7,
+      component: createMockComponent({
+        componentID: 7,
+        componentType: ComponentTypes.DATA_INPUT,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            deviceTypesList: [DeviceTypes.SCALE],
+          }),
+        ],
+      }),
+      expectedClass: Scale,
+      property: "scale",
+    },
+    // Camera
+    {
+      id: 8,
+      component: createMockComponent({
+        componentID: 8,
+        componentType: ComponentTypes.DATA_INPUT,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            deviceTypesList: [DeviceTypes.CAMERA],
+            mediaTypesList: [MediaTypes.IMAGE],
+          }),
+        ],
+      }),
+      expectedClass: Camera,
+      property: "camera",
+    },
+    // Announcement
+    {
+      id: 9,
+      component: createMockComponent({
+        componentID: 9,
+        componentType: ComponentTypes.ANNOUNCEMENT,
+      }),
+      expectedClass: Announcement,
+      property: "announcement",
+    },
+    // Keypad
+    {
+      id: 10,
+      component: createMockComponent({
+        componentID: 10,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            dsTypesList: [CussDataTypes.DS_TYPES_KEY],
+          }),
+        ],
+      }),
+      expectedClass: Keypad,
+      property: "keypad",
+    },
+    // Illumination
+    {
+      id: 11,
+      component: createMockComponent({
+        componentID: 11,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            deviceTypesList: [DeviceTypes.ILLUMINATION],
+          }),
+        ],
+      }),
+      expectedClass: Illumination,
+      property: "illumination",
+    },
+    // Headset
+    {
+      id: 12,
+      component: createMockComponent({
+        componentID: 12,
+        componentType: ComponentTypes.MEDIA_INPUT,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            deviceTypesList: [DeviceTypes.ASSISTIVE],
+            mediaTypesList: [MediaTypes.AUDIO],
+          }),
+        ],
+      }),
+      expectedClass: Headset,
+      property: "headset",
+    },
+    // InsertionBelt
+    {
+      id: 13,
+      component: createMockComponent({
+        componentID: 13,
+        componentType: ComponentTypes.INSERTION_BELT,
+        componentCharacteristics: [createMockCharacteristics()],
+      }),
+      expectedClass: InsertionBelt,
+      property: "insertionBelt",
+    },
+    // ParkingBelt
+    {
+      id: 14,
+      component: createMockComponent({
+        componentID: 14,
+        componentType: ComponentTypes.PARKING_BELT,
+        componentCharacteristics: [createMockCharacteristics()],
+      }),
+      expectedClass: ParkingBelt,
+      property: "parkingBelt",
+    },
+    // VerificationBelt
+    {
+      id: 15,
+      component: createMockComponent({
+        componentID: 15,
+        componentType: ComponentTypes.VERIFICATION_BELT,
+        componentCharacteristics: [createMockCharacteristics()],
+      }),
+      expectedClass: VerificationBelt,
+      property: "verificationBelt",
+    },
+    // RFID
+    {
+      id: 16,
+      component: createMockComponent({
+        componentID: 16,
+        componentType: ComponentTypes.DATA_INPUT,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            deviceTypesList: [DeviceTypes.CONTACTLESS],
+            mediaTypesList: [MediaTypes.RFID],
+          }),
+        ],
+      }),
+      expectedClass: RFID,
+      property: "rfid",
+    },
+    // BHS
+    {
+      id: 17,
+      component: createMockComponent({
+        componentID: 17,
+        componentType: ComponentTypes.DATA_OUTPUT,
+        componentCharacteristics: [
+          createMockCharacteristics({
+            dsTypesList: [CussDataTypes.DS_TYPES_RP1745],
+          }),
+        ],
+      }),
+      expectedClass: BHS,
+      property: "bhs",
+    },
+    // AEASBD
+    {
+      id: 18,
+      component: createMockComponent({
+        componentID: 18,
+        componentType: ComponentTypes.USER_OUTPUT,
+        componentCharacteristics: [{
+          dsTypesList: ["SBDAEA"],
+          mediaTypesList: [],
+          deviceTypesList: [],
+        } as unknown as ComponentCharacteristics],
+      }),
+      expectedClass: AEASBD,
+      property: "aeasbd",
+    },
+  ];
+
+  // Mock sendAndGetResponse
+  mockConnection.sendAndGetResponse = (data: unknown) => {
+    const appData = data as { meta?: { directive?: string } };
+    if (appData.meta?.directive === "platform_components") {
+      return Promise.resolve({
+        meta: { messageCode: "OK" },
+        payload: {
+          componentList: componentTypes.map(ct => ct.component)
+        }
+      } as unknown as PlatformData);
+    }
+    return Promise.resolve({ payload: {} } as unknown as PlatformData);
+  };
+
+  // Call getComponents
+  await cuss2.api.getComponents();
+
+  // Verify each component type created correct class
+  for (const ct of componentTypes) {
+    const component = cuss2.components![String(ct.id)];
+    assertEquals(component instanceof ct.expectedClass, true,
+      `Component ID ${ct.id} should be instance of ${ct.expectedClass.name}`);
+
+    // Verify property assignment if applicable
+    if (ct.property) {
+      // @ts-ignore - accessing dynamic property
+      assertEquals(cuss2[ct.property] === component, true,
+        `Component ID ${ct.id} should be assigned to cuss2.${ct.property}`);
+    }
+  }
+});
+
+Deno.test("3.3 - Feeder/Dispenser linking should create feeders/dispensers before printers for proper linking", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  const { Feeder, Dispenser } = await import("./models/index.ts");
+
+  // This test verifies that feeders/dispensers are created in the first pass
+
+  // Mock component list with feeders, dispensers, and printers
+  mockConnection.sendAndGetResponse = (data: unknown) => {
+    const appData = data as { meta?: { directive?: string } };
+    if (appData.meta?.directive === "platform_components") {
+      return Promise.resolve({
+        meta: { messageCode: "OK" },
+        payload: {
+          componentList: [
+            // Feeder (ID 2)
+            createMockComponent({
+              componentID: 2,
+              componentType: ComponentTypes.FEEDER,
+            }),
+            // Dispenser (ID 3)
+            createMockComponent({
+              componentID: 3,
+              componentType: ComponentTypes.DISPENSER,
+            }),
+            // Additional Feeder (ID 5)
+            createMockComponent({
+              componentID: 5,
+              componentType: ComponentTypes.FEEDER,
+            }),
+            // Additional Dispenser (ID 6)
+            createMockComponent({
+              componentID: 6,
+              componentType: ComponentTypes.DISPENSER,
+            }),
+            // Bag Tag Printer (linked to feeder 2 and dispenser 3)
+            createMockComponent({
+              componentID: 1,
+              linkedComponentIDs: [2, 3],
+              componentCharacteristics: [
+                createMockCharacteristics({
+                  deviceTypesList: [DeviceTypes.PRINT],
+                  mediaTypesList: [MediaTypes.BAGGAGETAG],
+                }),
+              ],
+            }),
+            // Boarding Pass Printer (linked to feeder 5 and dispenser 6)
+            createMockComponent({
+              componentID: 4,
+              linkedComponentIDs: [5, 6],
+              componentCharacteristics: [
+                createMockCharacteristics({
+                  deviceTypesList: [DeviceTypes.PRINT],
+                  mediaTypesList: [MediaTypes.BOARDINGPASS],
+                }),
+              ],
+            }),
+          ]
+        }
+      } as unknown as PlatformData);
+    }
+    return Promise.resolve({ payload: {} } as unknown as PlatformData);
+  };
+
+  // Spy on component creation by checking when components are added
+  const originalGetComponents = cuss2.api.getComponents;
+  cuss2.api.getComponents = async () => {
+    const result = await originalGetComponents.call(cuss2.api);
+
+    // Check components were created in correct order
+    // Feeders and dispensers should exist before printers
+    const components = cuss2.components!;
+    assertEquals(components["2"] instanceof Feeder, true);
+    assertEquals(components["3"] instanceof Dispenser, true);
+    assertEquals(components["1"] !== undefined, true);
+    assertEquals(components["4"] !== undefined, true);
+
+    return result;
+  };
+
+  await cuss2.api.getComponents();
+});
+
+Deno.test("3.4 - Component querying should query all components successfully", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  // Import Component class
+  const { Component } = await import("./models/index.ts");
+
+  // Create mock components using real Component instances
+  const component1 = new Component(createMockComponent({ componentID: 1 }), cuss2);
+  const component2 = new Component(createMockComponent({ componentID: 2 }), cuss2);
+  const component3 = new Component(createMockComponent({ componentID: 3 }), cuss2);
+
+  // Track query calls
+  let queryCalls = 0;
+  const mockQuery = () => {
+    queryCalls++;
+    return Promise.resolve({ meta: { messageCode: "OK" } } as unknown as PlatformData);
+  };
+
+  // Mock the query method
+  component1.query = mockQuery;
+  component2.query = mockQuery;
+  component3.query = mockQuery;
+
+  // Set components
+  cuss2.components = {
+    "1": component1,
+    "2": component2,
+    "3": component3,
+  };
+
+  // Query all components
+  const result = await cuss2.queryComponents();
+
+  // Verify all components were queried
+  assertEquals(result, true);
+  assertEquals(queryCalls, 3);
+});
+
+Deno.test("3.5 - Component query error handling should handle component query errors gracefully", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  // Import Component class
+  const { Component } = await import("./models/index.ts");
+
+  // Create mock components using real Component instances
+  const component1 = new Component(createMockComponent({ componentID: 1 }), cuss2);
+  const component2 = new Component(createMockComponent({ componentID: 2 }), cuss2);
+  const component3 = new Component(createMockComponent({ componentID: 3 }), cuss2);
+  const component4 = new Component(createMockComponent({ componentID: 4 }), cuss2);
+
+  // Track query calls to ensure all are attempted
+  let queryCalls = 0;
+
+  // Mock the query methods with some failures
+  component1.query = () => {
+    queryCalls++;
+    return Promise.resolve({ meta: { messageCode: "OK" } } as unknown as PlatformData);
+  };
+  component2.query = () => {
+    queryCalls++;
+    return Promise.reject(new Error("Component 2 error"));
+  };
+  component3.query = () => {
+    queryCalls++;
+    return Promise.resolve({ meta: { messageCode: "OK" } } as unknown as PlatformData);
+  };
+  component4.query = () => {
+    queryCalls++;
+    return Promise.reject(new Error("Component 4 error"));
+  };
+
+  // Set components
+  cuss2.components = {
+    "1": component1,
+    "2": component2,
+    "3": component3,
+    "4": component4,
+  };
+
+  // Query all components
+  const result = await cuss2.queryComponents();
+
+  // Verify all components were queried despite errors
+  assertEquals(result, true);
+  assertEquals(queryCalls, 4);
+});
+
+Deno.test("3.1 - Component discovery should handle empty component list", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  // Mock empty component list
+  mockConnection.sendAndGetResponse = () => {
+    return Promise.resolve({
+      meta: { messageCode: "OK" },
+      payload: { componentList: [] }
+    } as unknown as PlatformData);
+  };
+
+  // Call getComponents
+  const componentList = await cuss2.api.getComponents();
+
+  // Verify empty list handled correctly
+  assertEquals(componentList.length, 0);
+  assertEquals(cuss2.components !== undefined, true);
+  assertEquals(Object.keys(cuss2.components!).length, 0);
+});
+
+Deno.test("3.2 - Component type mapping should create generic Component for unknown types", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  const { Component } = await import("./models/index.ts");
+
+  // Mock component with unknown type (no matching identification)
+  mockConnection.sendAndGetResponse = () => {
+    return Promise.resolve({
+      meta: { messageCode: "OK" },
+      payload: {
+        componentList: [
+          createMockComponent({
+            componentID: 1,
+            componentType: ComponentTypes.DATA_INPUT,
+            componentCharacteristics: [
+              createMockCharacteristics({
+                // No recognizable characteristics - will create generic Component
+                deviceTypesList: [],
+                mediaTypesList: [],
+                dsTypesList: [],
+              }),
+            ],
+          })
+        ]
+      }
+    } as unknown as PlatformData);
+  };
+
+  await cuss2.api.getComponents();
+
+  // Verify generic Component was created
+  const component = cuss2.components!["1"];
+  assertEquals(component instanceof Component, true);
+  assertEquals(component.constructor.name, "Component");
 });

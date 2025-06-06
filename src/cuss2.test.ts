@@ -410,16 +410,16 @@ Deno.test("1.1 - Connected getter should reject on authentication error", async 
 
 // Helper to simulate state change via platform message
 async function simulateStateChange(
-  cuss2: Cuss2, 
-  newState: AppState, 
-  payload?: unknown
+  cuss2: Cuss2,
+  newState: AppState,
+  payload?: unknown,
 ): Promise<void> {
   await cuss2._handleWebSocketMessage({
     meta: {
       currentApplicationState: { applicationStateCode: newState },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST"
+      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST",
     },
-    payload: payload || {}
+    payload: payload || {},
   } as unknown as PlatformData);
 }
 
@@ -432,23 +432,23 @@ function setCurrentState(cuss2: Cuss2, state: AppState): void {
 // Helper to create mock cuss2 with state request tracking
 function createMockCuss2WithStateTracking() {
   const { cuss2, mockConnection } = createMockCuss2();
-  
+
   // Mock sendAndGetResponse for state requests
   mockConnection.sendAndGetResponse = (_data: unknown) => {
     return Promise.resolve({
       meta: { messageCode: "OK" },
-      payload: {}
+      payload: {},
     } as PlatformData);
   };
-  
+
   return { cuss2, mockConnection };
 }
 
 // Helper to test invalid state transition
 async function testInvalidStateTransition(
-  cuss2: Cuss2, 
-  fromState: AppState, 
-  requestMethod: () => Promise<PlatformData | undefined>
+  cuss2: Cuss2,
+  fromState: AppState,
+  requestMethod: () => Promise<PlatformData | undefined>,
 ): Promise<void> {
   setCurrentState(cuss2, fromState);
   const result = await requestMethod();
@@ -470,9 +470,7 @@ Deno.test("2.2 - State transitions should handle valid state transitions correct
 
   // Track state change events
   const stateChanges: StateChange[] = [];
-  cuss2.on("stateChange", (change: StateChange) => {
-    stateChanges.push(change);
-  });
+  cuss2.on("stateChange", (change: StateChange) => stateChanges.push(change));
 
   // Helper to test a state transition
   async function testStateTransition(
@@ -480,12 +478,12 @@ Deno.test("2.2 - State transitions should handle valid state transitions correct
     toState: AppState,
     requestMethod: () => Promise<PlatformData | undefined>,
     expectedIndex: number,
-    payload?: unknown
+    payload?: unknown,
   ) {
     setCurrentState(cuss2, fromState);
     await requestMethod();
     await simulateStateChange(cuss2, toState, payload);
-    
+
     assertEquals(cuss2.state, toState);
     assertEquals(stateChanges.length, expectedIndex + 1);
     assertEquals(stateChanges[expectedIndex].previous, fromState);
@@ -496,76 +494,38 @@ Deno.test("2.2 - State transitions should handle valid state transitions correct
   cuss2._disableAllComponents = () => Promise.resolve();
 
   // Test STOPPED → INITIALIZE
-  await testStateTransition(
-    AppState.STOPPED,
-    AppState.INITIALIZE,
-    () => cuss2.requestInitializeState(),
-    0
-  );
+  await testStateTransition(AppState.STOPPED, AppState.INITIALIZE, () => cuss2.requestInitializeState(), 0);
 
   // Test INITIALIZE → UNAVAILABLE
-  await testStateTransition(
-    AppState.INITIALIZE,
-    AppState.UNAVAILABLE,
-    () => cuss2.requestUnavailableState(),
-    1
-  );
+  await testStateTransition(AppState.INITIALIZE, AppState.UNAVAILABLE, () => cuss2.requestUnavailableState(), 1);
 
   // Test UNAVAILABLE → AVAILABLE
-  await testStateTransition(
-    AppState.UNAVAILABLE,
-    AppState.AVAILABLE,
-    () => cuss2.requestAvailableState(),
-    2
-  );
+  await testStateTransition(AppState.UNAVAILABLE, AppState.AVAILABLE, () => cuss2.requestAvailableState(), 2);
 
   // Test AVAILABLE → ACTIVE
-  await testStateTransition(
-    AppState.AVAILABLE,
-    AppState.ACTIVE,
-    () => cuss2.requestActiveState(),
-    3,
-    {
-      applicationActivation: {
-        executionMode: "SAM",
-        accessibleMode: false,
-        languageID: "en-US"
-      }
-    }
-  );
+  await testStateTransition(AppState.AVAILABLE, AppState.ACTIVE, () => cuss2.requestActiveState(), 3, {
+    applicationActivation: {
+      executionMode: "SAM",
+      accessibleMode: false,
+      languageID: "en-US",
+    },
+  });
 
   // Test ACTIVE → AVAILABLE
-  await testStateTransition(
-    AppState.ACTIVE,
-    AppState.AVAILABLE,
-    () => cuss2.requestAvailableState(),
-    4
-  );
+  await testStateTransition(AppState.ACTIVE, AppState.AVAILABLE, () => cuss2.requestAvailableState(), 4);
 });
 
 Deno.test("2.3 - Invalid state transitions should not allow invalid state transitions", async () => {
   const { cuss2 } = createMockCuss2WithStateTracking();
 
   // Test STOPPED → AVAILABLE (invalid, should return undefined)
-  await testInvalidStateTransition(
-    cuss2,
-    AppState.STOPPED,
-    () => cuss2.requestAvailableState()
-  );
+  await testInvalidStateTransition(cuss2, AppState.STOPPED, () => cuss2.requestAvailableState());
 
   // Test INITIALIZE → ACTIVE (invalid)
-  await testInvalidStateTransition(
-    cuss2,
-    AppState.INITIALIZE,
-    () => cuss2.requestActiveState()
-  );
+  await testInvalidStateTransition(cuss2, AppState.INITIALIZE, () => cuss2.requestActiveState());
 
   // Test UNAVAILABLE → ACTIVE (invalid, must go through AVAILABLE)
-  await testInvalidStateTransition(
-    cuss2,
-    AppState.UNAVAILABLE,
-    () => cuss2.requestActiveState()
-  );
+  await testInvalidStateTransition(cuss2, AppState.UNAVAILABLE, () => cuss2.requestActiveState());
 });
 
 Deno.test("2.4 - State change events should emit stateChange events with proper StateChange objects", async () => {
@@ -574,9 +534,7 @@ Deno.test("2.4 - State change events should emit stateChange events with proper 
   const emittedChanges: StateChange[] = [];
 
   // Listen for state changes
-  cuss2.on("stateChange", (change: StateChange) => {
-    emittedChanges.push(change);
-  });
+  cuss2.on("stateChange", (change: StateChange) => emittedChanges.push(change));
 
   // Simulate state change from UNAVAILABLE to AVAILABLE
   await simulateStateChange(cuss2, AppState.AVAILABLE);
@@ -597,12 +555,7 @@ Deno.test("2.5 - Pending state changes should prevent concurrent state change re
   mockConnection.sendAndGetResponse = () => {
     requestCount++;
     return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          meta: { messageCode: "OK" },
-          payload: {}
-        } as PlatformData);
-      }, 50);
+      setTimeout(() => resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData), 50);
     });
   };
 
@@ -645,8 +598,8 @@ Deno.test("2.2 - State transitions should emit activated event when entering ACT
     applicationActivation: {
       executionMode: "MAM",
       accessibleMode: true,
-      languageID: "fr-FR"
-    }
+      languageID: "fr-FR",
+    },
   };
 
   // Simulate transition to ACTIVE

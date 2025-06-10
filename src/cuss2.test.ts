@@ -8,11 +8,8 @@ import {
   type PlatformData,
 } from "cuss2-typescript-models";
 import {
-  type ComponentCharacteristics,
   ComponentTypes,
-  CussDataTypes,
-  DeviceTypes,
-  MediaTypes,
+  type EnvironmentComponent,
 } from "./types/modelExtensions.ts";
 import {
   createMockCharacteristics,
@@ -22,6 +19,7 @@ import {
   createMockCuss2WithStateTracking,
   createMockEnvironment,
   DEFAULT_DEVICE_ID,
+  mockDevice,
   MockConnection,
   setCurrentState,
   simulateStateChange,
@@ -545,64 +543,17 @@ Deno.test("3.1 - Component discovery should properly create component instances 
     if (appData.meta?.directive === "platform_components") {
       const componentList = [
         // Feeders and Dispensers for printers (must be created first)
-        createMockComponent({
-          componentID: 10,
-          componentType: ComponentTypes.FEEDER,
-        }),
-        createMockComponent({
-          componentID: 11,
-          componentType: ComponentTypes.DISPENSER,
-        }),
-        createMockComponent({
-          componentID: 12,
-          componentType: ComponentTypes.FEEDER,
-        }),
-        createMockComponent({
-          componentID: 13,
-          componentType: ComponentTypes.DISPENSER,
-        }),
+        mockDevice.createFeeder(10),
+        mockDevice.createDispenser(11),
+        mockDevice.createFeeder(12),
+        mockDevice.createDispenser(13),
         // Printers (with linked feeders and dispensers)
-        createMockComponent({
-          componentID: 1,
-          linkedComponentIDs: [10, 11], // Link to feeder 10 and dispenser 11
-          componentCharacteristics: [
-            createMockCharacteristics({
-              deviceTypesList: [DeviceTypes.PRINT],
-              mediaTypesList: [MediaTypes.BAGGAGETAG],
-            }),
-          ],
-        }),
-        createMockComponent({
-          componentID: 2,
-          linkedComponentIDs: [12, 13], // Link to feeder 12 and dispenser 13
-          componentCharacteristics: [
-            createMockCharacteristics({
-              deviceTypesList: [DeviceTypes.PRINT],
-              mediaTypesList: [MediaTypes.BOARDINGPASS],
-            }),
-          ],
-        }),
+        mockDevice.createBagTagPrinter(1, [10, 11]),
+        mockDevice.createBoardingPassPrinter(2, [12, 13]),
         // Other components
-        createMockComponent({
-          componentID: 3,
-          componentCharacteristics: [
-            createMockCharacteristics({
-              dsTypesList: [CussDataTypes.DS_TYPES_BARCODE],
-            }),
-          ],
-        }),
-        createMockComponent({
-          componentID: 4,
-          componentCharacteristics: [{
-            dsTypesList: [],
-            mediaTypesList: ["MAGCARD"],
-            deviceTypesList: [],
-          } as unknown as ComponentCharacteristics],
-        }),
-        createMockComponent({
-          componentID: 5,
-          componentType: ComponentTypes.ANNOUNCEMENT,
-        }),
+        mockDevice.createBarcodeReader(3),
+        mockDevice.createCardReader(4),
+        mockDevice.createAnnouncement(5),
       ];
 
       return Promise.resolve({
@@ -644,303 +595,52 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
     BagTagPrinter, BoardingPassPrinter, DocumentReader, BarcodeReader,
     CardReader, Biometric, Scale, Camera, Announcement, Keypad,
     Illumination, Headset, InsertionBelt, ParkingBelt, VerificationBelt,
-    RFID, BHS, AEASBD, Feeder, Dispenser
+    RFID, BHS, AEASBD, Feeder, Dispenser, Component
   } = await import("./models/index.ts");
 
   // Mock component list with all types
+  // Helper to create component type test data
+  const createComponentType = (
+    id: number,
+    createFn: (id: number) => EnvironmentComponent,
+    expectedClass: typeof Component,
+    property: string | null = null
+  ) => ({ id, component: createFn(id), expectedClass, property });
+
+  const createPrinterType = (
+    id: number,
+    linkedIds: number[],
+    createFn: (id: number, linkedIds: number[]) => EnvironmentComponent,
+    expectedClass: typeof Component,
+    property: string
+  ) => ({ id, component: createFn(id, linkedIds), expectedClass, property });
+
   const componentTypes = [
-    // Feeder for BagTagPrinter
-    {
-      id: 100,
-      component: createMockComponent({
-        componentID: 100,
-        componentType: ComponentTypes.FEEDER,
-      }),
-      expectedClass: Feeder,
-      property: null,
-    },
-    // Dispenser for BagTagPrinter
-    {
-      id: 101,
-      component: createMockComponent({
-        componentID: 101,
-        componentType: ComponentTypes.DISPENSER,
-      }),
-      expectedClass: Dispenser,
-      property: null,
-    },
-    // Feeder for BoardingPassPrinter
-    {
-      id: 102,
-      component: createMockComponent({
-        componentID: 102,
-        componentType: ComponentTypes.FEEDER,
-      }),
-      expectedClass: Feeder,
-      property: null,
-    },
-    // Dispenser for BoardingPassPrinter
-    {
-      id: 103,
-      component: createMockComponent({
-        componentID: 103,
-        componentType: ComponentTypes.DISPENSER,
-      }),
-      expectedClass: Dispenser,
-      property: null,
-    },
-    // BagTagPrinter
-    {
-      id: 1,
-      component: createMockComponent({
-        componentID: 1,
-        linkedComponentIDs: [100, 101],
-        componentCharacteristics: [
-          createMockCharacteristics({
-            deviceTypesList: [DeviceTypes.PRINT],
-            mediaTypesList: [MediaTypes.BAGGAGETAG],
-          }),
-        ],
-      }),
-      expectedClass: BagTagPrinter,
-      property: "bagTagPrinter",
-    },
-    // BoardingPassPrinter
-    {
-      id: 2,
-      component: createMockComponent({
-        componentID: 2,
-        linkedComponentIDs: [102, 103],
-        componentCharacteristics: [
-          createMockCharacteristics({
-            deviceTypesList: [DeviceTypes.PRINT],
-            mediaTypesList: [MediaTypes.BOARDINGPASS],
-          }),
-        ],
-      }),
-      expectedClass: BoardingPassPrinter,
-      property: "boardingPassPrinter",
-    },
-    // DocumentReader
-    {
-      id: 3,
-      component: createMockComponent({
-        componentID: 3,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            mediaTypesList: [MediaTypes.PASSPORT],
-          }),
-        ],
-      }),
-      expectedClass: DocumentReader,
-      property: "documentReader",
-    },
-    // BarcodeReader
-    {
-      id: 4,
-      component: createMockComponent({
-        componentID: 4,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            dsTypesList: [CussDataTypes.DS_TYPES_BARCODE],
-          }),
-        ],
-      }),
-      expectedClass: BarcodeReader,
-      property: "barcodeReader",
-    },
-    // CardReader
-    {
-      id: 5,
-      component: createMockComponent({
-        componentID: 5,
-        componentCharacteristics: [{
-          dsTypesList: [],
-          mediaTypesList: ["MAGCARD"],
-          deviceTypesList: [],
-        } as unknown as ComponentCharacteristics],
-      }),
-      expectedClass: CardReader,
-      property: "cardReader",
-    },
-    // Biometric
-    {
-      id: 6,
-      component: createMockComponent({
-        componentID: 6,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            dsTypesList: [CussDataTypes.DS_TYPES_BIOMETRIC],
-          }),
-        ],
-      }),
-      expectedClass: Biometric,
-      property: "biometric",
-    },
-    // Scale
-    {
-      id: 7,
-      component: createMockComponent({
-        componentID: 7,
-        componentType: ComponentTypes.DATA_INPUT,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            deviceTypesList: [DeviceTypes.SCALE],
-          }),
-        ],
-      }),
-      expectedClass: Scale,
-      property: "scale",
-    },
-    // Camera
-    {
-      id: 8,
-      component: createMockComponent({
-        componentID: 8,
-        componentType: ComponentTypes.DATA_INPUT,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            deviceTypesList: [DeviceTypes.CAMERA],
-            mediaTypesList: [MediaTypes.IMAGE],
-          }),
-        ],
-      }),
-      expectedClass: Camera,
-      property: "camera",
-    },
-    // Announcement
-    {
-      id: 9,
-      component: createMockComponent({
-        componentID: 9,
-        componentType: ComponentTypes.ANNOUNCEMENT,
-      }),
-      expectedClass: Announcement,
-      property: "announcement",
-    },
-    // Keypad
-    {
-      id: 10,
-      component: createMockComponent({
-        componentID: 10,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            dsTypesList: [CussDataTypes.DS_TYPES_KEY],
-          }),
-        ],
-      }),
-      expectedClass: Keypad,
-      property: "keypad",
-    },
-    // Illumination
-    {
-      id: 11,
-      component: createMockComponent({
-        componentID: 11,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            deviceTypesList: [DeviceTypes.ILLUMINATION],
-          }),
-        ],
-      }),
-      expectedClass: Illumination,
-      property: "illumination",
-    },
-    // Headset
-    {
-      id: 12,
-      component: createMockComponent({
-        componentID: 12,
-        componentType: ComponentTypes.MEDIA_INPUT,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            deviceTypesList: [DeviceTypes.ASSISTIVE],
-            mediaTypesList: [MediaTypes.AUDIO],
-          }),
-        ],
-      }),
-      expectedClass: Headset,
-      property: "headset",
-    },
-    // InsertionBelt
-    {
-      id: 13,
-      component: createMockComponent({
-        componentID: 13,
-        componentType: ComponentTypes.INSERTION_BELT,
-        componentCharacteristics: [createMockCharacteristics()],
-      }),
-      expectedClass: InsertionBelt,
-      property: "insertionBelt",
-    },
-    // ParkingBelt
-    {
-      id: 14,
-      component: createMockComponent({
-        componentID: 14,
-        componentType: ComponentTypes.PARKING_BELT,
-        componentCharacteristics: [createMockCharacteristics()],
-      }),
-      expectedClass: ParkingBelt,
-      property: "parkingBelt",
-    },
-    // VerificationBelt
-    {
-      id: 15,
-      component: createMockComponent({
-        componentID: 15,
-        componentType: ComponentTypes.VERIFICATION_BELT,
-        componentCharacteristics: [createMockCharacteristics()],
-      }),
-      expectedClass: VerificationBelt,
-      property: "verificationBelt",
-    },
-    // RFID
-    {
-      id: 16,
-      component: createMockComponent({
-        componentID: 16,
-        componentType: ComponentTypes.DATA_INPUT,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            deviceTypesList: [DeviceTypes.CONTACTLESS],
-            mediaTypesList: [MediaTypes.RFID],
-          }),
-        ],
-      }),
-      expectedClass: RFID,
-      property: "rfid",
-    },
-    // BHS
-    {
-      id: 17,
-      component: createMockComponent({
-        componentID: 17,
-        componentType: ComponentTypes.DATA_OUTPUT,
-        componentCharacteristics: [
-          createMockCharacteristics({
-            dsTypesList: [CussDataTypes.DS_TYPES_RP1745],
-          }),
-        ],
-      }),
-      expectedClass: BHS,
-      property: "bhs",
-    },
-    // AEASBD
-    {
-      id: 18,
-      component: createMockComponent({
-        componentID: 18,
-        componentType: ComponentTypes.USER_OUTPUT,
-        componentCharacteristics: [{
-          dsTypesList: ["SBDAEA"],
-          mediaTypesList: [],
-          deviceTypesList: [],
-        } as unknown as ComponentCharacteristics],
-      }),
-      expectedClass: AEASBD,
-      property: "aeasbd",
-    },
+    // Feeders and Dispensers
+    createComponentType(100, mockDevice.createFeeder, Feeder),
+    createComponentType(101, mockDevice.createDispenser, Dispenser),
+    createComponentType(102, mockDevice.createFeeder, Feeder),
+    createComponentType(103, mockDevice.createDispenser, Dispenser),
+    // Printers with linked components
+    createPrinterType(1, [100, 101], mockDevice.createBagTagPrinter, BagTagPrinter, "bagTagPrinter"),
+    createPrinterType(2, [102, 103], mockDevice.createBoardingPassPrinter, BoardingPassPrinter, "boardingPassPrinter"),
+    // Other components
+    createComponentType(3, mockDevice.createDocumentReader, DocumentReader, "documentReader"),
+    createComponentType(4, mockDevice.createBarcodeReader, BarcodeReader, "barcodeReader"),
+    createComponentType(5, mockDevice.createCardReader, CardReader, "cardReader"),
+    createComponentType(6, mockDevice.createBiometric, Biometric, "biometric"),
+    createComponentType(7, mockDevice.createScale, Scale, "scale"),
+    createComponentType(8, mockDevice.createCamera, Camera, "camera"),
+    createComponentType(9, mockDevice.createAnnouncement, Announcement, "announcement"),
+    createComponentType(10, mockDevice.createKeypad, Keypad, "keypad"),
+    createComponentType(11, mockDevice.createIllumination, Illumination, "illumination"),
+    createComponentType(12, mockDevice.createHeadset, Headset, "headset"),
+    createComponentType(13, mockDevice.createInsertionBelt, InsertionBelt, "insertionBelt"),
+    createComponentType(14, mockDevice.createParkingBelt, ParkingBelt, "parkingBelt"),
+    createComponentType(15, mockDevice.createVerificationBelt, VerificationBelt, "verificationBelt"),
+    createComponentType(16, mockDevice.createRFID, RFID, "rfid"),
+    createComponentType(17, mockDevice.createBHS, BHS, "bhs"),
+    createComponentType(18, mockDevice.createAEASBD, AEASBD, "aeasbd"),
   ];
 
   // Mock sendAndGetResponse
@@ -993,47 +693,17 @@ Deno.test("3.3 - Feeder/Dispenser linking should create feeders/dispensers befor
         payload: {
           componentList: [
             // Feeder (ID 2)
-            createMockComponent({
-              componentID: 2,
-              componentType: ComponentTypes.FEEDER,
-            }),
+            mockDevice.createFeeder(2),
             // Dispenser (ID 3)
-            createMockComponent({
-              componentID: 3,
-              componentType: ComponentTypes.DISPENSER,
-            }),
+            mockDevice.createDispenser(3),
             // Additional Feeder (ID 5)
-            createMockComponent({
-              componentID: 5,
-              componentType: ComponentTypes.FEEDER,
-            }),
+            mockDevice.createFeeder(5),
             // Additional Dispenser (ID 6)
-            createMockComponent({
-              componentID: 6,
-              componentType: ComponentTypes.DISPENSER,
-            }),
+            mockDevice.createDispenser(6),
             // Bag Tag Printer (linked to feeder 2 and dispenser 3)
-            createMockComponent({
-              componentID: 1,
-              linkedComponentIDs: [2, 3],
-              componentCharacteristics: [
-                createMockCharacteristics({
-                  deviceTypesList: [DeviceTypes.PRINT],
-                  mediaTypesList: [MediaTypes.BAGGAGETAG],
-                }),
-              ],
-            }),
+            mockDevice.createBagTagPrinter(1, [2, 3]),
             // Boarding Pass Printer (linked to feeder 5 and dispenser 6)
-            createMockComponent({
-              componentID: 4,
-              linkedComponentIDs: [5, 6],
-              componentCharacteristics: [
-                createMockCharacteristics({
-                  deviceTypesList: [DeviceTypes.PRINT],
-                  mediaTypesList: [MediaTypes.BOARDINGPASS],
-                }),
-              ],
-            }),
+            mockDevice.createBoardingPassPrinter(4, [5, 6]),
           ]
         }
       } as unknown as PlatformData);

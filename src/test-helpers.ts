@@ -11,6 +11,7 @@ import {
 import {
   type ComponentCharacteristics,
   ComponentTypes,
+  CussDataTypes,
   DeviceTypes,
   type EnvironmentComponent,
   MediaTypes,
@@ -198,3 +199,218 @@ export async function testInitializationThrowsForState(state: AppState) {
     `Platform has ${state} the application`,
   );
 }
+
+// Device-specific helper functions under mockDevice namespace
+export const mockDevice = {
+  createFeeder(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.FEEDER,
+    });
+  },
+
+  createDispenser(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.DISPENSER,
+    });
+  },
+
+  createBagTagPrinter(componentID: number, linkedComponentIDs: number[]): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      linkedComponentIDs,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.PRINT],
+          mediaTypesList: [MediaTypes.BAGGAGETAG],
+        }),
+      ],
+    });
+  },
+
+  createBoardingPassPrinter(componentID: number, linkedComponentIDs: number[]): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      linkedComponentIDs,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.PRINT],
+          mediaTypesList: [MediaTypes.BOARDINGPASS],
+        }),
+      ],
+    });
+  },
+
+  createBarcodeReader(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          dsTypesList: [CussDataTypes.DS_TYPES_BARCODE],
+        }),
+      ],
+    });
+  },
+
+  createCardReader(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentCharacteristics: [{
+        dsTypesList: [],
+        mediaTypesList: ["MAGCARD"],
+        deviceTypesList: [],
+      } as unknown as ComponentCharacteristics],
+    });
+  },
+
+  createAnnouncement(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.ANNOUNCEMENT,
+    });
+  },
+
+  createDocumentReader(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          mediaTypesList: [MediaTypes.PASSPORT],
+        }),
+      ],
+    });
+  },
+
+  createBiometric(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          dsTypesList: [CussDataTypes.DS_TYPES_BIOMETRIC],
+        }),
+      ],
+    });
+  },
+
+  createScale(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.DATA_INPUT,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.SCALE],
+        }),
+      ],
+    });
+  },
+
+  createCamera(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.DATA_INPUT,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.CAMERA],
+          mediaTypesList: [MediaTypes.IMAGE],
+        }),
+      ],
+    });
+  },
+
+  createKeypad(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          dsTypesList: [CussDataTypes.DS_TYPES_KEY],
+        }),
+      ],
+    });
+  },
+
+  createIllumination(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.ILLUMINATION],
+        }),
+      ],
+    });
+  },
+
+  createHeadset(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.MEDIA_INPUT,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.ASSISTIVE],
+          mediaTypesList: [MediaTypes.AUDIO],
+        }),
+      ],
+    });
+  },
+
+  createInsertionBelt(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.INSERTION_BELT,
+      componentCharacteristics: [createMockCharacteristics()],
+    });
+  },
+
+  createParkingBelt(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.PARKING_BELT,
+      componentCharacteristics: [createMockCharacteristics()],
+    });
+  },
+
+  createVerificationBelt(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.VERIFICATION_BELT,
+      componentCharacteristics: [createMockCharacteristics()],
+    });
+  },
+
+  createRFID(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.DATA_INPUT,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          deviceTypesList: [DeviceTypes.CONTACTLESS],
+          mediaTypesList: [MediaTypes.RFID],
+        }),
+      ],
+    });
+  },
+
+  createBHS(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.DATA_OUTPUT,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          dsTypesList: [CussDataTypes.DS_TYPES_RP1745],
+        }),
+      ],
+    });
+  },
+
+  createAEASBD(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.USER_OUTPUT,
+      componentCharacteristics: [{
+        dsTypesList: ["SBDAEA"],
+        mediaTypesList: [],
+        deviceTypesList: [],
+      } as unknown as ComponentCharacteristics],
+    });
+  },
+};

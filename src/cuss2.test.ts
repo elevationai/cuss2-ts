@@ -3,14 +3,8 @@ import { delay } from "jsr:@std/async/delay";
 import { Cuss2 } from "./cuss2.ts";
 import { Connection } from "./connection.ts";
 import { StateChange } from "./models/stateChange.ts";
-import {
-  ApplicationStateCodes as AppState,
-  type PlatformData,
-} from "cuss2-typescript-models";
-import {
-  ComponentTypes,
-  type EnvironmentComponent,
-} from "./types/modelExtensions.ts";
+import { ApplicationStateCodes as AppState, type PlatformData } from "cuss2-typescript-models";
+import { ComponentTypes, type EnvironmentComponent } from "./types/modelExtensions.ts";
 import {
   createMockCharacteristics,
   createMockComponent,
@@ -19,16 +13,14 @@ import {
   createMockCuss2WithStateTracking,
   createMockEnvironment,
   DEFAULT_DEVICE_ID,
-  mockDevice,
   MockConnection,
+  mockDevice,
   setCurrentState,
   simulateStateChange,
   testApiMethodRejectsWhenDisconnected,
   testInitializationThrowsForState,
   testInvalidStateTransition,
 } from "./test-helpers.ts";
-
-
 
 // Test Category 1: Connection and Initialization Tests
 
@@ -563,7 +555,7 @@ Deno.test("3.1 - Component discovery should properly create component instances 
     }
     return Promise.resolve({
       meta: { messageCode: "OK" },
-      payload: {}
+      payload: {},
     } as unknown as PlatformData);
   };
 
@@ -592,10 +584,27 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
 
   // Import component classes for instanceof checks
   const {
-    BagTagPrinter, BoardingPassPrinter, DocumentReader, BarcodeReader,
-    CardReader, Biometric, Scale, Camera, Announcement, Keypad,
-    Illumination, Headset, InsertionBelt, ParkingBelt, VerificationBelt,
-    RFID, BHS, AEASBD, Feeder, Dispenser, Component
+    BagTagPrinter,
+    BoardingPassPrinter,
+    DocumentReader,
+    BarcodeReader,
+    CardReader,
+    Biometric,
+    Scale,
+    Camera,
+    Announcement,
+    Keypad,
+    Illumination,
+    Headset,
+    InsertionBelt,
+    ParkingBelt,
+    VerificationBelt,
+    RFID,
+    BHS,
+    AEASBD,
+    Feeder,
+    Dispenser,
+    Component,
   } = await import("./models/index.ts");
 
   // Mock component list with all types
@@ -604,7 +613,7 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
     id: number,
     createFn: (id: number) => EnvironmentComponent,
     expectedClass: typeof Component,
-    property: string | null = null
+    property: string | null = null,
   ) => ({ id, component: createFn(id), expectedClass, property });
 
   const createPrinterType = (
@@ -612,7 +621,7 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
     linkedIds: number[],
     createFn: (id: number, linkedIds: number[]) => EnvironmentComponent,
     expectedClass: typeof Component,
-    property: string
+    property: string,
   ) => ({ id, component: createFn(id, linkedIds), expectedClass, property });
 
   const componentTypes = [
@@ -650,8 +659,8 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
       return Promise.resolve({
         meta: { messageCode: "OK" },
         payload: {
-          componentList: componentTypes.map(ct => ct.component)
-        }
+          componentList: componentTypes.map((ct) => ct.component),
+        },
       } as unknown as PlatformData);
     }
     return Promise.resolve({ payload: {} } as unknown as PlatformData);
@@ -663,14 +672,20 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
   // Verify each component type created correct class
   for (const ct of componentTypes) {
     const component = cuss2.components![String(ct.id)];
-    assertEquals(component instanceof ct.expectedClass, true,
-      `Component ID ${ct.id} should be instance of ${ct.expectedClass.name}`);
+    assertEquals(
+      component instanceof ct.expectedClass,
+      true,
+      `Component ID ${ct.id} should be instance of ${ct.expectedClass.name}`,
+    );
 
     // Verify property assignment if applicable
     if (ct.property) {
       // @ts-ignore - accessing dynamic property
-      assertEquals(cuss2[ct.property] === component, true,
-        `Component ID ${ct.id} should be assigned to cuss2.${ct.property}`);
+      assertEquals(
+        cuss2[ct.property] === component,
+        true,
+        `Component ID ${ct.id} should be assigned to cuss2.${ct.property}`,
+      );
     }
   }
 });
@@ -704,8 +719,8 @@ Deno.test("3.3 - Feeder/Dispenser linking should create feeders/dispensers befor
             mockDevice.createBagTagPrinter(1, [2, 3]),
             // Boarding Pass Printer (linked to feeder 5 and dispenser 6)
             mockDevice.createBoardingPassPrinter(4, [5, 6]),
-          ]
-        }
+          ],
+        },
       } as unknown as PlatformData);
     }
     return Promise.resolve({ payload: {} } as unknown as PlatformData);
@@ -830,7 +845,7 @@ Deno.test("3.1 - Component discovery should handle empty component list", async 
   mockConnection.sendAndGetResponse = () => {
     return Promise.resolve({
       meta: { messageCode: "OK" },
-      payload: { componentList: [] }
+      payload: { componentList: [] },
     } as unknown as PlatformData);
   };
 
@@ -867,9 +882,9 @@ Deno.test("3.2 - Component type mapping should create generic Component for unkn
                 dsTypesList: [],
               }),
             ],
-          })
-        ]
-      }
+          }),
+        ],
+      },
     } as unknown as PlatformData);
   };
 

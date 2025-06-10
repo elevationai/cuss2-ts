@@ -33,7 +33,7 @@ export class MockConnection extends EventEmitter {
   sendAndGetResponse(_data: unknown): Promise<PlatformData> {
     return Promise.resolve({
       meta: { messageCode: "OK" },
-      payload: {}
+      payload: {},
     } as unknown as PlatformData);
   }
 

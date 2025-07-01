@@ -57,12 +57,38 @@ console.log("📦 Bundling TypeScript code...");
 
 try {
   const commonBuildOptions: esbuild.BuildOptions = {
-    plugins: [...denoPlugins({ importMapURL: `data:application/json,${JSON.stringify(importMap)}` })],
+    plugins: [
+      {
+        name: 'browser-aliases',
+        setup(build) {
+          // Replace ./WebSocket.ts with empty content for browser builds
+          build.onResolve({ filter: /\/WebSocket\.ts$/ }, (args) => {
+            // Only handle relative imports
+            if (args.path.startsWith('./') || args.path.startsWith('../')) {
+              return {
+                path: 'virtual:websocket-browser',
+                namespace: 'websocket-browser',
+              };
+            }
+          });
+          
+          // Return empty content for the virtual module
+          build.onLoad({ filter: /.*/, namespace: 'websocket-browser' }, () => {
+            return {
+              contents: '// WebSocket polyfill not needed in browser',
+              loader: 'js',
+            };
+          });
+        },
+      },
+      ...denoPlugins({ importMapURL: `data:application/json,${JSON.stringify(importMap)}` }),
+    ],
     entryPoints: ["file://" + path.resolve(entryFile)], // esbuild requires absolute paths or relative to CWD
     bundle: true,
     globalName: "Cuss2", // This will be the global variable name for the IIFE
     platform: "browser", // Target the browser environment
     format: "iife", // Output an IIFE, suitable for browser globals
+    treeShaking: true, // Enable tree shaking to remove unused code
     // REMOVED: external: ['events', 'node:events'],
     // To help debug which files are included and where 'events' might be coming from if issues persist:
     // metafile: true,

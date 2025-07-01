@@ -57,22 +57,22 @@ var Cuss2 = (() => {
       var NumberIsNaN = Number.isNaN || function NumberIsNaN2(value) {
         return value !== value;
       };
-      function EventEmitter5() {
-        EventEmitter5.init.call(this);
+      function EventEmitter4() {
+        EventEmitter4.init.call(this);
       }
-      module.exports = EventEmitter5;
+      module.exports = EventEmitter4;
       module.exports.once = once;
-      EventEmitter5.EventEmitter = EventEmitter5;
-      EventEmitter5.prototype._events = void 0;
-      EventEmitter5.prototype._eventsCount = 0;
-      EventEmitter5.prototype._maxListeners = void 0;
+      EventEmitter4.EventEmitter = EventEmitter4;
+      EventEmitter4.prototype._events = void 0;
+      EventEmitter4.prototype._eventsCount = 0;
+      EventEmitter4.prototype._maxListeners = void 0;
       var defaultMaxListeners = 10;
       function checkListener(listener) {
         if (typeof listener !== "function") {
           throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
         }
       }
-      Object.defineProperty(EventEmitter5, "defaultMaxListeners", {
+      Object.defineProperty(EventEmitter4, "defaultMaxListeners", {
         enumerable: true,
         get: function() {
           return defaultMaxListeners;
@@ -84,14 +84,14 @@ var Cuss2 = (() => {
           defaultMaxListeners = arg;
         }
       });
-      EventEmitter5.init = function() {
+      EventEmitter4.init = function() {
         if (this._events === void 0 || this._events === Object.getPrototypeOf(this)._events) {
           this._events = /* @__PURE__ */ Object.create(null);
           this._eventsCount = 0;
         }
         this._maxListeners = this._maxListeners || void 0;
       };
-      EventEmitter5.prototype.setMaxListeners = function setMaxListeners(n) {
+      EventEmitter4.prototype.setMaxListeners = function setMaxListeners(n) {
         if (typeof n !== "number" || n < 0 || NumberIsNaN(n)) {
           throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + ".");
         }
@@ -100,13 +100,13 @@ var Cuss2 = (() => {
       };
       function _getMaxListeners(that) {
         if (that._maxListeners === void 0)
-          return EventEmitter5.defaultMaxListeners;
+          return EventEmitter4.defaultMaxListeners;
         return that._maxListeners;
       }
-      EventEmitter5.prototype.getMaxListeners = function getMaxListeners() {
+      EventEmitter4.prototype.getMaxListeners = function getMaxListeners() {
         return _getMaxListeners(this);
       };
-      EventEmitter5.prototype.emit = function emit(type) {
+      EventEmitter4.prototype.emit = function emit(type) {
         var args = [];
         for (var i = 1; i < arguments.length; i++)
           args.push(arguments[i]);
@@ -184,11 +184,11 @@ var Cuss2 = (() => {
         }
         return target;
       }
-      EventEmitter5.prototype.addListener = function addListener(type, listener) {
+      EventEmitter4.prototype.addListener = function addListener(type, listener) {
         return _addListener(this, type, listener, false);
       };
-      EventEmitter5.prototype.on = EventEmitter5.prototype.addListener;
-      EventEmitter5.prototype.prependListener = function prependListener(type, listener) {
+      EventEmitter4.prototype.on = EventEmitter4.prototype.addListener;
+      EventEmitter4.prototype.prependListener = function prependListener(type, listener) {
         return _addListener(this, type, listener, true);
       };
       function onceWrapper() {
@@ -207,17 +207,17 @@ var Cuss2 = (() => {
         state.wrapFn = wrapped;
         return wrapped;
       }
-      EventEmitter5.prototype.once = function once2(type, listener) {
+      EventEmitter4.prototype.once = function once2(type, listener) {
         checkListener(listener);
         this.on(type, _onceWrap(this, type, listener));
         return this;
       };
-      EventEmitter5.prototype.prependOnceListener = function prependOnceListener(type, listener) {
+      EventEmitter4.prototype.prependOnceListener = function prependOnceListener(type, listener) {
         checkListener(listener);
         this.prependListener(type, _onceWrap(this, type, listener));
         return this;
       };
-      EventEmitter5.prototype.removeListener = function removeListener(type, listener) {
+      EventEmitter4.prototype.removeListener = function removeListener(type, listener) {
         var list, events, position, i, originalListener;
         checkListener(listener);
         events = this._events;
@@ -257,8 +257,8 @@ var Cuss2 = (() => {
         }
         return this;
       };
-      EventEmitter5.prototype.off = EventEmitter5.prototype.removeListener;
-      EventEmitter5.prototype.removeAllListeners = function removeAllListeners(type) {
+      EventEmitter4.prototype.off = EventEmitter4.prototype.removeListener;
+      EventEmitter4.prototype.removeAllListeners = function removeAllListeners(type) {
         var listeners, events, i;
         events = this._events;
         if (events === void 0)
@@ -310,20 +310,20 @@ var Cuss2 = (() => {
           return unwrap ? [evlistener.listener || evlistener] : [evlistener];
         return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
       }
-      EventEmitter5.prototype.listeners = function listeners(type) {
+      EventEmitter4.prototype.listeners = function listeners(type) {
         return _listeners(this, type, true);
       };
-      EventEmitter5.prototype.rawListeners = function rawListeners(type) {
+      EventEmitter4.prototype.rawListeners = function rawListeners(type) {
         return _listeners(this, type, false);
       };
-      EventEmitter5.listenerCount = function(emitter, type) {
+      EventEmitter4.listenerCount = function(emitter, type) {
         if (typeof emitter.listenerCount === "function") {
           return emitter.listenerCount(type);
         } else {
           return listenerCount.call(emitter, type);
         }
       };
-      EventEmitter5.prototype.listenerCount = listenerCount;
+      EventEmitter4.prototype.listenerCount = listenerCount;
       function listenerCount(type) {
         var events = this._events;
         if (events !== void 0) {
@@ -336,7 +336,7 @@ var Cuss2 = (() => {
         }
         return 0;
       }
-      EventEmitter5.prototype.eventNames = function eventNames() {
+      EventEmitter4.prototype.eventNames = function eventNames() {
         return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
       };
       function arrayClone(arr, n) {
@@ -415,7 +415,7 @@ var Cuss2 = (() => {
     logger: () => logger
   });
 
-  // https://jsr.io/@cuss/cuss2-typescript-models/2.0.1/mod.ts
+  // ../../elevationai/cuss2-typescript-models/mod.ts
   var mod_exports = {};
   __export(mod_exports, {
     AckCodes: () => AckCodes,
@@ -444,7 +444,7 @@ var Cuss2 = (() => {
     TransactionDocumentType: () => TransactionDocumentType
   });
 
-  // https://jsr.io/@cuss/cuss2-typescript-models/2.0.1/src/types.gen.ts
+  // ../../elevationai/cuss2-typescript-models/src/types.gen.ts
   var BiometricProviderMessageType = /* @__PURE__ */ ((BiometricProviderMessageType2) => {
     BiometricProviderMessageType2["NONE"] = "NONE";
     BiometricProviderMessageType2["REQUEST"] = "REQUEST";
@@ -1001,494 +1001,46 @@ var Cuss2 = (() => {
     }
   };
 
-  // src/cuss2.ts
-  var import_events4 = __toESM(require_events());
-
-  // src/connection.ts
+  // src/models/EventEmitter.ts
   var import_events2 = __toESM(require_events());
-
-  // src/models/platformResponseError.ts
-  var PlatformResponseError = class extends Error {
-    constructor(pd) {
-      super("Platform returned status code: " + pd.meta.messageCode);
-      this.componentID = pd.meta.componentID;
-      this.componentState = pd.meta.componentState;
-      this.requestID = pd.meta.requestID;
-      this.messageCode = pd.meta.messageCode || "SOFTWARE_ERROR" /* SOFTWARE_ERROR */;
-    }
-    componentID;
-    componentState;
-    requestID;
-    messageCode;
-  };
-
-  // src/models/Errors.ts
-  var Cuss2Error = class extends Error {
-    constructor(message) {
-      super(message);
-      this.name = this.constructor.name;
-      Error.captureStackTrace(this, this.constructor);
-    }
-  };
-  var AuthenticationError = class extends Cuss2Error {
-    status;
-    constructor(message, status = 401) {
-      super(message);
-      this.status = status;
-    }
-  };
-
-  // https://jsr.io/@std/async/1.0.13/_util.ts
-  function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
-    const exp = Math.min(cap, base * multiplier ** attempt);
-    return (1 - jitter * Math.random()) * exp;
-  }
-
-  // https://jsr.io/@std/async/1.0.13/retry.ts
-  var RetryError = class extends Error {
-    /**
-     * Constructs a new {@linkcode RetryError} instance.
-     *
-     * @param cause the cause for this error.
-     * @param attempts the number of retry attempts made.
-     */
-    constructor(cause, attempts) {
-      super(`Retrying exceeded the maxAttempts (${attempts}).`);
-      this.name = "RetryError";
-      this.cause = cause;
-    }
-  };
-  async function retry(fn, options) {
-    const {
-      multiplier = 2,
-      maxTimeout = 6e4,
-      maxAttempts = 5,
-      minTimeout = 1e3,
-      jitter = 1
-    } = options ?? {};
-    if (maxTimeout <= 0) {
-      throw new TypeError(
-        `Cannot retry as 'maxTimeout' must be positive: current value is ${maxTimeout}`
-      );
-    }
-    if (minTimeout > maxTimeout) {
-      throw new TypeError(
-        `Cannot retry as 'minTimeout' must be <= 'maxTimeout': current values 'minTimeout=${minTimeout}', 'maxTimeout=${maxTimeout}'`
-      );
-    }
-    if (jitter > 1) {
-      throw new TypeError(
-        `Cannot retry as 'jitter' must be <= 1: current value is ${jitter}`
-      );
-    }
-    let attempt = 0;
-    while (true) {
-      try {
-        return await fn();
-      } catch (error) {
-        if (attempt + 1 >= maxAttempts) {
-          throw new RetryError(error, maxAttempts);
-        }
-        const timeout = exponentialBackoffWithJitter(
-          maxTimeout,
-          minTimeout,
-          attempt,
-          multiplier,
-          jitter
-        );
-        await new Promise((r) => setTimeout(r, timeout));
-      }
-      attempt++;
-    }
-  }
-
-  // src/connection.ts
-  var log2 = (..._args) => {
-  };
-  var global = {
-    WebSocket: globalThis.WebSocket,
-    fetch: globalThis.fetch,
-    clearTimeout: globalThis.clearTimeout.bind(globalThis),
-    setTimeout: globalThis.setTimeout.bind(globalThis)
-  };
-  var Connection = class _Connection extends import_events2.EventEmitter {
-    _auth;
-    _baseURL;
-    _socketURL;
-    _socket;
-    _refresher = null;
-    deviceID;
-    access_token = "";
-    _retryOptions;
-    get isOpen() {
-      return !!this._socket && this._socket.readyState === 1;
-    }
-    constructor(baseURL, client_id, client_secret, deviceID, tokenURL, retryOptions) {
-      super();
-      this.deviceID = deviceID;
-      this.setMaxListeners(0);
-      this._baseURL = this._cleanBaseURL(baseURL);
-      this._auth = {
-        url: tokenURL ?? `${this._baseURL}/oauth/token`,
-        client_id,
-        client_secret
-      };
-      this._socketURL = this._buildWebSocketURL(this._baseURL);
-      this._retryOptions = {
-        maxAttempts: 99,
-        minTimeout: 1e3,
-        //ms
-        maxTimeout: 64e3,
-        //ms
-        multiplier: 2,
-        jitter: 0.25,
-        ...retryOptions
-      };
-    }
-    static async authorize(url, client_id, client_secret) {
-      log2("info", `Authorizing client '${client_id}'`, url);
-      const params = new URLSearchParams();
-      params.append("client_id", client_id);
-      params.append("client_secret", client_secret);
-      params.append("grant_type", "client_credentials");
-      const response = await global.fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        redirect: "follow",
-        body: params.toString()
-        // Form-encoded data
-      });
-      if (response.status === 401) {
-        throw new AuthenticationError("Invalid Credentials", 401);
-      }
-      const data = await response.json();
-      return {
-        access_token: data.access_token,
-        expires_in: data.expires_in,
-        token_type: data.token_type
-      };
-    }
-    static async connect(baseURL, client_id, client_secret, deviceID, tokenURL, retryOptions) {
-      using connection = new _Connection(
-        baseURL,
-        client_id,
-        client_secret,
-        deviceID,
-        tokenURL,
-        retryOptions
-      );
-      await connection._authenticateAndQueueTokenRefresh();
-      await connection._createWebSocketAndAttachEventHandlers();
-      return connection;
-    }
-    _cleanBaseURL(url) {
-      const parts = url.split("?");
-      const cleanURL = parts[0];
-      return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
-    }
-    _buildWebSocketURL(baseURL) {
-      if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
-        return `${baseURL}/platform/subscribe`;
-      }
-      const protocol = baseURL.startsWith("https") ? "wss" : "ws";
-      const wsBase = baseURL.replace(/^https?:\/\//, "");
-      return `${protocol}://${wsBase}/platform/subscribe`;
-    }
-    async _authenticateAndQueueTokenRefresh() {
-      log2("info", "Getting access_token");
-      if (this._refresher) {
-        global.clearTimeout(this._refresher);
-        this._refresher = null;
-      }
-      try {
-        const access_data = await _Connection.authorize(
-          this._auth.url,
-          this._auth.client_id,
-          this._auth.client_secret
-        );
-        this.access_token = access_data.access_token;
-        const expires = Math.max(0, access_data.expires_in);
-        if (expires > 0) {
-          log2("info", `access_token expires in ${expires} seconds`);
-          this._refresher = global.setTimeout(
-            () => this._authenticateAndQueueTokenRefresh(),
-            (expires - 1) * 1e3
-          );
-        }
-      } catch (error) {
-        log2("error", "Authentication failed:", error);
-        throw error;
-      }
-    }
-    _createWebSocketAndAttachEventHandlers() {
-      let retrying = true;
-      return retry(() => new Promise((resolve, reject) => {
-        if (this.isOpen) {
-          log2("error", "open socket already exists");
-          return resolve(true);
-        }
-        const socket = new global.WebSocket(this._socketURL);
-        socket.onopen = () => {
-          log2("info", "Socket opened: ", this._socketURL);
-          this._socket = socket;
-          retrying = false;
-          resolve(true);
-          this.emit("open");
-        };
-        socket.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.ping) {
-              socket.send(`{ "pong": ${Date.now()} }`);
-              this.emit("ping", data);
-              return;
-            }
-            if (data.ackCode) {
-              this.emit("ack", data);
-              return;
-            }
-            log2("socket.onmessage", event);
-            const platformData = data;
-            this.emit("message", platformData);
-            if (platformData?.meta?.requestID) {
-              this.emit(String(platformData.meta.requestID), platformData);
-            }
-          } catch (error) {
-            log2("error", "Error processing message:", error);
-            this.emit("error", error);
-          }
-        };
-        socket.onclose = (e) => {
-          log2("Websocket Close:", e.reason);
-          socket.onopen = null;
-          socket.onclose = null;
-          socket.onerror = null;
-          socket.onmessage = null;
-          this.emit("close", e);
-          if (e.code === 1e3)
-            return;
-          if (retrying) {
-            reject(e);
-          }
-        };
-        socket.onerror = (e) => {
-          log2("Websocket Error:", e);
-          this.emit("error", e);
-        };
-      }), this._retryOptions);
-    }
-    send(data) {
-      if (data instanceof Object && !data.meta?.oauthToken) {
-        data.meta.oauthToken = this.access_token;
-      }
-      if (data instanceof Object && !data.meta?.deviceID) {
-        data.meta.deviceID = this.deviceID;
-      }
-      this._socket?.send(JSON.stringify(data));
-    }
-    async sendAndGetResponse(applicationData) {
-      if (!this._socket) {
-        throw new Error("WebSocket is not connected");
-      }
-      const meta = applicationData.meta;
-      const reqId = meta.requestID;
-      meta.oauthToken = this.access_token;
-      if ((meta.deviceID === null || meta.deviceID === "00000000-0000-0000-0000-000000000000") && this.deviceID !== null) {
-        meta.deviceID = this.deviceID;
-      }
-      const promise = this.waitFor(reqId);
-      this._socket.send(JSON.stringify(applicationData));
-      const message = await promise;
-      const messageCode = message.meta?.messageCode;
-      if (messageCode && helpers.isNonCritical(messageCode)) {
-        return message;
-      } else {
-        throw new PlatformResponseError(message);
-      }
-    }
-    close(code, reason) {
-      if (this._refresher) {
-        global.clearTimeout(this._refresher);
-        this._refresher = null;
-      }
-      this._socket?.close(code, reason);
-    }
-    waitFor(event) {
+  var EventEmitter2 = class _EventEmitter extends import_events2.EventEmitter {
+    waitFor(event, errorEvents = ["error"]) {
       return new Promise((resolve, reject) => {
+        const eventMappings = [];
+        const cleanup = () => {
+          for (const mapping of eventMappings) {
+            mapping.source.off(mapping.event, mapping.handler);
+          }
+        };
         const resolver = (e) => {
-          this.off("close", catcher);
+          cleanup();
           resolve(e);
         };
         const catcher = (e) => {
-          this.off(event, resolver);
+          cleanup();
           reject(e);
         };
-        this.once(event, resolver);
-        this.once("close", catcher);
+        const attachEvent = (eventString, handler) => {
+          const dotIndex = eventString.indexOf(".");
+          if (dotIndex > 0) {
+            const propertyName = eventString.substring(0, dotIndex);
+            const eventName = eventString.substring(dotIndex + 1);
+            const property = this[propertyName];
+            if (property && property instanceof _EventEmitter) {
+              property.once(eventName, handler);
+              eventMappings.push({ source: property, event: eventName, handler });
+              return;
+            }
+          }
+          this.once(eventString, handler);
+          eventMappings.push({ source: this, event: eventString, handler });
+        };
+        attachEvent(event, resolver);
+        for (const errorEvent of errorEvents) {
+          attachEvent(errorEvent, catcher);
+        }
       });
     }
-    [Symbol.dispose]() {
-      if (this._refresher) {
-        clearTimeout(this._refresher);
-      }
-    }
-  };
-
-  // src/models/stateChange.ts
-  var StateChange = class {
-    previous;
-    current;
-    constructor(previous, current) {
-      this.previous = previous;
-      this.current = current;
-    }
-  };
-
-  // src/types/modelExtensions.ts
-  var MediaTypes2 = MediaTypes;
-  var CussDataTypes2 = CussDataTypes;
-
-  // src/componentInterrogation.ts
-  var dsTypesHas = (charac0, type) => {
-    return charac0?.dsTypesList?.find((d) => d === type);
-  };
-  var mediaTypesHas = (mediaTypes, type) => {
-    return mediaTypes?.find((m) => m === type);
-  };
-  var deviceTypesHas = (deviceTypes, type) => {
-    return deviceTypes?.find((m) => m === type);
-  };
-  var ComponentInterrogation = class {
-    static isAnnouncement = (component) => {
-      return component.componentType === "ANNOUNCEMENT" /* ANNOUNCEMENT */;
-    };
-    static isFeeder = (component) => {
-      return component.componentType === "FEEDER" /* FEEDER */;
-    };
-    static isDispenser = (component) => {
-      return component.componentType === "DISPENSER" /* DISPENSER */;
-    };
-    static isBagTagPrinter = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, MediaTypes2.BAGGAGETAG);
-    };
-    static isBoardingPassPrinter = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, MediaTypes2.BOARDINGPASS);
-    };
-    static isDocumentReader = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      const mediaTypes = charac0.mediaTypesList;
-      return mediaTypesHas(mediaTypes, MediaTypes2.PASSPORT);
-    };
-    static isBarcodeReader = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_BARCODE);
-    };
-    static isCardReader = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      const mediaTypes = charac0.mediaTypesList;
-      return mediaTypesHas(mediaTypes, "MAGCARD");
-    };
-    static isKeypad = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY) || dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY_UP) || dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY_DOWN);
-    };
-    static isIllumination = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      return deviceTypesHas(charac0.deviceTypesList, "ILLUMINATION" /* ILLUMINATION */);
-    };
-    static isHeadset = (component) => {
-      if (component.componentType !== "MEDIA_INPUT" /* MEDIA_INPUT */)
-        return;
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "ASSISTIVE" /* ASSISTIVE */) && mediaTypesHas(mediaTypes, MediaTypes2.AUDIO);
-    };
-    static isScale = (component) => {
-      if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
-        return;
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      return deviceTypesHas(charac0.deviceTypesList, "SCALE" /* SCALE */);
-    };
-    static isBiometric = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_BIOMETRIC);
-    };
-    static isCamera = (component) => {
-      if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
-        return;
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return;
-      const mediaTypes = charac0.mediaTypesList;
-      return deviceTypesHas(charac0.deviceTypesList, "CAMERA" /* CAMERA */) && mediaTypesHas(mediaTypes, MediaTypes2.IMAGE);
-    };
-    static isRFIDReader = (component) => {
-      if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
-        return false;
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      const mediaTypes = charac0.mediaTypesList;
-      return !!deviceTypesHas(charac0.deviceTypesList, "CONTACTLESS" /* CONTACTLESS */) && !!mediaTypesHas(mediaTypes, MediaTypes2.RFID);
-    };
-    static isInsertionBelt = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return component.componentType === "INSERTION_BELT" /* INSERTION_BELT */;
-    };
-    static isVerificationBelt = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return component.componentType === "VERIFICATION_BELT" /* VERIFICATION_BELT */;
-    };
-    static isParkingBelt = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return component.componentType === "PARKING_BELT" /* PARKING_BELT */;
-    };
-    static isAEASBD = (component) => {
-      if (component.componentType !== "USER_OUTPUT" /* USER_OUTPUT */)
-        return false;
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return !!dsTypesHas(charac0, "SBDAEA");
-    };
-    static isBHS = (component) => {
-      if (component.componentType !== "DATA_OUTPUT" /* DATA_OUTPUT */)
-        return false;
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return !!dsTypesHas(charac0, CussDataTypes2.DS_TYPES_RP1745);
-    };
   };
 
   // src/models/Component.ts
@@ -1789,6 +1341,21 @@ var Cuss2 = (() => {
     }
   };
 
+  // src/models/platformResponseError.ts
+  var PlatformResponseError = class extends Error {
+    constructor(pd) {
+      super("Platform returned status code: " + pd.meta.messageCode);
+      this.componentID = pd.meta.componentID;
+      this.componentState = pd.meta.componentState;
+      this.requestID = pd.meta.requestID;
+      this.messageCode = pd.meta.messageCode || "SOFTWARE_ERROR" /* SOFTWARE_ERROR */;
+    }
+    componentID;
+    componentState;
+    requestID;
+    messageCode;
+  };
+
   // src/models/Printer.ts
   var Printer = class extends Component {
     constructor(component, cuss2, _type) {
@@ -2017,6 +1584,476 @@ var Cuss2 = (() => {
     }
   };
 
+  // src/models/Errors.ts
+  var Cuss2Error = class extends Error {
+    constructor(message) {
+      super(message);
+      this.name = this.constructor.name;
+      Error.captureStackTrace(this, this.constructor);
+    }
+  };
+  var AuthenticationError = class extends Cuss2Error {
+    status;
+    constructor(message, status = 401) {
+      super(message);
+      this.status = status;
+    }
+  };
+
+  // https://jsr.io/@std/async/1.0.13/_util.ts
+  function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
+    const exp = Math.min(cap, base * multiplier ** attempt);
+    return (1 - jitter * Math.random()) * exp;
+  }
+
+  // https://jsr.io/@std/async/1.0.13/retry.ts
+  var RetryError = class extends Error {
+    /**
+     * Constructs a new {@linkcode RetryError} instance.
+     *
+     * @param cause the cause for this error.
+     * @param attempts the number of retry attempts made.
+     */
+    constructor(cause, attempts) {
+      super(`Retrying exceeded the maxAttempts (${attempts}).`);
+      this.name = "RetryError";
+      this.cause = cause;
+    }
+  };
+  async function retry(fn, options) {
+    const {
+      multiplier = 2,
+      maxTimeout = 6e4,
+      maxAttempts = 5,
+      minTimeout = 1e3,
+      jitter = 1
+    } = options ?? {};
+    if (maxTimeout <= 0) {
+      throw new TypeError(
+        `Cannot retry as 'maxTimeout' must be positive: current value is ${maxTimeout}`
+      );
+    }
+    if (minTimeout > maxTimeout) {
+      throw new TypeError(
+        `Cannot retry as 'minTimeout' must be <= 'maxTimeout': current values 'minTimeout=${minTimeout}', 'maxTimeout=${maxTimeout}'`
+      );
+    }
+    if (jitter > 1) {
+      throw new TypeError(
+        `Cannot retry as 'jitter' must be <= 1: current value is ${jitter}`
+      );
+    }
+    let attempt = 0;
+    while (true) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (attempt + 1 >= maxAttempts) {
+          throw new RetryError(error, maxAttempts);
+        }
+        const timeout = exponentialBackoffWithJitter(
+          maxTimeout,
+          minTimeout,
+          attempt,
+          multiplier,
+          jitter
+        );
+        await new Promise((r) => setTimeout(r, timeout));
+      }
+      attempt++;
+    }
+  }
+
+  // src/connection.ts
+  var log2 = (..._args) => {
+  };
+  var global = {
+    WebSocket,
+    fetch: globalThis.fetch.bind(globalThis),
+    clearTimeout: globalThis.clearTimeout.bind(globalThis),
+    setTimeout: globalThis.setTimeout.bind(globalThis)
+  };
+  var Connection = class _Connection extends EventEmitter2 {
+    _auth;
+    _baseURL;
+    _socketURL;
+    _socket;
+    _refresher = null;
+    deviceID;
+    access_token = "";
+    _retryOptions;
+    get isOpen() {
+      return !!this._socket && this._socket.readyState === 1;
+    }
+    constructor(baseURL, client_id, client_secret, deviceID, tokenURL, retryOptions) {
+      super();
+      this.deviceID = deviceID;
+      this.setMaxListeners(0);
+      this._baseURL = this._cleanBaseURL(baseURL);
+      this._auth = {
+        url: tokenURL ?? `${this._baseURL}/oauth/token`,
+        client_id,
+        client_secret
+      };
+      this._socketURL = this._buildWebSocketURL(this._baseURL);
+      this._retryOptions = {
+        maxAttempts: 99,
+        minTimeout: 1e3,
+        //ms
+        maxTimeout: 64e3,
+        //ms
+        multiplier: 2,
+        jitter: 0.25,
+        ...retryOptions
+      };
+    }
+    async authorize() {
+      log2("info", `Authorizing client '${this._auth.client_id}'`, this._auth.url);
+      const params = new URLSearchParams();
+      params.append("client_id", this._auth.client_id);
+      params.append("client_secret", this._auth.client_secret);
+      params.append("grant_type", "client_credentials");
+      let attempts = 0;
+      const result = await retry(async () => {
+        log2("info", `Retrying client '${this._auth.client_id}'`);
+        this.emit("authenticating", ++attempts);
+        const response = await global.fetch(this._auth.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          redirect: "follow",
+          body: params.toString()
+          // Form-encoded data
+        });
+        if (response.status === 401) {
+          return new AuthenticationError("Invalid Credentials", 401);
+        }
+        if (response.status >= 400) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const auth = {
+          access_token: data.access_token,
+          expires_in: data.expires_in,
+          token_type: data.token_type
+        };
+        this.emit("authenticated", auth);
+        return auth;
+      }, this._retryOptions);
+      if (result instanceof AuthenticationError) {
+        this.emit("authenticationError", result);
+        throw result;
+      }
+      attempts = 0;
+      return result;
+    }
+    static connect(baseURL, client_id, client_secret, deviceID, tokenURL, retryOptions) {
+      using connection = new _Connection(
+        baseURL,
+        client_id,
+        client_secret,
+        deviceID,
+        tokenURL,
+        retryOptions
+      );
+      connection.once("authenticated", () => connection._createWebSocketAndAttachEventHandlers());
+      setTimeout(() => connection._authenticateAndQueueTokenRefresh(), 10);
+      return connection;
+    }
+    _cleanBaseURL(url) {
+      const parts = url.split("?");
+      const cleanURL = parts[0];
+      return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
+    }
+    _buildWebSocketURL(baseURL) {
+      if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
+        return `${baseURL}/platform/subscribe`;
+      }
+      const protocol = baseURL.startsWith("https") ? "wss" : "ws";
+      const wsBase = baseURL.replace(/^https?:\/\//, "");
+      return `${protocol}://${wsBase}/platform/subscribe`;
+    }
+    async _authenticateAndQueueTokenRefresh() {
+      log2("info", "Getting access_token");
+      if (this._refresher) {
+        global.clearTimeout(this._refresher);
+        this._refresher = null;
+      }
+      try {
+        const access_data = await this.authorize();
+        this.access_token = access_data.access_token;
+        const expires = Math.max(0, access_data.expires_in);
+        if (expires > 0) {
+          log2("info", `access_token expires in ${expires} seconds`);
+          this._refresher = global.setTimeout(() => this._authenticateAndQueueTokenRefresh(), (expires - 1) * 1e3);
+        }
+      } catch (error) {
+        log2("error", "Authentication failed:", error);
+      }
+    }
+    _createWebSocketAndAttachEventHandlers() {
+      let attempts = 0;
+      retry(() => new Promise((resolve, reject) => {
+        if (this.isOpen) {
+          return resolve(true);
+        }
+        this.emit("connecting", ++attempts);
+        let options = void 0;
+        if (typeof Deno !== "undefined") {
+          options = { headers: { Origin: "http://0.0.0.0" } };
+        }
+        const socket = new global.WebSocket(this._socketURL, options);
+        socket.onopen = () => {
+          log2("info", "Socket opened: ", this._socketURL);
+          this._socket = socket;
+          attempts = 0;
+          resolve(true);
+          this.emit("open");
+        };
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.ping) {
+              socket.send(`{ "pong": ${Date.now()} }`);
+              this.emit("ping", data);
+              return;
+            }
+            if (data.ackCode) {
+              this.emit("ack", data);
+              return;
+            }
+            log2("socket.onmessage", event);
+            const platformData = data;
+            this.emit("message", platformData);
+            if (platformData?.meta?.requestID) {
+              this.emit(String(platformData.meta.requestID), platformData);
+            }
+          } catch (error) {
+            log2("error", "Error processing message:", error);
+            this.emit("messageError", error);
+          }
+        };
+        socket.onclose = (e) => {
+          log2("Websocket Close:", e.reason);
+          socket.onopen = null;
+          socket.onclose = null;
+          socket.onerror = null;
+          socket.onmessage = null;
+          this.emit("close", e);
+          if (e.code === 1e3)
+            return;
+          if (attempts > 0) {
+            reject(e);
+          }
+        };
+        socket.onerror = (e) => {
+          log2("Websocket Error:", e);
+          this.emit("socketError", e);
+        };
+      }), this._retryOptions);
+    }
+    send(data) {
+      if (!this.isOpen) {
+        throw new Error("WebSocket connection not established");
+      }
+      if (data instanceof Object && !data.meta?.oauthToken) {
+        data.meta.oauthToken = this.access_token;
+      }
+      if (data instanceof Object && !data.meta?.deviceID) {
+        data.meta.deviceID = this.deviceID;
+      }
+      this._socket?.send(JSON.stringify(data));
+    }
+    async sendAndGetResponse(applicationData) {
+      if (!this.isOpen) {
+        throw new Error("WebSocket connection not established");
+      }
+      const meta = applicationData.meta;
+      const reqId = meta.requestID;
+      meta.oauthToken = this.access_token;
+      if ((meta.deviceID === null || meta.deviceID === "00000000-0000-0000-0000-000000000000") && this.deviceID !== null) {
+        meta.deviceID = this.deviceID;
+      }
+      const promise = this.waitFor(reqId, ["messageError", "socketError", "close"]);
+      this._socket?.send(JSON.stringify(applicationData));
+      const message = await promise;
+      const messageCode = message.meta?.messageCode;
+      if (messageCode && helpers.isNonCritical(messageCode)) {
+        return message;
+      } else {
+        throw new PlatformResponseError(message);
+      }
+    }
+    close(code, reason) {
+      if (this._refresher) {
+        global.clearTimeout(this._refresher);
+        this._refresher = null;
+      }
+      this._socket?.close(code, reason);
+    }
+    [Symbol.dispose]() {
+      if (this._refresher) {
+        clearTimeout(this._refresher);
+      }
+    }
+  };
+
+  // src/models/stateChange.ts
+  var StateChange = class {
+    previous;
+    current;
+    constructor(previous, current) {
+      this.previous = previous;
+      this.current = current;
+    }
+  };
+
+  // src/types/modelExtensions.ts
+  var MediaTypes2 = MediaTypes;
+  var CussDataTypes2 = CussDataTypes;
+
+  // src/componentInterrogation.ts
+  var dsTypesHas = (charac0, type) => {
+    return charac0?.dsTypesList?.find((d) => d === type);
+  };
+  var mediaTypesHas = (mediaTypes, type) => {
+    return mediaTypes?.find((m) => m === type);
+  };
+  var deviceTypesHas = (deviceTypes, type) => {
+    return deviceTypes?.find((m) => m === type);
+  };
+  var ComponentInterrogation = class {
+    static isAnnouncement = (component) => {
+      return component.componentType === "ANNOUNCEMENT" /* ANNOUNCEMENT */;
+    };
+    static isFeeder = (component) => {
+      return component.componentType === "FEEDER" /* FEEDER */;
+    };
+    static isDispenser = (component) => {
+      return component.componentType === "DISPENSER" /* DISPENSER */;
+    };
+    static isBagTagPrinter = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      const mediaTypes = charac0.mediaTypesList;
+      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, MediaTypes2.BAGGAGETAG);
+    };
+    static isBoardingPassPrinter = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      const mediaTypes = charac0.mediaTypesList;
+      return deviceTypesHas(charac0.deviceTypesList, "PRINT" /* PRINT */) && mediaTypesHas(mediaTypes, MediaTypes2.BOARDINGPASS);
+    };
+    static isDocumentReader = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      const mediaTypes = charac0.mediaTypesList;
+      return mediaTypesHas(mediaTypes, MediaTypes2.PASSPORT);
+    };
+    static isBarcodeReader = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_BARCODE);
+    };
+    static isCardReader = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      const mediaTypes = charac0.mediaTypesList;
+      return mediaTypesHas(mediaTypes, "MAGCARD");
+    };
+    static isKeypad = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY) || dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY_UP) || dsTypesHas(charac0, CussDataTypes2.DS_TYPES_KEY_DOWN);
+    };
+    static isIllumination = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      return deviceTypesHas(charac0.deviceTypesList, "ILLUMINATION" /* ILLUMINATION */);
+    };
+    static isHeadset = (component) => {
+      if (component.componentType !== "MEDIA_INPUT" /* MEDIA_INPUT */)
+        return;
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      const mediaTypes = charac0.mediaTypesList;
+      return deviceTypesHas(charac0.deviceTypesList, "ASSISTIVE" /* ASSISTIVE */) && mediaTypesHas(mediaTypes, MediaTypes2.AUDIO);
+    };
+    static isScale = (component) => {
+      if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
+        return;
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      return deviceTypesHas(charac0.deviceTypesList, "SCALE" /* SCALE */);
+    };
+    static isBiometric = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      return dsTypesHas(charac0, CussDataTypes2.DS_TYPES_BIOMETRIC);
+    };
+    static isCamera = (component) => {
+      if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
+        return;
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return;
+      const mediaTypes = charac0.mediaTypesList;
+      return deviceTypesHas(charac0.deviceTypesList, "CAMERA" /* CAMERA */) && mediaTypesHas(mediaTypes, MediaTypes2.IMAGE);
+    };
+    static isRFIDReader = (component) => {
+      if (component.componentType !== "DATA_INPUT" /* DATA_INPUT */)
+        return false;
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return false;
+      const mediaTypes = charac0.mediaTypesList;
+      return !!deviceTypesHas(charac0.deviceTypesList, "CONTACTLESS" /* CONTACTLESS */) && !!mediaTypesHas(mediaTypes, MediaTypes2.RFID);
+    };
+    static isInsertionBelt = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return false;
+      return component.componentType === "INSERTION_BELT" /* INSERTION_BELT */;
+    };
+    static isVerificationBelt = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return false;
+      return component.componentType === "VERIFICATION_BELT" /* VERIFICATION_BELT */;
+    };
+    static isParkingBelt = (component) => {
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return false;
+      return component.componentType === "PARKING_BELT" /* PARKING_BELT */;
+    };
+    static isAEASBD = (component) => {
+      if (component.componentType !== "USER_OUTPUT" /* USER_OUTPUT */)
+        return false;
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return false;
+      return !!dsTypesHas(charac0, "SBDAEA");
+    };
+    static isBHS = (component) => {
+      if (component.componentType !== "DATA_OUTPUT" /* DATA_OUTPUT */)
+        return false;
+      const charac0 = component.componentCharacteristics?.[0];
+      if (!charac0)
+        return false;
+      return !!dsTypesHas(charac0, CussDataTypes2.DS_TYPES_RP1745);
+    };
+  };
+
   // src/cuss2.ts
   var {
     isAnnouncement,
@@ -2045,7 +2082,7 @@ var Cuss2 = (() => {
       throw new TypeError("Invalid componentID: " + componentID);
     }
   }
-  var Cuss2 = class _Cuss2 extends import_events4.EventEmitter {
+  var Cuss2 = class _Cuss2 extends EventEmitter2 {
     connection;
     environment = {};
     components = void 0;
@@ -2076,30 +2113,39 @@ var Cuss2 = (() => {
     get state() {
       return this._currentState.current;
     }
+    get connected() {
+      if (this.connection.isOpen && this.components) {
+        return Promise.resolve();
+      }
+      return this.waitFor("connected", ["connection.authenticationError"]);
+    }
     constructor(connection) {
       super();
       this.connection = connection;
       connection.on("message", (e) => this._handleWebSocketMessage(e));
       connection.on("open", () => this._initialize());
     }
-    static async connect(wss, client_id, client_secret, deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
-      const connection = await Connection.connect(
+    static connect(wss, client_id, client_secret, deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
+      using connection = Connection.connect(
         wss,
         client_id,
         client_secret,
         deviceID,
         tokenURL
       );
-      const cuss2 = new _Cuss2(connection);
-      await cuss2._initialize();
-      return cuss2;
+      return new _Cuss2(connection);
+    }
+    _ensureConnected() {
+      if (!this.connection.isOpen) {
+        throw new Error("Connection not established. Please await cuss2.connected before making API calls.");
+      }
     }
     async _initialize() {
       log("info", "Getting Environment Information");
-      const level = await this.api.getEnvironment();
+      const environment = await this.api.getEnvironment();
       const deviceID = this.connection.deviceID;
       if (deviceID === "00000000-0000-0000-0000-000000000000" || deviceID === null) {
-        this.connection.deviceID = level.deviceID;
+        this.connection.deviceID = environment.deviceID;
       }
       if (!this.state) {
         throw new Error("Platform in abnormal state.");
@@ -2113,6 +2159,7 @@ var Cuss2 = (() => {
         log("error", "error querying components", e);
         super.emit("queryError", e);
       });
+      this.emit("connected", this);
     }
     async _handleWebSocketMessage(platformData) {
       if (!platformData)
@@ -2142,9 +2189,7 @@ var Cuss2 = (() => {
             this.checkRequiredComponentsAndSyncState();
           }
         } else if (currentState === "ACTIVE" /* ACTIVE */) {
-          if (!payload?.applicationActivation) {
-            this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
-          }
+          this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
           this.accessibleMode = payload?.applicationActivation?.accessibleMode || false;
           this.language = payload?.applicationActivation?.languageID || "en-US";
           super.emit("activated", payload?.applicationActivation);
@@ -2168,6 +2213,7 @@ var Cuss2 = (() => {
     }
     api = {
       getEnvironment: async () => {
+        this._ensureConnected();
         const ad = Build.applicationData("platform_environment" /* PLATFORM_ENVIRONMENT */);
         const response = await this.connection.sendAndGetResponse(ad);
         log("verbose", "[getEnvironment()] response", response);
@@ -2175,6 +2221,7 @@ var Cuss2 = (() => {
         return this.environment;
       },
       getComponents: async () => {
+        this._ensureConnected();
         const ad = Build.applicationData("platform_components" /* PLATFORM_COMPONENTS */);
         const response = await this.connection.sendAndGetResponse(ad);
         log("verbose", "[getComponents()] response", response);
@@ -2249,6 +2296,7 @@ var Cuss2 = (() => {
         return componentList;
       },
       getStatus: async (componentID) => {
+        this._ensureConnected();
         const ad = Build.applicationData("peripherals_query" /* PERIPHERALS_QUERY */, {
           componentID
         });
@@ -2257,6 +2305,7 @@ var Cuss2 = (() => {
         return response;
       },
       send: async (componentID, dataObj) => {
+        this._ensureConnected();
         const ad = Build.applicationData("peripherals_send" /* PERIPHERALS_SEND */, {
           componentID,
           dataObj
@@ -2264,6 +2313,7 @@ var Cuss2 = (() => {
         return await this.connection.sendAndGetResponse(ad);
       },
       setup: async (componentID, dataObj) => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData("peripherals_setup" /* PERIPHERALS_SETUP */, {
           componentID,
@@ -2272,6 +2322,7 @@ var Cuss2 = (() => {
         return await this.connection.sendAndGetResponse(ad);
       },
       cancel: async (componentID) => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData("peripherals_cancel" /* PERIPHERALS_CANCEL */, {
           componentID
@@ -2279,6 +2330,7 @@ var Cuss2 = (() => {
         return await this.connection.sendAndGetResponse(ad);
       },
       enable: async (componentID) => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData(
           "peripherals_userpresent_enable" /* PERIPHERALS_USERPRESENT_ENABLE */,
@@ -2287,6 +2339,7 @@ var Cuss2 = (() => {
         return await this.connection.sendAndGetResponse(ad);
       },
       disable: async (componentID) => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData(
           "peripherals_userpresent_disable" /* PERIPHERALS_USERPRESENT_DISABLE */,
@@ -2295,6 +2348,7 @@ var Cuss2 = (() => {
         return await this.connection.sendAndGetResponse(ad);
       },
       offer: async (componentID) => {
+        this._ensureConnected();
         validateComponentId(componentID);
         const ad = Build.applicationData(
           "peripherals_userpresent_offer" /* PERIPHERALS_USERPRESENT_OFFER */,
@@ -2303,6 +2357,7 @@ var Cuss2 = (() => {
         return await this.connection.sendAndGetResponse(ad);
       },
       staterequest: async (state, reasonCode = "NOT_APPLICABLE" /* NOT_APPLICABLE */, reason = "") => {
+        this._ensureConnected();
         if (this.pendingStateChange) {
           return Promise.resolve(void 0);
         }
@@ -2319,6 +2374,7 @@ var Cuss2 = (() => {
       },
       announcement: {
         play: async (componentID, rawData) => {
+          this._ensureConnected();
           validateComponentId(componentID);
           const dataObj = [{
             data: rawData,
@@ -2334,6 +2390,7 @@ var Cuss2 = (() => {
           return await this.connection.sendAndGetResponse(ad);
         },
         pause: async (componentID) => {
+          this._ensureConnected();
           validateComponentId(componentID);
           const ad = Build.applicationData(
             "peripherals_announcement_pause" /* PERIPHERALS_ANNOUNCEMENT_PAUSE */,
@@ -2342,6 +2399,7 @@ var Cuss2 = (() => {
           return await this.connection.sendAndGetResponse(ad);
         },
         resume: async (componentID) => {
+          this._ensureConnected();
           validateComponentId(componentID);
           const ad = Build.applicationData(
             "peripherals_announcement_resume" /* PERIPHERALS_ANNOUNCEMENT_RESUME */,
@@ -2350,6 +2408,7 @@ var Cuss2 = (() => {
           return await this.connection.sendAndGetResponse(ad);
         },
         stop: async (componentID) => {
+          this._ensureConnected();
           validateComponentId(componentID);
           const ad = Build.applicationData(
             "peripherals_announcement_stop" /* PERIPHERALS_ANNOUNCEMENT_STOP */,
@@ -2369,31 +2428,38 @@ var Cuss2 = (() => {
         }
       }
     }
-    async requestAvailableState() {
-      if (this.state === "INITIALIZE" /* INITIALIZE */) {
-        await this.requestUnavailableState();
-      }
-      const okToChange = this.state === "UNAVAILABLE" /* UNAVAILABLE */ || this.state === "ACTIVE" /* ACTIVE */;
-      if (okToChange && this.state === "ACTIVE" /* ACTIVE */) {
-        await this._disableAllComponents();
-      }
-      return okToChange ? this.api.staterequest("AVAILABLE" /* AVAILABLE */) : Promise.resolve(void 0);
+    async requestInitializeState() {
+      this._ensureConnected();
+      const okToChange = this.state === "STOPPED" /* STOPPED */;
+      return okToChange ? await this.api.staterequest("INITIALIZE" /* INITIALIZE */) : Promise.resolve(void 0);
     }
     async requestUnavailableState() {
+      this._ensureConnected();
       const okToChange = this.state === "INITIALIZE" /* INITIALIZE */ || this.state === "AVAILABLE" /* AVAILABLE */ || this.state === "ACTIVE" /* ACTIVE */;
       if (okToChange && this.state === "ACTIVE" /* ACTIVE */) {
         await this._disableAllComponents();
       }
       return okToChange ? this.api.staterequest("UNAVAILABLE" /* UNAVAILABLE */) : Promise.resolve(void 0);
     }
-    async requestStoppedState() {
-      return await this.api.staterequest("STOPPED" /* STOPPED */);
+    async requestAvailableState() {
+      this._ensureConnected();
+      const okToChange = this.state === "UNAVAILABLE" /* UNAVAILABLE */ || this.state === "ACTIVE" /* ACTIVE */;
+      if (okToChange && this.state === "ACTIVE" /* ACTIVE */) {
+        await this._disableAllComponents();
+      }
+      return okToChange ? this.api.staterequest("AVAILABLE" /* AVAILABLE */) : Promise.resolve(void 0);
     }
     async requestActiveState() {
+      this._ensureConnected();
       const okToChange = this.state === "AVAILABLE" /* AVAILABLE */ || this.state === "ACTIVE" /* ACTIVE */;
       return await (okToChange ? this.api.staterequest("ACTIVE" /* ACTIVE */) : Promise.resolve(void 0));
     }
+    async requestStoppedState() {
+      this._ensureConnected();
+      return await this.api.staterequest("STOPPED" /* STOPPED */);
+    }
     async requestReload() {
+      this._ensureConnected();
       const okToChange = !this.state || this.state === "UNAVAILABLE" /* UNAVAILABLE */ || this.state === "AVAILABLE" /* AVAILABLE */ || this.state === "ACTIVE" /* ACTIVE */;
       if (!okToChange) {
         return Promise.resolve(false);
@@ -2481,5 +2547,5 @@ var Cuss2 = (() => {
   delete Cuss2.LogMessage;
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "0.3.0";
+  globalCtx.Cuss2.version = "0.4.3";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

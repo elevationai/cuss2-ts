@@ -57,9 +57,8 @@ export function createMockEnvironment(overrides?: Partial<EnvironmentLevel>): En
     killTimeout: 60,
     deviceLocation: "TEST",
     cussVersions: ["2.0"],
-    platformID: "test-platform",
     ...overrides,
-  } as unknown as EnvironmentLevel;
+  } as EnvironmentLevel;
 }
 
 // Helper function to create mock ComponentCharacteristics

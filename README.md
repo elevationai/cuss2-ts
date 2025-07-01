@@ -346,7 +346,6 @@ component.on("statusChange", (status) => {});
 ```typescript
 const env = cuss2.environment;
 console.log("Device ID:", env.deviceID);
-console.log("Platform ID:", env.platformID);
 console.log("CUSS Version:", env.cuss2Version);
 console.log("Location:", env.locationCode);
 console.log("Capabilities:", env.platformCapabilities);

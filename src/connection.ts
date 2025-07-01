@@ -5,9 +5,7 @@ import { AuthenticationError } from "./models/Errors.ts";
 import type { ApplicationData, PlatformData, UniqueId } from "cuss2-typescript-models";
 import type { AuthResponse } from "./models/authResponse.ts";
 import { retry } from "async/retry";
-
-// At the time of writing, Deno's WebSocket implementation does not support the `headers` option.
-import { WebSocket } from "npm:ws@8";
+import "./WebSocket.ts";
 
 // const log = console.log
 const log = (..._args: unknown[]) => {};
@@ -27,7 +25,7 @@ interface ConnectionEvents {
 // These are needed for overriding during testing
 export const global = {
   WebSocket,
-  fetch: globalThis.fetch,
+  fetch: globalThis.fetch.bind(globalThis),
   clearTimeout: globalThis.clearTimeout.bind(globalThis),
   setTimeout: globalThis.setTimeout.bind(globalThis),
 };
@@ -213,12 +211,13 @@ export class Connection extends EventEmitter {
           return resolve(true);
         }
         this.emit("connecting", ++attempts);
-        // This can create synchronous Errors and will reject the promise
-        const socket = new global.WebSocket(this._socketURL, {
-          headers: {
-            "Origin": "http://0.0.0.0", // or whatever origin your server expects
-          },
-        });
+
+        let options: undefined | { headers: { Origin: string } } = undefined;
+        if (typeof Deno !== "undefined") {
+          options = { headers: { Origin: "http://0.0.0.0" } }
+        }
+
+        const socket = new global.WebSocket(this._socketURL, options as undefined);
 
         socket.onopen = () => {
           log("info", "Socket opened: ", this._socketURL);
@@ -309,7 +308,7 @@ export class Connection extends EventEmitter {
       meta.deviceID = this.deviceID;
     }
     const promise = this.waitFor(reqId, ["messageError", "socketError", "close"]);
-    this._socket.send(JSON.stringify(applicationData));
+    this._socket?.send(JSON.stringify(applicationData));
     const message = (await promise) as PlatformData;
     const messageCode = message.meta?.messageCode;
     if (messageCode && helpers.isNonCritical(messageCode)) {

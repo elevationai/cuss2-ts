@@ -121,6 +121,11 @@ export class Cuss2 extends EventEmitter {
   private constructor(connection: Connection) {
     super();
     this.connection = connection;
+    
+    // Increase max listeners to handle many components
+    // Each component adds a listener for messages and deactivation
+    this.setMaxListeners(100);
+    
     // Subscribe to messages from the connection
     connection.on("message", (e) => this._handleWebSocketMessage(e));
     connection.on("open", () => this._initialize());

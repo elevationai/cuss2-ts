@@ -2122,6 +2122,7 @@ var Cuss2 = (() => {
     constructor(connection) {
       super();
       this.connection = connection;
+      this.setMaxListeners(100);
       connection.on("message", (e) => this._handleWebSocketMessage(e));
       connection.on("open", () => this._initialize());
     }

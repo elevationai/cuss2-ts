@@ -72,6 +72,7 @@ try {
             }
           });
           
+          
           // Return empty content for the virtual module
           build.onLoad({ filter: /.*/, namespace: 'websocket-browser' }, () => {
             return {
@@ -151,20 +152,35 @@ try {
     console.error('Cuss2 not found. The bundle might have failed to load or was not generated correctly.');
     return;
   }
-  // Create global Cuss2 object, assigning the main Cuss2 export to it.
+  // The IIFE bundle creates a global 'Cuss2' object containing all exports
   const _c2 = Cuss2;
-  globalCtx.Cuss2 = _c2.Cuss2;
-
-  // Add all other exports from Cuss2 as properties of globalCtx.Cuss2
-  for (const key in _c2) {
-    if (key !== 'Cuss2' && Object.prototype.hasOwnProperty.call(_c2, key)) {
-      globalCtx.Cuss2[key] = _c2[key];
+  
+  // The Cuss2 constructor should be at _c2.Cuss2
+  if (_c2.Cuss2 && typeof _c2.Cuss2.connect === 'function') {
+    // Make the Cuss2 constructor the main export
+    const Cuss2Constructor = _c2.Cuss2;
+    
+    // Copy all other exports as properties on the constructor
+    for (const key in _c2) {
+      if (Object.prototype.hasOwnProperty.call(_c2, key)) {
+        Cuss2Constructor[key] = _c2[key];
+      }
     }
+    
+    globalCtx.Cuss2 = Cuss2Constructor;
+  } else {
+    // Fallback: just expose the whole bundle
+    globalCtx.Cuss2 = _c2;
   }
-  Cuss2.Models.StateChange = _c2.StateChange;
-  delete Cuss2.StateChange;
-  Cuss2.Models.LogMessage = _c2.LogMessage;
-  delete Cuss2.LogMessage;
+  // Move StateChange and LogMessage to Models namespace if they exist
+  if (globalCtx.Cuss2.Models && _c2.StateChange) {
+    globalCtx.Cuss2.Models.StateChange = _c2.StateChange;
+    delete globalCtx.Cuss2.StateChange;
+  }
+  if (globalCtx.Cuss2.Models && _c2.LogMessage) {
+    globalCtx.Cuss2.Models.LogMessage = _c2.LogMessage;
+    delete globalCtx.Cuss2.LogMessage;
+  }
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
   globalCtx.Cuss2.version = "${denoConfig.version}";

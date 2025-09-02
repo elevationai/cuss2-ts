@@ -128,7 +128,10 @@ export const Build = {
       dataObj,
     } = options;
     const meta = {} as ApplicationDataMeta;
-    meta.requestID = crypto.randomUUID();
+    // Use crypto.randomUUID if available, otherwise fallback to a polyfill
+    meta.requestID = typeof crypto !== 'undefined' && crypto.randomUUID 
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${Math.random().toString(36).substring(2, 15)}`;
     meta.directive = directive;
     // Only set componentID if it's defined
     if (componentID) {

@@ -1,4 +1,4 @@
-# CUSS2.ts
+# CUSS2-ts
 
 A TypeScript SDK for the Common Use Self-Service version 2 (CUSS2) platform that facilitates developing applications for airline self-service kiosks.
 
@@ -7,28 +7,118 @@ A TypeScript SDK for the Common Use Self-Service version 2 (CUSS2) platform that
 
 ## Overview
 
-CUSS2.ts provides a robust TypeScript interface to interact with a CUSS2 platform, enabling developers to create applications for self-service check-in, self-tagging, and self bag-drop terminals in the airline industry. This SDK handles WebSocket communication, OAuth authentication, platform state management, and provides a clean API for interacting with various peripheral devices.
+CUSS2-ts provides a robust TypeScript interface to interact with a CUSS2 platform, enabling developers to create applications for self-service check-in, self-tagging, and self bag-drop terminals in the airline industry. This SDK handles WebSocket communication, OAuth authentication, platform state management, and provides a clean API for interacting with various peripheral devices.
 
-## Installation
+## Browser Quickstart
 
-This is a Deno-first project. You can import it directly in your Deno application:
+Get started with CUSS2-ts in your browser in under 5 minutes:
 
-```typescript
-import { Cuss2 } from "jsr:@cuss/cuss2-ts@latest";
+### Option 1: Use the CDN Bundle
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CUSS2 Quick Start</title>
+</head>
+<body>
+    <h1>CUSS2 Platform Connection</h1>
+    <button id="connect">Connect</button>
+    <div id="status"></div>
+
+    <!-- Load CUSS2-ts from JSR (via esm.sh) -->
+    <script type="module">
+        import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
+        
+        document.getElementById('connect').addEventListener('click', async () => {
+            const status = document.getElementById('status');
+            status.textContent = 'Connecting...';
+            
+            // Connect to your CUSS2 platform (uses default URL http://localhost:22222)
+            const cuss2 = Cuss2.connect(
+                "your-client-id",     // Replace with your client ID
+                "your-client-secret"  // Replace with your client secret
+                // Optional: provide custom WebSocket URL as 3rd parameter
+                // "wss://your-platform.example.com"
+            );
+            
+            // Wait for connection
+            await cuss2.connected;
+            status.textContent = `Connected! State: ${cuss2.state}`;
+            
+            // List available components
+            console.log('Available components:', Object.keys(cuss2.components));
+            
+            // Request state transitions
+            await cuss2.requestInitializeState();
+            await cuss2.requestUnavailableState();
+            status.textContent = `State: ${cuss2.state}`;
+        });
+    </script>
+</body>
+</html>
 ```
 
-## Quick Start
+### Option 2: Use the Pre-built Bundle
+
+1. Download the latest bundle:
+```bash
+curl -O https://jsr.io/@cuss/cuss2-ts/latest/dist/cuss2.min.js
+```
+
+2. Include it in your HTML:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CUSS2 Quick Start</title>
+</head>
+<body>
+    <script src="cuss2.min.js"></script>
+    <script>
+        // Connect to the platform (uses default URL http://localhost:22222)
+        const cuss2 = Cuss2.connect(
+            "your-client-id",     // Replace with your client ID
+            "your-client-secret"  // Replace with your client secret
+            // Optional: provide custom WebSocket URL as 3rd parameter
+            // "wss://your-platform.example.com"
+        );
+        
+        // Wait for connection and interact
+        cuss2.connected.then(async () => {
+            console.log('Connected to CUSS2 platform!');
+            console.log('Environment:', cuss2.environment);
+            console.log('Components:', cuss2.components);
+            
+            // Work with components
+            if (cuss2.barcodeReader) {
+                await cuss2.barcodeReader.enable();
+                cuss2.barcodeReader.on('data', (data) => {
+                    console.log('Barcode scanned:', data);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+### Try the Live Example
+
+Check out the [basic browser example](docs/examples/basic-connection-browser.html) for a complete working demo with connection status, logging, and error handling.
+
+## Deno Quickstart
 
 ```typescript
 import { Cuss2 } from "jsr:@cuss/cuss2-ts@latest";
 
-// Connect to the CUSS2 platform
 const cuss2 = Cuss2.connect(
-  "wss://cuss-platform.example.com",
   "client-id",
-  "client-secret",
-  "device-id", // Optional, defaults to "00000000-0000-0000-0000-000000000000"
-  "https://oauth.example.com/token" // Optional - will use wss location if not provided
+  "client-secret"
+  // Optional parameters:
+  // "wss://cuss-platform.example.com",  // Custom WebSocket URL (default: https://localhost:22222)
+  // "device-id",                         // Device ID (default: "00000000-0000-0000-0000-000000000000")
+  // "https://oauth.example.com/token"    // OAuth token URL (default: wss location)
 );
 
 // Wait for connection to be established
@@ -86,7 +176,9 @@ State transitions follow specific rules:
 ### Connection Lifecycle
 
 ```typescript
-const cuss2 = Cuss2.connect(wss, clientId, clientSecret, deviceId, tokenUrl);
+const cuss2 = Cuss2.connect(clientId, clientSecret, wss, deviceId, tokenUrl);
+// Basic usage with defaults:
+const cuss2 = Cuss2.connect('KAP', 'secret');
 
 // Connection events
 cuss2.connection.on("connecting", (attempt) => console.log("Connecting...", attempt));
@@ -400,10 +492,10 @@ This creates:
 <script>
   // The global Cuss2 object contains all exports
   const cuss2 = Cuss2.connect(
-    "wss://platform.example.com",
     "client-id", 
-    "client-secret",
-    "device-id"
+    "client-secret"
+    // Optional: custom WebSocket URL as 3rd parameter
+    // "wss://platform.example.com"
   );
   
   // All models are available under Cuss2.Models
@@ -420,38 +512,7 @@ This creates:
 
 ```bash
 # Run all tests
-deno test --allow-net --allow-read --allow-env
-
-# Run specific test file
-deno test src/cuss2.test.ts --allow-net --allow-read --allow-env
-
-# Run tests in watch mode
-deno test --watch --allow-net --allow-read --allow-env
-```
-
-## Development
-
-The project structure:
-- `/src` - TypeScript source files
-- `/src/models` - Component and model classes
-- `/examples` - Usage examples
-- `/scripts` - Build scripts
-- `/specs` - Specifications and documentation
-- `/dist` - Built JavaScript bundles (git ignored)
-
-### Configuration
-
-The `deno.jsonc` file contains:
-```json
-{
-  "name": "@cuss/cuss2-ts",
-  "version": "0.4.1",
-  "exports": "./mod.ts",
-  "tasks": {
-    "build": "deno run --allow-read --allow-write --allow-env --allow-run --allow-net scripts/build-js.ts",
-    "test": "deno test --allow-net --allow-read"
-  }
-}
+deno task test
 ```
 
 ## License

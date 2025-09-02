@@ -257,7 +257,7 @@
     </div>
 
     <!-- Include the CUSS2 browser bundle -->
-    <script src="../dist/cuss2.js"></script>
+    <script src="https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.js"></script>
 
     <script>
         let cuss2 = null;
@@ -608,9 +608,9 @@
                     ui.updateConnectionStatus('CONNECTING');
 
                     cuss2 = Cuss2.connect(
-                        config.wss,
                         config.clientId,
                         config.clientSecret,
+                        config.wss,
                         config.deviceId || undefined,
                         config.tokenUrl || undefined
                     );

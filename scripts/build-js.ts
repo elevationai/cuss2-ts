@@ -94,21 +94,17 @@ try {
     // metafile: true,
   };
 
+  // Build IIFE version for script tags
   const result = await esbuild.build({
     ...commonBuildOptions,
     outfile: path.join(outDir, "cuss2.js"),
   });
 
   console.log(
-    `✅ Bundle created successfully with ${result.errors.length} errors and ${result.warnings.length} warnings`,
+    `✅ IIFE bundle created successfully with ${result.errors.length} errors and ${result.warnings.length} warnings`,
   );
 
-  // if (result.metafile) {
-  //   await Deno.writeTextFile(path.join(outDir, "cuss2.meta.json"), JSON.stringify(result.metafile));
-  //   console.log(`📄 Metafile written to ${path.join(outDir, "cuss2.meta.json")}`);
-  // }
-
-  // Also create a minified version
+  // Also create a minified IIFE version
   await esbuild.build({
     ...commonBuildOptions,
     outfile: path.join(outDir, "cuss2.min.js"),
@@ -116,7 +112,29 @@ try {
     sourcemap: true,
   });
 
-  console.log("✅ Minified bundle created successfully");
+  console.log("✅ Minified IIFE bundle created successfully");
+
+  // Build ESM version for module imports
+  await esbuild.build({
+    ...commonBuildOptions,
+    format: "esm", // Override format to ESM
+    globalName: undefined, // No global name needed for ESM
+    outfile: path.join(outDir, "cuss2.esm.js"),
+  });
+
+  console.log("✅ ESM bundle created successfully");
+
+  // Also create a minified ESM version
+  await esbuild.build({
+    ...commonBuildOptions,
+    format: "esm", // Override format to ESM
+    globalName: undefined, // No global name needed for ESM
+    outfile: path.join(outDir, "cuss2.esm.min.js"),
+    minify: true,
+    sourcemap: true,
+  });
+
+  console.log("✅ Minified ESM bundle created successfully");
 
   // Write wrapper script that makes all exports available on Cuss2 global
   console.log("📝 Writing wrapper script to expose Cuss2 on global object...");
@@ -158,8 +176,10 @@ try {
 
   console.log("✅ Build complete!");
   console.log(`📦 Browser bundles created at:
-  - ${outDir}/cuss2.js
-  - ${outDir}/cuss2.min.js`);
+  - ${outDir}/cuss2.js (IIFE for script tags)
+  - ${outDir}/cuss2.min.js (Minified IIFE)
+  - ${outDir}/cuss2.esm.js (ESM for imports)
+  - ${outDir}/cuss2.esm.min.js (Minified ESM)`);
 }
 catch (error) {
   console.error("❌ Build failed:", error);

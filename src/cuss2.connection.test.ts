@@ -28,9 +28,9 @@ Deno.test("1.1 - Static connect() method should create a new Cuss2 instance with
   try {
     // Create Cuss2 instance
     const cuss2 = Cuss2.connect(
-      "wss://test.com",
       "client_id",
       "client_secret",
+      "wss://test.com",
       "device_id",
       "token_url",
     );

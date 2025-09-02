@@ -1,12 +1,12 @@
 // deno run --allow-net examples/basic-connection.ts
 
-import { Cuss2 } from "../mod.ts";
+import { Cuss2 } from "../../mod.ts";
 
 // Example configuration - replace with your actual values
 const config = {
-  wss: "http://localhost:22222",
   clientId: "KAP",
   clientSecret: "secret",
+  wss: "http://localhost:22222", // Optional
   deviceID: undefined, // Optional, defaults to "00000000-0000-0000-0000-000000000000"
   tokenURL: "http://localhost:22222/oauth/token", // Optional - will default the wss location if not provided
 };
@@ -15,9 +15,9 @@ async function main() {
   // Connect to the CUSS2 platform
   console.log("Connecting to CUSS2 platform...");
   const cuss2 = Cuss2.connect(
-    config.wss,
     config.clientId,
     config.clientSecret,
+    config.wss,
     config.deviceID,
     config.tokenURL,
   );

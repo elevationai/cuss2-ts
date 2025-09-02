@@ -415,7 +415,7 @@ var Cuss2 = (() => {
     logger: () => logger
   });
 
-  // ../../elevationai/cuss2-typescript-models/mod.ts
+  // https://jsr.io/@cuss/cuss2-typescript-models/2.0.1/mod.ts
   var mod_exports = {};
   __export(mod_exports, {
     AckCodes: () => AckCodes,
@@ -444,7 +444,7 @@ var Cuss2 = (() => {
     TransactionDocumentType: () => TransactionDocumentType
   });
 
-  // ../../elevationai/cuss2-typescript-models/src/types.gen.ts
+  // https://jsr.io/@cuss/cuss2-typescript-models/2.0.1/src/types.gen.ts
   var BiometricProviderMessageType = /* @__PURE__ */ ((BiometricProviderMessageType2) => {
     BiometricProviderMessageType2["NONE"] = "NONE";
     BiometricProviderMessageType2["REQUEST"] = "REQUEST";
@@ -953,7 +953,7 @@ var Cuss2 = (() => {
         dataObj
       } = options;
       const meta = {};
-      meta.requestID = crypto.randomUUID();
+      meta.requestID = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${Math.random().toString(36).substring(2, 15)}`;
       meta.directive = directive;
       if (componentID) {
         meta.componentID = componentID;
@@ -2126,7 +2126,7 @@ var Cuss2 = (() => {
       connection.on("message", (e) => this._handleWebSocketMessage(e));
       connection.on("open", () => this._initialize());
     }
-    static connect(wss, client_id, client_secret, deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
+    static connect(client_id, client_secret, wss = "https://localhost:22222", deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
       using connection = Connection.connect(
         wss,
         client_id,
@@ -2548,5 +2548,5 @@ var Cuss2 = (() => {
   delete Cuss2.LogMessage;
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "0.4.3";
+  globalCtx.Cuss2.version = "1.0.0";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

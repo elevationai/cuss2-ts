@@ -87,15 +87,15 @@
     <h2>Log:</h2>
     <div id="log" class="log"></div>
 
-    <!-- Include the CUSS2 browser bundle -->
-    <script src="../dist/cuss2.js"></script>
+    <!-- Include the CUSS2 browser bundle from CDN -->
+    <script src="https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.js"></script>
 
     <script>
         // Configuration - replace with your actual values
         const config = {
-            wss: "http://localhost:22222",
             clientId: "KAP",
             clientSecret: "secret",
+            wss: "http://localhost:22222", // Optional
             deviceID: undefined, // Optional
             tokenURL: "http://localhost:22222/oauth/token" // Optional
         };
@@ -122,7 +122,7 @@
             const statusDiv = document.getElementById('status');
             statusDiv.className = connected ? 'status connected' : 'status disconnected';
             statusDiv.textContent = connected ? 'Connected' : 'Disconnected';
-            
+
             document.getElementById('connectBtn').disabled = connected;
             document.getElementById('disconnectBtn').disabled = !connected;
         }
@@ -131,12 +131,12 @@
         async function connect() {
             try {
                 log('Connecting to CUSS2 platform...');
-                
+
                 // Connect to the CUSS2 platform
                 cuss2 = Cuss2.connect(
-                    config.wss,
                     config.clientId,
                     config.clientSecret,
+                    config.wss,
                     config.deviceID,
                     config.tokenURL
                 );
@@ -179,7 +179,7 @@
                 log('Requesting initialize state...');
                 await cuss2.requestInitializeState();
                 log('Initialize state requested successfully!');
-                
+
                 log('Connection established. You can now interact with the platform.');
 
             } catch (error) {

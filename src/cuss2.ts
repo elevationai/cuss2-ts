@@ -121,20 +121,20 @@ export class Cuss2 extends EventEmitter {
   private constructor(connection: Connection) {
     super();
     this.connection = connection;
-    
+
     // Increase max listeners to handle many components
     // Each component adds a listener for messages and deactivation
     this.setMaxListeners(100);
-    
+
     // Subscribe to messages from the connection
     connection.on("message", (e) => this._handleWebSocketMessage(e));
     connection.on("open", () => this._initialize());
   }
 
   static connect(
-    wss: string,
     client_id: string,
     client_secret: string,
+    wss: string = "https://localhost:22222",
     deviceID: string = "00000000-0000-0000-0000-000000000000",
     tokenURL?: string,
   ): Cuss2 {

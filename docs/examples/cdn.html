@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CUSS2 CDN Example</title>
+</head>
+<body>
+<h1>CUSS2 Platform Connection</h1>
+<button id="connect">Connect</button>
+<div id="status"></div>
+
+<!-- Load CUSS2-ts from unpkg CDN -->
+<script type="module">
+  import { Cuss2 } from "https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.esm.js";
+
+  document.getElementById('connect').addEventListener('click', async () => {
+    const status = document.getElementById('status');
+    status.textContent = 'Connecting...';
+
+    const cuss2 = Cuss2.connect(
+      "KAP",     // Replace with your client ID
+      "secret",  // Replace with your client secret
+      // Optional: provide custom WebSocket URL as 3rd parameter
+      "http://localhost:22222",
+    );
+
+    // Wait for connection
+    await cuss2.connected;
+    status.textContent = `Connected! State: ${cuss2.state}`;
+
+    // List available components
+    console.log('Available components:', Object.keys(cuss2.components));
+
+    // Request state transitions
+    await cuss2.requestInitializeState();
+    await cuss2.requestUnavailableState();
+    status.textContent = `State: ${cuss2.state}`;
+  });
+</script>
+</body>
+</html>

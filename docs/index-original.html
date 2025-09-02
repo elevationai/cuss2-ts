@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUSS2-ts Browser Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .examples-list {
+            list-style: none;
+            padding: 0;
+        }
+        .example-item {
+            background: #f8f9fa;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            transition: transform 0.2s;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .example-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+        .example-link {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 600;
+            font-size: 18px;
+            display: block;
+            padding: 20px;
+            padding-bottom: 0;
+        }
+        .example-description {
+            color: #666;
+            margin-top: 8px;
+            padding: 0 20px 20px 20px;
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .note strong {
+            color: #856404;
+        }
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CUSS2-ts Browser Examples</h1>
+        
+        <p>Welcome to the CUSS2-ts browser examples. These demonstrate how to integrate the CUSS2 TypeScript SDK in web applications.</p>
+
+        <div class="note">
+            <strong>Note:</strong> These examples connect to a local CUSS2 platform at <code>http://localhost:22222</code>. 
+            Make sure your CUSS2 platform is running before testing.
+        </div>
+
+        <h2>Available Examples</h2>
+        
+        <div class="examples-list">
+            <a href="examples/basic-connection-browser.html" class="example-item">
+                <div class="example-link">Basic Connection</div>
+                <div class="example-description">
+                    A comprehensive example showing how to establish a connection to the CUSS2 platform, 
+                    handle authentication, monitor connection events, and request state transitions. 
+                    Uses the IIFE bundle loaded via a script tag.
+                </div>
+            </a>
+            
+            <a href="examples/cdn.html" class="example-item">
+                <div class="example-link">ES Module Import</div>
+                <div class="example-description">
+                    A minimal example demonstrating how to import CUSS2 as an ES module and establish 
+                    a basic connection. Shows modern JavaScript module usage with <code>import</code> statements.
+                </div>
+            </a>
+            
+            <a href="examples/tester.html" class="example-item">
+                <div class="example-link">Interactive Tester</div>
+                <div class="example-description">
+                    A comprehensive testing interface for the CUSS2 platform. Allows you to configure connection 
+                    parameters, control application state transitions, and interact with various platform components 
+                    through an intuitive UI.
+                </div>
+            </a>
+        </div>
+
+        <h2>Getting Started</h2>
+        
+        <p>To use CUSS2-ts in your own project, you can either:</p>
+        
+        <ol>
+            <li><strong>Use the IIFE bundle</strong> (for traditional script tags):
+                <code>&lt;script src="https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.min.js"&gt;&lt;/script&gt;</code>
+            </li>
+            <li><strong>Use the ES module</strong> (for modern JavaScript):
+                <code>import { Cuss2 } from "https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.esm.js";</code>
+            </li>
+        </ol>
+
+        <h2>Configuration</h2>
+        
+        <p>Both examples use the following default configuration:</p>
+        <ul>
+            <li>Client ID: <code>KAP</code></li>
+            <li>Client Secret: <code>secret</code></li>
+            <li>WebSocket URL: <code>http://localhost:22222</code></li>
+        </ul>
+        
+        <p>Update these values in the examples to match your CUSS2 platform configuration.</p>
+
+        <h2>Documentation</h2>
+        
+        <p>For more information, visit the <a href="https://github.com/elevationai/cuss2-ts" target="_blank">CUSS2-ts GitHub repository</a>.</p>
+    </div>
+</body>
+</html>

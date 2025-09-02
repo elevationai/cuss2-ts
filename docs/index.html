@@ -3,149 +3,397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CUSS2-ts Browser Examples</title>
+    <title>CUSS2-ts | Modern TypeScript SDK for Airline Kiosks</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            line-height: 1.6;
-            background: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-        h2 {
-            color: #555;
-            margin-top: 30px;
-        }
-        .examples-list {
-            list-style: none;
+        * {
+            margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-        .example-item {
-            background: #f8f9fa;
-            margin: 15px 0;
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(15, 15, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #64ffda, #48cae4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(100, 255, 218, 0.4)); }
+            to { filter: drop-shadow(0 0 30px rgba(72, 202, 228, 0.6)); }
+        }
+
+        .hero .subtitle {
+            font-size: 1.3rem;
+            color: #a0a0a0;
+            margin-bottom: 40px;
+        }
+
+        .quick-start {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+
+        .quick-start a {
+            padding: 12px 30px;
             border-radius: 8px;
-            border-left: 4px solid #007bff;
-            transition: transform 0.2s;
-            display: block;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #64ffda, #48cae4);
+            color: #0f0f1e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+        }
+
+        .btn-secondary {
+            border: 2px solid #64ffda;
+            color: #64ffda;
+            background: transparent;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(100, 255, 218, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+
+        .example-card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
             text-decoration: none;
             color: inherit;
-        }
-        .example-item:hover {
-            transform: translateX(5px);
-            background: #e9ecef;
-        }
-        .example-link {
-            text-decoration: none;
-            color: #007bff;
-            font-weight: 600;
-            font-size: 18px;
             display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .example-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .example-card:hover::before {
+            left: 100%;
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px);
+            border-color: #64ffda;
+            box-shadow: 0 10px 40px rgba(100, 255, 218, 0.2);
+        }
+
+        .example-card h3 {
+            color: #64ffda;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .example-card p {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        .example-card .tag {
+            display: inline-block;
+            background: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .code-section {
+            background: rgba(15, 15, 30, 0.6);
+            border-radius: 12px;
+            padding: 40px;
+            margin: 60px 0;
+            border: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .code-section h2 {
+            color: #64ffda;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .code-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .code-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .code-tab.active {
+            color: #64ffda;
+            border-bottom: 2px solid #64ffda;
+            margin-bottom: -2px;
+        }
+
+        .code-block {
+            background: #0a0a14;
+            border-radius: 8px;
             padding: 20px;
-            padding-bottom: 0;
+            overflow-x: auto;
+            display: none;
         }
-        .example-description {
-            color: #666;
-            margin-top: 8px;
-            padding: 0 20px 20px 20px;
+
+        .code-block.active {
+            display: block;
         }
-        .note {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .note strong {
-            color: #856404;
-        }
-        code {
-            background: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
+
+        .code-block pre {
+            color: #e0e0e0;
             font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 60px 0;
+        }
+
+        @media (max-width: 768px) {
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #64ffda, #48cae4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .feature h3 {
+            color: #64ffda;
+            margin-bottom: 10px;
+        }
+
+        .feature p {
+            color: #a0a0a0;
+        }
+
+        .footer {
+            border-top: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 40px 0;
+            margin-top: 100px;
+            text-align: center;
+            color: #a0a0a0;
+        }
+
+        .footer a {
+            color: #64ffda;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
+    <header class="header">
+        <div class="container">
+            <nav style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #64ffda;">CUSS2-ts</div>
+                <div style="display: flex; gap: 30px;">
+                    <a href="https://github.com/elevationai/cuss2-ts" style="color: #e0e0e0; text-decoration: none;">GitHub</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
     <div class="container">
-        <h1>CUSS2-ts Browser Examples</h1>
-        
-        <p>Welcome to the CUSS2-ts browser examples. These demonstrate how to integrate the CUSS2 TypeScript SDK in web applications.</p>
+        <section class="hero">
+            <h1>CUSS2-ts</h1>
+            <p class="subtitle">Open Source TypeScript SDK for Airline Self-Service Kiosks</p>
+            <div class="quick-start">
+                <a href="#quickstart" class="btn-primary">Get Started</a>
+                <a href="https://github.com/elevationai/cuss2-ts" class="btn-secondary">View on GitHub</a>
+            </div>
+        </section>
 
-        <div class="note">
-            <strong>Note:</strong> These examples connect to a local CUSS2 platform at <code>http://localhost:22222</code>. 
-            Make sure your CUSS2 platform is running before testing.
-        </div>
+        <section class="features">
+            <div class="feature">
+                <div class="feature-icon">🚀</div>
+                <h3>TypeScript First</h3>
+                <p>Fully typed interfaces for all CUSS2 components and responses</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔌</div>
+                <h3>WebSocket Ready</h3>
+                <p>Automatic reconnection and connection lifecycle management</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <h3>30+ Components</h3>
+                <p>Support for printers, scanners, scales, and more peripherals</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Event Driven</h3>
+                <p>Subscribe to state changes and component updates in real-time</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔓</div>
+                <h3>Open Source</h3>
+                <p>MIT licensed with active community support and contributions</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🤝</div>
+                <h3>Community Driven</h3>
+                <p>Built with developers, for developers. PRs welcome!</p>
+            </div>
+        </section>
 
-        <h2>Available Examples</h2>
-        
-        <div class="examples-list">
-            <a href="examples/basic-connection-browser.html" class="example-item">
-                <div class="example-link">Basic Connection</div>
-                <div class="example-description">
-                    A comprehensive example showing how to establish a connection to the CUSS2 platform, 
-                    handle authentication, monitor connection events, and request state transitions. 
-                    Uses the IIFE bundle loaded via a script tag.
-                </div>
-            </a>
-            
-            <a href="examples/cdn.html" class="example-item">
-                <div class="example-link">ES Module Import</div>
-                <div class="example-description">
-                    A minimal example demonstrating how to import CUSS2 as an ES module and establish 
-                    a basic connection. Shows modern JavaScript module usage with <code>import</code> statements.
-                </div>
-            </a>
-            
-            <a href="examples/tester.html" class="example-item">
-                <div class="example-link">Interactive Tester</div>
-                <div class="example-description">
-                    A comprehensive testing interface for the CUSS2 platform. Allows you to configure connection 
-                    parameters, control application state transitions, and interact with various platform components 
-                    through an intuitive UI.
-                </div>
-            </a>
-        </div>
+        <section id="examples">
+            <h2 style="text-align: center; color: #64ffda; margin-bottom: 40px; font-size: 2.5rem;">Interactive Examples</h2>
+            <div class="examples-grid">
+                <a href="examples/basic-connection-browser.html" class="example-card">
+                    <h3>Basic Connection</h3>
+                    <p>Learn how to establish a connection to the CUSS2 platform, handle authentication, and monitor connection events.</p>
+                    <span class="tag">Beginner</span>
+                </a>
 
-        <h2>Getting Started</h2>
-        
-        <p>To use CUSS2-ts in your own project, you can either:</p>
-        
-        <ol>
-            <li><strong>Use the IIFE bundle</strong> (for traditional script tags):
-                <code>&lt;script src="https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.min.js"&gt;&lt;/script&gt;</code>
-            </li>
-            <li><strong>Use the ES module</strong> (for modern JavaScript):
-                <code>import { Cuss2 } from "https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.esm.js";</code>
-            </li>
-        </ol>
+                <a href="examples/cdn.html" class="example-card">
+                    <h3>ES Module Import</h3>
+                    <p>Modern JavaScript module usage with import statements. Perfect for contemporary web applications.</p>
+                    <span class="tag">ES6+</span>
+                </a>
 
-        <h2>Configuration</h2>
-        
-        <p>Both examples use the following default configuration:</p>
-        <ul>
-            <li>Client ID: <code>KAP</code></li>
-            <li>Client Secret: <code>secret</code></li>
-            <li>WebSocket URL: <code>http://localhost:22222</code></li>
-        </ul>
-        
-        <p>Update these values in the examples to match your CUSS2 platform configuration.</p>
+                <a href="examples/tester.html" class="example-card">
+                    <h3>Interactive Tester</h3>
+                    <p>Comprehensive testing interface for the CUSS2 platform with full component interaction capabilities.</p>
+                    <span class="tag">Advanced</span>
+                </a>
+            </div>
+        </section>
 
-        <h2>Documentation</h2>
-        
-        <p>For more information, visit the <a href="https://github.com/elevationai/cuss2-ts" target="_blank">CUSS2-ts GitHub repository</a>.</p>
+        <section id="quickstart" class="code-section">
+            <h2>Quick Start</h2>
+            <div class="code-tabs">
+                <button class="code-tab active" onclick="showTab('browser')">Browser</button>
+                <button class="code-tab" onclick="showTab('deno')">Deno</button>
+                <button class="code-tab" onclick="showTab('npm')">NPM</button>
+            </div>
+            <div id="browser" class="code-block active">
+                <pre>&lt;script type="module"&gt;
+  import { Cuss2 } from "https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.esm.js";
+
+  const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET");
+  await cuss2.connected;
+  console.log("Connected to CUSS2 platform!");
+&lt;/script&gt;</pre>
+            </div>
+            <div id="deno" class="code-block">
+                <pre>import { Cuss2 } from "jsr:@cuss/cuss2-ts@latest";
+
+const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET");
+await cuss2.connected;
+console.log("Connected to CUSS2 platform!");</pre>
+            </div>
+            <div id="npm" class="code-block">
+                <pre>npm install @cuss/cuss2-ts
+
+import { Cuss2 } from "@cuss/cuss2-ts";
+const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET");</pre>
+            </div>
+        </section>
     </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2024 Elevation.AI | Open Source (MIT License) | <a href="https://github.com/elevationai/cuss2-ts">GitHub</a> | <a href="https://jsr.io/@cuss/cuss2-ts">JSR Package</a> | <a href="https://github.com/elevationai/cuss2-ts/blob/master/LICENSE">License</a></p>
+        </div>
+    </footer>
+
+    <script>
+        function showTab(tabName) {
+            document.querySelectorAll('.code-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.code-block').forEach(block => block.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+    </script>
 </body>
 </html>

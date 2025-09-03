@@ -1501,6 +1501,9 @@ var Cuss2 = (() => {
 
   // src/models/Announcement.ts
   var Announcement = class extends Component {
+    constructor(component, cuss2) {
+      super(component, cuss2, DeviceType.ANNOUNCEMENT);
+    }
     say(text, lang = "en-US") {
       const xml = `<?xml version="1.0" encoding="UTF-8"?><speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">${text}</speak>`;
       return this.play(xml);
@@ -1978,7 +1981,7 @@ var Cuss2 = (() => {
       return deviceTypesHas(charac0.deviceTypesList, "ILLUMINATION" /* ILLUMINATION */);
     };
     static isHeadset = (component) => {
-      if (component.componentType !== "MEDIA_INPUT" /* MEDIA_INPUT */)
+      if (component.componentType !== "USER_INPUT" /* USER_INPUT */)
         return;
       const charac0 = component.componentCharacteristics?.[0];
       if (!charac0)
@@ -2563,5 +2566,5 @@ var Cuss2 = (() => {
   }
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "1.0.3-beta.1";
+  globalCtx.Cuss2.version = "1.0.4";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

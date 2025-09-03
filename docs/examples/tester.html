@@ -554,7 +554,7 @@
             if (component.enabled) item.classList.add("enabled");
 
             item.innerHTML = `
-                    <div class="component-name">${component.constructor.name} (ID: ${id})</div>
+                    <div class="component-name">${component.deviceType} (ID: ${id})</div>
                     <div class="component-status">
                         Ready: ${component.ready ? "Yes" : "No"} |
                         Enabled: ${component.enabled ? "Yes" : "No"} |
@@ -582,7 +582,7 @@
         const componentHandlers = {
           // Handle component click
           async handleComponentClick(component) {
-            const name = component.constructor.name;
+            const name = component.deviceType;
             const action = component.enabled ? "disable" : "enable";
 
             if (confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${name}?`)) {
@@ -682,7 +682,7 @@
               {
                 event: "componentStateChange",
                 handler: (component) => {
-                  logger.event(`Component ${component.constructor.name} state changed`);
+                  logger.event(`Component ${component.deviceType} state changed`);
                   ui.displayComponents();
                 },
               },
@@ -707,7 +707,7 @@
               // {
               //     event: 'componentStateChange',
               //     handler: component => {
-              //         logger.event(`Component ${component.constructor.name} state changed`);
+              //         logger.event(`Component ${component.deviceType} state changed`);
               //         ui.displayComponents();
               //     }
               // },

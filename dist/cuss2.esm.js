@@ -1486,6 +1486,9 @@ var Keypad = class extends Component {
 
 // src/models/Announcement.ts
 var Announcement = class extends Component {
+  constructor(component, cuss2) {
+    super(component, cuss2, DeviceType.ANNOUNCEMENT);
+  }
   say(text, lang = "en-US") {
     const xml = `<?xml version="1.0" encoding="UTF-8"?><speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">${text}</speak>`;
     return this.play(xml);
@@ -1963,7 +1966,7 @@ var ComponentInterrogation = class {
     return deviceTypesHas(charac0.deviceTypesList, "ILLUMINATION" /* ILLUMINATION */);
   };
   static isHeadset = (component) => {
-    if (component.componentType !== "MEDIA_INPUT" /* MEDIA_INPUT */)
+    if (component.componentType !== "USER_INPUT" /* USER_INPUT */)
       return;
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0)

@@ -1,7 +1,12 @@
 import { Component } from "./Component.ts";
-import type { PlatformData } from "cuss2-typescript-models";
+import { DeviceType } from "./deviceType.ts";
+import type { Cuss2 } from "../cuss2.ts";
+import type { EnvironmentComponent, PlatformData } from "cuss2-typescript-models";
 
 export class Announcement extends Component {
+  constructor(component: EnvironmentComponent, cuss2: Cuss2) {
+    super(component, cuss2, DeviceType.ANNOUNCEMENT);
+  }
   say(text: string, lang: string = "en-US"): Promise<PlatformData> {
     const xml =
       `<?xml version="1.0" encoding="UTF-8"?><speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">${text}</speak>`;

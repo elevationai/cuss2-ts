@@ -288,7 +288,7 @@ Deno.test("ComponentInterrogation - isIllumination", () => {
 
 Deno.test("ComponentInterrogation - isHeadset", () => {
   const headset = createMockComponent({
-    componentType: ComponentTypes.MEDIA_INPUT,
+    componentType: ComponentTypes.USER_INPUT,
     componentCharacteristics: [
       createMockCharacteristics({
         deviceTypesList: [DeviceTypes.ASSISTIVE],
@@ -308,7 +308,7 @@ Deno.test("ComponentInterrogation - isHeadset", () => {
   });
 
   const missingAssistive = createMockComponent({
-    componentType: ComponentTypes.MEDIA_INPUT,
+    componentType: ComponentTypes.USER_INPUT,
     componentCharacteristics: [
       createMockCharacteristics({
         deviceTypesList: [DeviceTypes.PRINT],
@@ -318,7 +318,7 @@ Deno.test("ComponentInterrogation - isHeadset", () => {
   });
 
   const missingAudio = createMockComponent({
-    componentType: ComponentTypes.MEDIA_INPUT,
+    componentType: ComponentTypes.USER_INPUT,
     componentCharacteristics: [
       createMockCharacteristics({
         deviceTypesList: [DeviceTypes.ASSISTIVE],
@@ -328,7 +328,7 @@ Deno.test("ComponentInterrogation - isHeadset", () => {
   });
 
   const noCharacteristics = createMockComponent({
-    componentType: ComponentTypes.MEDIA_INPUT,
+    componentType: ComponentTypes.USER_INPUT,
   });
 
   assertEquals(!!ComponentInterrogation.isHeadset(headset), true);

@@ -85,7 +85,7 @@ export class ComponentInterrogation {
   };
 
   static isHeadset = (component: EnvironmentComponent) => {
-    if (component.componentType !== ComponentTypes.MEDIA_INPUT) return;
+    if (component.componentType !== ComponentTypes.USER_INPUT) return;
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0) return;
     const mediaTypes = charac0.mediaTypesList;

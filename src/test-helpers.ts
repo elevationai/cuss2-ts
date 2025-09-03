@@ -342,7 +342,7 @@ export const mockDevice = {
   createHeadset(componentID: number): EnvironmentComponent {
     return createMockComponent({
       componentID,
-      componentType: ComponentTypes.MEDIA_INPUT,
+      componentType: ComponentTypes.USER_INPUT,
       componentCharacteristics: [
         createMockCharacteristics({
           deviceTypesList: [DeviceTypes.ASSISTIVE],

@@ -1,6 +1,6 @@
 {
   "name": "@cuss/cuss2-ts",
-  "version": "1.0.2",
+  "version": "1.0.3-beta.1",
   "license": "MIT",
   "exports": "./mod.ts",
   "tasks": {
@@ -15,7 +15,7 @@
   "imports": {
     "@types/node": "npm:@types/node@^22.15.17",
     "cuss2-typescript-models": "jsr:@cuss/cuss2-typescript-models@2.0.1",
-    "events": "node:events",
+    "events": "node:events?dev",
     "async/retry": "jsr:@std/async@^1.0.13/retry"
   },
   "links": [

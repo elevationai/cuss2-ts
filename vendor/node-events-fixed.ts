@@ -30,7 +30,9 @@
 // Mock AsyncResource for compatibility
 class AsyncResource {
   constructor(_type: string, _opts?: any) {}
-  bind(fn: Function): Function { return fn; }
+  bind(fn: Function): Function {
+    return fn;
+  }
   runInAsyncScope(fn: Function, thisArg: any, ...args: any[]): any {
     return fn.apply(thisArg, args);
   }
@@ -44,7 +46,7 @@ type nodeEvents = any;
 let defaultMaxListeners = 10;
 
 const AsyncIteratorPrototype = Object.getPrototypeOf(
-  Object.getPrototypeOf((async function*() {})())
+  Object.getPrototypeOf((async function* () {})()),
 );
 // Inspect (mocked)
 const inspect = (value: any, _opts?: any) => value;
@@ -130,16 +132,19 @@ export class _EventEmitter {
     // validateNumber(n, "setMaxListeners", 0);
     if (eventTargets.length === 0) {
       defaultMaxListeners = n;
-    } else {
+    }
+    else {
       for (const target of eventTargets) {
         if (isEventTarget(target)) {
           // @ts-expect-error
           target[kMaxEventTargetListeners] = n;
           // @ts-expect-error
           target[kMaxEventTargetListenersWarned] = false;
-        } else if (typeof target.setMaxListeners === "function") {
+        }
+        else if (typeof target.setMaxListeners === "function") {
           target.setMaxListeners(n);
-        } else {
+        }
+        else {
           throw new ERR_INVALID_ARG_TYPE(
             "eventTargets",
             ["EventEmitter", "EventTarget"],
@@ -189,7 +194,8 @@ export class _EventEmitter {
       this._events = { __proto__: null };
       this._eventsCount = 0;
       this[kShapeMode] = false;
-    } else {
+    }
+    else {
       this[kShapeMode] = true;
     }
 
@@ -198,7 +204,8 @@ export class _EventEmitter {
     if (opts?.captureRejections) {
       // validateBoolean(opts.captureRejections, "options.captureRejections");
       this[kCapture] = Boolean(opts.captureRejections);
-    } else {
+    }
+    else {
       // Assigning the kCapture property directly saves an expensive
       // prototype lookup in a very sensitive hot path.
       this[kCapture] = _EventEmitter.prototype[kCapture];
@@ -235,10 +242,12 @@ export class _EventEmitter {
 
     const events = this._events;
     if (events !== undefined) {
-      if (doError && events[kErrorMonitor] !== undefined)
+      if (doError && events[kErrorMonitor] !== undefined) {
         this.emit(kErrorMonitor, ...args);
+      }
       doError = doError && events.error === undefined;
-    } else if (!doError) return false;
+    }
+    else if (!doError) return false;
 
     // If there is no 'error' event listener then throw.
     if (doError) {
@@ -259,7 +268,8 @@ export class _EventEmitter {
             ),
             configurable: true,
           });
-        } catch {
+        }
+        catch {
           // Continue regardless of error.
         }
 
@@ -271,7 +281,8 @@ export class _EventEmitter {
       let stringifiedEr;
       try {
         stringifiedEr = inspect(er);
-      } catch {
+      }
+      catch {
         stringifiedEr = er;
       }
 
@@ -295,7 +306,8 @@ export class _EventEmitter {
       if (result !== undefined && result !== null) {
         addCatch(this, result, type, args);
       }
-    } else {
+    }
+    else {
       const len = handler.length;
       const listeners = arrayClone(handler);
       for (let i = 0; i < len; ++i) {
@@ -378,14 +390,18 @@ export class _EventEmitter {
 
       if (this[kShapeMode]) {
         events[type] = undefined;
-      } else if (this._eventsCount === 0) {
-        this._events = { __proto__: null };
-      } else {
-        delete events[type];
-        if (events.removeListener)
-          this.emit("removeListener", type, list.listener || listener);
       }
-    } else if (typeof list !== "function") {
+      else if (this._eventsCount === 0) {
+        this._events = { __proto__: null };
+      }
+      else {
+        delete events[type];
+        if (events.removeListener) {
+          this.emit("removeListener", type, list.listener || listener);
+        }
+      }
+    }
+    else if (typeof list !== "function") {
       let position = -1;
 
       for (let i = list.length - 1; i >= 0; i--) {
@@ -404,8 +420,9 @@ export class _EventEmitter {
 
       if (list.length === 1) events[type] = list[0];
 
-      if (events.removeListener !== undefined)
+      if (events.removeListener !== undefined) {
         this.emit("removeListener", type, listener);
+      }
     }
 
     return this;
@@ -429,7 +446,8 @@ export class _EventEmitter {
       if (arguments.length === 0) {
         this._events = { __proto__: null };
         this._eventsCount = 0;
-      } else if (events[type!] !== undefined) {
+      }
+      else if (events[type!] !== undefined) {
         if (--this._eventsCount === 0) this._events = { __proto__: null };
         else delete events[type!];
       }
@@ -454,7 +472,8 @@ export class _EventEmitter {
 
     if (typeof listeners === "function") {
       this.removeListener(type!, listeners);
-    } else if (listeners !== undefined) {
+    }
+    else if (listeners !== undefined) {
       // LIFO order
       for (let i = listeners.length - 1; i >= 0; i--) {
         this.removeListener(type!, listeners[i]);
@@ -503,13 +522,12 @@ export class _EventEmitter {
 
       if (typeof evlistener === "function") {
         if (listener != null) {
-          return listener === evlistener || listener === evlistener.listener
-            ? 1
-            : 0;
+          return listener === evlistener || listener === evlistener.listener ? 1 : 0;
         }
 
         return 1;
-      } else if (evlistener !== undefined) {
+      }
+      else if (evlistener !== undefined) {
         if (listener != null) {
           let matching = 0;
 
@@ -550,7 +568,8 @@ export class EventEmitterAsyncResource extends _EventEmitter {
     if (typeof options === "string") {
       name = options;
       options = undefined;
-    } else {
+    }
+    else {
       // if (new.target === EventEmitterAsyncResource) {
       // validateString(options?.name, "options.name");
       // }
@@ -573,8 +592,9 @@ export class EventEmitterAsyncResource extends _EventEmitter {
    */
   emit(event: string | symbol, ...args: any[]): boolean {
     // @ts-expect-error
-    if (this[kAsyncResource] === undefined)
+    if (this[kAsyncResource] === undefined) {
       throw new ERR_INVALID_THIS("EventEmitterAsyncResource");
+    }
     const { asyncResource } = this;
     Array.prototype.unshift(args, super.emit, this, event);
     return Reflect.apply(
@@ -589,8 +609,9 @@ export class EventEmitterAsyncResource extends _EventEmitter {
    */
   emitDestroy() {
     // @ts-expect-error
-    if (this[kAsyncResource] === undefined)
+    if (this[kAsyncResource] === undefined) {
       throw new ERR_INVALID_THIS("EventEmitterAsyncResource");
+    }
     this.asyncResource.emitDestroy();
   }
 
@@ -599,8 +620,9 @@ export class EventEmitterAsyncResource extends _EventEmitter {
    */
   get asyncId(): number {
     // @ts-expect-error
-    if (this[kAsyncResource] === undefined)
+    if (this[kAsyncResource] === undefined) {
       throw new ERR_INVALID_THIS("EventEmitterAsyncResource");
+    }
     return this.asyncResource.asyncId();
   }
 
@@ -609,8 +631,9 @@ export class EventEmitterAsyncResource extends _EventEmitter {
    */
   get triggerAsyncId(): number {
     // @ts-expect-error
-    if (this[kAsyncResource] === undefined)
+    if (this[kAsyncResource] === undefined) {
       throw new ERR_INVALID_THIS("EventEmitterAsyncResource");
+    }
     return this.asyncResource.triggerAsyncId();
   }
 
@@ -619,8 +642,9 @@ export class EventEmitterAsyncResource extends _EventEmitter {
    */
   get asyncResource(): any {
     // @ts-expect-error
-    if (this[kAsyncResource] === undefined)
+    if (this[kAsyncResource] === undefined) {
       throw new ERR_INVALID_THIS("EventEmitterAsyncResource");
+    }
     // @ts-expect-error
     return this[kAsyncResource];
   }
@@ -649,8 +673,9 @@ class EventEmitterReferencingAsyncResource extends AsyncResource {
    */
   get eventEmitter() {
     // @ts-expect-error
-    if (this[kEventEmitter] === undefined)
+    if (this[kEventEmitter] === undefined) {
       throw new ERR_INVALID_THIS("EventEmitterReferencingAsyncResource");
+    }
     // @ts-expect-error
     return this[kEventEmitter];
   }
@@ -685,14 +710,12 @@ export const on: any = function on(
     throw new AbortError(undefined, { cause: signal?.reason });
   }
   // Support both highWaterMark and highWatermark for backward compatibility
-  const highWatermark =
-    options.highWaterMark ??
+  const highWatermark = options.highWaterMark ??
     (options as any).highWatermark ??
     Number.MAX_SAFE_INTEGER;
   // validateInteger(highWatermark, "options.highWaterMark", 1);
   // Support both lowWaterMark and lowWatermark for backward compatibility
-  const lowWatermark =
-    options.lowWaterMark ?? (options as any).lowWatermark ?? 1;
+  const lowWatermark = options.lowWaterMark ?? (options as any).lowWatermark ?? 1;
   // validateInteger(lowWatermark, "options.lowWaterMark", 1);
 
   // Preparing controlling queues and variables
@@ -790,11 +813,9 @@ export const on: any = function on(
   addEventListener(
     emitter,
     event,
-    (options as any)[kFirstEventParam]
-      ? eventHandler
-      : function (...args) {
-          return eventHandler(args);
-        },
+    (options as any)[kFirstEventParam] ? eventHandler : function (...args) {
+      return eventHandler(args);
+    },
   );
   if (
     event !== "error" &&
@@ -809,9 +830,7 @@ export const on: any = function on(
     }
   }
 
-  const abortListenerDisposable = signal
-    ? addAbortListener(signal, abortListener)
-    : null;
+  const abortListenerDisposable = signal ? addAbortListener(signal, abortListener) : null;
 
   return iterator;
 
@@ -828,7 +847,8 @@ export const on: any = function on(
         emitter.pause?.();
       }
       unconsumedEvents.push(value);
-    } else unconsumedPromises.shift().resolve(createIterResult(value, false));
+    }
+    else unconsumedPromises.shift().resolve(createIterResult(value, false));
   }
 
   function errorHandler(err: Error) {
@@ -919,98 +939,95 @@ export const once: any = async function once(
   });
 };
 
-export const addAbortListener: any =
-  function addAbortListener(signal, listener) {
-    if (signal === undefined) {
-      // @ts-expect-error
-      throw new ERR_INVALID_ARG_TYPE("signal", "AbortSignal", signal);
-    }
-    // validateAbortSignal(signal, 'signal');
-    // validateFunction(listener, 'listener');
+export const addAbortListener: any = function addAbortListener(signal, listener) {
+  if (signal === undefined) {
+    // @ts-expect-error
+    throw new ERR_INVALID_ARG_TYPE("signal", "AbortSignal", signal);
+  }
+  // validateAbortSignal(signal, 'signal');
+  // validateFunction(listener, 'listener');
 
-    let removeEventListener: Listener;
-    if (signal.aborted) {
+  let removeEventListener: Listener;
+  if (signal.aborted) {
+    // @ts-expect-error
+    queueMicrotask(() => listener());
+  }
+  else {
+    // TODO(atlowChemi) add { subscription: true } and return directly
+    signal.addEventListener("abort", listener, {
       // @ts-expect-error
-      queueMicrotask(() => listener());
-    } else {
-      // TODO(atlowChemi) add { subscription: true } and return directly
-      signal.addEventListener("abort", listener, {
-        // @ts-expect-error
-        __proto__: null,
-        once: true,
-        [kResistStopPropagation]: true,
-      });
-      removeEventListener = () => {
-        signal.removeEventListener("abort", listener);
-      };
-    }
-    return {
       __proto__: null,
-      [Symbol.dispose]() {
-        removeEventListener?.();
-      },
+      once: true,
+      [kResistStopPropagation]: true,
+    });
+    removeEventListener = () => {
+      signal.removeEventListener("abort", listener);
     };
+  }
+  return {
+    __proto__: null,
+    [Symbol.dispose]() {
+      removeEventListener?.();
+    },
   };
+};
 
 /**
  * Returns a copy of the array of listeners for the event name
  * specified as `type`.
  * @returns {Function[]}
  */
-export const getEventListeners: any =
-  function getEventListeners(emitterOrTarget, type) {
-    // First check if EventEmitter
-    if (typeof (emitterOrTarget as NodeEventEmitter).listeners === "function") {
-      return (emitterOrTarget as NodeEventEmitter).listeners(type);
+export const getEventListeners: any = function getEventListeners(emitterOrTarget, type) {
+  // First check if EventEmitter
+  if (typeof (emitterOrTarget as NodeEventEmitter).listeners === "function") {
+    return (emitterOrTarget as NodeEventEmitter).listeners(type);
+  }
+  // Require event target lazily to avoid always loading it
+  if (isEventTarget(emitterOrTarget)) {
+    // @ts-expect-error
+    const root = emitterOrTarget[kEvents].get(type);
+    const listeners = [];
+    let handler = root?.next;
+    while (handler?.listener !== undefined) {
+      const listener = handler.listener?.deref ? handler.listener.deref() : handler.listener;
+      listeners.push(listener);
+      handler = handler.next;
     }
-    // Require event target lazily to avoid always loading it
-    if (isEventTarget(emitterOrTarget)) {
-      // @ts-expect-error
-      const root = emitterOrTarget[kEvents].get(type);
-      const listeners = [];
-      let handler = root?.next;
-      while (handler?.listener !== undefined) {
-        const listener = handler.listener?.deref
-          ? handler.listener.deref()
-          : handler.listener;
-        listeners.push(listener);
-        handler = handler.next;
-      }
-      return listeners;
-    }
-    throw new ERR_INVALID_ARG_TYPE(
-      "emitter",
-      ["EventEmitter", "EventTarget"],
-      // @ts-expect-error
-      emitterOrTarget,
-    );
-  };
+    return listeners;
+  }
+  throw new ERR_INVALID_ARG_TYPE(
+    "emitter",
+    ["EventEmitter", "EventTarget"],
+    // @ts-expect-error
+    emitterOrTarget,
+  );
+};
 
 /**
  * Returns the max listeners set.
  * @param {EventEmitter | EventTarget} emitterOrTarget
  * @returns {number}
  */
-export const getMaxListeners: any =
-  function getMaxListeners(emitterOrTarget) {
-    if (
-      typeof (emitterOrTarget as NodeEventEmitter)?.getMaxListeners ===
+export const getMaxListeners: any = function getMaxListeners(emitterOrTarget) {
+  if (
+    typeof (emitterOrTarget as NodeEventEmitter)?.getMaxListeners ===
       "function"
-    ) {
-      return _getMaxListeners(emitterOrTarget as _EventEmitter);
-      // @ts-expect-error
-    } else if (emitterOrTarget?.[kMaxEventTargetListeners]) {
-      // @ts-expect-error
-      return emitterOrTarget[kMaxEventTargetListeners];
-    }
+  ) {
+    return _getMaxListeners(emitterOrTarget as _EventEmitter);
+    // @ts-expect-error
+  }
+  else if (emitterOrTarget?.[kMaxEventTargetListeners]) {
+    // @ts-expect-error
+    return emitterOrTarget[kMaxEventTargetListeners];
+  }
 
-    throw new ERR_INVALID_ARG_TYPE(
-      "emitter",
-      ["EventEmitter", "EventTarget"],
-      // @ts-expect-error
-      emitterOrTarget,
-    );
-  };
+  throw new ERR_INVALID_ARG_TYPE(
+    "emitter",
+    ["EventEmitter", "EventTarget"],
+    // @ts-expect-error
+    emitterOrTarget,
+  );
+};
 
 // ----------------------------------------------------------------------------
 // FixedQueue (internal)
@@ -1126,7 +1143,8 @@ function addCatch(
         setTimeout(emitUnhandledRejectionOrErr, 0, that, err, type, args);
       });
     }
-  } catch (error_) {
+  }
+  catch (error_) {
     that.emit("error", error_);
   }
 }
@@ -1141,7 +1159,8 @@ function emitUnhandledRejectionOrErr(
   if (typeof ee[kRejection] === "function") {
     // @ts-expect-error
     ee[kRejection](err, type, ...args);
-  } else {
+  }
+  else {
     // We have to disable the capture rejections mechanism, otherwise
     // we might end up in an infinite loop.
     const prev = ee[kCapture];
@@ -1153,7 +1172,8 @@ function emitUnhandledRejectionOrErr(
     try {
       ee[kCapture] = false;
       ee.emit("error", err);
-    } finally {
+    }
+    finally {
       ee[kCapture] = prev;
     }
   }
@@ -1170,7 +1190,8 @@ function enhanceStackTrace(err: Error, own: Error) {
     // @ts-expect-error
     const { name } = this.constructor;
     if (name !== "EventEmitter") ctorInfo = ` on ${name} instance`;
-  } catch {
+  }
+  catch {
     // Continue regardless of error.
   }
   const sep = `\nEmitted 'error' event${ctorInfo} at:\n`;
@@ -1207,7 +1228,8 @@ function _addListener(
   if (events === undefined) {
     events = target._events = { __proto__: null };
     target._eventsCount = 0;
-  } else {
+  }
+  else {
     // To avoid recursion in the case that type === "newListener"! Before
     // adding it to the listeners, first emit "newListener".
     if (events.newListener !== undefined) {
@@ -1225,16 +1247,17 @@ function _addListener(
     // Optimize the case of one listener. Don't need the extra array object.
     events[type] = listener;
     ++target._eventsCount;
-  } else {
+  }
+  else {
     if (typeof existing === "function") {
       // Adding the second element, need to change to array.
-      existing = events[type] = prepend
-        ? [listener, existing]
-        : [existing, listener];
+      existing = events[type] = prepend ? [listener, existing] : [existing, listener];
       // If we've already got an array, just append.
-    } else if (prepend) {
+    }
+    else if (prepend) {
       existing.unshift(listener);
-    } else {
+    }
+    else {
       existing.push(listener);
     }
 
@@ -1245,7 +1268,9 @@ function _addListener(
       // No error code for this since it is a Warning
       const w = new genericNodeError(
         `Possible EventEmitter memory leak detected. ${existing.length} ${String(type)} listeners ` +
-          `added to ${inspect(target, { depth: -1 })}. MaxListeners is ${m}. Use emitter.setMaxListeners() to increase limit`,
+          `added to ${
+            inspect(target, { depth: -1 })
+          }. MaxListeners is ${m}. Use emitter.setMaxListeners() to increase limit`,
         {
           // @ts-expect-error
           name: "MaxListenersExceededWarning",
@@ -1300,8 +1325,9 @@ function _listeners(
   const evlistener = events[type];
   if (evlistener === undefined) return [];
 
-  if (typeof evlistener === "function")
+  if (typeof evlistener === "function") {
     return unwrap ? [evlistener.listener || evlistener] : [evlistener];
+  }
 
   return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener);
 }
@@ -1346,7 +1372,8 @@ function eventTargetAgnosticRemoveListener(
 ) {
   if (typeof (emitter as NodeEventEmitter).removeListener === "function") {
     (emitter as NodeEventEmitter).removeListener(name, listener);
-  } else if (
+  }
+  else if (
     typeof (emitter as EventTarget).removeEventListener === "function"
   ) {
     (emitter as EventTarget).removeEventListener(
@@ -1354,7 +1381,8 @@ function eventTargetAgnosticRemoveListener(
       listener,
       flags,
     );
-  } else {
+  }
+  else {
     // @ts-expect-error
     throw new ERR_INVALID_ARG_TYPE("emitter", "EventEmitter", emitter);
   }
@@ -1369,12 +1397,15 @@ function eventTargetAgnosticAddListener(
   if (typeof (emitter as NodeEventEmitter).on === "function") {
     if (flags?.once) {
       (emitter as NodeEventEmitter).once(name, listener);
-    } else {
+    }
+    else {
       (emitter as NodeEventEmitter).on(name, listener);
     }
-  } else if (typeof (emitter as EventTarget).addEventListener === "function") {
+  }
+  else if (typeof (emitter as EventTarget).addEventListener === "function") {
     (emitter as EventTarget).addEventListener(name as string, listener, flags);
-  } else {
+  }
+  else {
     // @ts-expect-error
     throw new ERR_INVALID_ARG_TYPE("emitter", "EventEmitter", emitter);
   }

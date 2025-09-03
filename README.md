@@ -533,6 +533,18 @@ This creates:
 deno task test
 ```
 
+## Pre-Commit Checks
+
+You MUST run these checks before committing code:
+
+```bash
+deno check
+deno lint
+deno fmt --check
+deno task test
+deno task build
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.

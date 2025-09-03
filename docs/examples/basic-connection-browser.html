@@ -1,210 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CUSS2 Basic Browser Example</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #333;
-        }
-        .config {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-right: 10px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .status {
-            margin: 20px 0;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .log {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 14px;
-        }
-        .log-entry {
-            margin: 2px 0;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+        margin: 0;
+        padding: 40px 20px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #64ffda;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      h2 {
+        color: #64ffda;
+        font-size: 1.3rem;
+        margin-top: 30px;
+      }
+      .subtitle {
+        text-align: center;
+        color: #a0a0a0;
+        margin-bottom: 40px;
+      }
+      .config {
+        background: rgba(26, 26, 46, 0.6);
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        padding: 20px;
+        border-radius: 12px;
+        margin: 20px 0;
+      }
+      .config strong {
+        color: #64ffda;
+      }
+      button {
+        background: linear-gradient(135deg, #64ffda, #48cae4);
+        color: #0f0f1e;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        margin-right: 10px;
+        transition: all 0.3s ease;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+      }
+      button:disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .status {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid;
+        font-weight: 500;
+      }
+      .status.connected {
+        background: rgba(100, 255, 218, 0.1);
+        border-color: #64ffda;
+        color: #64ffda;
+      }
+      .status.disconnected {
+        background: rgba(255, 100, 100, 0.1);
+        border-color: #ff6464;
+        color: #ff6464;
+      }
+      .log {
+        background: #0a0a14;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        border-radius: 8px;
+        padding: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+      }
+      .log-entry {
+        margin: 4px 0;
+        color: #b0b0b0;
+      }
+      .back-link {
+        display: inline-block;
+        color: #64ffda;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+      }
+      .back-link:hover {
+        transform: translateX(-5px);
+      }
     </style>
-</head>
-<body>
-    <h1>CUSS2 Basic Browser Example</h1>
-    <p>This example demonstrates a minimal connection to a CUSS2 platform from a web browser.</p>
+  </head>
+  <body>
+    <div class="container">
+      <a href="../index.html" class="back-link">← Back to Examples</a>
+      <h1>CUSS2 Basic Browser Example</h1>
+      <p class="subtitle">This example demonstrates a minimal connection to a CUSS2 platform from a web browser.</p>
 
-    <div class="config">
+      <div class="config">
         <strong>Configuration:</strong><br>
         WebSocket URL: <span id="configWss">http://localhost:22222</span><br>
         Client ID: <span id="configClientId">KAP</span><br>
         Client Secret: <span id="configClientSecret">***</span>
-    </div>
+      </div>
 
-    <div>
+      <div>
         <button id="connectBtn">Connect</button>
         <button id="disconnectBtn" disabled>Disconnect</button>
+      </div>
+
+      <div id="status" class="status disconnected">Disconnected</div>
+
+      <h2>Log:</h2>
+      <div id="log" class="log"></div>
     </div>
 
-    <div id="status" class="status disconnected">Disconnected</div>
+    <!-- Include the CUSS2 browser bundle -->
+    <script type="module">
+      import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@1.0.3";
+      // Configuration - replace with your actual values
+      const config = {
+        clientId: "KAP",
+        clientSecret: "secret",
+        wss: "http://localhost:22222", // Optional
+        deviceID: undefined, // Optional
+        tokenURL: "http://localhost:22222/oauth/token", // Optional
+      };
 
-    <h2>Log:</h2>
-    <div id="log" class="log"></div>
+      let cuss2 = null;
 
-    <!-- Include the CUSS2 browser bundle from CDN -->
-    <script src="https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.js"></script>
+      // Display configuration
+      document.getElementById("configWss").textContent = config.wss;
+      document.getElementById("configClientId").textContent = config.clientId;
+      document.getElementById("configClientSecret").textContent = "*".repeat(config.clientSecret.length);
 
-    <script>
-        // Configuration - replace with your actual values
-        const config = {
-            clientId: "KAP",
-            clientSecret: "secret",
-            wss: "http://localhost:22222", // Optional
-            deviceID: undefined, // Optional
-            tokenURL: "http://localhost:22222/oauth/token" // Optional
-        };
+      // Log function
+      function log(message) {
+        const logDiv = document.getElementById("log");
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
 
-        let cuss2 = null;
+      // Update status
+      function updateStatus(connected) {
+        const statusDiv = document.getElementById("status");
+        statusDiv.className = connected ? "status connected" : "status disconnected";
+        statusDiv.textContent = connected ? "Connected" : "Disconnected";
 
-        // Display configuration
-        document.getElementById('configWss').textContent = config.wss;
-        document.getElementById('configClientId').textContent = config.clientId;
-        document.getElementById('configClientSecret').textContent = '*'.repeat(config.clientSecret.length);
+        document.getElementById("connectBtn").disabled = connected;
+        document.getElementById("disconnectBtn").disabled = !connected;
+      }
 
-        // Log function
-        function log(message) {
-            const logDiv = document.getElementById('log');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            logDiv.appendChild(entry);
-            logDiv.scrollTop = logDiv.scrollHeight;
+      // Connect function
+      async function connect() {
+        try {
+          log("Connecting to CUSS2 platform...");
+
+          // Connect to the CUSS2 platform
+          cuss2 = Cuss2.connect(
+            config.clientId,
+            config.clientSecret,
+            config.wss,
+            config.deviceID,
+            config.tokenURL,
+          );
+
+          // Listen for connection events
+          cuss2.connection.on("connecting", (attemptCount) => {
+            log(`Connecting to WebSocket... Attempt: ${attemptCount}`);
+          });
+
+          cuss2.connection.on("authenticating", (attemptCount) => {
+            log(`Authenticating... Attempt: ${attemptCount}`);
+          });
+
+          cuss2.connection.once("authenticated", (auth) => {
+            log("Authenticated successfully");
+          });
+
+          cuss2.connection.on("close", () => {
+            log("Connection closed");
+            updateStatus(false);
+          });
+
+          cuss2.connection.on("error", (error) => {
+            log(`Connection error: ${error.message}`);
+          });
+
+          // Wait for connection to be established
+          log("Waiting for connection to be established...");
+          await cuss2.connected;
+
+          log("Connected successfully!");
+          updateStatus(true);
+
+          // Log the environment information
+          log(`CUSS2 Environment: Device ID: ${cuss2.environment.deviceID}`);
+          log(`CUSS Version: ${cuss2.environment.cussVersions?.[0] || "Unknown"}`);
+          log(`Location: ${cuss2.environment.deviceLocation?.airportCode || "Unknown"}`);
+
+          // Request initialize state
+          log("Requesting initialize state...");
+          await cuss2.requestInitializeState();
+          log("Initialize state requested successfully!");
+
+          log("Connection established. You can now interact with the platform.");
         }
-
-        // Update status
-        function updateStatus(connected) {
-            const statusDiv = document.getElementById('status');
-            statusDiv.className = connected ? 'status connected' : 'status disconnected';
-            statusDiv.textContent = connected ? 'Connected' : 'Disconnected';
-
-            document.getElementById('connectBtn').disabled = connected;
-            document.getElementById('disconnectBtn').disabled = !connected;
+        catch (error) {
+          log(`Error: ${error.message}`);
+          updateStatus(false);
         }
+      }
 
-        // Connect function
-        async function connect() {
-            try {
-                log('Connecting to CUSS2 platform...');
-
-                // Connect to the CUSS2 platform
-                cuss2 = Cuss2.connect(
-                    config.clientId,
-                    config.clientSecret,
-                    config.wss,
-                    config.deviceID,
-                    config.tokenURL
-                );
-
-                // Listen for connection events
-                cuss2.connection.on('connecting', (attemptCount) => {
-                    log(`Connecting to WebSocket... Attempt: ${attemptCount}`);
-                });
-
-                cuss2.connection.on('authenticating', (attemptCount) => {
-                    log(`Authenticating... Attempt: ${attemptCount}`);
-                });
-
-                cuss2.connection.once('authenticated', (auth) => {
-                    log('Authenticated successfully');
-                });
-
-                cuss2.connection.on('close', () => {
-                    log('Connection closed');
-                    updateStatus(false);
-                });
-
-                cuss2.connection.on('error', (error) => {
-                    log(`Connection error: ${error.message}`);
-                });
-
-                // Wait for connection to be established
-                log('Waiting for connection to be established...');
-                await cuss2.connected;
-
-                log('Connected successfully!');
-                updateStatus(true);
-
-                // Log the environment information
-                log(`CUSS2 Environment: Device ID: ${cuss2.environment.deviceID}`);
-                log(`CUSS Version: ${cuss2.environment.cussVersions?.[0] || 'Unknown'}`);
-                log(`Location: ${cuss2.environment.deviceLocation?.airportCode || 'Unknown'}`);
-
-                // Request initialize state
-                log('Requesting initialize state...');
-                await cuss2.requestInitializeState();
-                log('Initialize state requested successfully!');
-
-                log('Connection established. You can now interact with the platform.');
-
-            } catch (error) {
-                log(`Error: ${error.message}`);
-                updateStatus(false);
-            }
+      // Disconnect function
+      function disconnect() {
+        if (cuss2) {
+          log("Disconnecting...");
+          cuss2.connection.close();
+          cuss2 = null;
+          updateStatus(false);
+          log("Disconnected");
         }
+      }
 
-        // Disconnect function
-        function disconnect() {
-            if (cuss2) {
-                log('Disconnecting...');
-                cuss2.connection.close();
-                cuss2 = null;
-                updateStatus(false);
-                log('Disconnected');
-            }
-        }
+      // Setup event listeners
+      document.getElementById("connectBtn").addEventListener("click", connect);
+      document.getElementById("disconnectBtn").addEventListener("click", disconnect);
 
-        // Setup event listeners
-        document.getElementById('connectBtn').addEventListener('click', connect);
-        document.getElementById('disconnectBtn').addEventListener('click', disconnect);
-
-        // Initial log
-        log('CUSS2 Basic Browser Example ready');
+      // Initial log
+      log("CUSS2 Basic Browser Example ready");
     </script>
-</body>
+  </body>
 </html>

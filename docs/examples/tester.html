@@ -1,721 +1,849 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CUSS2 Browser Client Demo</title>
+    <title>CUSS2 Interactive Tester</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: 1fr;
         }
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .panel {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        h2 {
-            color: #555;
-            margin-top: 0;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .connection-form {
-            display: grid;
-            gap: 10px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #555;
-        }
-        input, select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        button {
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        button:hover:not(:disabled) {
-            background: #0056b3;
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .status {
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-            font-weight: 500;
-        }
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .status.connecting {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .state-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            margin: 5px 0;
-        }
-        .state-badge.STOPPED { background: #6c757d; color: white; }
-        .state-badge.INITIALIZE { background: #17a2b8; color: white; }
-        .state-badge.UNAVAILABLE { background: #ffc107; color: black; }
-        .state-badge.AVAILABLE { background: #28a745; color: white; }
-        .state-badge.ACTIVE { background: #dc3545; color: white; }
-        .component-list {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-        }
-        .component-item {
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            background: #f9f9f9;
-        }
-        .component-item.ready {
-            background: #e8f5e9;
-            border-color: #4caf50;
-        }
-        .component-item.enabled {
-            background: #e3f2fd;
-            border-color: #2196f3;
-        }
-        .component-name {
-            font-weight: 600;
-            color: #333;
-        }
-        .component-status {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        .log-container {
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-        }
-        .log-entry {
-            margin: 2px 0;
-            padding: 2px 0;
-        }
-        .log-entry.info { color: #333; }
-        .log-entry.success { color: #28a745; }
-        .log-entry.error { color: #dc3545; }
-        .log-entry.event { color: #007bff; }
-        .actions {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .actions button {
-            font-size: 14px;
-            padding: 8px 16px;
-        }
-        .environment-info {
-            background: #f9f9f9;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .environment-info div {
-            margin: 5px 0;
-        }
-        .full-width {
-            grid-column: 1 / -1;
-        }
+      }
+      .panel {
+        background: rgba(26, 26, 46, 0.6);
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+      h1 {
+        color: #64ffda;
+        margin-bottom: 10px;
+        text-align: center;
+        font-size: 2.5rem;
+      }
+      h2 {
+        color: #64ffda;
+        margin-top: 0;
+        border-bottom: 2px solid rgba(100, 255, 218, 0.3);
+        padding-bottom: 10px;
+      }
+      .connection-form {
+        display: grid;
+        gap: 10px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+      label {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #a0a0a0;
+      }
+      input, select {
+        padding: 8px 12px;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        background: #0a0a14;
+        color: #e0e0e0;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      input:focus, select:focus {
+        outline: none;
+        border-color: #64ffda;
+        box-shadow: 0 0 5px rgba(100, 255, 218, 0.3);
+      }
+      button {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #64ffda, #48cae4);
+        color: #0f0f1e;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+      }
+      button:disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-weight: 500;
+      }
+      .status.connected {
+        background: rgba(100, 255, 218, 0.1);
+        border: 1px solid #64ffda;
+        color: #64ffda;
+      }
+      .status.disconnected {
+        background: rgba(255, 100, 100, 0.1);
+        border: 1px solid #ff6464;
+        color: #ff6464;
+      }
+      .status.connecting {
+        background: rgba(255, 200, 100, 0.1);
+        border: 1px solid #ffc864;
+        color: #ffc864;
+      }
+      .state-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        margin: 5px 0;
+      }
+      .state-badge.STOPPED {
+        background: rgba(108, 117, 125, 0.3);
+        color: #a0a0a0;
+        border: 1px solid #6c757d;
+      }
+      .state-badge.INITIALIZE {
+        background: rgba(23, 162, 184, 0.3);
+        color: #17a2b8;
+        border: 1px solid #17a2b8;
+      }
+      .state-badge.UNAVAILABLE {
+        background: rgba(255, 193, 7, 0.3);
+        color: #ffc107;
+        border: 1px solid #ffc107;
+      }
+      .state-badge.AVAILABLE {
+        background: rgba(100, 255, 218, 0.3);
+        color: #64ffda;
+        border: 1px solid #64ffda;
+      }
+      .state-badge.ACTIVE {
+        background: rgba(220, 53, 69, 0.3);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+      }
+      .component-list {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        background: #0a0a14;
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .component-item {
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid rgba(100, 255, 218, 0.1);
+        border-radius: 4px;
+        background: rgba(26, 26, 46, 0.4);
+      }
+      .component-item.ready {
+        background: rgba(100, 255, 218, 0.1);
+        border-color: #64ffda;
+      }
+      .component-item.enabled {
+        background: rgba(72, 202, 228, 0.1);
+        border-color: #48cae4;
+      }
+      .component-name {
+        font-weight: 600;
+        color: #64ffda;
+      }
+      .component-status {
+        font-size: 12px;
+        color: #a0a0a0;
+        margin-top: 5px;
+      }
+      .log-container {
+        background: #0a0a14;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        border-radius: 8px;
+        padding: 10px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+      }
+      .log-entry {
+        margin: 2px 0;
+        padding: 2px 0;
+      }
+      .log-entry.info {
+        color: #b0b0b0;
+      }
+      .log-entry.success {
+        color: #64ffda;
+      }
+      .log-entry.error {
+        color: #ff6464;
+      }
+      .log-entry.event {
+        color: #48cae4;
+      }
+      .actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .actions button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+      .environment-info {
+        background: rgba(26, 26, 46, 0.4);
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        border: 1px solid rgba(100, 255, 218, 0.1);
+      }
+      .environment-info div {
+        margin: 5px 0;
+      }
+      .full-width {
+        grid-column: 1 / -1;
+      }
+      .subtitle {
+        text-align: center;
+        color: #a0a0a0;
+        margin-bottom: 30px;
+      }
+      .back-link {
+        display: inline-block;
+        color: #64ffda;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+      }
+      .back-link:hover {
+        transform: translateX(-5px);
+      }
     </style>
-</head>
-<body>
-    <h1>CUSS2 Browser Client Demo</h1>
-    <p>This demo showcases connecting to a CUSS2 platform and interacting with components from a web browser.</p>
-
+  </head>
+  <body>
     <div class="container">
+      <a href="../index.html" class="back-link">← Back to Examples</a>
+      <h1>CUSS2 Interactive Tester</h1>
+      <p class="subtitle">Testing interface for the CUSS2 platform with full component interaction capabilities</p>
+
+      <div class="grid">
         <!-- Connection Panel -->
         <div class="panel">
-            <h2>Connection</h2>
-            <form id="connectionForm" class="connection-form">
-                <div class="form-group">
-                    <label for="wss">WebSocket URL</label>
-                    <input type="text" id="wss" value="http://localhost:22222" required>
-                </div>
-                <div class="form-group">
-                    <label for="clientId">Client ID</label>
-                    <input type="text" id="clientId" value="KAP" required>
-                </div>
-                <div class="form-group">
-                    <label for="clientSecret">Client Secret</label>
-                    <input type="password" id="clientSecret" value="secret" required>
-                </div>
-                <div class="form-group">
-                    <label for="deviceId">Device ID (optional)</label>
-                    <input type="text" id="deviceId" placeholder="Leave empty for default">
-                </div>
-                <div class="form-group">
-                    <label for="tokenUrl">Token URL (optional)</label>
-                    <input type="text" id="tokenUrl" value="http://localhost:22222/oauth/token" placeholder="Leave empty to use WebSocket URL">
-                </div>
-                <button type="submit" id="connectBtn">Connect</button>
-                <button type="button" id="disconnectBtn" disabled>Disconnect</button>
-            </form>
-            
-            <div id="connectionStatus" class="status disconnected">Disconnected</div>
-            
-            <div id="environmentInfo" class="environment-info" style="display: none;">
-                <h3>Environment</h3>
-                <div id="envDetails"></div>
+          <h2>Connection</h2>
+          <form id="connectionForm" class="connection-form">
+            <div class="form-group">
+              <label for="wss">WebSocket URL</label>
+              <input type="text" id="wss" value="http://localhost:22222" required>
             </div>
+            <div class="form-group">
+              <label for="clientId">Client ID</label>
+              <input type="text" id="clientId" value="KAP" required>
+            </div>
+            <div class="form-group">
+              <label for="clientSecret">Client Secret</label>
+              <input type="password" id="clientSecret" value="secret" required>
+            </div>
+            <div class="form-group">
+              <label for="deviceId">Device ID (optional)</label>
+              <input type="text" id="deviceId" placeholder="Leave empty for default">
+            </div>
+            <div class="form-group">
+              <label for="tokenUrl">Token URL (optional)</label>
+              <input
+                type="text"
+                id="tokenUrl"
+                value="http://localhost:22222/oauth/token"
+                placeholder="Leave empty to use WebSocket URL"
+              >
+            </div>
+            <button type="submit" id="connectBtn">Connect</button>
+            <button type="button" id="disconnectBtn" disabled>Disconnect</button>
+          </form>
+
+          <div id="connectionStatus" class="status disconnected">Disconnected</div>
+
+          <div id="environmentInfo" class="environment-info" style="display: none">
+            <h3>Environment</h3>
+            <div id="envDetails"></div>
+          </div>
         </div>
 
         <!-- State Management Panel -->
         <div class="panel">
-            <h2>State Management</h2>
-            <div>
-                <strong>Current State:</strong> 
-                <span id="currentState" class="state-badge STOPPED">STOPPED</span>
-            </div>
-            
-            <div class="actions">
-                <button id="initializeBtn" disabled>Initialize</button>
-                <button id="unavailableBtn" disabled>Unavailable</button>
-                <button id="availableBtn" disabled>Available</button>
-                <button id="activeBtn" disabled>Active</button>
-                <button id="stoppedBtn" disabled>Stopped</button>
-                <button id="reloadBtn" disabled>Reload</button>
-            </div>
+          <h2>State Management</h2>
+          <div>
+            <strong>Current State:</strong>
+            <span id="currentState" class="state-badge STOPPED">STOPPED</span>
+          </div>
 
-            <h3>Application Info</h3>
-            <div id="appInfo" style="font-size: 14px;">
-                <div>Multi-tenant: <span id="multiTenant">-</span></div>
-                <div>Accessible Mode: <span id="accessibleMode">-</span></div>
-                <div>Language: <span id="language">-</span></div>
-            </div>
+          <div class="actions">
+            <button id="initializeBtn" disabled>Initialize</button>
+            <button id="unavailableBtn" disabled>Unavailable</button>
+            <button id="availableBtn" disabled>Available</button>
+            <button id="activeBtn" disabled>Active</button>
+            <button id="stoppedBtn" disabled>Stopped</button>
+            <button id="reloadBtn" disabled>Reload</button>
+          </div>
+
+          <h3>Application Info</h3>
+          <div id="appInfo" style="font-size: 14px">
+            <div>Multi-tenant: <span id="multiTenant">-</span></div>
+            <div>Accessible Mode: <span id="accessibleMode">-</span></div>
+            <div>Language: <span id="language">-</span></div>
+          </div>
         </div>
 
         <!-- Components Panel -->
         <div class="panel full-width">
-            <h2>Components</h2>
-            <div id="componentList" class="component-list">
-                <p style="color: #666;">Connect to see available components...</p>
-            </div>
+          <h2>Components</h2>
+          <div id="componentList" class="component-list">
+            <p style="color: #666">Connect to see available components...</p>
+          </div>
         </div>
 
         <!-- Event Log Panel -->
         <div class="panel full-width">
-            <h2>Event Log</h2>
-            <div id="logContainer" class="log-container"></div>
+          <h2>Event Log</h2>
+          <div id="logContainer" class="log-container"></div>
         </div>
-    </div>
+      </div>
 
-    <!-- Include the CUSS2 browser bundle -->
-    <script src="https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.js"></script>
-
-    <script>
+      <!-- Include the CUSS2 browser bundle -->
+      <script type="module">
+        import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@1.0.3";
+        import {
+          ApplicationStateCodes,
+          MessageCodes,
+        } from "https://esm.sh/jsr/@cuss/cuss2-typescript-models@latest";
         let cuss2 = null;
-        
-        // Try to access Models safely
-        let ApplicationStateCodes, MessageCodes;
-        try {
-            ({ ApplicationStateCodes, MessageCodes } = Cuss2.Models);
-        } catch (error) {
-            // Fallback - check if they're directly on Cuss2
-            ApplicationStateCodes = Cuss2.ApplicationStateCodes;
-            MessageCodes = Cuss2.MessageCodes;
-        }
 
         // ===== DOM HELPERS =====
         const dom = {
-            // Cache DOM elements
-            elements: {
-                form: null,
-                connectBtn: null,
-                disconnectBtn: null,
-                connectionStatus: null,
-                currentState: null,
-                componentList: null,
-                logContainer: null,
-                environmentInfo: null,
-                envDetails: null,
-                stateButtons: {},
-                appInfo: {}
-            },
+          // Cache DOM elements
+          elements: {
+            form: null,
+            connectBtn: null,
+            disconnectBtn: null,
+            connectionStatus: null,
+            currentState: null,
+            componentList: null,
+            logContainer: null,
+            environmentInfo: null,
+            envDetails: null,
+            stateButtons: {},
+            appInfo: {},
+          },
 
-            // Initialize DOM element cache
-            init() {
-                this.elements.form = document.getElementById('connectionForm');
-                this.elements.connectBtn = document.getElementById('connectBtn');
-                this.elements.disconnectBtn = document.getElementById('disconnectBtn');
-                this.elements.connectionStatus = document.getElementById('connectionStatus');
-                this.elements.currentState = document.getElementById('currentState');
-                this.elements.componentList = document.getElementById('componentList');
-                this.elements.logContainer = document.getElementById('logContainer');
-                this.elements.environmentInfo = document.getElementById('environmentInfo');
-                this.elements.envDetails = document.getElementById('envDetails');
+          // Initialize DOM element cache
+          init() {
+            this.elements.form = document.getElementById("connectionForm");
+            this.elements.connectBtn = document.getElementById("connectBtn");
+            this.elements.disconnectBtn = document.getElementById("disconnectBtn");
+            this.elements.connectionStatus = document.getElementById("connectionStatus");
+            this.elements.currentState = document.getElementById("currentState");
+            this.elements.componentList = document.getElementById("componentList");
+            this.elements.logContainer = document.getElementById("logContainer");
+            this.elements.environmentInfo = document.getElementById("environmentInfo");
+            this.elements.envDetails = document.getElementById("envDetails");
 
-                // State buttons
-                this.elements.stateButtons = {
-                    initialize: document.getElementById('initializeBtn'),
-                    unavailable: document.getElementById('unavailableBtn'),
-                    available: document.getElementById('availableBtn'),
-                    active: document.getElementById('activeBtn'),
-                    stopped: document.getElementById('stoppedBtn'),
-                    reload: document.getElementById('reloadBtn')
-                };
+            // State buttons
+            this.elements.stateButtons = {
+              initialize: document.getElementById("initializeBtn"),
+              unavailable: document.getElementById("unavailableBtn"),
+              available: document.getElementById("availableBtn"),
+              active: document.getElementById("activeBtn"),
+              stopped: document.getElementById("stoppedBtn"),
+              reload: document.getElementById("reloadBtn"),
+            };
 
-                // App info elements
-                this.elements.appInfo = {
-                    multiTenant: document.getElementById('multiTenant'),
-                    accessibleMode: document.getElementById('accessibleMode'),
-                    language: document.getElementById('language')
-                };
-            },
+            // App info elements
+            this.elements.appInfo = {
+              multiTenant: document.getElementById("multiTenant"),
+              accessibleMode: document.getElementById("accessibleMode"),
+              language: document.getElementById("language"),
+            };
+          },
 
-            // Get form values
-            getFormData() {
-                return {
-                    wss: document.getElementById('wss').value,
-                    clientId: document.getElementById('clientId').value,
-                    clientSecret: document.getElementById('clientSecret').value,
-                    deviceId: document.getElementById('deviceId').value,
-                    tokenUrl: document.getElementById('tokenUrl').value
-                };
-            },
+          // Get form values
+          getFormData() {
+            return {
+              wss: document.getElementById("wss").value,
+              clientId: document.getElementById("clientId").value,
+              clientSecret: document.getElementById("clientSecret").value,
+              deviceId: document.getElementById("deviceId").value,
+              tokenUrl: document.getElementById("tokenUrl").value,
+            };
+          },
 
-            // Update element text content
-            setText(element, text) {
-                if (element) element.textContent = text;
-            },
+          // Update element text content
+          setText(element, text) {
+            if (element) element.textContent = text;
+          },
 
-            // Update element class
-            setClass(element, className) {
-                if (element) element.className = className;
-            },
+          // Update element class
+          setClass(element, className) {
+            if (element) element.className = className;
+          },
 
-            // Enable/disable button
-            setButtonState(button, disabled) {
-                if (button) button.disabled = disabled;
-            },
+          // Enable/disable button
+          setButtonState(button, disabled) {
+            if (button) button.disabled = disabled;
+          },
 
-            // Show/hide element
-            setVisible(element, visible) {
-                if (element) element.style.display = visible ? 'block' : 'none';
-            }
+          // Show/hide element
+          setVisible(element, visible) {
+            if (element) element.style.display = visible ? "block" : "none";
+          },
         };
 
         // ===== LOGGING UTILITY =====
         const logger = {
-            // Log types enum
-            types: {
-                INFO: 'info',
-                SUCCESS: 'success',
-                ERROR: 'error',
-                EVENT: 'event'
-            },
+          // Log types enum
+          types: {
+            INFO: "info",
+            SUCCESS: "success",
+            ERROR: "error",
+            EVENT: "event",
+          },
 
-            // Create a log entry
-            log(message, type = 'info') {
-                const entry = document.createElement('div');
-                entry.className = `log-entry ${type}`;
-                entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-                dom.elements.logContainer.appendChild(entry);
-                dom.elements.logContainer.scrollTop = dom.elements.logContainer.scrollHeight;
-            },
+          // Create a log entry
+          log(message, type = "info") {
+            const entry = document.createElement("div");
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            dom.elements.logContainer.appendChild(entry);
+            dom.elements.logContainer.scrollTop = dom.elements.logContainer.scrollHeight;
+          },
 
-            // Convenience methods
-            info(message) { this.log(message, this.types.INFO); },
-            success(message) { this.log(message, this.types.SUCCESS); },
-            error(message) { this.log(message, this.types.ERROR); },
-            event(message) { this.log(message, this.types.EVENT); }
+          // Convenience methods
+          info(message) {
+            this.log(message, this.types.INFO);
+          },
+          success(message) {
+            this.log(message, this.types.SUCCESS);
+          },
+          error(message) {
+            this.log(message, this.types.ERROR);
+          },
+          event(message) {
+            this.log(message, this.types.EVENT);
+          },
         };
 
         // ===== UI UPDATE UTILITIES =====
         const ui = {
-            // Connection status states
-            connectionStates: {
-                CONNECTED: { class: 'status connected', text: 'Connected' },
-                DISCONNECTED: { class: 'status disconnected', text: 'Disconnected' },
-                CONNECTING: { class: 'status connecting', text: 'Connecting...' },
-                FAILED: { class: 'status disconnected', text: 'Connection failed' }
-            },
+          // Connection status states
+          connectionStates: {
+            CONNECTED: { class: "status connected", text: "Connected" },
+            DISCONNECTED: { class: "status disconnected", text: "Disconnected" },
+            CONNECTING: { class: "status connecting", text: "Connecting..." },
+            FAILED: { class: "status disconnected", text: "Connection failed" },
+          },
 
-            // Update connection status
-            updateConnectionStatus(state) {
-                const status = this.connectionStates[state];
-                dom.setClass(dom.elements.connectionStatus, status.class);
-                dom.setText(dom.elements.connectionStatus, status.text);
-            },
+          // Update connection status
+          updateConnectionStatus(state) {
+            const status = this.connectionStates[state];
+            dom.setClass(dom.elements.connectionStatus, status.class);
+            dom.setText(dom.elements.connectionStatus, status.text);
+          },
 
-            // Update state display
-            updateStateDisplay(state) {
-                dom.setClass(dom.elements.currentState, `state-badge ${state}`);
-                dom.setText(dom.elements.currentState, state);
-                this.updateStateButtons(state);
-            },
+          // Update state display
+          updateStateDisplay(state) {
+            dom.setClass(dom.elements.currentState, `state-badge ${state}`);
+            dom.setText(dom.elements.currentState, state);
+            this.updateStateButtons(state);
+          },
 
-            // Update application info
-            updateApplicationInfo(show = false) {
-                if (show && cuss2) {
-                    dom.setText(dom.elements.appInfo.multiTenant, cuss2.multiTenant ? 'Yes' : 'No');
-                    dom.setText(dom.elements.appInfo.accessibleMode, cuss2.accessibleMode ? 'Yes' : 'No');
-                    dom.setText(dom.elements.appInfo.language, cuss2.language || '-');
-                } else {
-                    Object.values(dom.elements.appInfo).forEach(el => dom.setText(el, '-'));
-                }
-            },
+          // Update application info
+          updateApplicationInfo(show = false) {
+            if (show && cuss2) {
+              dom.setText(dom.elements.appInfo.multiTenant, cuss2.multiTenant ? "Yes" : "No");
+              dom.setText(dom.elements.appInfo.accessibleMode, cuss2.accessibleMode ? "Yes" : "No");
+              dom.setText(dom.elements.appInfo.language, cuss2.language || "-");
+            }
+            else {
+              Object.values(dom.elements.appInfo).forEach((el) => dom.setText(el, "-"));
+            }
+          },
 
-            // Update state transition buttons
-            updateStateButtons(currentState) {
-                // Disable all buttons first
-                Object.values(dom.elements.stateButtons).forEach(btn => dom.setButtonState(btn, true));
+          // Update state transition buttons
+          updateStateButtons(currentState) {
+            // Disable all buttons first
+            Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
 
-                if (!cuss2 || !cuss2.connection.isOpen) return;
+            if (!cuss2 || !cuss2.connection.isOpen) return;
 
-                // State transition rules
-                const stateTransitions = {
-                    [ApplicationStateCodes.STOPPED]: ['initialize'],
-                    [ApplicationStateCodes.INITIALIZE]: ['unavailable'],
-                    [ApplicationStateCodes.UNAVAILABLE]: ['available', 'reload'],
-                    [ApplicationStateCodes.AVAILABLE]: ['unavailable', 'active', 'reload'],
-                    [ApplicationStateCodes.ACTIVE]: ['available', 'unavailable', 'reload']
-                };
+            // State transition rules
+            const stateTransitions = {
+              [ApplicationStateCodes.STOPPED]: ["initialize"],
+              [ApplicationStateCodes.INITIALIZE]: ["unavailable"],
+              [ApplicationStateCodes.UNAVAILABLE]: ["available", "reload"],
+              [ApplicationStateCodes.AVAILABLE]: ["unavailable", "active", "reload"],
+              [ApplicationStateCodes.ACTIVE]: ["available", "unavailable", "reload"],
+            };
 
-                // Enable valid transitions
-                const validTransitions = stateTransitions[currentState] || [];
-                validTransitions.forEach(action => {
-                    dom.setButtonState(dom.elements.stateButtons[action], false);
-                });
+            // Enable valid transitions
+            const validTransitions = stateTransitions[currentState] || [];
+            validTransitions.forEach((action) => {
+              dom.setButtonState(dom.elements.stateButtons[action], false);
+            });
 
-                // Stopped can be requested from any state except STOPPED
-                if (currentState !== ApplicationStateCodes.STOPPED) {
-                    dom.setButtonState(dom.elements.stateButtons.stopped, false);
-                }
-            },
+            // Stopped can be requested from any state except STOPPED
+            if (currentState !== ApplicationStateCodes.STOPPED) {
+              dom.setButtonState(dom.elements.stateButtons.stopped, false);
+            }
+          },
 
-            // Display environment info
-            displayEnvironment(env) {
-                dom.setVisible(dom.elements.environmentInfo, true);
-                dom.elements.envDetails.innerHTML = `
-                    <div><strong>Device ID:</strong> ${env.deviceID || '-'}</div>
-                    <div><strong>CUSS Version:</strong> ${env.cussVersions?.[0] || '-'}</div>
-                    <div><strong>Location:</strong> ${env.deviceLocation?.airportCode || '-'}</div>
+          // Display environment info
+          displayEnvironment(env) {
+            dom.setVisible(dom.elements.environmentInfo, true);
+            dom.elements.envDetails.innerHTML = `
+                    <div><strong>Device ID:</strong> ${env.deviceID || "-"}</div>
+                    <div><strong>CUSS Version:</strong> ${env.cussVersions?.[0] || "-"}</div>
+                    <div><strong>Location:</strong> ${env.deviceLocation?.airportCode || "-"}</div>
                 `;
-            },
+          },
 
-            // Display components
-            displayComponents() {
-                if (!cuss2 || !cuss2.components) {
-                    dom.elements.componentList.innerHTML = '<p style="color: #666;">No components available</p>';
-                    return;
-                }
+          // Display components
+          displayComponents() {
+            if (!cuss2 || !cuss2.components) {
+              dom.elements.componentList.innerHTML = '<p style="color: #666;">No components available</p>';
+              return;
+            }
 
-                dom.elements.componentList.innerHTML = '';
-                
-                Object.entries(cuss2.components).forEach(([id, component]) => {
-                    const item = this.createComponentItem(id, component);
-                    dom.elements.componentList.appendChild(item);
-                });
-            },
+            dom.elements.componentList.innerHTML = "";
 
-            // Create a component item element
-            createComponentItem(id, component) {
-                const item = document.createElement('div');
-                item.className = 'component-item';
-                
-                if (component.ready) item.classList.add('ready');
-                if (component.enabled) item.classList.add('enabled');
-                
-                item.innerHTML = `
+            Object.entries(cuss2.components).forEach(([id, component]) => {
+              const item = this.createComponentItem(id, component);
+              dom.elements.componentList.appendChild(item);
+            });
+          },
+
+          // Create a component item element
+          createComponentItem(id, component) {
+            const item = document.createElement("div");
+            item.className = "component-item";
+
+            if (component.ready) item.classList.add("ready");
+            if (component.enabled) item.classList.add("enabled");
+
+            item.innerHTML = `
                     <div class="component-name">${component.constructor.name} (ID: ${id})</div>
                     <div class="component-status">
-                        Ready: ${component.ready ? 'Yes' : 'No'} | 
-                        Enabled: ${component.enabled ? 'Yes' : 'No'} | 
-                        Required: ${component.required ? 'Yes' : 'No'}
+                        Ready: ${component.ready ? "Yes" : "No"} |
+                        Enabled: ${component.enabled ? "Yes" : "No"} |
+                        Required: ${component.required ? "Yes" : "No"}
                     </div>
                 `;
-                
-                // Add click handler
-                item.addEventListener('click', () => componentHandlers.handleComponentClick(component));
-                
-                return item;
-            },
 
-            // Reset UI to disconnected state
-            resetUI() {
-                dom.setVisible(dom.elements.environmentInfo, false);
-                dom.elements.componentList.innerHTML = '<p style="color: #666;">Connect to see available components...</p>';
-                this.updateStateDisplay('STOPPED');
-                this.updateApplicationInfo(false);
-            }
+            // Add click handler
+            item.addEventListener("click", () => componentHandlers.handleComponentClick(component));
+
+            return item;
+          },
+
+          // Reset UI to disconnected state
+          resetUI() {
+            dom.setVisible(dom.elements.environmentInfo, false);
+            dom.elements.componentList.innerHTML =
+              '<p style="color: #666;">Connect to see available components...</p>';
+            this.updateStateDisplay("STOPPED");
+            this.updateApplicationInfo(false);
+          },
         };
 
         // ===== COMPONENT HANDLERS =====
         const componentHandlers = {
-            // Handle component click
-            async handleComponentClick(component) {
-                const name = component.constructor.name;
-                const action = component.enabled ? 'disable' : 'enable';
-                
-                if (confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${name}?`)) {
-                    try {
-                        await component[action]();
-                        logger.success(`${name} ${action}d`);
-                        ui.displayComponents();
-                    } catch (error) {
-                        logger.error(`Failed to ${action} ${name}: ${error.message}`);
-                    }
-                }
-            },
+          // Handle component click
+          async handleComponentClick(component) {
+            const name = component.constructor.name;
+            const action = component.enabled ? "disable" : "enable";
 
-            // Setup component data listeners
-            setupComponentListeners() {
-                const componentListeners = [
-                    { component: 'barcodeReader', event: 'data', handler: data => `Barcode scanned: ${data.rawData}` },
-                    { component: 'cardReader', event: 'data', handler: data => `Card read: ${data.track1 || data.track2 || 'Chip/NFC'}` },
-                    { component: 'scale', event: 'data', handler: data => `Weight: ${data.weight} ${data.unit}` }
-                ];
-
-                componentListeners.forEach(({ component, event, handler }) => {
-                    if (cuss2[component]) {
-                        cuss2[component].on(event, data => logger.event(handler(data)));
-                    }
-                });
+            if (confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${name}?`)) {
+              try {
+                await component[action]();
+                logger.success(`${name} ${action}d`);
+                ui.displayComponents();
+              }
+              catch (error) {
+                logger.error(`Failed to ${action} ${name}: ${error.message}`);
+              }
             }
+          },
+
+          // Setup component data listeners
+          setupComponentListeners() {
+            const componentListeners = [
+              {
+                component: "barcodeReader",
+                event: "data",
+                handler: (data) => `Barcode scanned: ${data.rawData}`,
+              },
+              {
+                component: "cardReader",
+                event: "data",
+                handler: (data) => `Card read: ${data.track1 || data.track2 || "Chip/NFC"}`,
+              },
+              { component: "scale", event: "data", handler: (data) => `Weight: ${data.weight} ${data.unit}` },
+            ];
+
+            componentListeners.forEach(({ component, event, handler }) => {
+              if (cuss2[component]) {
+                cuss2[component].on(event, (data) => logger.event(handler(data)));
+              }
+            });
+          },
         };
 
         // ===== CONNECTION MANAGEMENT =====
         const connectionManager = {
-            // Setup connection event listeners
-            setupConnectionListeners() {
-                const connectionEvents = [
-                    { event: 'connecting', handler: attempt => logger.info(`WebSocket connection attempt ${attempt}`) },
-                    { event: 'authenticating', handler: attempt => logger.info(`Authentication attempt ${attempt}`) },
-                    { event: 'authenticated', handler: () => logger.success('Authentication successful') },
-                    { event: 'open', handler: () => logger.success('WebSocket connection opened') },
-                    { event: 'close', handler: () => this.handleConnectionClose() },
-                    { event: 'error', handler: error => logger.error(`Connection error: ${error.message}`) }
-                ];
+          // Setup connection event listeners
+          setupConnectionListeners() {
+            const connectionEvents = [
+              {
+                event: "connecting",
+                handler: (attempt) => logger.info(`WebSocket connection attempt ${attempt}`),
+              },
+              {
+                event: "authenticating",
+                handler: (attempt) => logger.info(`Authentication attempt ${attempt}`),
+              },
+              { event: "authenticated", handler: () => logger.success("Authentication successful") },
+              { event: "open", handler: () => logger.success("WebSocket connection opened") },
+              { event: "close", handler: () => this.handleConnectionClose() },
+              { event: "error", handler: (error) => logger.error(`Connection error: ${error.message}`) },
+            ];
 
-                connectionEvents.forEach(({ event, handler }) => {
-                    cuss2.connection.on(event, handler);
-                });
-            },
+            connectionEvents.forEach(({ event, handler }) => {
+              cuss2.connection.on(event, handler);
+            });
+          },
 
-            // Handle connection close
-            handleConnectionClose() {
-                logger.error('WebSocket connection closed');
-                ui.updateConnectionStatus('DISCONNECTED');
-                dom.setButtonState(dom.elements.connectBtn, false);
-                dom.setButtonState(dom.elements.disconnectBtn, true);
-                Object.values(dom.elements.stateButtons).forEach(btn => dom.setButtonState(btn, true));
-            },
+          // Handle connection close
+          handleConnectionClose() {
+            logger.error("WebSocket connection closed");
+            ui.updateConnectionStatus("DISCONNECTED");
+            dom.setButtonState(dom.elements.connectBtn, false);
+            dom.setButtonState(dom.elements.disconnectBtn, true);
+            Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+          },
 
-            // Setup platform event listeners
-            setupPlatformListeners() {
-                const platformEvents = [
-                    {
-                        event: 'stateChange',
-                        handler: stateChange => {
-                            logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
-                            ui.updateStateDisplay(stateChange.current);
-                            ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
-                        }
-                    },
-                    {
-                        event: 'activated',
-                        handler: () => {
-                            logger.event('Application activated');
-                            ui.updateApplicationInfo(true);
-                        }
-                    },
-                    {
-                        event: 'deactivated',
-                        handler: newState => {
-                            logger.event(`Application deactivated, new state: ${newState}`);
-                            ui.updateApplicationInfo(false);
-                        }
-                    },
-                    {
-                        event: 'componentStateChange',
-                        handler: component => {
-                            logger.event(`Component ${component.constructor.name} state changed`);
-                            ui.displayComponents();
-                        }
-                    },
-                    {
-                        event: 'sessionTimeout',
-                        handler: () => logger.error('Session timeout')
-                    }
-                ];
+          // Setup platform event listeners
+          setupPlatformListeners() {
+            const platformEvents = [
+              {
+                event: "stateChange",
+                handler: (stateChange) => {
+                  logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
+                  ui.updateStateDisplay(stateChange.current);
+                  ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
+                },
+              },
+              {
+                event: "activated",
+                handler: () => {
+                  logger.event("Application activated");
+                  ui.updateApplicationInfo(true);
+                },
+              },
+              {
+                event: "deactivated",
+                handler: (newState) => {
+                  logger.event(`Application deactivated, new state: ${newState}`);
+                  ui.updateApplicationInfo(false);
+                },
+              },
+              {
+                event: "componentStateChange",
+                handler: (component) => {
+                  logger.event(`Component ${component.constructor.name} state changed`);
+                  ui.displayComponents();
+                },
+              },
+              {
+                event: "sessionTimeout",
+                handler: () => logger.error("Session timeout"),
+              },
+              // {
+              //     event: 'activated',
+              //     handler: () => {
+              //         logger.event('Application activated');
+              //         ui.updateApplicationInfo(true);
+              //     }
+              // },
+              // {
+              //     event: 'deactivated',
+              //     handler: newState => {
+              //         logger.event(`Application deactivated, new state: ${newState}`);
+              //         ui.updateApplicationInfo(false);
+              //     }
+              // },
+              // {
+              //     event: 'componentStateChange',
+              //     handler: component => {
+              //         logger.event(`Component ${component.constructor.name} state changed`);
+              //         ui.displayComponents();
+              //     }
+              // },
+              // {
+              //     event: 'sessionTimeout',
+              //     handler: () => logger.error('Session timeout')
+              // }
+            ];
 
-                platformEvents.forEach(({ event, handler }) => {
-                    cuss2.on(event, handler);
-                });
-            },
+            platformEvents.forEach(({ event, handler }) => {
+              cuss2.on(event, handler);
+            });
+          },
 
-            // Connect to CUSS2
-            async connect(config) {
-                try {
-                    logger.info('Connecting to CUSS2 platform...');
-                    ui.updateConnectionStatus('CONNECTING');
+          // Connect to CUSS2
+          async connect(config) {
+            try {
+              logger.info("Connecting to CUSS2 platform...");
+              ui.updateConnectionStatus("CONNECTING");
 
-                    cuss2 = Cuss2.connect(
-                        config.clientId,
-                        config.clientSecret,
-                        config.wss,
-                        config.deviceId || undefined,
-                        config.tokenUrl || undefined
-                    );
+              cuss2 = Cuss2.connect(
+                config.clientId,
+                config.clientSecret,
+                config.wss,
+                config.deviceId || undefined,
+                config.tokenUrl || undefined,
+              );
 
-                    // Setup all listeners
-                    this.setupConnectionListeners();
-                    this.setupPlatformListeners();
+              // Setup all listeners
+              this.setupConnectionListeners();
+              this.setupPlatformListeners();
 
-                    // Wait for connection
-                    await cuss2.connected;
+              // Wait for connection
+              await cuss2.connected;
 
-                    logger.success('Connected successfully!');
-                    ui.updateConnectionStatus('CONNECTED');
-                    dom.setButtonState(dom.elements.connectBtn, true);
-                    dom.setButtonState(dom.elements.disconnectBtn, false);
+              logger.success("Connected successfully!");
+              ui.updateConnectionStatus("CONNECTED");
+              dom.setButtonState(dom.elements.connectBtn, true);
+              dom.setButtonState(dom.elements.disconnectBtn, false);
 
-                    // Display environment and components
-                    ui.displayEnvironment(cuss2.environment);
-                    ui.displayComponents();
-                    ui.updateStateDisplay(cuss2.state);
+              // Display environment and components
+              ui.displayEnvironment(cuss2.environment);
+              ui.displayComponents();
+              ui.updateStateDisplay(cuss2.state);
 
-                    // Setup component listeners
-                    componentHandlers.setupComponentListeners();
-
-                } catch (error) {
-                    logger.error(`Connection failed: ${error.message}`);
-                    ui.updateConnectionStatus('FAILED');
-                    dom.setButtonState(dom.elements.connectBtn, false);
-                    dom.setButtonState(dom.elements.disconnectBtn, true);
-                }
-            },
-
-            // Disconnect
-            disconnect() {
-                if (cuss2) {
-                    cuss2.connection.close();
-                    cuss2 = null;
-                    ui.resetUI();
-                }
+              // Setup component listeners
+              componentHandlers.setupComponentListeners();
             }
+            catch (error) {
+              logger.error(`Connection failed: ${error.message}`);
+              ui.updateConnectionStatus("FAILED");
+              dom.setButtonState(dom.elements.connectBtn, false);
+              dom.setButtonState(dom.elements.disconnectBtn, true);
+            }
+          },
+
+          // Disconnect
+          disconnect() {
+            if (cuss2) {
+              cuss2.connection.close();
+              cuss2 = null;
+              ui.resetUI();
+            }
+          },
         };
 
         // ===== STATE MANAGEMENT =====
         const stateManager = {
-            // State request mapping
-            stateRequests: {
-                initialize: { method: 'requestInitializeState', state: 'INITIALIZE' },
-                unavailable: { method: 'requestUnavailableState', state: 'UNAVAILABLE' },
-                available: { method: 'requestAvailableState', state: 'AVAILABLE' },
-                active: { method: 'requestActiveState', state: 'ACTIVE' },
-                stopped: { method: 'requestStoppedState', state: 'STOPPED' },
-                reload: { method: 'requestReload', state: 'RELOAD', confirm: 'This will close the connection. Continue?' }
+          // State request mapping
+          stateRequests: {
+            initialize: { method: "requestInitializeState", state: "INITIALIZE" },
+            unavailable: { method: "requestUnavailableState", state: "UNAVAILABLE" },
+            available: { method: "requestAvailableState", state: "AVAILABLE" },
+            active: { method: "requestActiveState", state: "ACTIVE" },
+            stopped: { method: "requestStoppedState", state: "STOPPED" },
+            reload: {
+              method: "requestReload",
+              state: "RELOAD",
+              confirm: "This will close the connection. Continue?",
             },
+          },
 
-            // Request state change
-            async requestState(action) {
-                const request = this.stateRequests[action];
-                if (!request) return;
+          // Request state change
+          async requestState(action) {
+            const request = this.stateRequests[action];
+            if (!request) return;
 
-                // Check for confirmation requirement
-                if (request.confirm && !confirm(request.confirm)) return;
+            // Check for confirmation requirement
+            if (request.confirm && !confirm(request.confirm)) return;
 
-                try {
-                    await cuss2[request.method]();
-                    logger.success(`Requested ${request.state} state`);
-                } catch (error) {
-                    logger.error(`Failed to request ${request.state}: ${error.message}`);
-                }
-            },
-
-            // Setup state button listeners
-            setupStateButtons() {
-                Object.entries(dom.elements.stateButtons).forEach(([action, button]) => {
-                    button.addEventListener('click', () => this.requestState(action));
-                });
+            try {
+              await cuss2[request.method]();
+              logger.success(`Requested ${request.state} state`);
             }
+            catch (error) {
+              logger.error(`Failed to request ${request.state}: ${error.message}`);
+            }
+          },
+
+          // Setup state button listeners
+          setupStateButtons() {
+            Object.entries(dom.elements.stateButtons).forEach(([action, button]) => {
+              button.addEventListener("click", () => this.requestState(action));
+            });
+          },
         };
 
         // ===== INITIALIZATION =====
         function init() {
-            // Initialize DOM
-            dom.init();
+          // Initialize DOM
+          dom.init();
 
-            // Setup form submission
-            dom.elements.form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await connectionManager.connect(dom.getFormData());
-            });
+          // Setup form submission
+          dom.elements.form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await connectionManager.connect(dom.getFormData());
+          });
 
-            // Setup disconnect button
-            dom.elements.disconnectBtn.addEventListener('click', () => connectionManager.disconnect());
+          // Setup disconnect button
+          dom.elements.disconnectBtn.addEventListener("click", () => connectionManager.disconnect());
 
-            // Setup state buttons
-            stateManager.setupStateButtons();
+          // Setup state buttons
+          stateManager.setupStateButtons();
 
-            // Initial log message
-            logger.info('CUSS2 Browser Client Demo ready');
+          // Initial log message
+          logger.info("CUSS2 Browser Client Demo ready");
         }
 
         // Initialize when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
         }
-    </script>
-</body>
+        else {
+          init();
+        }
+      </script>
+    </div>
+  </body>
 </html>

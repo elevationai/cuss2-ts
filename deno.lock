@@ -771,7 +771,8 @@
     "dependencies": [
       "jsr:@cuss/cuss2-typescript-models@2.0.1",
       "jsr:@std/async@^1.0.13",
-      "npm:@types/node@^22.15.17"
+      "npm:@types/node@^22.15.17",
+      "npm:ws@8"
     ],
     "links": {
       "jsr:@cuss/cuss2-typescript-models@2.0.1": {

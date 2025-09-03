@@ -2566,5 +2566,5 @@ var Cuss2 = (() => {
   }
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "1.0.4";
+  globalCtx.Cuss2.version = "1.0.6";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

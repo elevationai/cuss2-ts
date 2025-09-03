@@ -187,7 +187,7 @@ State transitions follow specific rules:
 ```typescript
 const cuss2 = Cuss2.connect(clientId, clientSecret, wss, deviceId, tokenUrl);
 // Basic usage with defaults:
-const cuss2 = Cuss2.connect("KAP", "secret");
+const cuss2 = Cuss2.connect("EAI", "secret");
 
 // Connection events
 cuss2.connection.on("connecting", (attempt) => console.log("Connecting...", attempt));

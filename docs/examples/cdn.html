@@ -120,16 +120,27 @@
       <script type="module">
         import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
 
+        // Parse query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryConfig = {
+          clientId: urlParams.get('CLIENT-ID') || "EAI",
+          clientSecret: urlParams.get('CLIENT-SECRET') || "secret",
+          wss: urlParams.get('CUSS-WSS') || "http://localhost:22222",
+          tokenUrl: urlParams.get('OAUTH-URL'),
+          deviceId: urlParams.get('DEVICE-ID')
+        };
+
         document.getElementById("connect").addEventListener("click", async () => {
           const status = document.getElementById("status");
           status.textContent = "Connecting...";
           status.className = "connecting";
 
           const cuss2 = Cuss2.connect(
-            "KAP", // Replace with your client ID
-            "secret", // Replace with your client secret
-            // Optional: provide custom WebSocket URL as 3rd parameter
-            "http://localhost:22222",
+            queryConfig.clientId,
+            queryConfig.clientSecret,
+            queryConfig.wss,
+            queryConfig.deviceId || undefined,
+            queryConfig.tokenUrl || undefined
           );
 
           // Wait for connection

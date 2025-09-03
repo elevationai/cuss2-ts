@@ -44,9 +44,8 @@ type nodeEvents = any;
 let defaultMaxListeners = 10;
 
 const AsyncIteratorPrototype = Object.getPrototypeOf(
-  Object.getPrototypeOf(async function* () {}).prototype,
+  Object.getPrototypeOf((async function*() {})())
 );
-
 // Inspect (mocked)
 const inspect = (value: any, _opts?: any) => value;
 

@@ -263,7 +263,7 @@
             </div>
             <div class="form-group">
               <label for="clientId">Client ID</label>
-              <input type="text" id="clientId" value="KAP" required>
+              <input type="text" id="clientId" value="EAI" required>
             </div>
             <div class="form-group">
               <label for="clientSecret">Client Secret</label>
@@ -342,6 +342,16 @@
           MessageCodes,
         } from "https://esm.sh/jsr/@cuss/cuss2-typescript-models@latest";
         let cuss2 = null;
+
+        // ===== QUERY PARAMETER PARSING =====
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryConfig = {
+          clientId: urlParams.get('CLIENT-ID'),
+          clientSecret: urlParams.get('CLIENT-SECRET'),
+          wss: urlParams.get('CUSS-WSS'),
+          tokenUrl: urlParams.get('OAUTH-URL'),
+          deviceId: urlParams.get('DEVICE-ID')
+        };
 
         // ===== DOM HELPERS =====
         const dom = {
@@ -819,6 +829,13 @@
         function init() {
           // Initialize DOM
           dom.init();
+
+          // Apply query parameters to form if provided
+          if (queryConfig.clientId) document.getElementById('clientId').value = queryConfig.clientId;
+          if (queryConfig.clientSecret) document.getElementById('clientSecret').value = queryConfig.clientSecret;
+          if (queryConfig.wss) document.getElementById('wss').value = queryConfig.wss;
+          if (queryConfig.tokenUrl) document.getElementById('tokenUrl').value = queryConfig.tokenUrl;
+          if (queryConfig.deviceId) document.getElementById('deviceId').value = queryConfig.deviceId;
 
           // Setup form submission
           dom.elements.form.addEventListener("submit", async (e) => {

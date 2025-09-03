@@ -4,7 +4,7 @@ import { Cuss2 } from "../../mod.ts";
 
 // Example configuration - replace with your actual values
 const config = {
-  clientId: "KAP",
+  clientId: "EAI",
   clientSecret: "secret",
   wss: "http://localhost:22222", // Optional
   deviceID: undefined, // Optional, defaults to "00000000-0000-0000-0000-000000000000"

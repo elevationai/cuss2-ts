@@ -987,51 +987,49 @@ var Build = {
 };
 
 // src/models/EventEmitter.ts
-var import_npm_events_3_3 = __toESM(require_events());
-var BaseEventEmitter = import_npm_events_3_3.default;
-var EventEmitter2 = class extends BaseEventEmitter {
+var import_events2 = __toESM(require_events());
+var EventEmitter2 = class _EventEmitter extends import_events2.EventEmitter {
   waitFor(event, errorEvents = ["error"]) {
     return new Promise((resolve, reject) => {
-      const mappings = [];
-      const cleanup = () => mappings.forEach((m) => m.source.removeListener(m.event, m.handler));
-      const resolver = (...a) => {
-        cleanup();
-        resolve(a[0]);
+      const eventMappings = [];
+      const cleanup = () => {
+        for (const mapping of eventMappings) {
+          mapping.source.off(mapping.event, mapping.handler);
+        }
       };
-      const catcher = (...a) => {
+      const resolver = (e) => {
         cleanup();
-        reject(a[0] ?? a);
+        resolve(e);
       };
-      const attach = (ev, handler) => {
-        if (typeof ev === "string" && ev.includes(".")) {
-          const parts = ev.split(".");
-          const traverseToTarget = (obj, segments) => {
-            let current = obj;
-            for (const seg of segments) {
-              current = current?.[seg];
-            }
-            return current;
-          };
-          const target = traverseToTarget(this, parts.slice(0, -1));
-          const leaf = parts[parts.length - 1];
-          if (target && typeof target.once === "function") {
-            target.once(leaf, handler);
-            mappings.push({ source: target, event: leaf, handler });
+      const catcher = (e) => {
+        cleanup();
+        reject(e);
+      };
+      const attachEvent = (eventString, handler) => {
+        const dotIndex = eventString.indexOf(".");
+        if (dotIndex > 0) {
+          const propertyName = eventString.substring(0, dotIndex);
+          const eventName = eventString.substring(dotIndex + 1);
+          const property = this[propertyName];
+          if (property && property instanceof _EventEmitter) {
+            property.once(eventName, handler);
+            eventMappings.push({ source: property, event: eventName, handler });
             return;
           }
         }
-        this.once(ev, handler);
-        mappings.push({ source: this, event: ev, handler });
+        this.once(eventString, handler);
+        eventMappings.push({ source: this, event: eventString, handler });
       };
-      attach(event, resolver);
-      for (const e of errorEvents)
-        attach(e, catcher);
+      attachEvent(event, resolver);
+      for (const errorEvent of errorEvents) {
+        attachEvent(errorEvent, catcher);
+      }
     });
   }
 };
 
 // src/models/Component.ts
-var import_events2 = __toESM(require_events());
+var import_events3 = __toESM(require_events());
 
 // src/models/deviceType.ts
 var DeviceType = {
@@ -1063,7 +1061,7 @@ var DeviceType = {
 };
 
 // src/models/Component.ts
-var Component = class extends import_events2.EventEmitter {
+var Component = class extends import_events3.EventEmitter {
   _component;
   id;
   api;

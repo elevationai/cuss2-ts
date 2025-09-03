@@ -129,7 +129,7 @@ export const Build = {
     } = options;
     const meta = {} as ApplicationDataMeta;
     // Use crypto.randomUUID if available, otherwise fallback to a polyfill
-    meta.requestID = typeof crypto !== 'undefined' && crypto.randomUUID 
+    meta.requestID = typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${Math.random().toString(36).substring(2, 15)}`;
     meta.directive = directive;

@@ -214,7 +214,7 @@ export class Connection extends EventEmitter {
 
         let options: undefined | { headers: { Origin: string } } = undefined;
         if (typeof Deno !== "undefined") {
-          options = { headers: { Origin: "http://0.0.0.0" } }
+          options = { headers: { Origin: "http://0.0.0.0" } };
         }
 
         const socket = new global.WebSocket(this._socketURL, options as undefined);

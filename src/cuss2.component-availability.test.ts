@@ -91,7 +91,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - all required compo
   // Spy on requestAvailableState
   const requestAvailableSpy = spy(cuss2, "requestAvailableState");
 
-
   cuss2.checkRequiredComponentsAndSyncState();
 
   // Should request AVAILABLE state since all required components are ready

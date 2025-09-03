@@ -59,25 +59,24 @@ try {
   const commonBuildOptions: esbuild.BuildOptions = {
     plugins: [
       {
-        name: 'browser-aliases',
+        name: "browser-aliases",
         setup(build) {
           // Replace ./WebSocket.ts with empty content for browser builds
           build.onResolve({ filter: /\/WebSocket\.ts$/ }, (args) => {
             // Only handle relative imports
-            if (args.path.startsWith('./') || args.path.startsWith('../')) {
+            if (args.path.startsWith("./") || args.path.startsWith("../")) {
               return {
-                path: 'virtual:websocket-browser',
-                namespace: 'websocket-browser',
+                path: "virtual:websocket-browser",
+                namespace: "websocket-browser",
               };
             }
           });
-          
-          
+
           // Return empty content for the virtual module
-          build.onLoad({ filter: /.*/, namespace: 'websocket-browser' }, () => {
+          build.onLoad({ filter: /.*/, namespace: "websocket-browser" }, () => {
             return {
-              contents: '// WebSocket polyfill not needed in browser',
-              loader: 'js',
+              contents: "// WebSocket polyfill not needed in browser",
+              loader: "js",
             };
           });
         },

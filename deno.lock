@@ -32,6 +32,7 @@
     "npm:@types/node@^22.15.17": "22.15.17",
     "npm:esbuild@0.19.11": "0.19.11",
     "npm:esbuild@0.20.2": "0.20.2",
+    "npm:events@3.3.0": "3.3.0",
     "npm:ws@8": "8.18.2"
   },
   "jsr": {
@@ -458,6 +459,9 @@
       "scripts": true,
       "bin": true
     },
+    "events@3.3.0": {
+      "integrity": "sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q=="
+    },
     "undici-types@6.20.0": {
       "integrity": "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="
     },
@@ -474,7 +478,8 @@
     "https://deno.land/std/testing/asserts.ts": "https://deno.land/std@0.224.0/testing/asserts.ts",
     "https://deno.land/std/testing/mock.ts": "https://deno.land/std@0.224.0/testing/mock.ts",
     "https://deno.land/std/uuid/mod.ts": "https://deno.land/std@0.224.0/uuid/mod.ts",
-    "https://deno.land/x/emit/mod.ts": "https://deno.land/x/emit@0.40.0/mod.ts"
+    "https://deno.land/x/emit/mod.ts": "https://deno.land/x/emit@0.40.0/mod.ts",
+    "https://esm.sh/@types/events@~3.0.3/index.d.ts": "https://esm.sh/@types/events@3.0.3/index.d.ts"
   },
   "remote": {
     "https://deno.land/std@0.140.0/_util/assert.ts": "e94f2eb37cebd7f199952e242c77654e43333c1ac4c5c700e929ea3aa5489f74",
@@ -730,7 +735,9 @@
     "https://deno.land/x/esbuild_deno_loader@0.8.2/src/plugin_deno_resolver.ts": "0449ed23ae93db1ec74d015a46934aefd7ba7a8f719f7a4980b616cb3f5bbee4",
     "https://deno.land/x/esbuild_deno_loader@0.8.2/src/shared.ts": "33052684aeb542ebd24da372816bbbf885cd090a7ab0fde7770801f7f5b49572",
     "https://deno.land/x/importmap@0.2.1/_util.ts": "ada9a9618b537e6c0316c048a898352396c882b9f2de38aba18fd3f2950ede89",
-    "https://deno.land/x/importmap@0.2.1/mod.ts": "ae3d1cd7eabd18c01a4960d57db471126b020f23b37ef14e1359bbb949227ade"
+    "https://deno.land/x/importmap@0.2.1/mod.ts": "ae3d1cd7eabd18c01a4960d57db471126b020f23b37ef14e1359bbb949227ade",
+    "https://esm.sh/events@3.3.0": "67db9d85612cb2968c301f4fbfaf9a962dbeb359afc3394af5ea712598181310",
+    "https://esm.sh/events@3.3.0/denonext/events.mjs": "32488a313167f654a48291791c3f290f15c049e557dae491e4cd33d142ce9f17"
   },
   "workspace": {
     "dependencies": [

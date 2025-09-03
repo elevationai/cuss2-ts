@@ -1,40 +1,151 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>CUSS2 CDN Example</title>
-</head>
-<body>
-<h1>CUSS2 Platform Connection</h1>
-<button id="connect">Connect</button>
-<div id="status"></div>
+  <head>
+    <title>CUSS2 ES Module Example</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+        margin: 0;
+        padding: 40px 20px;
+        line-height: 1.6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+      }
+      h1 {
+        color: #64ffda;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+      .subtitle {
+        color: #a0a0a0;
+        margin-bottom: 40px;
+      }
+      .code-preview {
+        background: rgba(26, 26, 46, 0.6);
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: left;
+      }
+      .code-label {
+        color: #64ffda;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+      .code-content {
+        background: #0a0a14;
+        border-radius: 8px;
+        padding: 15px;
+        color: #b0b0b0;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        overflow-x: auto;
+      }
+      button {
+        background: linear-gradient(135deg, #64ffda, #48cae4);
+        color: #0f0f1e;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin: 20px 0;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+      }
+      #status {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 8px;
+        font-weight: 500;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(26, 26, 46, 0.4);
+        border: 1px solid rgba(100, 255, 218, 0.2);
+      }
+      #status.connected {
+        background: rgba(100, 255, 218, 0.1);
+        border-color: #64ffda;
+        color: #64ffda;
+      }
+      #status.connecting {
+        background: rgba(255, 200, 100, 0.1);
+        border-color: #ffc864;
+        color: #ffc864;
+      }
+      .back-link {
+        display: inline-block;
+        color: #64ffda;
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+      }
+      .back-link:hover {
+        transform: translateX(-5px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="../index.html" class="back-link">← Back to Examples</a>
+      <h1>ES Module Import Example</h1>
+      <p class="subtitle">Modern JavaScript module usage with CDN imports</p>
 
-<!-- Load CUSS2-ts from unpkg CDN -->
-<script type="module">
-  import { Cuss2 } from "https://unpkg.com/@cuss/cuss2-ts@latest/dist/cuss2.esm.js";
+      <div class="code-preview">
+        <div class="code-label">Import Statement:</div>
+        <div class="code-content">import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";</div>
+      </div>
 
-  document.getElementById('connect').addEventListener('click', async () => {
-    const status = document.getElementById('status');
-    status.textContent = 'Connecting...';
+      <button id="connect">Connect to Platform</button>
+      <div id="status">Ready to connect...</div>
 
-    const cuss2 = Cuss2.connect(
-      "KAP",     // Replace with your client ID
-      "secret",  // Replace with your client secret
-      // Optional: provide custom WebSocket URL as 3rd parameter
-      "http://localhost:22222",
-    );
+      <!-- Load CUSS2-ts from esm.sh CDN -->
+      <script type="module">
+        import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@1.0.3";
 
-    // Wait for connection
-    await cuss2.connected;
-    status.textContent = `Connected! State: ${cuss2.state}`;
+        document.getElementById("connect").addEventListener("click", async () => {
+          const status = document.getElementById("status");
+          status.textContent = "Connecting...";
+          status.className = "connecting";
 
-    // List available components
-    console.log('Available components:', Object.keys(cuss2.components));
+          const cuss2 = Cuss2.connect(
+            "KAP", // Replace with your client ID
+            "secret", // Replace with your client secret
+            // Optional: provide custom WebSocket URL as 3rd parameter
+            "http://localhost:22222",
+          );
 
-    // Request state transitions
-    await cuss2.requestInitializeState();
-    await cuss2.requestUnavailableState();
-    status.textContent = `State: ${cuss2.state}`;
-  });
-</script>
-</body>
+          // Wait for connection
+          await cuss2.connected;
+          status.textContent = `Connected! State: ${cuss2.state}`;
+          status.className = "connected";
+
+          // List available components
+          console.log("Available components:", Object.keys(cuss2.components));
+
+          // Request state transitions
+          await cuss2.requestInitializeState();
+          await cuss2.requestUnavailableState();
+          status.textContent = `State: ${cuss2.state}`;
+        });
+      </script>
+    </div>
+  </body>
 </html>

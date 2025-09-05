@@ -383,10 +383,12 @@ console.log("Connected to CUSS2 platform!");</pre>
         </div>
         <div id="npm" class="code-block">
           <pre>
-npm install @cuss/cuss2-ts
+# Install via npx with JSR
+npx jsr add @cuss/cuss2-ts
 
+# Then in your code:
 import { Cuss2 } from "@cuss/cuss2-ts";
-const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET");</pre>
+const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET", "wss://your-cuss-server");</pre>
         </div>
       </section>
     </div>

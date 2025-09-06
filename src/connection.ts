@@ -299,7 +299,11 @@ export class Connection extends EventEmitter {
     if (data instanceof Object && !data.meta?.deviceID) {
       data.meta.deviceID = this.deviceID;
     }
-    this._socket?.send(JSON.stringify(data));
+    this.json(data);
+  }
+
+  json(obj: unknown) {
+    this._socket?.send(JSON.stringify(obj));
   }
 
   async sendAndGetResponse(

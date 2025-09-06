@@ -1656,7 +1656,9 @@ async function retry(fn, options) {
 var log2 = (..._args) => {
 };
 var global = {
-  WebSocket,
+  get WebSocket() {
+    return globalThis.WebSocket;
+  },
   fetch: globalThis.fetch.bind(globalThis),
   clearTimeout: globalThis.clearTimeout.bind(globalThis),
   setTimeout: globalThis.setTimeout.bind(globalThis)
@@ -1787,9 +1789,10 @@ var Connection = class _Connection extends EventEmitter2 {
       this.emit("connecting", ++attempts);
       let options = void 0;
       if (typeof Deno !== "undefined") {
-        options = { headers: { Origin: "http://0.0.0.0" } };
+        const origin = this._baseURL.startsWith("http") ? this._baseURL : `http://${this._baseURL}`;
+        options = { headers: { Origin: origin } };
       }
-      const socket = new global.WebSocket(this._socketURL, options);
+      const socket = new global.WebSocket(this._socketURL, void 0, options);
       socket.onopen = () => {
         log2("info", "Socket opened: ", this._socketURL);
         this._socket = socket;

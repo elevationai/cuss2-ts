@@ -1671,7 +1671,9 @@ var Cuss2 = (() => {
   var log2 = (..._args) => {
   };
   var global = {
-    WebSocket,
+    get WebSocket() {
+      return globalThis.WebSocket;
+    },
     fetch: globalThis.fetch.bind(globalThis),
     clearTimeout: globalThis.clearTimeout.bind(globalThis),
     setTimeout: globalThis.setTimeout.bind(globalThis)
@@ -1802,9 +1804,10 @@ var Cuss2 = (() => {
         this.emit("connecting", ++attempts);
         let options = void 0;
         if (typeof Deno !== "undefined") {
-          options = { headers: { Origin: "http://0.0.0.0" } };
+          const origin = this._baseURL.startsWith("http") ? this._baseURL : `http://${this._baseURL}`;
+          options = { headers: { Origin: origin } };
         }
-        const socket = new global.WebSocket(this._socketURL, options);
+        const socket = new global.WebSocket(this._socketURL, void 0, options);
         socket.onopen = () => {
           log2("info", "Socket opened: ", this._socketURL);
           this._socket = socket;
@@ -2566,5 +2569,5 @@ var Cuss2 = (() => {
   }
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "1.0.7";
+  globalCtx.Cuss2.version = "1.0.8-beta.1";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

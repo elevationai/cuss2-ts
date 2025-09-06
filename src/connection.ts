@@ -23,8 +23,15 @@ interface ConnectionEvents {
 }
 
 // These are needed for overriding during testing
-export const global = {
-  WebSocket,
+export const global: {
+  readonly WebSocket: typeof globalThis.WebSocket;
+  fetch: typeof globalThis.fetch;
+  clearTimeout: typeof globalThis.clearTimeout;
+  setTimeout: typeof globalThis.setTimeout;
+} = {
+  get WebSocket() {
+    return globalThis.WebSocket;
+  },
   fetch: globalThis.fetch.bind(globalThis),
   clearTimeout: globalThis.clearTimeout.bind(globalThis),
   setTimeout: globalThis.setTimeout.bind(globalThis),
@@ -212,12 +219,14 @@ export class Connection extends EventEmitter {
         }
         this.emit("connecting", ++attempts);
 
-        let options: undefined | { headers: { Origin: string } } = undefined;
+        let options: { headers: { Origin: string } } | undefined = undefined;
         if (typeof Deno !== "undefined") {
-          options = { headers: { Origin: "http://0.0.0.0" } };
+          const origin = this._baseURL.startsWith("http") ? this._baseURL : `http://${this._baseURL}`;
+          options = { headers: { Origin: origin } };
         }
 
-        const socket = new global.WebSocket(this._socketURL, options as undefined);
+        // @ts-ignore - ws library accepts options as third parameter, browser ignores extra params
+        const socket = new global.WebSocket(this._socketURL, undefined, options);
 
         socket.onopen = () => {
           log("info", "Socket opened: ", this._socketURL);

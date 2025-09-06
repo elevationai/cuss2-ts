@@ -79,12 +79,15 @@ const testTokenUrl = "https://example.com/api/oauth/token";
 const testToken = "test-token";
 
 function mockGlobal(fn: () => Promise<unknown>): () => Promise<void> {
+  const originalWebSocket = globalThis.WebSocket;
   return async () => {
     try {
       await fn();
     }
     finally {
-      global.WebSocket = globalThis.WebSocket;
+      // Restore original WebSocket
+      // @ts-ignore - restore for tests
+      globalThis.WebSocket = originalWebSocket;
       global.fetch = globalThis.fetch;
       global.setTimeout = globalThis.setTimeout.bind(globalThis);
       global.clearTimeout = globalThis.clearTimeout.bind(globalThis);
@@ -104,7 +107,7 @@ function mockWebSocket(action?: (ws: MockWebSocket) => (() => void) | undefined)
   creator.prototype = MockWebSocket.prototype;
 
   //@ts-ignore - Mock WebSocket for testing
-  global.WebSocket = creator;
+  globalThis.WebSocket = creator;
   return mockWs;
 }
 

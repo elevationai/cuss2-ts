@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examples - CUSS2.ts Documentation</title>
+    <title>Component Guides & Examples - CUSS2.ts Documentation</title>
     <style>
         :root {
             --primary-cyan: #64ffda;
@@ -22,6 +22,11 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px; /* Account for fixed header */
         }
 
         body {
@@ -87,20 +92,78 @@
             padding-bottom: 2px;
         }
 
-        /* Main Content */
-        .container {
-            max-width: 1200px;
-            margin: 100px auto 0;
+        /* Layout */
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 80px auto 0;
+            gap: 2rem;
             padding: 2rem;
         }
 
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .sidebar h3 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-links {
+            list-style: none;
+        }
+
+        .sidebar-links li {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .sidebar-links a:hover {
+            color: var(--primary-cyan);
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        .sidebar-links a.active {
+            color: var(--primary-cyan);
+            background: rgba(100, 255, 218, 0.1);
+            border-left: 2px solid var(--primary-cyan);
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            min-width: 0;
+        }
+
         .page-header {
-            text-align: center;
-            margin-bottom: 4rem;
+            margin-bottom: 3rem;
         }
 
         .page-header h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             color: var(--primary-cyan);
             margin-bottom: 1rem;
         }
@@ -110,23 +173,62 @@
             color: var(--text-secondary);
         }
 
-        /* Examples Grid */
-        .examples-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
-        }
-
-        .example-card {
+        /* API Sections */
+        .api-section {
             background: rgba(26, 26, 46, 0.6);
             border: 1px solid rgba(100, 255, 218, 0.2);
             border-radius: 12px;
             padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .api-section h2 {
+            color: var(--primary-cyan);
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            border-bottom: 2px solid rgba(100, 255, 218, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        .api-section h3 {
+            color: var(--secondary-blue);
+            margin: 2rem 0 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* Code Blocks */
+        pre[class*="language-"] {
+            background: #1e1e2e !important;
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem !important;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        code[class*="language-"] {
+            background: none !important;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+        }
+
+        /* Example Grid Styles */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .example-card {
+            background: rgba(26, 26, 46, 0.4);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
             transition: all 0.3s ease;
             text-decoration: none;
             color: inherit;
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         .example-card:hover {
@@ -137,14 +239,14 @@
 
         .example-card h3 {
             color: var(--primary-cyan);
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
         }
 
         .example-card p {
             color: var(--text-secondary);
-            margin-bottom: 1rem;
-            line-height: 1.6;
+            font-size: 0.95rem;
+            flex-grow: 1;
         }
 
         .example-tags {
@@ -159,51 +261,28 @@
             color: var(--primary-cyan);
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border: 1px solid rgba(100, 255, 218, 0.3);
         }
-
-        /* Code Preview */
-        .code-preview {
-            background: var(--dark-navy);
-            border: 1px solid rgba(100, 255, 218, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.85rem;
-            color: #d4d4d4;
-            overflow-x: auto;
-        }
-
-        /* Footer */
-        footer {
-            background: rgba(26, 26, 46, 0.95);
-            border-top: 1px solid rgba(100, 255, 218, 0.2);
-            padding: 3rem 0;
-            margin-top: 6rem;
-        }
-
-        .footer-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
+        
         /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+        }
+
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
             }
-
             .examples-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .page-header h1 {
-                font-size: 2rem;
             }
         }
     </style>
@@ -218,126 +297,511 @@
             <ul class="nav-links">
                 <li><a href="../index.html">Home</a></li>
                 <li><a href="../api-reference.html">API Reference</a></li>
-                <li><a href="../components.html">Components</a></li>
-                <li><a href="index.html" class="active">Examples</a></li>
+                <li><a href="index.html" class="active">Guides & Examples</a></li>
                 <li><a href="https://github.com/elevationai/cuss2-ts">GitHub</a></li>
             </ul>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container">
-        <div class="page-header">
-            <h1>Examples</h1>
-            <p>Interactive examples and code samples for the CUSS2.ts SDK</p>
-        </div>
-
-        <div class="examples-grid">
-            <!-- Interactive Tester -->
-            <a href="tester.html" class="example-card">
-                <h3>🧪 Interactive Tester</h3>
-                <p>Full-featured testing interface for the CUSS2 platform with real-time component interaction, state management, and event logging.</p>
-                <div class="example-tags">
-                    <span class="tag">Interactive</span>
-                    <span class="tag">All Components</span>
-                    <span class="tag">State Management</span>
-                </div>
-            </a>
-
-            <!-- Basic Connection Browser -->
-            <a href="basic-connection-browser.html" class="example-card">
-                <h3>🌐 Basic Browser Connection</h3>
-                <p>Simple example showing how to connect to a CUSS2 platform from a web browser with minimal setup.</p>
-                <div class="code-preview">
-const cuss2 = Cuss2.connect(
-  "client-id",
-  "client-secret"
-);
-await cuss2.connected;</div>
-                <div class="example-tags">
-                    <span class="tag">Browser</span>
-                    <span class="tag">Getting Started</span>
-                </div>
-            </a>
-
-            <!-- CDN Example -->
-            <a href="cdn.html" class="example-card">
-                <h3>📦 CDN Integration</h3>
-                <p>Load CUSS2.ts directly from a CDN without any build tools. Perfect for quick prototypes and testing.</p>
-                <div class="code-preview">
-&lt;script type="module"&gt;
-  import { Cuss2 } from 
-    "https://esm.sh/jsr/@cuss/cuss2-ts";
-&lt;/script&gt;</div>
-                <div class="example-tags">
-                    <span class="tag">CDN</span>
-                    <span class="tag">No Build</span>
-                    <span class="tag">Quick Start</span>
-                </div>
-            </a>
-
-            <!-- TypeScript Example -->
-            <a href="basic-connection.ts" class="example-card">
-                <h3>📝 TypeScript Connection</h3>
-                <p>TypeScript example showing proper type usage, async/await patterns, and error handling.</p>
-                <div class="code-preview">
-import { Cuss2 } from "jsr:@cuss/cuss2-ts";
-import type { Component } from "jsr:@cuss/cuss2-ts";</div>
-                <div class="example-tags">
-                    <span class="tag">TypeScript</span>
-                    <span class="tag">Deno</span>
-                    <span class="tag">Type Safety</span>
-                </div>
-            </a>
-        </div>
-
-        <!-- Additional Examples Section -->
-        <section style="margin-top: 4rem;">
-            <h2 style="color: var(--primary-cyan); margin-bottom: 2rem; text-align: center;">More Examples Coming Soon</h2>
-            <div class="examples-grid">
-                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
-                    <h3>🖨️ Printer Operations</h3>
-                    <p>Working with boarding pass and bag tag printers, including print data formatting and status handling.</p>
-                    <div class="example-tags">
-                        <span class="tag">Coming Soon</span>
-                    </div>
-                </div>
-
-                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
-                    <h3>📊 Barcode & Card Readers</h3>
-                    <p>Handling data from barcode scanners and card readers with proper event management.</p>
-                    <div class="example-tags">
-                        <span class="tag">Coming Soon</span>
-                    </div>
-                </div>
-
-                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
-                    <h3>⚖️ Scale Integration</h3>
-                    <p>Reading weight data from scales and handling stability events for baggage processing.</p>
-                    <div class="example-tags">
-                        <span class="tag">Coming Soon</span>
-                    </div>
-                </div>
-
-                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
-                    <h3>🔄 State Management</h3>
-                    <p>Advanced state transition patterns and automatic state synchronization based on component availability.</p>
-                    <div class="example-tags">
-                        <span class="tag">Coming Soon</span>
-                    </div>
-                </div>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h3>Guides & Examples</h3>
+            <div class="sidebar-section">
+                <ul class="sidebar-links">
+                    <li><a href="#examples" class="active">Examples</a></li>
+                    <li><a href="#base-component">Base Component</a></li>
+                    <li><a href="#printers">Printers</a></li>
+                    <li><a href="#data-readers">Data Readers</a></li>
+                    <li><a href="#payment">Payment</a></li>
+                    <li><a href="#measurement">Measurement</a></li>
+                    <li><a href="#system">System</a></li>
+                    <li><a href="#status-management">Status Management</a></li>
+                    <li><a href="#events-errors">Events & Errors</a></li>
+                </ul>
             </div>
-        </section>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <div class="page-header" style="text-align: left;">
+                <h1>Component Guides & Examples</h1>
+                <p>Interactive examples and usage guides for the CUSS2.ts SDK.</p>
+            </div>
+
+            <!-- Examples Section -->
+            <section id="examples" class="api-section">
+                <h2>Interactive Examples</h2>
+                <div class="examples-grid">
+                    <a href="tester.html" class="example-card">
+                        <h3>🧪 Interactive Tester</h3>
+                        <p>Full-featured testing interface for the CUSS2 platform with real-time component interaction, state management, and event logging.</p>
+                        <div class="example-tags">
+                            <span class="tag">Interactive</span>
+                            <span class="tag">All Components</span>
+                            <span class="tag">State Management</span>
+                        </div>
+                    </a>
+                    <a href="basic-connection-browser.html" class="example-card">
+                        <h3>🌐 Basic Browser Connection</h3>
+                        <p>Simple example showing how to connect to a CUSS2 platform from a web browser with minimal setup.</p>
+                        <div class="example-tags">
+                            <span class="tag">Browser</span>
+                            <span class="tag">Getting Started</span>
+                        </div>
+                    </a>
+                    <a href="cdn.html" class="example-card">
+                        <h3>📦 CDN Integration</h3>
+                        <p>Load CUSS2.ts directly from a CDN without any build tools. Perfect for quick prototypes and testing.</p>
+                        <div class="example-tags">
+                            <span class="tag">CDN</span>
+                            <span class="tag">No Build</span>
+                            <span class="tag">Quick Start</span>
+                        </div>
+                    </a>
+                    <a href="basic-connection.ts" class="example-card">
+                        <h3>📝 TypeScript Connection</h3>
+                        <p>TypeScript example showing proper type usage, async/await patterns, and error handling for Deno or Node.</p>
+                        <div class="example-tags">
+                            <span class="tag">TypeScript</span>
+                            <span class="tag">Deno</span>
+                            <span class="tag">Node</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Component Details -->
+            <section id="base-component" class="api-section">
+                <h2>Base Component Class</h2>
+                <p>All components inherit from the base <code>Component</code> class, providing common functionality:</p>
+                
+                <pre><code class="language-typescript">// Common component methods
+component.enable();     // Enable the component
+component.disable();    // Disable the component
+component.query();      // Query component status
+component.cancel();     // Cancel current operation
+
+// Component properties
+component.id           // Unique component identifier
+component.meta         // Component metadata
+component.status       // Current status (READY, UNAVAILABLE, ERROR, etc.)
+
+// Event handling
+component.on('statusChange', (status) => {
+    console.log(`Component status: ${status}`);
+});
+
+component.on('error', (error) => {
+    console.error(`Component error: ${error.message}`);
+});</code></pre>
+            </section>
+
+            <section id="printers" class="api-section">
+                <h2>🖨️ Printer Components</h2>
+                <p>Printers support various output formats including raw data, images, and structured documents.</p>
+
+                <h3>BoardingPassPrinter</h3>
+                <pre><code class="language-typescript">const bpp = cuss2.boardingPassPrinter;
+
+// Print raw data
+await bpp.printRaw(base64Data);
+
+// Print boarding pass template
+await bpp.printBoardingPass({
+    passengerName: "SMITH/JOHN",
+    flight: "AA123",
+    seat: "12A",
+    gate: "B42",
+    boardingTime: "10:30"
+});
+
+// Printer with feeder control
+if (bpp.feeder) {
+    await bpp.feeder.setup({ mediaSize: "BP_2x6" });
+    await bpp.feeder.takeMedia();
+}
+
+// Handle print events
+bpp.on('printComplete', () => {
+    console.log('Boarding pass printed successfully');
+});
+
+bpp.on('paperOut', () => {
+    console.error('Printer out of paper');
+});</code></pre>
+
+                <h3>BagTagPrinter</h3>
+                <pre><code class="language-typescript">const btp = cuss2.bagTagPrinter;
+
+// Print bag tag with airline data
+await btp.printRaw(iataFormattedData);
+
+// Query printer status
+const status = await btp.query();
+if (status === ComponentStatus.READY) {
+    await btp.printBagTag({
+        tagNumber: "AA123456789",
+        destination: "LAX",
+        routing: ["DFW", "LAX"],
+        passenger: "SMITH/J"
+    });
+}
+
+// Dispenser control for tag output
+if (btp.dispenser) {
+    await btp.dispenser.present();  // Present tag to passenger
+    await btp.dispenser.retract();  // Retract if not taken
+}</code></pre>
+            </section>
+
+            <section id="data-readers" class="api-section">
+                <h2>📊 Data Reader Components</h2>
+                <p>Components that read various types of data from documents, cards, and biometric sources.</p>
+
+                <h3>BarcodeReader</h3>
+                <pre><code class="language-typescript">const barcode = cuss2.barcodeReader;
+
+// Enable and start reading
+await barcode.enable();
+
+// Handle barcode data
+barcode.on('data', (scanData) => {
+    console.log('Barcode scanned:', scanData.value);
+    console.log('Barcode type:', scanData.symbology);
+    
+    // Process based on type
+    if (scanData.symbology === 'PDF417') {
+        processBoardingPass(scanData.value);
+    }
+});
+
+// Multiple barcode types
+barcode.on('dataList', (barcodes) => {
+    barcodes.forEach(scan => {
+        console.log(`Found ${scan.symbology}: ${scan.value}`);
+    });
+});</code></pre>
+
+                <h3>PassportReader</h3>
+                <pre><code class="language-typescript">const passport = cuss2.passportReader;
+
+// Enable with specific settings
+await passport.enable();
+
+// Read passport data
+passport.on('data', (passportData) => {
+    console.log('Document Number:', passportData.documentNumber);
+    console.log('Name:', passportData.surname, passportData.givenNames);
+    console.log('Nationality:', passportData.nationality);
+    console.log('Expiry:', passportData.expiryDate);
+    
+    // Verify MRZ checksum
+    if (passportData.mrzValid) {
+        console.log('Document verified');
+    }
+});
+
+// Handle chip reading
+passport.on('chipData', (chipData) => {
+    console.log('Biometric data available');
+    // Process facial image, fingerprints, etc.
+});</code></pre>
+            </section>
+
+            <section id="payment" class="api-section">
+                <h2>💳 Payment Components</h2>
+                <p>Handle various payment methods including cards, cash, and coins.</p>
+
+                <h3>PaymentDevice</h3>
+                <pre><code class="language-typescript">const payment = cuss2.paymentDevice;
+
+// Initialize payment for amount
+await payment.startTransaction({
+    amount: 125.50,
+    currency: "USD",
+    type: "PURCHASE"
+});
+
+// Handle payment events
+payment.on('cardInserted', () => {
+    console.log('Processing card...');
+});
+
+payment.on('approved', (transaction) => {
+    console.log('Payment approved:', transaction.authCode);
+    await payment.printReceipt();
+});
+
+payment.on('declined', (reason) => {
+    console.error('Payment declined:', reason);
+});
+
+// Cancel transaction if needed
+await payment.cancel();</code></pre>
+
+                <h3>CashAcceptor</h3>
+                <pre><code class="language-typescript">const cash = cuss2.cashAcceptor;
+
+// Enable cash acceptance
+await cash.enable();
+await cash.startAccepting(100.00); // Accept up to $100
+
+// Track inserted bills
+cash.on('billInserted', (bill) => {
+    console.log(`Inserted: $${bill.value}`);
+    totalInserted += bill.value;
+});
+
+// Complete transaction
+cash.on('complete', (total) => {
+    console.log(`Total cash received: $${total}`);
+});</code></pre>
+            </section>
+
+            <section id="measurement" class="api-section">
+                <h2>⚖️ Measurement Components</h2>
+                <p>Components for weighing baggage and measuring dimensions.</p>
+
+                <h3>Scale</h3>
+                <pre><code class="language-typescript">const scale = cuss2.scale;
+
+// Enable scale
+await scale.enable();
+
+// Get current weight
+scale.on('weight', (data) => {
+    console.log(`Weight: ${data.weight} ${data.unit}`);
+    
+    // Check if stable
+    if (data.stable) {
+        console.log('Weight is stable');
+        recordBaggageWeight(data.weight);
+    }
+});
+
+// Handle overweight
+scale.on('overweight', () => {
+    console.warn('Baggage exceeds maximum weight');
+    showOverweightFeeDialog();
+});
+
+// Zero/tare the scale
+await scale.zero();</code></pre>
+            </section>
+
+            <section id="system" class="api-section">
+                <h2>🔌 System Components</h2>
+                <p>Core system components for power, proximity, and input management.</p>
+
+                <h3>ProximitySession</h3>
+                <pre><code class="language-typescript">const proximity = cuss2.proximitySession;
+
+// Enable proximity detection
+await proximity.enable();
+
+// Detect passenger presence
+proximity.on('sessionStarted', () => {
+    console.log('Passenger detected');
+    startKioskSession();
+});
+
+proximity.on('sessionEnded', () => {
+    console.log('Passenger left');
+    resetKiosk();
+});
+
+// Set detection range
+await proximity.configure({
+    range: 'NEAR',  // NEAR, MEDIUM, FAR
+    timeout: 30000   // Auto-end after 30 seconds
+});</code></pre>
+
+                <h3>Announcement</h3>
+                <pre><code class="language-typescript">const announcement = cuss2.announcement;
+
+// Play text-to-speech
+await announcement.play({
+    text: "Please scan your boarding pass",
+    language: "en-US",
+    volume: 80
+});
+
+// Play audio file
+await announcement.playAudio({
+    url: "https://airline.com/sounds/welcome.mp3",
+    volume: 70
+});
+
+// Handle playback events
+announcement.on('complete', () => {
+    console.log('Announcement finished');
+});
+
+// Stop current announcement
+await announcement.stop();</code></pre>
+            </section>
+
+            <section id="status-management" class="api-section">
+                <h2>Component Status Management</h2>
+                <p>All components report their status and can be monitored for availability:</p>
+
+                <pre><code class="language-typescript">// Monitor all components
+cuss2.on('componentStatusChange', (event) => {
+    console.log(`${event.componentId}: ${event.status}`);
+    
+    // Update UI based on status
+    switch(event.status) {
+        case ComponentStatus.READY:
+            enableFeature(event.componentId);
+            break;
+        case ComponentStatus.UNAVAILABLE:
+            disableFeature(event.componentId);
+            break;
+        case ComponentStatus.ERROR:
+            showErrorMessage(event.componentId, event.error);
+            break;
+    }
+});
+
+// Check specific component availability
+if (cuss2.boardingPassPrinter?.status === ComponentStatus.READY) {
+    showPrintOption();
+}
+
+// Wait for component to be ready
+async function waitForComponent(component) {
+    return new Promise((resolve) => {
+        if (component.status === ComponentStatus.READY) {
+            resolve();
+        } else {
+            component.once('statusChange', (status) => {
+                if (status === ComponentStatus.READY) {
+                    resolve();
+                }
+            });
+        }
+    });
+}</code></pre>
+            </section>
+
+            <section id="events-errors" class="api-section">
+                <h2>Events and Error Handling</h2>
+                <p>Comprehensive event system for monitoring component state and handling errors:</p>
+
+                <pre><code class="language-typescript">// Component-specific events
+component.on('statusChange', handler);
+component.on('data', handler);
+component.on('error', handler);
+
+// Global component events
+cuss2.on('componentEnabled', ({ componentId }) => {
+    console.log(`${componentId} enabled`);
+});
+
+cuss2.on('componentDisabled', ({ componentId }) => {
+    console.log(`${componentId} disabled`);
+});
+
+// Error handling patterns
+try {
+    await component.enable();
+} catch (error) {
+    if (error.code === 'DEVICE_OFFLINE') {
+        // Handle offline device
+        showMaintenanceMessage();
+    } else if (error.code === 'PERMISSION_DENIED') {
+        // Handle permission issues
+        requestPermission();
+    } else {
+        // Generic error handling
+        console.error('Component error:', error);
+    }
+}
+
+// Retry logic for transient failures
+async function enableWithRetry(component, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            await component.enable();
+            return;
+        } catch (error) {
+            console.warn(`Attempt ${i + 1} failed:`, error);
+            if (i === maxRetries - 1) throw error;
+            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
+        }
+    }
+}</code></pre>
+            </section>
+        </main>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <p>© 2025 Elevation AI - All rights reserved • 
-                <a href="https://github.com/elevationai/cuss2-ts" style="color: var(--primary-cyan); text-decoration: none;">GitHub</a> • 
-                <a href="https://jsr.io/@cuss/cuss2-ts" style="color: var(--primary-cyan); text-decoration: none;">JSR Package</a>
-            </p>
-        </div>
-    </footer>
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-vsc-dark-plus.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    
+    <style>
+        /* Override Prism styles for better visibility */
+        .token.comment { color: #6a9955 !important; }
+        .token.keyword { color: #c586c0 !important; }
+        .token.string { color: #ce9178 !important; }
+        .token.function { color: #dcdcaa !important; }
+        .token.number { color: #b5cea8 !important; }
+        .token.operator { color: #d4d4d4 !important; }
+        .token.punctuation { color: #d4d4d4 !important; }
+        .token.class-name { color: #4ec9b0 !important; }
+        .token.parameter { color: #9cdcfe !important; }
+        .token.boolean { color: #569cd6 !important; }
+        .token.builtin { color: #4ec9b0 !important; }
+        .token.property { color: #9cdcfe !important; }
+        code[class*="language-"], pre[class*="language-"] {
+            color: #d4d4d4 !important;
+            background: none !important;
+        }
+    </style>
+    
+    <script>
+        // Syntax highlighting on load
+        document.addEventListener('DOMContentLoaded', () => {
+            Prism.highlightAll();
+        });
+
+        // Scroll Spy for Active Section Highlighting
+        const sections = document.querySelectorAll('.api-section');
+        const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+        
+        const linkMap = {};
+        sidebarLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                linkMap[href.substring(1)] = link;
+            }
+        });
+        
+        function updateActiveLink() {
+            const scrollPosition = window.scrollY + 100; // Offset for fixed header
+            
+            let currentSection = null;
+            sections.forEach(section => {
+                if (section.offsetTop <= scrollPosition) {
+                    currentSection = section;
+                }
+            });
+            
+            const sectionId = currentSection ? currentSection.getAttribute('id') : null;
+
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (linkMap[sectionId] === link) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', updateActiveLink);
+        document.addEventListener('DOMContentLoaded', updateActiveLink);
+    </script>
 </body>
 </html>

@@ -96,7 +96,7 @@
         .main-container {
             display: flex;
             max-width: 1400px;
-            margin: 80px auto 0;
+            margin: 80px auto 60px;
             gap: 2rem;
             padding: 2rem;
         }
@@ -264,7 +264,7 @@
             font-size: 0.8rem;
             border: 1px solid rgba(100, 255, 218, 0.3);
         }
-        
+
         /* Responsive */
         @media (max-width: 1024px) {
             .main-container {
@@ -313,7 +313,6 @@
                     <li><a href="#base-component">Base Component</a></li>
                     <li><a href="#printers">Printers</a></li>
                     <li><a href="#data-readers">Data Readers</a></li>
-                    <li><a href="#payment">Payment</a></li>
                     <li><a href="#measurement">Measurement</a></li>
                     <li><a href="#system">System</a></li>
                     <li><a href="#status-management">Status Management</a></li>
@@ -375,84 +374,80 @@
             <section id="base-component" class="api-section">
                 <h2>Base Component Class</h2>
                 <p>All components inherit from the base <code>Component</code> class, providing common functionality:</p>
-                
+
                 <pre><code class="language-typescript">// Common component methods
-component.enable();     // Enable the component
-component.disable();    // Disable the component
-component.query();      // Query component status
-component.cancel();     // Cancel current operation
+await component.enable();
+await component.disable();
+await component.query();
 
 // Component properties
-component.id           // Unique component identifier
-component.meta         // Component metadata
-component.status       // Current status (READY, UNAVAILABLE, ERROR, etc.)
+const id = component.id;                     // Unique component identifier
+const type = component.deviceType;           // Component device type (e.g., "BARCODE_READER")
+const isReady = component.ready;             // Boolean ready status
+const isEnabled = component.enabled;           // Boolean enabled status
 
 // Event handling
-component.on('statusChange', (status) => {
-    console.log(`Component status: ${status}`);
-});
-
-component.on('error', (error) => {
-    console.error(`Component error: ${error.message}`);
+component.on('readyStateChange', (isReady) => {
+    console.log(`Component is now ${isReady ? 'ready' : 'not ready'}`);
 });</code></pre>
             </section>
 
             <section id="printers" class="api-section">
                 <h2>🖨️ Printer Components</h2>
-                <p>Printers support various output formats including raw data, images, and structured documents.</p>
+                <p>Printers are controlled via low-level ITPS commands. You will need to consult your device manufacturer's documentation for a list of available commands.</p>
 
                 <h3>BoardingPassPrinter</h3>
                 <pre><code class="language-typescript">const bpp = cuss2.boardingPassPrinter;
 
-// Print raw data
-await bpp.printRaw(base64Data);
+// This example queries the printer's environment status.
+if (bpp) {
+    await bpp.enable();
+    const status = await bpp.getEnvironment();
+    console.log('Printer Status:', status);
 
-// Print boarding pass template
-await bpp.printBoardingPass({
-    passengerName: "SMITH/JOHN",
-    flight: "AA123",
-    seat: "12A",
-    gate: "B42",
-    boardingTime: "10:30"
-});
-
-// Printer with feeder control
-if (bpp.feeder) {
-    await bpp.feeder.setup({ mediaSize: "BP_2x6" });
-    await bpp.feeder.takeMedia();
+    // Example of sending a raw ITPS command (device-specific)
+    // const response = await bpp.sendITPSCommand("YOUR_ITPS_COMMAND");
 }
 
-// Handle print events
-bpp.on('printComplete', () => {
-    console.log('Boarding pass printed successfully');
-});
-
-bpp.on('paperOut', () => {
-    console.error('Printer out of paper');
+// Listen for generic state changes
+bpp.on('stateChange', (status) => {
+    console.log('BoardingPassPrinter state is now:', status.name);
 });</code></pre>
 
                 <h3>BagTagPrinter</h3>
                 <pre><code class="language-typescript">const btp = cuss2.bagTagPrinter;
 
-// Print bag tag with airline data
-await btp.printRaw(iataFormattedData);
+// This example clears all stored PECTABs from the printer memory.
+if (btp) {
+    await btp.enable();
+    const success = await btp.pectabs.clear();
+    console.log('PECTABs cleared:', success);
+}</code></pre>
 
-// Query printer status
-const status = await btp.query();
-if (status === ComponentStatus.READY) {
-    await btp.printBagTag({
-        tagNumber: "AA123456789",
-        destination: "LAX",
-        routing: ["DFW", "LAX"],
-        passenger: "SMITH/J"
-    });
+                <h3>Feeder (Sub-component)</h3>
+                <pre><code class="language-typescript">const feeder = cuss2.boardingPassPrinter?.feeder;
+
+// The Feeder is a basic component. You can check its ready status.
+if (feeder?.ready) {
+    console.log('Feeder is ready to accept media.');
 }
 
-// Dispenser control for tag output
-if (btp.dispenser) {
-    await btp.dispenser.present();  // Present tag to passenger
-    await btp.dispenser.retract();  // Retract if not taken
-}</code></pre>
+feeder.on('stateChange', (status) => {
+    console.log('Feeder state is now:', status.name);
+});</code></pre>
+
+                <h3>Dispenser (Sub-component)</h3>
+                <pre><code class="language-typescript">const dispenser = cuss2.boardingPassPrinter?.dispenser;
+
+// Check if media is present in the output slot.
+if (dispenser?.mediaPresent) {
+    console.log('Document is waiting to be taken.');
+}
+
+// Listen for the mediaPresent event, which fires when media is detected.
+dispenser.on('mediaPresent', (isPresent) => {
+    console.log(isPresent ? 'Media is present.' : 'Media has been taken.');
+});</code></pre>
             </section>
 
             <section id="data-readers" class="api-section">
@@ -460,227 +455,112 @@ if (btp.dispenser) {
                 <p>Components that read various types of data from documents, cards, and biometric sources.</p>
 
                 <h3>BarcodeReader</h3>
-                <pre><code class="language-typescript">const barcode = cuss2.barcodeReader;
+                <pre><code class="language-typescript">const barcodeReader = cuss2.barcodeReader;
 
 // Enable and start reading
-await barcode.enable();
+if (barcodeReader) {
+    await barcodeReader.enable();
 
-// Handle barcode data
-barcode.on('data', (scanData) => {
-    console.log('Barcode scanned:', scanData.value);
-    console.log('Barcode type:', scanData.symbology);
-    
-    // Process based on type
-    if (scanData.symbology === 'PDF417') {
-        processBoardingPass(scanData.value);
-    }
-});
-
-// Multiple barcode types
-barcode.on('dataList', (barcodes) => {
-    barcodes.forEach(scan => {
-        console.log(`Found ${scan.symbology}: ${scan.value}`);
+    // BarcodeReader emits a 'data' event with a string array payload.
+    barcodeReader.on('data', (data) => {
+        const barcodeData = data[0]; // Typically the first element
+        console.log('Barcode scanned:', barcodeData);
     });
-});</code></pre>
+}</code></pre>
 
-                <h3>PassportReader</h3>
-                <pre><code class="language-typescript">const passport = cuss2.passportReader;
+                <h3>DocumentReader</h3>
+                <pre><code class="language-typescript">const docReader = cuss2.documentReader;
 
-// Enable with specific settings
-await passport.enable();
+// Enable the component to start reading
+if (docReader) {
+    await docReader.enable();
 
-// Read passport data
-passport.on('data', (passportData) => {
-    console.log('Document Number:', passportData.documentNumber);
-    console.log('Name:', passportData.surname, passportData.givenNames);
-    console.log('Nationality:', passportData.nationality);
-    console.log('Expiry:', passportData.expiryDate);
-    
-    // Verify MRZ checksum
-    if (passportData.mrzValid) {
-        console.log('Document verified');
-    }
-});
-
-// Handle chip reading
-passport.on('chipData', (chipData) => {
-    console.log('Biometric data available');
-    // Process facial image, fingerprints, etc.
-});</code></pre>
-            </section>
-
-            <section id="payment" class="api-section">
-                <h2>💳 Payment Components</h2>
-                <p>Handle various payment methods including cards, cash, and coins.</p>
-
-                <h3>PaymentDevice</h3>
-                <pre><code class="language-typescript">const payment = cuss2.paymentDevice;
-
-// Initialize payment for amount
-await payment.startTransaction({
-    amount: 125.50,
-    currency: "USD",
-    type: "PURCHASE"
-});
-
-// Handle payment events
-payment.on('cardInserted', () => {
-    console.log('Processing card...');
-});
-
-payment.on('approved', (transaction) => {
-    console.log('Payment approved:', transaction.authCode);
-    await payment.printReceipt();
-});
-
-payment.on('declined', (reason) => {
-    console.error('Payment declined:', reason);
-});
-
-// Cancel transaction if needed
-await payment.cancel();</code></pre>
-
-                <h3>CashAcceptor</h3>
-                <pre><code class="language-typescript">const cash = cuss2.cashAcceptor;
-
-// Enable cash acceptance
-await cash.enable();
-await cash.startAccepting(100.00); // Accept up to $100
-
-// Track inserted bills
-cash.on('billInserted', (bill) => {
-    console.log(`Inserted: $${bill.value}`);
-    totalInserted += bill.value;
-});
-
-// Complete transaction
-cash.on('complete', (total) => {
-    console.log(`Total cash received: $${total}`);
-});</code></pre>
+    // The DocumentReader emits a generic 'data' event with a string array.
+    // The structure of the data within the array depends on the platform's implementation.
+    docReader.on('data', (data) => {
+        console.log('Document data received:', data);
+        // You will need to parse the data based on your platform's format.
+    });
+}</code></pre>
             </section>
 
             <section id="measurement" class="api-section">
                 <h2>⚖️ Measurement Components</h2>
-                <p>Components for weighing baggage and measuring dimensions.</p>
+                <p>Components for weighing baggage.</p>
 
                 <h3>Scale</h3>
                 <pre><code class="language-typescript">const scale = cuss2.scale;
 
-// Enable scale
-await scale.enable();
+// Enable the component
+if (scale) {
+    await scale.enable();
 
-// Get current weight
-scale.on('weight', (data) => {
-    console.log(`Weight: ${data.weight} ${data.unit}`);
-    
-    // Check if stable
-    if (data.stable) {
-        console.log('Weight is stable');
-        recordBaggageWeight(data.weight);
-    }
-});
-
-// Handle overweight
-scale.on('overweight', () => {
-    console.warn('Baggage exceeds maximum weight');
-    showOverweightFeeDialog();
-});
-
-// Zero/tare the scale
-await scale.zero();</code></pre>
+    // The Scale component emits a generic 'data' event.
+    // The structure of the data payload (e.g., a JSON string)
+    // depends on the platform's specific implementation.
+    scale.on('data', (data) => {
+        console.log(`Weight data received:`, data[0]);
+        try {
+            const weightInfo = JSON.parse(data[0]);
+            if (weightInfo.stable) {
+                console.log(`Weight is stable at ${weightInfo.weight} ${weightInfo.unit}`);
+            }
+        } catch (e) {
+            console.error("Could not parse scale data");
+        }
+    });
+}</code></pre>
             </section>
 
             <section id="system" class="api-section">
                 <h2>🔌 System Components</h2>
-                <p>Core system components for power, proximity, and input management.</p>
-
-                <h3>ProximitySession</h3>
-                <pre><code class="language-typescript">const proximity = cuss2.proximitySession;
-
-// Enable proximity detection
-await proximity.enable();
-
-// Detect passenger presence
-proximity.on('sessionStarted', () => {
-    console.log('Passenger detected');
-    startKioskSession();
-});
-
-proximity.on('sessionEnded', () => {
-    console.log('Passenger left');
-    resetKiosk();
-});
-
-// Set detection range
-await proximity.configure({
-    range: 'NEAR',  // NEAR, MEDIUM, FAR
-    timeout: 30000   // Auto-end after 30 seconds
-});</code></pre>
+                <p>Core system components for audio output.</p>
 
                 <h3>Announcement</h3>
                 <pre><code class="language-typescript">const announcement = cuss2.announcement;
 
-// Play text-to-speech
-await announcement.play({
-    text: "Please scan your boarding pass",
-    language: "en-US",
-    volume: 80
-});
+// Play text-to-speech using the 'say' method
+if (announcement) {
+    await announcement.enable();
+    await announcement.say("Please scan your boarding pass.", "en-US");
+}
 
-// Play audio file
-await announcement.playAudio({
-    url: "https://airline.com/sounds/welcome.mp3",
-    volume: 70
-});
-
-// Handle playback events
-announcement.on('complete', () => {
-    console.log('Announcement finished');
-});
-
-// Stop current announcement
-await announcement.stop();</code></pre>
+// Listen for events
+announcement.on('stateChange', (status) => {
+    console.log('Announcement state is now:', status.name);
+});</code></pre>
             </section>
 
             <section id="status-management" class="api-section">
                 <h2>Component Status Management</h2>
                 <p>All components report their status and can be monitored for availability:</p>
 
-                <pre><code class="language-typescript">// Monitor all components
-cuss2.on('componentStatusChange', (event) => {
-    console.log(`${event.componentId}: ${event.status}`);
-    
+                <pre><code class="language-typescript">// Monitor all components for state changes
+cuss2.on('componentStateChange', (component) => {
+    console.log(`${component.deviceType} (ID: ${component.id}) is now ${component.ready ? 'ready' : 'not ready'}`);
+
     // Update UI based on status
-    switch(event.status) {
-        case ComponentStatus.READY:
-            enableFeature(event.componentId);
-            break;
-        case ComponentStatus.UNAVAILABLE:
-            disableFeature(event.componentId);
-            break;
-        case ComponentStatus.ERROR:
-            showErrorMessage(event.componentId, event.error);
-            break;
+    if (component.deviceType === 'BOARDING_PASS_PRINTER') {
+        const printButton = document.getElementById('print-button');
+        printButton.disabled = !component.ready;
     }
 });
 
 // Check specific component availability
-if (cuss2.boardingPassPrinter?.status === ComponentStatus.READY) {
+if (cuss2.boardingPassPrinter?.ready) {
     showPrintOption();
 }
 
-// Wait for component to be ready
+// Wait for a component to be ready
 async function waitForComponent(component) {
+    if (component.ready) return Promise.resolve();
+
     return new Promise((resolve) => {
-        if (component.status === ComponentStatus.READY) {
-            resolve();
-        } else {
-            component.once('statusChange', (status) => {
-                if (status === ComponentStatus.READY) {
-                    resolve();
-                }
-            });
-        }
+        component.once('readyStateChange', (isReady) => {
+            if (isReady) {
+                resolve();
+            }
+        });
     });
 }</code></pre>
             </section>
@@ -690,58 +570,52 @@ async function waitForComponent(component) {
                 <p>Comprehensive event system for monitoring component state and handling errors:</p>
 
                 <pre><code class="language-typescript">// Component-specific events
-component.on('statusChange', handler);
-component.on('data', handler);
+component.on('stateChange', handler);
+component.on('data', handler); // For DataReaderComponent instances
 component.on('error', handler);
 
-// Global component events
-cuss2.on('componentEnabled', ({ componentId }) => {
-    console.log(`${componentId} enabled`);
+// Global Cuss2 events
+cuss2.on('connected', () => {
+    console.log('Platform connection established!');
 });
 
-cuss2.on('componentDisabled', ({ componentId }) => {
-    console.log(`${componentId} disabled`);
+cuss2.on('deactivated', (newState) => {
+    console.log(`Session deactivated, moved to ${newState} state.`);
 });
 
 // Error handling patterns
 try {
-    await component.enable();
+    await cuss2.requestActiveState();
 } catch (error) {
-    if (error.code === 'DEVICE_OFFLINE') {
-        // Handle offline device
-        showMaintenanceMessage();
-    } else if (error.code === 'PERMISSION_DENIED') {
-        // Handle permission issues
-        requestPermission();
+    // Errors from the platform often have a code
+    if (error.code === 1006) { // Invalid State
+        console.error('Cannot request ACTIVE state from current state.');
     } else {
-        // Generic error handling
-        console.error('Component error:', error);
-    }
-}
-
-// Retry logic for transient failures
-async function enableWithRetry(component, maxRetries = 3) {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            await component.enable();
-            return;
-        } catch (error) {
-            console.warn(`Attempt ${i + 1} failed:`, error);
-            if (i === maxRetries - 1) throw error;
-            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
-        }
+        console.error('An unexpected error occurred:', error.message);
     }
 }</code></pre>
             </section>
         </main>
     </div>
 
+
+
+    <!-- Footer -->
+    <footer style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(26, 26, 46, 0.95); border-top: 1px solid rgba(100, 255, 218, 0.2); padding: 1rem 0; z-index: 100;">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 2rem; text-align: center; color: #a0a0a0;">
+            <p>© 2025 Elevation AI - All rights reserved •
+                <a href="https://github.com/elevationai/cuss2-ts" style="color: #64ffda; text-decoration: none;">GitHub</a> •
+                <a href="https://jsr.io/@cuss/cuss2-ts" style="color: #64ffda; text-decoration: none;">JSR Package</a>
+            </p>
+        </div>
+    </footer>
+
     <!-- Prism.js for Syntax Highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-vsc-dark-plus.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-    
+
     <style>
         /* Override Prism styles for better visibility */
         .token.comment { color: #6a9955 !important; }
@@ -761,7 +635,7 @@ async function enableWithRetry(component, maxRetries = 3) {
             background: none !important;
         }
     </style>
-    
+
     <script>
         // Syntax highlighting on load
         document.addEventListener('DOMContentLoaded', () => {
@@ -771,7 +645,7 @@ async function enableWithRetry(component, maxRetries = 3) {
         // Scroll Spy for Active Section Highlighting
         const sections = document.querySelectorAll('.api-section');
         const sidebarLinks = document.querySelectorAll('.sidebar-links a');
-        
+
         const linkMap = {};
         sidebarLinks.forEach(link => {
             const href = link.getAttribute('href');
@@ -779,17 +653,17 @@ async function enableWithRetry(component, maxRetries = 3) {
                 linkMap[href.substring(1)] = link;
             }
         });
-        
+
         function updateActiveLink() {
             const scrollPosition = window.scrollY + 100; // Offset for fixed header
-            
+
             let currentSection = null;
             sections.forEach(section => {
                 if (section.offsetTop <= scrollPosition) {
                     currentSection = section;
                 }
             });
-            
+
             const sectionId = currentSection ? currentSection.getAttribute('id') : null;
 
             sidebarLinks.forEach(link => {
@@ -799,7 +673,7 @@ async function enableWithRetry(component, maxRetries = 3) {
                 }
             });
         }
-        
+
         window.addEventListener('scroll', updateActiveLink);
         document.addEventListener('DOMContentLoaded', updateActiveLink);
     </script>

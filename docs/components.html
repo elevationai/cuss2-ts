@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Components - CUSS2.ts Documentation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-cyan: #64ffda;
+            --secondary-blue: #48cae4;
+            --dark-navy: #0f0f1e;
+            --dark-purple: #1a1a2e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --error-red: #ff6464;
+            --warning-orange: #ffc864;
+            --success-green: #64ff8c;
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--dark-navy) 0%, var(--dark-purple) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-cyan);
+        }
+
+        .nav-links a.active {
+            color: var(--primary-cyan);
+            border-bottom: 2px solid var(--primary-cyan);
+            padding-bottom: 2px;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 100px auto 0;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Component Categories */
+        .component-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .category-card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-cyan);
+        }
+
+        .category-card h3 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-card .icon {
+            font-size: 1.5rem;
+        }
+
+        .component-list {
+            list-style: none;
+        }
+
+        .component-list li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .component-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Component Details Section */
+        .component-details {
+            margin-top: 4rem;
+        }
+
+        .detail-section {
+            background: rgba(26, 26, 46, 0.4);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-section h2 {
+            color: var(--primary-cyan);
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .detail-section h3 {
+            color: var(--secondary-blue);
+            margin: 1.5rem 0 1rem;
+        }
+
+        /* Code Blocks with Syntax Highlighting */
+        pre[class*="language-"] {
+            background: #1e1e1e !important;
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem !important;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        code[class*="language-"] {
+            background: none !important;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+        }
+
+        /* VS Code Dark+ Theme Colors */
+        .token.comment { color: #6A9955 !important; }
+        .token.keyword { color: #569CD6 !important; }
+        .token.string { color: #CE9178 !important; }
+        .token.number { color: #B5CEA8 !important; }
+        .token.function { color: #DCDCAA !important; }
+        .token.class-name { color: #4EC9B0 !important; }
+        .token.property { color: #9CDCFE !important; }
+        .token.operator { color: #D4D4D4 !important; }
+        .token.punctuation { color: #D4D4D4 !important; }
+        .token.boolean { color: #569CD6 !important; }
+        .token.parameter { color: #9CDCFE !important; }
+
+        /* Component Grid */
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .component-badge {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            color: var(--primary-cyan);
+            font-weight: 500;
+        }
+
+        /* Status Indicators */
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status.ready { 
+            background: rgba(100, 255, 140, 0.2); 
+            color: var(--success-green);
+            border: 1px solid var(--success-green);
+        }
+
+        .status.unavailable { 
+            background: rgba(255, 100, 100, 0.2); 
+            color: var(--error-red);
+            border: 1px solid var(--error-red);
+        }
+
+        .status.busy { 
+            background: rgba(255, 200, 100, 0.2); 
+            color: var(--warning-orange);
+            border: 1px solid var(--warning-orange);
+        }
+
+        /* Method Table */
+        .method-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .method-table th {
+            background: rgba(100, 255, 218, 0.1);
+            color: var(--primary-cyan);
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .method-table td {
+            padding: 1rem;
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .method-table code {
+            background: rgba(100, 255, 218, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            color: var(--primary-cyan);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(26, 26, 46, 0.95);
+            border-top: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 3rem 0;
+            margin-top: 6rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .component-categories {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .method-table {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                <span>🛫</span> CUSS2.ts
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="api-reference.html">API Reference</a></li>
+                <li><a href="components.html" class="active">Components</a></li>
+                <li><a href="examples/index.html">Examples</a></li>
+                <li><a href="https://github.com/elevationai/cuss2-ts">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-header">
+            <h1>CUSS2 Components</h1>
+            <p>Complete guide to all 30+ peripheral components supported by the CUSS2 platform. Each component represents a physical device or service available on self-service kiosks.</p>
+        </div>
+
+        <!-- Component Categories -->
+        <div class="component-categories">
+            <div class="category-card">
+                <h3><span class="icon">🖨️</span> Printers</h3>
+                <ul class="component-list">
+                    <li>BagTagPrinter</li>
+                    <li>BoardingPassPrinter</li>
+                    <li>DocumentPrinter</li>
+                </ul>
+            </div>
+
+            <div class="category-card">
+                <h3><span class="icon">📊</span> Data Readers</h3>
+                <ul class="component-list">
+                    <li>BarcodeReader</li>
+                    <li>CardReader</li>
+                    <li>PassportReader</li>
+                    <li>FaceReader</li>
+                    <li>FingerprintReader</li>
+                </ul>
+            </div>
+
+            <div class="category-card">
+                <h3><span class="icon">💳</span> Payment</h3>
+                <ul class="component-list">
+                    <li>PaymentDevice</li>
+                    <li>CashAcceptor</li>
+                    <li>CoinAcceptor</li>
+                    <li>CashDispenser</li>
+                </ul>
+            </div>
+
+            <div class="category-card">
+                <h3><span class="icon">⚖️</span> Measurement</h3>
+                <ul class="component-list">
+                    <li>Scale</li>
+                    <li>MeasuringDevice</li>
+                    <li>HandBaggageGauge</li>
+                </ul>
+            </div>
+
+            <div class="category-card">
+                <h3><span class="icon">🔊</span> Audio/Visual</h3>
+                <ul class="component-list">
+                    <li>Announcement</li>
+                    <li>Headset</li>
+                    <li>Display</li>
+                    <li>Illumination</li>
+                </ul>
+            </div>
+
+            <div class="category-card">
+                <h3><span class="icon">🔌</span> System</h3>
+                <ul class="component-list">
+                    <li>PowerManager</li>
+                    <li>ProximitySession</li>
+                    <li>Keyboard</li>
+                    <li>Keypad</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Component Details -->
+        <div class="component-details">
+            <!-- Base Component -->
+            <div class="detail-section">
+                <h2>Base Component Class</h2>
+                <p>All components inherit from the base <code>Component</code> class, providing common functionality:</p>
+                
+                <pre><code class="language-typescript">// Common component methods
+component.enable();     // Enable the component
+component.disable();    // Disable the component
+component.query();      // Query component status
+component.cancel();     // Cancel current operation
+
+// Component properties
+component.id           // Unique component identifier
+component.meta         // Component metadata
+component.status       // Current status (READY, UNAVAILABLE, ERROR, etc.)
+
+// Event handling
+component.on('statusChange', (status) => {
+    console.log(`Component status: ${status}`);
+});
+
+component.on('error', (error) => {
+    console.error(`Component error: ${error.message}`);
+});</code></pre>
+            </div>
+
+            <!-- Printer Components -->
+            <div class="detail-section">
+                <h2>🖨️ Printer Components</h2>
+                <p>Printers support various output formats including raw data, images, and structured documents.</p>
+
+                <h3>BoardingPassPrinter</h3>
+                <pre><code class="language-typescript">const bpp = cuss2.boardingPassPrinter;
+
+// Print raw data
+await bpp.printRaw(base64Data);
+
+// Print boarding pass template
+await bpp.printBoardingPass({
+    passengerName: "SMITH/JOHN",
+    flight: "AA123",
+    seat: "12A",
+    gate: "B42",
+    boardingTime: "10:30"
+});
+
+// Printer with feeder control
+if (bpp.feeder) {
+    await bpp.feeder.setup({ mediaSize: "BP_2x6" });
+    await bpp.feeder.takeMedia();
+}
+
+// Handle print events
+bpp.on('printComplete', () => {
+    console.log('Boarding pass printed successfully');
+});
+
+bpp.on('paperOut', () => {
+    console.error('Printer out of paper');
+});</code></pre>
+
+                <h3>BagTagPrinter</h3>
+                <pre><code class="language-typescript">const btp = cuss2.bagTagPrinter;
+
+// Print bag tag with airline data
+await btp.printRaw(iataFormattedData);
+
+// Query printer status
+const status = await btp.query();
+if (status === ComponentStatus.READY) {
+    await btp.printBagTag({
+        tagNumber: "AA123456789",
+        destination: "LAX",
+        routing: ["DFW", "LAX"],
+        passenger: "SMITH/J"
+    });
+}
+
+// Dispenser control for tag output
+if (btp.dispenser) {
+    await btp.dispenser.present();  // Present tag to passenger
+    await btp.dispenser.retract();  // Retract if not taken
+}</code></pre>
+            </div>
+
+            <!-- Data Reader Components -->
+            <div class="detail-section">
+                <h2>📊 Data Reader Components</h2>
+                <p>Components that read various types of data from documents, cards, and biometric sources.</p>
+
+                <h3>BarcodeReader</h3>
+                <pre><code class="language-typescript">const barcode = cuss2.barcodeReader;
+
+// Enable and start reading
+await barcode.enable();
+
+// Handle barcode data
+barcode.on('data', (scanData) => {
+    console.log('Barcode scanned:', scanData.value);
+    console.log('Barcode type:', scanData.symbology);
+    
+    // Process based on type
+    if (scanData.symbology === 'PDF417') {
+        processBoardingPass(scanData.value);
+    }
+});
+
+// Multiple barcode types
+barcode.on('dataList', (barcodes) => {
+    barcodes.forEach(scan => {
+        console.log(`Found ${scan.symbology}: ${scan.value}`);
+    });
+});</code></pre>
+
+                <h3>PassportReader</h3>
+                <pre><code class="language-typescript">const passport = cuss2.passportReader;
+
+// Enable with specific settings
+await passport.enable();
+
+// Read passport data
+passport.on('data', (passportData) => {
+    console.log('Document Number:', passportData.documentNumber);
+    console.log('Name:', passportData.surname, passportData.givenNames);
+    console.log('Nationality:', passportData.nationality);
+    console.log('Expiry:', passportData.expiryDate);
+    
+    // Verify MRZ checksum
+    if (passportData.mrzValid) {
+        console.log('Document verified');
+    }
+});
+
+// Handle chip reading
+passport.on('chipData', (chipData) => {
+    console.log('Biometric data available');
+    // Process facial image, fingerprints, etc.
+});</code></pre>
+            </div>
+
+            <!-- Payment Components -->
+            <div class="detail-section">
+                <h2>💳 Payment Components</h2>
+                <p>Handle various payment methods including cards, cash, and coins.</p>
+
+                <h3>PaymentDevice</h3>
+                <pre><code class="language-typescript">const payment = cuss2.paymentDevice;
+
+// Initialize payment for amount
+await payment.startTransaction({
+    amount: 125.50,
+    currency: "USD",
+    type: "PURCHASE"
+});
+
+// Handle payment events
+payment.on('cardInserted', () => {
+    console.log('Processing card...');
+});
+
+payment.on('approved', (transaction) => {
+    console.log('Payment approved:', transaction.authCode);
+    await payment.printReceipt();
+});
+
+payment.on('declined', (reason) => {
+    console.error('Payment declined:', reason);
+});
+
+// Cancel transaction if needed
+await payment.cancel();</code></pre>
+
+                <h3>CashAcceptor</h3>
+                <pre><code class="language-typescript">const cash = cuss2.cashAcceptor;
+
+// Enable cash acceptance
+await cash.enable();
+await cash.startAccepting(100.00); // Accept up to $100
+
+// Track inserted bills
+cash.on('billInserted', (bill) => {
+    console.log(`Inserted: $${bill.value}`);
+    totalInserted += bill.value;
+});
+
+// Complete transaction
+cash.on('complete', (total) => {
+    console.log(`Total cash received: $${total}`);
+});</code></pre>
+            </div>
+
+            <!-- Measurement Components -->
+            <div class="detail-section">
+                <h2>⚖️ Measurement Components</h2>
+                <p>Components for weighing baggage and measuring dimensions.</p>
+
+                <h3>Scale</h3>
+                <pre><code class="language-typescript">const scale = cuss2.scale;
+
+// Enable scale
+await scale.enable();
+
+// Get current weight
+scale.on('weight', (data) => {
+    console.log(`Weight: ${data.weight} ${data.unit}`);
+    
+    // Check if stable
+    if (data.stable) {
+        console.log('Weight is stable');
+        recordBaggageWeight(data.weight);
+    }
+});
+
+// Handle overweight
+scale.on('overweight', () => {
+    console.warn('Baggage exceeds maximum weight');
+    showOverweightFeeDialog();
+});
+
+// Zero/tare the scale
+await scale.zero();</code></pre>
+            </div>
+
+            <!-- System Components -->
+            <div class="detail-section">
+                <h2>🔌 System Components</h2>
+                <p>Core system components for power, proximity, and input management.</p>
+
+                <h3>ProximitySession</h3>
+                <pre><code class="language-typescript">const proximity = cuss2.proximitySession;
+
+// Enable proximity detection
+await proximity.enable();
+
+// Detect passenger presence
+proximity.on('sessionStarted', () => {
+    console.log('Passenger detected');
+    startKioskSession();
+});
+
+proximity.on('sessionEnded', () => {
+    console.log('Passenger left');
+    resetKiosk();
+});
+
+// Set detection range
+await proximity.configure({
+    range: 'NEAR',  // NEAR, MEDIUM, FAR
+    timeout: 30000   // Auto-end after 30 seconds
+});</code></pre>
+
+                <h3>Announcement</h3>
+                <pre><code class="language-typescript">const announcement = cuss2.announcement;
+
+// Play text-to-speech
+await announcement.play({
+    text: "Please scan your boarding pass",
+    language: "en-US",
+    volume: 80
+});
+
+// Play audio file
+await announcement.playAudio({
+    url: "https://airline.com/sounds/welcome.mp3",
+    volume: 70
+});
+
+// Handle playback events
+announcement.on('complete', () => {
+    console.log('Announcement finished');
+});
+
+// Stop current announcement
+await announcement.stop();</code></pre>
+            </div>
+
+            <!-- Component Status Management -->
+            <div class="detail-section">
+                <h2>Component Status Management</h2>
+                <p>All components report their status and can be monitored for availability:</p>
+
+                <pre><code class="language-typescript">// Monitor all components
+cuss2.on('componentStatusChange', (event) => {
+    console.log(`${event.componentId}: ${event.status}`);
+    
+    // Update UI based on status
+    switch(event.status) {
+        case ComponentStatus.READY:
+            enableFeature(event.componentId);
+            break;
+        case ComponentStatus.UNAVAILABLE:
+            disableFeature(event.componentId);
+            break;
+        case ComponentStatus.ERROR:
+            showErrorMessage(event.componentId, event.error);
+            break;
+    }
+});
+
+// Check specific component availability
+if (cuss2.boardingPassPrinter?.status === ComponentStatus.READY) {
+    showPrintOption();
+}
+
+// Wait for component to be ready
+async function waitForComponent(component) {
+    return new Promise((resolve) => {
+        if (component.status === ComponentStatus.READY) {
+            resolve();
+        } else {
+            component.once('statusChange', (status) => {
+                if (status === ComponentStatus.READY) {
+                    resolve();
+                }
+            });
+        }
+    });
+}</code></pre>
+            </div>
+
+            <!-- Events and Error Handling -->
+            <div class="detail-section">
+                <h2>Events and Error Handling</h2>
+                <p>Comprehensive event system for monitoring component state and handling errors:</p>
+
+                <pre><code class="language-typescript">// Component-specific events
+component.on('statusChange', handler);
+component.on('data', handler);
+component.on('error', handler);
+
+// Global component events
+cuss2.on('componentEnabled', ({ componentId }) => {
+    console.log(`${componentId} enabled`);
+});
+
+cuss2.on('componentDisabled', ({ componentId }) => {
+    console.log(`${componentId} disabled`);
+});
+
+// Error handling patterns
+try {
+    await component.enable();
+} catch (error) {
+    if (error.code === 'DEVICE_OFFLINE') {
+        // Handle offline device
+        showMaintenanceMessage();
+    } else if (error.code === 'PERMISSION_DENIED') {
+        // Handle permission issues
+        requestPermission();
+    } else {
+        // Generic error handling
+        console.error('Component error:', error);
+    }
+}
+
+// Retry logic for transient failures
+async function enableWithRetry(component, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            await component.enable();
+            return;
+        } catch (error) {
+            console.warn(`Attempt ${i + 1} failed:`, error);
+            if (i === maxRetries - 1) throw error;
+            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
+        }
+    }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Elevation AI - All rights reserved • 
+                <a href="https://github.com/elevationai/cuss2-ts" style="color: var(--primary-cyan); text-decoration: none;">GitHub</a> • 
+                <a href="https://jsr.io/@cuss/cuss2-ts" style="color: var(--primary-cyan); text-decoration: none;">JSR Package</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Prism.js for Syntax Highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+</body>
+</html>

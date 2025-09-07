@@ -1,416 +1,823 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CUSS2-ts | Modern TypeScript SDK for Airline Kiosks</title>
+    <title>CUSS2.ts Documentation - TypeScript SDK for CUSS2 Platform</title>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-        color: #e0e0e0;
-        min-height: 100vh;
-        line-height: 1.6;
-      }
-
-      .header {
-        background: rgba(15, 15, 30, 0.95);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(100, 255, 218, 0.2);
-        padding: 20px 0;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-      }
-
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-      }
-
-      .hero {
-        padding: 80px 0;
-        text-align: center;
-      }
-
-      .hero h1 {
-        font-size: 3.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #64ffda, #48cae4);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 20px;
-        animation: glow 2s ease-in-out infinite alternate;
-      }
-
-      @keyframes glow {
-        from {
-          filter: drop-shadow(0 0 20px rgba(100, 255, 218, 0.4));
+        :root {
+            --primary-cyan: #64ffda;
+            --secondary-blue: #48cae4;
+            --dark-navy: #0f0f1e;
+            --dark-purple: #1a1a2e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --error-red: #ff6464;
+            --warning-orange: #ffc864;
+            --success-green: #64ff8c;
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
-        to {
-          filter: drop-shadow(0 0 30px rgba(72, 202, 228, 0.6));
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      }
 
-      .hero .subtitle {
-        font-size: 1.3rem;
-        color: #a0a0a0;
-        margin-bottom: 40px;
-      }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--dark-navy) 0%, var(--dark-purple) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
 
-      .quick-start {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        margin-bottom: 60px;
-      }
+        /* Navigation */
+        nav {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
 
-      .quick-start a {
-        padding: 12px 30px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-      .btn-primary {
-        background: linear-gradient(135deg, #64ffda, #48cae4);
-        color: #0f0f1e;
-      }
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
-      }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
 
-      .btn-secondary {
-        border: 2px solid #64ffda;
-        color: #64ffda;
-        background: transparent;
-      }
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
 
-      .btn-secondary:hover {
-        background: rgba(100, 255, 218, 0.1);
-        transform: translateY(-2px);
-      }
+        .nav-links a:hover {
+            color: var(--primary-cyan);
+        }
 
-      .examples-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 30px;
-        margin: 60px 0;
-      }
+        .nav-links a.active {
+            color: var(--primary-cyan);
+            border-bottom: 2px solid var(--primary-cyan);
+            padding-bottom: 2px;
+        }
 
-      .example-card {
-        background: rgba(26, 26, 46, 0.6);
-        border: 1px solid rgba(100, 255, 218, 0.2);
-        border-radius: 12px;
-        padding: 30px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        text-decoration: none;
-        color: inherit;
-        display: block;
-        position: relative;
-        overflow: hidden;
-      }
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 6rem 2rem;
+            text-align: center;
+            background: radial-gradient(circle at center, rgba(100, 255, 218, 0.1) 0%, transparent 70%);
+        }
 
-      .example-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.1), transparent);
-        transition: left 0.5s ease;
-      }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--secondary-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-      .example-card:hover::before {
-        left: 100%;
-      }
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
 
-      .example-card:hover {
-        transform: translateY(-5px);
-        border-color: #64ffda;
-        box-shadow: 0 10px 40px rgba(100, 255, 218, 0.2);
-      }
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
 
-      .example-card h3 {
-        color: #64ffda;
-        margin-bottom: 15px;
-        font-size: 1.4rem;
-      }
+        .btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
 
-      .example-card p {
-        color: #b0b0b0;
-        line-height: 1.6;
-      }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-cyan), var(--secondary-blue));
+            color: var(--dark-navy);
+        }
 
-      .example-card .tag {
-        display: inline-block;
-        background: rgba(100, 255, 218, 0.1);
-        color: #64ffda;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        margin-top: 15px;
-      }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+        }
 
-      .code-section {
-        background: rgba(15, 15, 30, 0.6);
-        border-radius: 12px;
-        padding: 40px;
-        margin: 60px 0;
-        border: 1px solid rgba(100, 255, 218, 0.1);
-      }
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-cyan);
+            border: 2px solid var(--primary-cyan);
+        }
 
-      .code-section h2 {
-        color: #64ffda;
-        margin-bottom: 30px;
-        font-size: 2rem;
-      }
+        .btn-secondary:hover {
+            background: rgba(100, 255, 218, 0.1);
+        }
 
-      .code-tabs {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        border-bottom: 2px solid rgba(100, 255, 218, 0.2);
-      }
-
-      .code-tab {
-        padding: 10px 20px;
-        background: none;
-        border: none;
-        color: #a0a0a0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 1rem;
-      }
-
-      .code-tab.active {
-        color: #64ffda;
-        border-bottom: 2px solid #64ffda;
-        margin-bottom: -2px;
-      }
-
-      .code-block {
-        background: #0a0a14;
-        border-radius: 8px;
-        padding: 20px;
-        overflow-x: auto;
-        display: none;
-      }
-
-      .code-block.active {
-        display: block;
-      }
-
-      .code-block pre {
-        color: #e0e0e0;
-        font-family: "Courier New", monospace;
-        font-size: 0.95rem;
-      }
-
-      .features {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 30px;
-        margin: 60px 0;
-      }
-
-      @media (max-width: 768px) {
+        /* Features Grid */
         .features {
-          grid-template-columns: 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
         }
-      }
 
-      .feature {
-        text-align: center;
-      }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
 
-      .feature-icon {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto 20px;
-        background: linear-gradient(135deg, #64ffda, #48cae4);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-      }
+        .feature-card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
 
-      .feature h3 {
-        color: #64ffda;
-        margin-bottom: 10px;
-      }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-cyan);
+        }
 
-      .feature p {
-        color: #a0a0a0;
-      }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
 
-      .footer {
-        border-top: 1px solid rgba(100, 255, 218, 0.2);
-        padding: 40px 0;
-        margin-top: 100px;
-        text-align: center;
-        color: #a0a0a0;
-      }
+        .feature-card h3 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+        }
 
-      .footer a {
-        color: #64ffda;
-        text-decoration: none;
-      }
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
 
-      .footer a:hover {
-        text-decoration: underline;
-      }
+        /* Quick Start Section */
+        .quick-start {
+            background: rgba(26, 26, 46, 0.4);
+            padding: 4rem 0;
+            margin: 4rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            color: var(--primary-cyan);
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .code-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .code-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .code-tab.active {
+            color: var(--primary-cyan);
+            border-bottom: 2px solid var(--primary-cyan);
+            margin-bottom: -2px;
+        }
+
+        .code-block {
+            background: #1e1e2e;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .code-block pre code {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+
+        /* VS Code Dark+ Theme Colors */
+        .language-javascript .comment,
+        .language-typescript .comment {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        .language-javascript .keyword,
+        .language-typescript .keyword {
+            color: #c586c0;
+        }
+
+        .language-javascript .string,
+        .language-typescript .string {
+            color: #ce9178;
+        }
+
+        .language-javascript .function,
+        .language-typescript .function {
+            color: #dcdcaa;
+        }
+
+        .language-javascript .number,
+        .language-typescript .number {
+            color: #b5cea8;
+        }
+
+        .language-javascript .operator,
+        .language-typescript .operator {
+            color: #d4d4d4;
+        }
+
+        .language-javascript .punctuation,
+        .language-typescript .punctuation {
+            color: #d4d4d4;
+        }
+
+        .language-javascript .class-name,
+        .language-typescript .class-name,
+        .language-javascript .constant,
+        .language-typescript .constant {
+            color: #4ec9b0;
+        }
+
+        .language-javascript .parameter,
+        .language-typescript .parameter {
+            color: #9cdcfe;
+        }
+
+        .language-javascript .boolean,
+        .language-typescript .boolean,
+        .language-javascript .null,
+        .language-typescript .null {
+            color: #569cd6;
+        }
+
+        .language-javascript .tag,
+        .language-typescript .tag,
+        .language-html .tag {
+            color: #569cd6;
+        }
+
+        .language-html .attr-name {
+            color: #9cdcfe;
+        }
+
+        .language-html .attr-value {
+            color: #ce9178;
+        }
+
+        .language-javascript .async,
+        .language-typescript .async,
+        .language-javascript .await,
+        .language-typescript .await {
+            color: #c586c0;
+        }
+
+        .code-content {
+            display: none;
+        }
+
+        .code-content.active {
+            display: block;
+        }
+
+        /* Component Grid */
+        .components-section {
+            padding: 4rem 0;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .component-badge {
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .component-badge:hover {
+            background: rgba(100, 255, 218, 0.1);
+            border-color: var(--primary-cyan);
+            transform: scale(1.05);
+        }
+
+        .component-badge .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .component-badge .name {
+            font-weight: 600;
+            color: var(--primary-cyan);
+            font-size: 0.9rem;
+        }
+
+        /* State Flow Diagram */
+        .state-flow {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .state-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .state-node {
+            background: var(--dark-navy);
+            border: 2px solid var(--primary-cyan);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .state-arrow {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+        }
+
+        /* API Reference Cards */
+        .api-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .api-card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .api-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-cyan);
+        }
+
+        .api-card h3 {
+            color: var(--primary-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .api-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(26, 26, 46, 0.95);
+            border-top: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 3rem 0;
+            margin-top: 6rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary-cyan);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(100, 255, 218, 0.1);
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <header class="header">
-      <div class="container">
-        <nav style="display: flex; justify-content: space-between; align-items: center">
-          <div style="font-size: 1.5rem; font-weight: bold; color: #64ffda">CUSS2-ts</div>
-          <div style="display: flex; gap: 30px">
-            <a href="https://github.com/elevationai/cuss2-ts" style="color: #e0e0e0; text-decoration: none">GitHub</a>
-          </div>
-        </nav>
-      </div>
-    </header>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                <span>🛫</span> CUSS2.ts
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="api-reference.html">API Reference</a></li>
+                <li><a href="components.html">Components</a></li>
+                <li><a href="examples/">Examples</a></li>
+                <li><a href="https://github.com/elevationai/cuss2-ts">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
 
-    <div class="container">
-      <section class="hero">
-        <h1>CUSS2-ts</h1>
-        <p class="subtitle">Open Source TypeScript SDK for Airline Self-Service Kiosks</p>
-        <div class="quick-start">
-          <a href="#quickstart" class="btn-primary">Get Started</a>
-          <a href="https://github.com/elevationai/cuss2-ts" class="btn-secondary">View on GitHub</a>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>CUSS2.ts</h1>
+        <p class="hero-subtitle">TypeScript SDK for Common Use Self-Service v2 Platform</p>
+        <div class="hero-buttons">
+            <a href="examples/index.html" class="btn btn-primary">View Examples</a>
+            <a href="api-reference.html" class="btn btn-secondary">API Documentation</a>
         </div>
-      </section>
+    </section>
 
-      <section class="features">
-        <div class="feature">
-          <div class="feature-icon">🚀</div>
-          <h3>TypeScript First</h3>
-          <p>Fully typed interfaces for all CUSS2 components and responses</p>
+    <!-- Features -->
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>TypeScript First</h3>
+                <p>Built from the ground up with TypeScript, providing complete type safety and excellent IDE support for all CUSS2 operations.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔌</div>
+                <h3>30+ Components</h3>
+                <p>Full support for all CUSS2 peripheral devices including printers, scanners, card readers, scales, and baggage handling systems.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Auto Reconnection</h3>
+                <p>Built-in WebSocket management with automatic reconnection, OAuth token refresh, and exponential backoff strategies.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📡</div>
+                <h3>Event-Driven</h3>
+                <p>Reactive architecture with typed events for state changes, component updates, and real-time device data streams.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>State Management</h3>
+                <p>Automatic state synchronization based on required component availability with built-in state transition validation.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🦕</div>
+                <h3>Deno Native</h3>
+                <p>Designed for the modern Deno runtime with ESM modules, while providing browser bundles for web applications.</p>
+            </div>
         </div>
-        <div class="feature">
-          <div class="feature-icon">🔌</div>
-          <h3>WebSocket Ready</h3>
-          <p>Automatic reconnection and connection lifecycle management</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">🎯</div>
-          <h3>30+ Components</h3>
-          <p>Support for printers, scanners, scales, and more peripherals</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">⚡</div>
-          <h3>Event Driven</h3>
-          <p>Subscribe to state changes and component updates in real-time</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">🔓</div>
-          <h3>Open Source</h3>
-          <p>MIT licensed with active community support and contributions</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">🤝</div>
-          <h3>Community Driven</h3>
-          <p>Built with developers, for developers. PRs welcome!</p>
-        </div>
-      </section>
+    </section>
 
-      <section id="examples">
-        <h2 style="text-align: center; color: #64ffda; margin-bottom: 40px; font-size: 2.5rem">Interactive Examples</h2>
-        <div class="examples-grid">
-          <a href="examples/basic-connection-browser.html" class="example-card">
-            <h3>Basic Connection</h3>
-            <p>
-              Learn how to establish a connection to the CUSS2 platform, handle authentication, and monitor connection
-              events.
-            </p>
-            <span class="tag">Beginner</span>
-          </a>
+    <!-- Quick Start -->
+    <section class="quick-start">
+        <div class="container">
+            <h2 class="section-title">Quick Start</h2>
+            
+            <div class="code-tabs">
+                <button class="code-tab active" onclick="showTab('browser')">Browser</button>
+                <button class="code-tab" onclick="showTab('deno')">Deno</button>
+                <button class="code-tab" onclick="showTab('node')">Node.js</button>
+            </div>
 
-          <a href="examples/cdn.html" class="example-card">
-            <h3>ES Module Import</h3>
-            <p>Modern JavaScript module usage with import statements. Perfect for contemporary web applications.</p>
-            <span class="tag">ES6+</span>
-          </a>
+            <div id="browser" class="code-content active">
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Import from CDN
+import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
 
-          <a href="examples/tester.html" class="example-card">
-            <h3>Interactive Tester</h3>
-            <p>Comprehensive testing interface for the CUSS2 platform with full component interaction capabilities.</p>
-            <span class="tag">Advanced</span>
-          </a>
-        </div>
-      </section>
+// Connect to CUSS2 platform
+const cuss2 = Cuss2.connect(
+  "your-client-id",
+  "your-client-secret",
+  "wss://platform.example.com" // Optional custom URL
+);
 
-      <section id="quickstart" class="code-section">
-        <h2>Quick Start</h2>
-        <div class="code-tabs">
-          <button class="code-tab active" onclick="showTab('browser')">Browser</button>
-          <button class="code-tab" onclick="showTab('deno')">Deno</button>
-          <button class="code-tab" onclick="showTab('npm')">NPM</button>
-        </div>
-        <div id="browser" class="code-block active">
-          <pre>
-&lt;script type="module"&gt;
-  import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
+// Wait for connection
+await cuss2.connected;
+console.log("Connected! State:", cuss2.state);
 
-  const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET");
-  await cuss2.connected;
-  console.log("Connected to CUSS2 platform!");
-&lt;/script&gt;</pre>
-        </div>
-        <div id="deno" class="code-block">
-          <pre>
+// Work with components
+if (cuss2.barcodeReader) {
+  await cuss2.barcodeReader.enable();
+  cuss2.barcodeReader.on("data", (data) => {
+    console.log("Barcode:", data.rawData);
+  });
+}</code></pre>
+                </div>
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(100, 255, 218, 0.1); border: 1px solid rgba(100, 255, 218, 0.2); border-radius: 8px;">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                        <strong style="color: var(--primary-cyan);">Note:</strong> Use this code inside a <code>&lt;script type="module"&gt;</code> tag in your HTML file.
+                    </p>
+                </div>
+            </div>
+
+            <div id="deno" class="code-content">
+                <div class="code-block">
+                    <pre><code class="language-typescript">// Import from JSR
 import { Cuss2 } from "jsr:@cuss/cuss2-ts@latest";
 
-const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET");
+// Connect with full configuration
+const cuss2 = Cuss2.connect(
+  "client-id",
+  "client-secret",
+  "wss://cuss-platform.example.com",
+  "device-id",
+  "https://oauth.example.com/token"
+);
+
+// Wait for connection
 await cuss2.connected;
-console.log("Connected to CUSS2 platform!");</pre>
-        </div>
-        <div id="npm" class="code-block">
-          <pre>
-# Install via npx with JSR
-npx jsr add @cuss/cuss2-ts
 
-# Then in your code:
+// Request state transitions
+await cuss2.requestInitializeState();
+await cuss2.requestAvailableState();
+
+// Enable components
+if (cuss2.boardingPassPrinter) {
+  await cuss2.boardingPassPrinter.enable();
+  await cuss2.boardingPassPrinter.send(printData);
+}</code></pre>
+                </div>
+            </div>
+
+            <div id="node" class="code-content">
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Install from JSR for Node.js
+// npx jsr add @cuss/cuss2-ts
+
 import { Cuss2 } from "@cuss/cuss2-ts";
-const cuss2 = Cuss2.connect("CLIENT_ID", "SECRET", "wss://your-cuss-server");</pre>
-        </div>
-      </section>
-    </div>
 
-    <footer class="footer">
-      <div class="container">
-        <p>
-          © 2024 Elevation.AI | Open Source (MIT License) | <a href="https://github.com/elevationai/cuss2-ts">GitHub</a>
-          | <a href="https://jsr.io/@cuss/cuss2-ts">JSR Package</a> | <a
-            href="https://github.com/elevationai/cuss2-ts/blob/master/LICENSE"
-          >License</a>
-        </p>
-      </div>
+const cuss2 = Cuss2.connect(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET
+);
+
+cuss2.connected.then(async () => {
+  console.log("Environment:", cuss2.environment);
+  console.log("Components:", Object.keys(cuss2.components));
+  
+  // Listen for state changes
+  cuss2.on("stateChange", (change) => {
+    console.log(`State: ${change.previous} → ${change.current}`);
+  });
+});</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- State Management -->
+    <section class="container">
+        <h2 class="section-title">Application State Flow</h2>
+        <div class="state-flow">
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">
+                CUSS2 applications transition through well-defined states following strict rules
+            </p>
+            <div class="state-diagram">
+                <div class="state-node">STOPPED</div>
+                <span class="state-arrow">→</span>
+                <div class="state-node">INITIALIZE</div>
+                <span class="state-arrow">→</span>
+                <div class="state-node">UNAVAILABLE</div>
+                <span class="state-arrow">⇄</span>
+                <div class="state-node">AVAILABLE</div>
+                <span class="state-arrow">⇄</span>
+                <div class="state-node">ACTIVE</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported Components -->
+    <section class="components-section container">
+        <h2 class="section-title">Supported Components</h2>
+        <div class="components-grid">
+            <div class="component-badge">
+                <div class="icon">🏷️</div>
+                <div class="name">BagTagPrinter</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">🎫</div>
+                <div class="name">BoardingPassPrinter</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">📊</div>
+                <div class="name">BarcodeReader</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">💳</div>
+                <div class="name">CardReader</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">📄</div>
+                <div class="name">DocumentReader</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">📡</div>
+                <div class="name">RFID</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">⚖️</div>
+                <div class="name">Scale</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">🎤</div>
+                <div class="name">Announcement</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">💡</div>
+                <div class="name">Illumination</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">📷</div>
+                <div class="name">Camera</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">🔢</div>
+                <div class="name">Keypad</div>
+            </div>
+            <div class="component-badge">
+                <div class="icon">👆</div>
+                <div class="name">Biometric</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Reference Preview -->
+    <section class="container">
+        <h2 class="section-title">API Reference</h2>
+        <div class="api-cards">
+            <a href="api-reference.html#cuss2" class="api-card">
+                <h3>Cuss2 Class</h3>
+                <p>Main SDK class for platform connection, state management, and component orchestration.</p>
+            </a>
+            <a href="api-reference.html#connection" class="api-card">
+                <h3>Connection</h3>
+                <p>WebSocket and OAuth management with automatic reconnection and token refresh.</p>
+            </a>
+            <a href="api-reference.html#components" class="api-card">
+                <h3>Components</h3>
+                <p>Base component class and specialized implementations for all CUSS2 peripherals.</p>
+            </a>
+            <a href="api-reference.html#events" class="api-card">
+                <h3>Events</h3>
+                <p>Typed event system for platform notifications, state changes, and component data.</p>
+            </a>
+            <a href="api-reference.html#types" class="api-card">
+                <h3>Types & Models</h3>
+                <p>Complete TypeScript definitions for all CUSS2 messages, states, and data structures.</p>
+            </a>
+            <a href="api-reference.html#errors" class="api-card">
+                <h3>Error Handling</h3>
+                <p>Comprehensive error codes and handling strategies for platform and component errors.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Elevation AI - All rights reserved • 
+                <a href="https://github.com/elevationai/cuss2-ts">GitHub</a> • 
+                <a href="https://jsr.io/@cuss/cuss2-ts">JSR Package</a>
+            </p>
+        </div>
     </footer>
 
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-vsc-dark-plus.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+
     <script>
-      function showTab(tabName) {
-        document.querySelectorAll(".code-tab").forEach((tab) => tab.classList.remove("active"));
-        document.querySelectorAll(".code-block").forEach((block) => block.classList.remove("active"));
-        event.target.classList.add("active");
-        document.getElementById(tabName).classList.add("active");
-      }
+        function showTab(tabName) {
+            // Hide all code contents
+            document.querySelectorAll('.code-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.code-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Mark clicked tab as active
+            event.target.classList.add('active');
+            
+            // Re-highlight syntax for newly visible code
+            Prism.highlightAll();
+        }
+        
+        // Initial syntax highlighting
+        document.addEventListener('DOMContentLoaded', () => {
+            Prism.highlightAll();
+        });
     </script>
-  </body>
+</body>
 </html>

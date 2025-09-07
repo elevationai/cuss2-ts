@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examples - CUSS2.ts Documentation</title>
+    <style>
+        :root {
+            --primary-cyan: #64ffda;
+            --secondary-blue: #48cae4;
+            --dark-navy: #0f0f1e;
+            --dark-purple: #1a1a2e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --error-red: #ff6464;
+            --warning-orange: #ffc864;
+            --success-green: #64ff8c;
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--dark-navy) 0%, var(--dark-purple) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-cyan);
+        }
+
+        .nav-links a.active {
+            color: var(--primary-cyan);
+            border-bottom: 2px solid var(--primary-cyan);
+            padding-bottom: 2px;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 100px auto 0;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Examples Grid */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .example-card {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-cyan);
+        }
+
+        .example-card h3 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .example-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .example-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            background: rgba(100, 255, 218, 0.1);
+            color: var(--primary-cyan);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(100, 255, 218, 0.3);
+        }
+
+        /* Code Preview */
+        .code-preview {
+            background: var(--dark-navy);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: #d4d4d4;
+            overflow-x: auto;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(26, 26, 46, 0.95);
+            border-top: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 3rem 0;
+            margin-top: 6rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="../index.html" class="nav-brand">
+                <span>🛫</span> CUSS2.ts
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../api-reference.html">API Reference</a></li>
+                <li><a href="../components.html">Components</a></li>
+                <li><a href="index.html" class="active">Examples</a></li>
+                <li><a href="https://github.com/elevationai/cuss2-ts">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-header">
+            <h1>Examples</h1>
+            <p>Interactive examples and code samples for the CUSS2.ts SDK</p>
+        </div>
+
+        <div class="examples-grid">
+            <!-- Interactive Tester -->
+            <a href="tester.html" class="example-card">
+                <h3>🧪 Interactive Tester</h3>
+                <p>Full-featured testing interface for the CUSS2 platform with real-time component interaction, state management, and event logging.</p>
+                <div class="example-tags">
+                    <span class="tag">Interactive</span>
+                    <span class="tag">All Components</span>
+                    <span class="tag">State Management</span>
+                </div>
+            </a>
+
+            <!-- Basic Connection Browser -->
+            <a href="basic-connection-browser.html" class="example-card">
+                <h3>🌐 Basic Browser Connection</h3>
+                <p>Simple example showing how to connect to a CUSS2 platform from a web browser with minimal setup.</p>
+                <div class="code-preview">
+const cuss2 = Cuss2.connect(
+  "client-id",
+  "client-secret"
+);
+await cuss2.connected;</div>
+                <div class="example-tags">
+                    <span class="tag">Browser</span>
+                    <span class="tag">Getting Started</span>
+                </div>
+            </a>
+
+            <!-- CDN Example -->
+            <a href="cdn.html" class="example-card">
+                <h3>📦 CDN Integration</h3>
+                <p>Load CUSS2.ts directly from a CDN without any build tools. Perfect for quick prototypes and testing.</p>
+                <div class="code-preview">
+&lt;script type="module"&gt;
+  import { Cuss2 } from 
+    "https://esm.sh/jsr/@cuss/cuss2-ts";
+&lt;/script&gt;</div>
+                <div class="example-tags">
+                    <span class="tag">CDN</span>
+                    <span class="tag">No Build</span>
+                    <span class="tag">Quick Start</span>
+                </div>
+            </a>
+
+            <!-- TypeScript Example -->
+            <a href="basic-connection.ts" class="example-card">
+                <h3>📝 TypeScript Connection</h3>
+                <p>TypeScript example showing proper type usage, async/await patterns, and error handling.</p>
+                <div class="code-preview">
+import { Cuss2 } from "jsr:@cuss/cuss2-ts";
+import type { Component } from "jsr:@cuss/cuss2-ts";</div>
+                <div class="example-tags">
+                    <span class="tag">TypeScript</span>
+                    <span class="tag">Deno</span>
+                    <span class="tag">Type Safety</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Additional Examples Section -->
+        <section style="margin-top: 4rem;">
+            <h2 style="color: var(--primary-cyan); margin-bottom: 2rem; text-align: center;">More Examples Coming Soon</h2>
+            <div class="examples-grid">
+                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
+                    <h3>🖨️ Printer Operations</h3>
+                    <p>Working with boarding pass and bag tag printers, including print data formatting and status handling.</p>
+                    <div class="example-tags">
+                        <span class="tag">Coming Soon</span>
+                    </div>
+                </div>
+
+                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
+                    <h3>📊 Barcode & Card Readers</h3>
+                    <p>Handling data from barcode scanners and card readers with proper event management.</p>
+                    <div class="example-tags">
+                        <span class="tag">Coming Soon</span>
+                    </div>
+                </div>
+
+                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
+                    <h3>⚖️ Scale Integration</h3>
+                    <p>Reading weight data from scales and handling stability events for baggage processing.</p>
+                    <div class="example-tags">
+                        <span class="tag">Coming Soon</span>
+                    </div>
+                </div>
+
+                <div class="example-card" style="opacity: 0.6; cursor: not-allowed;">
+                    <h3>🔄 State Management</h3>
+                    <p>Advanced state transition patterns and automatic state synchronization based on component availability.</p>
+                    <div class="example-tags">
+                        <span class="tag">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Elevation AI - All rights reserved • 
+                <a href="https://github.com/elevationai/cuss2-ts" style="color: var(--primary-cyan); text-decoration: none;">GitHub</a> • 
+                <a href="https://jsr.io/@cuss/cuss2-ts" style="color: var(--primary-cyan); text-decoration: none;">JSR Package</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

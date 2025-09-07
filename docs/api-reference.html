@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - CUSS2.ts Documentation</title>
+    <style>
+        :root {
+            --primary-cyan: #64ffda;
+            --secondary-blue: #48cae4;
+            --dark-navy: #0f0f1e;
+            --dark-purple: #1a1a2e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --error-red: #ff6464;
+            --warning-orange: #ffc864;
+            --success-green: #64ff8c;
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px; /* Account for fixed header */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--dark-navy) 0%, var(--dark-purple) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-cyan);
+        }
+
+        .nav-links a.active {
+            color: var(--primary-cyan);
+            border-bottom: 2px solid var(--primary-cyan);
+            padding-bottom: 2px;
+        }
+
+        /* Layout */
+        .main-container {
+            display: flex;
+            margin-top: 60px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            left: 0;
+            top: 60px;
+            bottom: 120px; /* Account for fixed footer */
+            background: rgba(26, 26, 46, 0.95);
+            border-right: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-section h4 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-links {
+            list-style: none;
+        }
+
+        .sidebar-links li {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .sidebar-links a:hover {
+            color: var(--primary-cyan);
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        .sidebar-links a.active {
+            color: var(--primary-cyan);
+            background: rgba(100, 255, 218, 0.1);
+            border-left: 2px solid var(--primary-cyan);
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            padding-bottom: 150px; /* Space for fixed footer */
+            min-width: 0;
+        }
+
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* API Sections */
+        .api-section {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .api-section h2 {
+            color: var(--primary-cyan);
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            border-bottom: 2px solid rgba(100, 255, 218, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        .api-section h3 {
+            color: var(--secondary-blue);
+            margin: 2rem 0 1rem;
+            font-size: 1.5rem;
+        }
+
+        .api-section h4 {
+            color: var(--text-primary);
+            margin: 1.5rem 0 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        /* Method/Property Tables */
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .api-table th {
+            background: var(--dark-navy);
+            color: var(--primary-cyan);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .api-table td {
+            padding: 0.75rem;
+        }
+
+        .api-table tr:hover {
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: #1e1e2e;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .code-block pre code {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+
+        /* Inline Code - only for non-Prism code */
+        code:not([class*="language-"]) {
+            background: rgba(100, 255, 218, 0.05);
+            color: #64ffda;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Courier New", monospace;
+            font-size: 0.9em;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            font-weight: 500;
+        }
+
+        /* First column code in tables - no border, larger size */
+        .api-table td:first-child code {
+            border: none;
+            font-size: 1.2em;
+        }
+
+        /* Remove styling from async keyword */
+        .keyword.async {
+            background: none;
+            color: inherit;
+            border: none;
+            padding: 0;
+            font-weight: normal;
+        }
+
+        /* Method Signature */
+        .method-signature {
+            background: #1e1e2e;
+            border-left: 3px solid var(--primary-cyan);
+            padding: 0.5rem 1rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+        
+        .method-signature pre {
+            margin: 0;
+            background: transparent;
+            padding: 0;
+        }
+        
+        .method-signature .badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+        }
+
+        /* Parameter List */
+        .param-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .param-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .param-list .param-name {
+            color: var(--primary-cyan);
+            font-weight: 600;
+            font-family: "Courier New", monospace;
+        }
+
+        .param-list .param-type {
+            color: var(--secondary-blue);
+            font-family: "Courier New", monospace;
+            font-size: 0.9em;
+        }
+
+        .param-list .param-desc {
+            color: var(--text-secondary);
+            margin-left: 1rem;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .badge-async {
+            background: none;
+            color: inherit;
+            padding: 0;
+            font-weight: normal;
+        }
+
+        .badge-static {
+            background: rgba(72, 202, 228, 0.2);
+            color: var(--secondary-blue);
+        }
+
+        .badge-readonly {
+            background: rgba(255, 200, 100, 0.2);
+            color: var(--warning-orange);
+        }
+
+        .badge-event {
+            background: rgba(100, 255, 140, 0.2);
+            color: var(--success-green);
+        }
+
+        /* Return Type */
+        .return-type {
+            color: var(--secondary-blue);
+            font-family: "Courier New", monospace;
+            font-size: 0.9em;
+        }
+
+        /* TOC */
+        .toc {
+            background: rgba(26, 26, 46, 0.4);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc h3 {
+            color: var(--primary-cyan);
+            margin-bottom: 1rem;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .toc a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .toc a:hover {
+            color: var(--primary-cyan);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .api-table {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                <span>🛫</span> CUSS2.ts
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="api-reference.html" class="active">API Reference</a></li>
+                <li><a href="components.html">Components</a></li>
+                <li><a href="examples/">Examples</a></li>
+                <li><a href="https://github.com/elevationai/cuss2-ts">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h3>API Reference</h3>
+            
+            <div class="sidebar-section">
+                <h4>Core Classes</h4>
+                <ul class="sidebar-links">
+                    <li><a href="#cuss2" class="active">Cuss2</a></li>
+                    <li><a href="#connection">Connection</a></li>
+                    <li><a href="#component">Component</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h4>Components</h4>
+                <ul class="sidebar-links">
+                    <li><a href="#printers">Printers</a></li>
+                    <li><a href="#readers">Data Readers</a></li>
+                    <li><a href="#input">Input Devices</a></li>
+                    <li><a href="#baggage">Baggage</a></li>
+                    <li><a href="#output">Output</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h4>Types & Enums</h4>
+                <ul class="sidebar-links">
+                    <li><a href="#states">Application States</a></li>
+                    <li><a href="#errors">Error Codes</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <div class="page-header">
+                <h1>API Reference</h1>
+                <p>Complete reference documentation for the CUSS2.ts TypeScript SDK</p>
+            </div>
+
+            <!-- Cuss2 Class -->
+            <section id="cuss2" class="api-section">
+                <h2>Cuss2 Class</h2>
+                <p>Main SDK class for CUSS2 platform interaction. Manages connection, state transitions, and component orchestration.</p>
+
+                <h3>Static Methods</h3>
+
+                <h4>connect()</h4>
+                <div class="method-signature">
+                    <span class="badge badge-static">static</span>
+                    <pre><code class="language-typescript">Cuss2.connect(
+    clientId: string,
+    clientSecret: string,
+    wss?: string,
+    deviceId?: string,
+    tokenUrl?: string
+): Cuss2</code></pre>
+                </div>
+                <p>Creates and connects to a CUSS2 platform instance.</p>
+                <ul class="param-list">
+                    <li>
+                        <span class="param-name">clientId</span>
+                        <span class="param-type">string</span>
+                        <div class="param-desc">OAuth client identifier</div>
+                    </li>
+                    <li>
+                        <span class="param-name">clientSecret</span>
+                        <span class="param-type">string</span>
+                        <div class="param-desc">OAuth client secret</div>
+                    </li>
+                    <li>
+                        <span class="param-name">wss</span>
+                        <span class="param-type">string</span>
+                        <div class="param-desc">WebSocket URL (default: "ws://localhost:22222")</div>
+                    </li>
+                    <li>
+                        <span class="param-name">deviceId</span>
+                        <span class="param-type">string</span>
+                        <div class="param-desc">Device identifier (default: "00000000-0000-0000-0000-000000000000")</div>
+                    </li>
+                    <li>
+                        <span class="param-name">tokenUrl</span>
+                        <span class="param-type">string</span>
+                        <div class="param-desc">OAuth token endpoint (defaults to wss + "/oauth/token")</div>
+                    </li>
+                </ul>
+
+                <h4>Example</h4>
+                <div class="code-block">
+                    <pre><code class="language-typescript">const cuss2 = Cuss2.connect(
+    "client-id",
+    "client-secret",
+    "wss://platform.example.com",
+    "device-123",
+    "https://oauth.example.com/token"
+);
+
+await cuss2.connected;</code></pre>
+                </div>
+
+                <h3>Properties</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>state</code></td>
+                            <td><span class="return-type">ApplicationStateCodes</span></td>
+                            <td>Current application state</td>
+                        </tr>
+                        <tr>
+                            <td><code>environment</code></td>
+                            <td><span class="return-type">Environment</span></td>
+                            <td>Platform environment information</td>
+                        </tr>
+                        <tr>
+                            <td><code>components</code></td>
+                            <td><span class="return-type">Record&lt;string, Component&gt;</span></td>
+                            <td>All discovered components by ID</td>
+                        </tr>
+                        <tr>
+                            <td><code>connection</code></td>
+                            <td><span class="return-type">Connection</span></td>
+                            <td>WebSocket connection instance</td>
+                        </tr>
+                        <tr>
+                            <td><code>connected</code></td>
+                            <td><span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Resolves when connection is established</td>
+                        </tr>
+                        <tr>
+                            <td><code>multiTenant</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Multi-tenant mode status</td>
+                        </tr>
+                        <tr>
+                            <td><code>accessibleMode</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Accessibility mode status</td>
+                        </tr>
+                        <tr>
+                            <td><code>language</code></td>
+                            <td><span class="return-type">string</span></td>
+                            <td>Current language code</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>State Transition Methods</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>requestInitializeState()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Request transition to INITIALIZE state</td>
+                        </tr>
+                        <tr>
+                            <td><code>requestUnavailableState()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Request transition to UNAVAILABLE state</td>
+                        </tr>
+                        <tr>
+                            <td><code>requestAvailableState()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Request transition to AVAILABLE state</td>
+                        </tr>
+                        <tr>
+                            <td><code>requestActiveState(data)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Request transition to ACTIVE state with activation data</td>
+                        </tr>
+                        <tr>
+                            <td><code>requestStoppedState()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Request transition to STOPPED state</td>
+                        </tr>
+                        <tr>
+                            <td><code>requestReload()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Request application reload (closes connection)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Component Access Properties</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>bagTagPrinter</code></td>
+                            <td><span class="return-type">BagTagPrinter | undefined</span></td>
+                            <td>Bag tag printer component</td>
+                        </tr>
+                        <tr>
+                            <td><code>boardingPassPrinter</code></td>
+                            <td><span class="return-type">BoardingPassPrinter | undefined</span></td>
+                            <td>Boarding pass printer component</td>
+                        </tr>
+                        <tr>
+                            <td><code>documentReader</code></td>
+                            <td><span class="return-type">DocumentReader | undefined</span></td>
+                            <td>Document reader component</td>
+                        </tr>
+                        <tr>
+                            <td><code>barcodeReader</code></td>
+                            <td><span class="return-type">BarcodeReader | undefined</span></td>
+                            <td>Barcode reader component</td>
+                        </tr>
+                        <tr>
+                            <td><code>illumination</code></td>
+                            <td><span class="return-type">Illumination | undefined</span></td>
+                            <td>Illumination/lights component</td>
+                        </tr>
+                        <tr>
+                            <td><code>announcement</code></td>
+                            <td><span class="return-type">Announcement | undefined</span></td>
+                            <td>Announcement/audio component</td>
+                        </tr>
+                        <tr>
+                            <td><code>keypad</code></td>
+                            <td><span class="return-type">Keypad | undefined</span></td>
+                            <td>Keypad component</td>
+                        </tr>
+                        <tr>
+                            <td><code>cardReader</code></td>
+                            <td><span class="return-type">CardReader | undefined</span></td>
+                            <td>Card reader component</td>
+                        </tr>
+                        <tr>
+                            <td><code>biometric</code></td>
+                            <td><span class="return-type">Biometric | undefined</span></td>
+                            <td>Biometric reader component</td>
+                        </tr>
+                        <tr>
+                            <td><code>scale</code></td>
+                            <td><span class="return-type">Scale | undefined</span></td>
+                            <td>Scale component</td>
+                        </tr>
+                        <tr>
+                            <td><code>rfid</code></td>
+                            <td><span class="return-type">RFID | undefined</span></td>
+                            <td>RFID reader component</td>
+                        </tr>
+                        <tr>
+                            <td><code>headset</code></td>
+                            <td><span class="return-type">Headset | undefined</span></td>
+                            <td>Headset component</td>
+                        </tr>
+                        <tr>
+                            <td><code>camera</code></td>
+                            <td><span class="return-type">Camera | undefined</span></td>
+                            <td>Camera component</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Events</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>connected</code></td>
+                            <td><span class="return-type">Cuss2</span></td>
+                            <td>Emitted when connection is established</td>
+                        </tr>
+                        <tr>
+                            <td><code>stateChange</code></td>
+                            <td><span class="return-type">{previous: string, current: string}</span></td>
+                            <td>Emitted on state transitions</td>
+                        </tr>
+                        <tr>
+                            <td><code>activated</code></td>
+                            <td><span class="return-type">ActivationData</span></td>
+                            <td>Emitted when application becomes ACTIVE</td>
+                        </tr>
+                        <tr>
+                            <td><code>deactivated</code></td>
+                            <td><span class="return-type">string</span></td>
+                            <td>Emitted when application leaves ACTIVE state</td>
+                        </tr>
+                        <tr>
+                            <td><code>sessionTimeout</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Emitted on session timeout</td>
+                        </tr>
+                        <tr>
+                            <td><code>componentStateChange</code></td>
+                            <td><span class="return-type">Component</span></td>
+                            <td>Emitted when component state changes</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Connection Class -->
+            <section id="connection" class="api-section">
+                <h2>Connection Class</h2>
+                <p>Manages WebSocket connection and OAuth authentication with automatic reconnection and token refresh.</p>
+
+                <h3>Properties</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>isOpen</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>WebSocket connection status</td>
+                        </tr>
+                        <tr>
+                            <td><code>isAuthenticated</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>OAuth authentication status</td>
+                        </tr>
+                        <tr>
+                            <td><code>auth</code></td>
+                            <td><span class="return-type">AuthenticationData | null</span></td>
+                            <td>Current authentication data</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Methods</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>connect()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Establish WebSocket connection</td>
+                        </tr>
+                        <tr>
+                            <td><code>close()</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Close WebSocket connection</td>
+                        </tr>
+                        <tr>
+                            <td><code>send(message)</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Send message to platform</td>
+                        </tr>
+                        <tr>
+                            <td><code>request(message)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;any&gt;</span></td>
+                            <td>Send request and await response</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Events</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>connecting</code></td>
+                            <td><span class="return-type">number</span></td>
+                            <td>Connection attempt number</td>
+                        </tr>
+                        <tr>
+                            <td><code>authenticating</code></td>
+                            <td><span class="return-type">number</span></td>
+                            <td>Authentication attempt number</td>
+                        </tr>
+                        <tr>
+                            <td><code>authenticated</code></td>
+                            <td><span class="return-type">AuthenticationData</span></td>
+                            <td>Successfully authenticated</td>
+                        </tr>
+                        <tr>
+                            <td><code>open</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>WebSocket opened</td>
+                        </tr>
+                        <tr>
+                            <td><code>close</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>WebSocket closed</td>
+                        </tr>
+                        <tr>
+                            <td><code>error</code></td>
+                            <td><span class="return-type">Error</span></td>
+                            <td>Connection error occurred</td>
+                        </tr>
+                        <tr>
+                            <td><code>message</code></td>
+                            <td><span class="return-type">any</span></td>
+                            <td>Message received from platform</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Component Base Class -->
+            <section id="component" class="api-section">
+                <h2>Component Class</h2>
+                <p>Base class for all CUSS2 peripheral components. Provides common functionality for component management.</p>
+
+                <h3>Properties</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td><span class="return-type">string</span></td>
+                            <td>Unique component identifier</td>
+                        </tr>
+                        <tr>
+                            <td><code>deviceType</code></td>
+                            <td><span class="return-type">string</span></td>
+                            <td>Component device type</td>
+                        </tr>
+                        <tr>
+                            <td><code>ready</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Component ready status</td>
+                        </tr>
+                        <tr>
+                            <td><code>enabled</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Component enabled status</td>
+                        </tr>
+                        <tr>
+                            <td><code>required</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Whether component is required for operation</td>
+                        </tr>
+                        <tr>
+                            <td><code>status</code></td>
+                            <td><span class="return-type">ComponentStatus</span></td>
+                            <td>Current component status</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Methods</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>enable()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Enable the component</td>
+                        </tr>
+                        <tr>
+                            <td><code>disable()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Disable the component</td>
+                        </tr>
+                        <tr>
+                            <td><code>query()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;ComponentStatus&gt;</span></td>
+                            <td>Query component status</td>
+                        </tr>
+                        <tr>
+                            <td><code>queryUpdate()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Query and update internal status</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Events</h3>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>stateChange</code></td>
+                            <td><span class="return-type">ComponentStatus</span></td>
+                            <td>Component state changed</td>
+                        </tr>
+                        <tr>
+                            <td><code>statusChange</code></td>
+                            <td><span class="return-type">ComponentStatus</span></td>
+                            <td>Component status updated</td>
+                        </tr>
+                        <tr>
+                            <td><code>data</code></td>
+                            <td><span class="return-type">any</span></td>
+                            <td>Component data received (readers only)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Printers -->
+            <section id="printers" class="api-section">
+                <h2>Printer Components</h2>
+                <p>Components for physical document output including boarding passes, bag tags, and receipts.</p>
+
+                <h3>Printer Class (Base)</h3>
+                <p>Extends <code>Component</code> - Base class for all printer components.</p>
+
+                <h4>Properties</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>feeder</code></td>
+                            <td><span class="return-type">Feeder | undefined</span></td>
+                            <td>Paper feeder component if available</td>
+                        </tr>
+                        <tr>
+                            <td><code>dispenser</code></td>
+                            <td><span class="return-type">Dispenser | undefined</span></td>
+                            <td>Document dispenser component if available</td>
+                        </tr>
+                        <tr>
+                            <td><code>mediaPresent</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Indicates if media is present in the dispenser (read-only)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>sendITPSCommand(cmd)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;string&gt;</span></td>
+                            <td>Send ITPS command to printer</td>
+                        </tr>
+                        <tr>
+                            <td><code>getEnvironment()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;Record&lt;string, string&gt;&gt;</span></td>
+                            <td>Query printer environment settings (ES command)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Nested Objects</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Object.Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>logos.clear(id?)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;boolean&gt;</span></td>
+                            <td>Clear logo from printer memory (LC command)</td>
+                        </tr>
+                        <tr>
+                            <td><code>logos.query()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;string[]&gt;</span></td>
+                            <td>Query stored logos (LS command)</td>
+                        </tr>
+                        <tr>
+                            <td><code>pectabs.clear(id?)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;boolean&gt;</span></td>
+                            <td>Clear PECTAB from memory (PC command)</td>
+                        </tr>
+                        <tr>
+                            <td><code>pectabs.query()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;string[]&gt;</span></td>
+                            <td>Query PECTABs in memory (PS command)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>BoardingPassPrinter Class</h3>
+                <p>Extends <code>Printer</code> - Handles boarding pass printing with template support.</p>
+                <p><em>Inherits all properties and methods from the base Printer class.</em></p>
+
+                <h4>Additional Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Object.Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>templates.clear(id?)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;boolean&gt;</span></td>
+                            <td>Clear template from printer memory (TC command)</td>
+                        </tr>
+                        <tr>
+                            <td><code>templates.query()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;string[]&gt;</span></td>
+                            <td>Query templates in printer memory (TA command)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>BagTagPrinter Class</h3>
+                <p>Extends <code>Printer</code> - Specialized printer for baggage tags.</p>
+                <p><em>Inherits all properties and methods from the base Printer class.</em></p>
+
+                <h4>Overridden Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Object.Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>pectabs.clear(id?)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;boolean&gt;</span></td>
+                            <td>Clear PECTAB (overridden for bag tags)</td>
+                        </tr>
+                        <tr>
+                            <td><code>pectabs.query()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;string[]&gt;</span></td>
+                            <td>Query PECTABs (overridden for bag tags)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Printer Events</h3>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>printComplete</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Print job completed successfully</td>
+                        </tr>
+                        <tr>
+                            <td><code>printError</code></td>
+                            <td><span class="return-type">Error</span></td>
+                            <td>Print job failed</td>
+                        </tr>
+                        <tr>
+                            <td><code>mediaOut</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Printer out of paper/media</td>
+                        </tr>
+                        <tr>
+                            <td><code>mediaLow</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Paper/media running low</td>
+                        </tr>
+                        <tr>
+                            <td><code>mediaJam</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Paper jam detected</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Data Readers -->
+            <section id="readers" class="api-section">
+                <h2>Data Reader Components</h2>
+                <p>Components for reading data from various sources including barcodes, cards, and documents.</p>
+
+                <h3>BarcodeReader Class</h3>
+                <p>Extends <code>DataReaderComponent</code> - Reads 1D and 2D barcodes.</p>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>scan()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;BarcodeData&gt;</span></td>
+                            <td>Trigger a single scan</td>
+                        </tr>
+                        <tr>
+                            <td><code>continuousScan(enabled)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Enable/disable continuous scanning</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Events</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>data</code></td>
+                            <td><span class="return-type">BarcodeData</span></td>
+                            <td>Single barcode scanned</td>
+                        </tr>
+                        <tr>
+                            <td><code>dataList</code></td>
+                            <td><span class="return-type">BarcodeData[]</span></td>
+                            <td>Multiple barcodes scanned</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>CardReader Class</h3>
+                <p>Extends <code>DataReaderComponent</code> - Reads magnetic stripe and chip cards.</p>
+
+                <h4>Properties</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>cardPresent</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Card currently in reader</td>
+                        </tr>
+                        <tr>
+                            <td><code>capabilities</code></td>
+                            <td><span class="return-type">CardReaderCapabilities</span></td>
+                            <td>Supported card types (chip, mag, contactless)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>readCard()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;CardData&gt;</span></td>
+                            <td>Read inserted card data</td>
+                        </tr>
+                        <tr>
+                            <td><code>ejectCard()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Eject the card</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>DocumentReader Class</h3>
+                <p>Extends <code>DataReaderComponent</code> - Reads machine-readable travel documents.</p>
+
+                <h4>Methods</h4>
+                <p><em>Inherits all methods from DataReaderComponent (enable, disable, query, queryUpdate)</em></p>
+
+                <h4>Events</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>data</code></td>
+                            <td><span class="return-type">DocumentData</span></td>
+                            <td>Document data read</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Input Devices -->
+            <section id="input" class="api-section">
+                <h2>Input Device Components</h2>
+                <p>Components for user input including keypads and accessibility devices.</p>
+
+                <h3>Keypad Class</h3>
+                <p>Extends <code>Component</code> - Numeric keypad for PIN entry.</p>
+
+                <h4>Properties</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>pinMode</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Secure PIN entry mode enabled</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>setPINMode(enabled)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Enable/disable secure PIN mode</td>
+                        </tr>
+                        <tr>
+                            <td><code>clear()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Clear current input</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Headset Class</h3>
+                <p>Extends <code>Component</code> - Audio headset for accessibility.</p>
+
+                <h4>Properties</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>isConnected</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Headset connection status</td>
+                        </tr>
+                        <tr>
+                            <td><code>volume</code></td>
+                            <td><span class="return-type">number</span></td>
+                            <td>Current volume level (0-100)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>playAudio(options)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Play audio through headset</td>
+                        </tr>
+                        <tr>
+                            <td><code>setVolume(level)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Set headset volume (0-100)</td>
+                        </tr>
+                        <tr>
+                            <td><code>stop()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Stop audio playback</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Baggage Components -->
+            <section id="baggage" class="api-section">
+                <h2>Baggage Handling Components</h2>
+                <p>Components for weighing and measuring baggage.</p>
+
+                <h3>Scale Class</h3>
+                <p>Extends <code>Component</code> - Electronic scale for weighing baggage.</p>
+
+                <h4>Properties</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>currentWeight</code></td>
+                            <td><span class="return-type">number</span></td>
+                            <td>Current weight reading</td>
+                        </tr>
+                        <tr>
+                            <td><code>unit</code></td>
+                            <td><span class="return-type">WeightUnit</span></td>
+                            <td>Weight unit (kg or lb)</td>
+                        </tr>
+                        <tr>
+                            <td><code>stable</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Weight reading is stable</td>
+                        </tr>
+                        <tr>
+                            <td><code>maxWeight</code></td>
+                            <td><span class="return-type">number</span></td>
+                            <td>Maximum weight capacity</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>zero()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Zero/tare the scale</td>
+                        </tr>
+                        <tr>
+                            <td><code>setUnit(unit)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Set weight unit (kg/lb)</td>
+                        </tr>
+                        <tr>
+                            <td><code>getWeight()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;WeightData&gt;</span></td>
+                            <td>Get current weight reading</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Events</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>weight</code></td>
+                            <td><span class="return-type">WeightData</span></td>
+                            <td>Weight value changed</td>
+                        </tr>
+                        <tr>
+                            <td><code>stable</code></td>
+                            <td><span class="return-type">WeightData</span></td>
+                            <td>Weight reading stabilized</td>
+                        </tr>
+                        <tr>
+                            <td><code>overweight</code></td>
+                            <td><span class="return-type">number</span></td>
+                            <td>Weight exceeds limit</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </section>
+
+            <!-- Output Components -->
+            <section id="output" class="api-section">
+                <h2>Output Components</h2>
+                <p>Components for visual and audio output to passengers.</p>
+
+                <h3>Illumination Class</h3>
+                <p>Extends <code>Component</code> - Visual indicator lights.</p>
+
+                <h4>Properties</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>currentColor</code></td>
+                            <td><span class="return-type">string</span></td>
+                            <td>Current light color</td>
+                        </tr>
+                        <tr>
+                            <td><code>pattern</code></td>
+                            <td><span class="return-type">IlluminationPattern</span></td>
+                            <td>Light pattern (solid, blink, pulse)</td>
+                        </tr>
+                        <tr>
+                            <td><code>isOn</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Light on/off state</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>setState(state)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Set light color and pattern</td>
+                        </tr>
+                        <tr>
+                            <td><code>flash(options)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Flash lights temporarily</td>
+                        </tr>
+                        <tr>
+                            <td><code>off()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Turn lights off</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Announcement Class</h3>
+                <p>Extends <code>Component</code> - Audio announcements and text-to-speech.</p>
+
+                <h4>Properties</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>isPlaying</code></td>
+                            <td><span class="return-type">boolean</span></td>
+                            <td>Audio currently playing</td>
+                        </tr>
+                        <tr>
+                            <td><code>volume</code></td>
+                            <td><span class="return-type">number</span></td>
+                            <td>Volume level (0-100)</td>
+                        </tr>
+                        <tr>
+                            <td><code>language</code></td>
+                            <td><span class="return-type">string</span></td>
+                            <td>TTS language code</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Methods</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>speak(options)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Text-to-speech announcement</td>
+                        </tr>
+                        <tr>
+                            <td><code>playAudio(options)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Play audio file</td>
+                        </tr>
+                        <tr>
+                            <td><code>stop()</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Stop current playback</td>
+                        </tr>
+                        <tr>
+                            <td><code>setVolume(level)</code></td>
+                            <td><span class="badge badge-async">async</span> <span class="return-type">Promise&lt;void&gt;</span></td>
+                            <td>Set volume (0-100)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Events</h4>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Payload</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>started</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Playback started</td>
+                        </tr>
+                        <tr>
+                            <td><code>completed</code></td>
+                            <td><span class="return-type">void</span></td>
+                            <td>Playback completed</td>
+                        </tr>
+                        <tr>
+                            <td><code>error</code></td>
+                            <td><span class="return-type">Error</span></td>
+                            <td>Playback error</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Application States -->
+            <section id="states" class="api-section">
+                <h2>Application States</h2>
+                <p>CUSS2 application lifecycle states with transition rules.</p>
+
+                <div class="code-block">
+                    <pre><code class="language-typescript">enum ApplicationStateCodes {
+    STOPPED = "STOPPED",
+    INITIALIZE = "INITIALIZE", 
+    UNAVAILABLE = "UNAVAILABLE",
+    AVAILABLE = "AVAILABLE",
+    ACTIVE = "ACTIVE"
+}</code></pre>
+                </div>
+
+                <h3>State Transition Rules</h3>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>From State</th>
+                            <th>Valid Transitions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>STOPPED</code></td>
+                            <td>→ INITIALIZE</td>
+                        </tr>
+                        <tr>
+                            <td><code>INITIALIZE</code></td>
+                            <td>→ UNAVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td><code>UNAVAILABLE</code></td>
+                            <td>→ AVAILABLE, INITIALIZE</td>
+                        </tr>
+                        <tr>
+                            <td><code>AVAILABLE</code></td>
+                            <td>→ ACTIVE, UNAVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td><code>ACTIVE</code></td>
+                            <td>→ AVAILABLE, UNAVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td><code>Any State</code></td>
+                            <td>→ STOPPED</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Error Codes -->
+            <section id="errors" class="api-section">
+                <h2>Error Codes</h2>
+                <p>Standard CUSS2 platform error codes for error handling.</p>
+
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>1000</code></td>
+                            <td>DEVICE_NOTOPERATIONAL</td>
+                            <td>Device is not operational</td>
+                        </tr>
+                        <tr>
+                            <td><code>1001</code></td>
+                            <td>MEDIA_NOTREADY</td>
+                            <td>Media not ready (e.g., out of paper)</td>
+                        </tr>
+                        <tr>
+                            <td><code>1002</code></td>
+                            <td>DEVICE_BUSY</td>
+                            <td>Device is busy processing</td>
+                        </tr>
+                        <tr>
+                            <td><code>1003</code></td>
+                            <td>INVALID_DATA</td>
+                            <td>Invalid data format provided</td>
+                        </tr>
+                        <tr>
+                            <td><code>1004</code></td>
+                            <td>TIMEOUT</td>
+                            <td>Operation timed out</td>
+                        </tr>
+                        <tr>
+                            <td><code>1005</code></td>
+                            <td>PERMISSION_DENIED</td>
+                            <td>Permission denied for operation</td>
+                        </tr>
+                        <tr>
+                            <td><code>1006</code></td>
+                            <td>INVALID_STATE</td>
+                            <td>Invalid state for requested operation</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Error Handling Example</h3>
+                <div class="code-block">
+                    <pre><code class="language-typescript">try {
+    await cuss2.boardingPassPrinter.enable();
+} catch (error) {
+    // Check error code directly
+    if (error.code === 1001) {  // MEDIA_NOTREADY
+        console.log("Printer out of paper");
+        // Handle paper reload
+    } else if (error.code === 1000) {  // DEVICE_NOTOPERATIONAL
+        console.log("Printer not operational");
+        // Handle printer offline
+    } else {
+        console.error("Unexpected error:", error);
+    }
+}</code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(26, 26, 46, 0.95); border-top: 1px solid rgba(100, 255, 218, 0.2); padding: 1rem 0; z-index: 100;">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 2rem; text-align: center; color: #a0a0a0;">
+            <p>© 2025 Elevation AI - All rights reserved • 
+                <a href="https://github.com/elevationai/cuss2-ts" style="color: #64ffda; text-decoration: none;">GitHub</a> • 
+                <a href="https://jsr.io/@cuss/cuss2-ts" style="color: #64ffda; text-decoration: none;">JSR Package</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-vsc-dark-plus.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    
+    <style>
+        /* Override Prism styles for better visibility */
+        .token.comment { color: #6a9955 !important; }
+        .token.keyword { color: #c586c0 !important; }
+        .token.string { color: #ce9178 !important; }
+        .token.function { color: #dcdcaa !important; }
+        .token.number { color: #b5cea8 !important; }
+        .token.operator { color: #d4d4d4 !important; }
+        .token.punctuation { color: #d4d4d4 !important; }
+        .token.class-name { color: #4ec9b0 !important; }
+        .token.parameter { color: #9cdcfe !important; }
+        .token.boolean { color: #569cd6 !important; }
+        .token.builtin { color: #4ec9b0 !important; }
+        .token.property { color: #9cdcfe !important; }
+        code[class*="language-"], pre[class*="language-"] {
+            color: #d4d4d4 !important;
+            background: none !important;
+        }
+    </style>
+    
+    <script>
+        // Syntax highlighting on load
+        document.addEventListener('DOMContentLoaded', () => {
+            Prism.highlightAll();
+        });
+        
+        // Scroll Spy for Active Section Highlighting
+        const sections = document.querySelectorAll('.api-section');
+        const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+        
+        // Create a map of section IDs to sidebar links
+        const linkMap = {};
+        sidebarLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                linkMap[href.substring(1)] = link;
+            }
+        });
+        
+        // Function to update active link
+        function updateActiveLink() {
+            // Get current scroll position
+            const scrollPosition = window.scrollY + 100; // Offset for fixed header
+            
+            // Find the current section
+            let currentSection = null;
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionBottom = sectionTop + section.offsetHeight;
+                
+                if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                    currentSection = section;
+                }
+            });
+            
+            // If we found a current section, update the sidebar
+            if (currentSection) {
+                const sectionId = currentSection.getAttribute('id');
+                
+                // Remove active class from all links
+                sidebarLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // Add active class to current section's link
+                if (linkMap[sectionId]) {
+                    linkMap[sectionId].classList.add('active');
+                }
+            }
+        }
+        
+        // Update on scroll
+        window.addEventListener('scroll', updateActiveLink);
+        
+        // Update on load
+        updateActiveLink();
+        
+        // Update when clicking sidebar links (smooth scroll)
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    e.preventDefault();
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        // Smooth scroll to element
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                        
+                        // Update active state immediately
+                        sidebarLinks.forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

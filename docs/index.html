@@ -602,7 +602,7 @@ console.log("Connected! State:", cuss2.state);
 if (cuss2.barcodeReader) {
   await cuss2.barcodeReader.enable();
   cuss2.barcodeReader.on("data", (data) => {
-    console.log("Barcode:", data.rawData);
+    console.log("Barcodes:", data); // data is string[]
   });
 }</code></pre>
                 </div>

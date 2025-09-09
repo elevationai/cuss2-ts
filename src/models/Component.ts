@@ -13,20 +13,20 @@ import {
   type ScreenResolution,
 } from "cuss2-typescript-models";
 import { DeviceType } from "./deviceType.ts";
-import type { ComponentAPI } from "./ComponentAPI.ts";
+import type { ComponentAPI } from "../cuss2/ComponentAPI.ts";
 
 export class Component extends EventEmitter {
-  _component: EnvironmentComponent;
+  private _component: EnvironmentComponent;
   id: number;
   api!: ComponentAPI; // Using definite assignment assertion
   required: boolean = false;
-  _status: MessageCodes = MessageCodes.OK;
-  _componentState: ComponentState = ComponentState.UNAVAILABLE;
+  private _status: MessageCodes = MessageCodes.OK;
+  private _componentState: ComponentState = ComponentState.UNAVAILABLE;
   deviceType: DeviceType;
   pendingCalls: number = 0;
   enabled: boolean = false;
   pollingInterval = 10000;
-  _poller: ReturnType<typeof setTimeout> | undefined;
+  private _poller: ReturnType<typeof setTimeout> | undefined;
   parent: Component | null;
   subcomponents: Component[] = [];
 
@@ -61,7 +61,7 @@ export class Component extends EventEmitter {
     // Subscribe to platform messages
     cuss2.on("message", (data: PlatformData) => {
       if (data?.meta?.componentID === this.id) {
-        this._handleMessage(data);
+        this.handleMessage(data);
       }
     });
 
@@ -130,11 +130,11 @@ export class Component extends EventEmitter {
     poll();
   }
 
-  _handleMessage(data: PlatformData) {
+  protected handleMessage(data: PlatformData) {
     this.emit("message", data);
   }
 
-  async _call(action: () => Promise<PlatformData>): Promise<PlatformData> {
+  private async _call(action: () => Promise<PlatformData>): Promise<PlatformData> {
     this.pendingCalls++;
     try {
       return await action();

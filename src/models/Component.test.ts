@@ -2,7 +2,7 @@ import { assert, assertEquals, assertExists } from "jsr:@std/assert";
 import { EventEmitter } from "events";
 import { Component } from "./Component.ts";
 import type { Cuss2 } from "../cuss2.ts";
-import type { ComponentAPI } from "./ComponentAPI.ts";
+import type { ComponentAPI } from "../cuss2/ComponentAPI.ts";
 import { DeviceType } from "./deviceType.ts";
 import {
   type ApplicationState,
@@ -160,7 +160,9 @@ Deno.test("Component constructor should initialize properties correctly", () => 
   assertEquals(component.id, componentID);
   assertEquals(component.deviceType, DeviceType.UNKNOWN);
   assertEquals(component.required, false);
+  // @ts-ignore - accessing private property for testing
   assertEquals(component._status, MessageCodes.OK);
+  // @ts-ignore - accessing private property for testing
   assertEquals(component._componentState, ComponentState.UNAVAILABLE);
   assertEquals(component.enabled, false);
   assertEquals(component.pendingCalls, 0);
@@ -178,10 +180,12 @@ Deno.test("Component should correctly determine ready state", () => {
   assert(!component.ready);
 
   // Set component state to READY
+  // @ts-ignore - accessing private property for testing
   component._componentState = ComponentState.READY;
   assert(component.ready);
 
   // Set back to UNAVAILABLE
+  // @ts-ignore - accessing private property for testing
   component._componentState = ComponentState.UNAVAILABLE;
   assert(!component.ready);
 });
@@ -226,7 +230,9 @@ Deno.test("Component should update state correctly when receiving platform messa
   component.updateState(platformMessage);
 
   // Check state changes
+  // @ts-ignore - accessing private property for testing
   assertEquals(component._componentState, ComponentState.READY);
+  // @ts-ignore - accessing private property for testing
   assertEquals(component._status, MessageCodes.OK);
 
   // Check events were emitted
@@ -244,6 +250,7 @@ Deno.test("Component should update state correctly when receiving platform messa
   component.updateState(platformMessage2);
 
   // Check state and events
+  // @ts-ignore - accessing private property for testing
   assertEquals(component._status, MessageCodes.SOFTWARE_ERROR);
   assert(!readyStateChangeEmitted); // Component state didn't change
   assert(statusChangeEmitted);
@@ -356,7 +363,9 @@ Deno.test("Component stateIsDifferent should correctly identify state changes", 
   const { component } = createTestComponent();
 
   // Initial state: UNAVAILABLE, OK
+  // @ts-ignore - accessing private property for testing
   component._componentState = ComponentState.UNAVAILABLE;
+  // @ts-ignore - accessing private property for testing
   component._status = MessageCodes.OK;
 
   // Same state and status
@@ -441,18 +450,23 @@ Deno.test("Component pollUntilReady starts polling when required", () => {
 
     // Check that setTimeout was called and poller is set
     assert(timeoutCalled);
+    // @ts-ignore - accessing private property for testing
     assertEquals(component._poller, 42);
 
     // Now make the component ready
+    // @ts-ignore - accessing private property for testing
     component._componentState = ComponentState.READY;
 
     // Now simulate the callback being invoked
     // This would normally clear the poller if the component is ready
+    // @ts-ignore - accessing private property for testing
     if (typeof component._poller === "number") {
+      // @ts-ignore - accessing private property for testing
       component._poller = undefined;
     }
 
     // Check that poller is now cleared
+    // @ts-ignore - accessing private property for testing
     assertEquals(component._poller, undefined);
   }
   finally {

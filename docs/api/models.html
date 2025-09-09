@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuss2-ts - Models API Reference</title>
+  <meta name="description" content="API documentation for models module">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <!-- Prism.js CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body class="api-page">
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <a href="../" class="logo">
+      Cuss2-ts
+    </a>
+    <ul class="nav-links">
+      <li><a href="../">Home</a></li>
+<li><a href="./">API Reference</a></li>
+<li><a href="../examples/index.html">Guides &amp; Examples</a></li>
+<li><a href="https://github.com/elevationai/cuss2-ts" target="_blank">GitHub</a></li>
+    </ul>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+  </nav>
+
+  <!-- Layout Container -->
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="api-sidebar-header">
+        <a href="./" class="api-back-link">
+          <span>←</span> Back to API Reference
+        </a>
+        <h2 class="api-page-title">Models</h2>
+      </div>
+      
+      
+    <nav class="on-page-nav">
+      <ul>
+        
+      <li>
+        <a href="#component">Component</a>
+        <ul><li><a href="#component-stateisdifferent">stateIsDifferent()</a></li>
+<li><a href="#component-updatestate">updateState()</a></li>
+<li><a href="#component-polluntilready">pollUntilReady()</a></li>
+<li><a href="#component-handlemessage">handleMessage()</a></li>
+<li><a href="#component-enable">enable()</a></li>
+<li><a href="#component-disable">disable()</a></li>
+<li><a href="#component-cancel">cancel()</a></li>
+<li><a href="#component-query">query()</a></li>
+<li><a href="#component-setup">setup()</a></li>
+<li><a href="#component-send">send()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#datareadercomponent">DataReaderComponent</a>
+        <ul><li><a href="#datareadercomponent-handlemessage">handleMessage()</a></li>
+<li><a href="#datareadercomponent-read">read()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#barcodereader">BarcodeReader</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#documentreader">DocumentReader</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#cardreader">CardReader</a>
+        <ul><li><a href="#cardreader-enablepayment">enablePayment()</a></li>
+<li><a href="#cardreader-readpayment">readPayment()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#scale">Scale</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#rfid">RFID</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#camera">Camera</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#aeasbd">AEASBD</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#bhs">BHS</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#printer">Printer</a>
+        <ul><li><a href="#printer-updatestate">updateState()</a></li>
+<li><a href="#printer-setupitps">setupITPS()</a></li>
+<li><a href="#printer-senditps">sendITPS()</a></li>
+<li><a href="#printer-senditpscommand">sendITPSCommand()</a></li>
+<li><a href="#printer-getenvironment">getEnvironment()</a></li>
+<li><a href="#printer-getpairedresponse">getPairedResponse()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#bagtagprinter">BagTagPrinter</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#boardingpassprinter">BoardingPassPrinter</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#feeder">Feeder</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#dispenser">Dispenser</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#keypad">Keypad</a>
+        <ul><li><a href="#keypad-handlemessage">handleMessage()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#announcement">Announcement</a>
+        <ul><li><a href="#announcement-say">say()</a></li>
+<li><a href="#announcement-play">play()</a></li>
+<li><a href="#announcement-stop">stop()</a></li>
+<li><a href="#announcement-pause">pause()</a></li>
+<li><a href="#announcement-resume">resume()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#illumination">Illumination</a>
+        <ul><li><a href="#illumination-enable">enable()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#headset">Headset</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#biometric">Biometric</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#insertionbelt">InsertionBelt</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#verificationbelt">VerificationBelt</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#parkingbelt">ParkingBelt</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#platformresponseerror">PlatformResponseError</a>
+        
+      </li>
+    
+
+      <li>
+        <a href="#statechange">StateChange</a>
+        
+      </li>
+    
+      </ul>
+    </nav>
+  
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <article class="content-wrapper">
+        <div class="page-header">
+          <h1>Models API Reference</h1>
+          <p>API documentation for models module</p>
+        </div>
+
+        
+    <section id="component" class="api-section">
+      <h2>Component</h2>
+      <pre><code class="language-typescript">class Component extends EventEmitter</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  id: number;
+  api: ComponentAPI;
+  required: boolean;
+  deviceType: DeviceType;
+  pendingCalls: number;
+  enabled: boolean;
+  pollingInterval: number;
+  parent: Component | null;
+  subcomponents: Component[];
+  get ready(): boolean;
+  get pending(): boolean;
+  get status(): MessageCodes;</code></pre>
+    </section>
+      <h3>Methods</h3>
+
+    <section class="method" id="component-stateisdifferent">
+      <pre><code class="language-typescript">stateIsDifferent(msg: PlatformData): boolean</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-updatestate">
+      <pre><code class="language-typescript">updateState(msg: PlatformData): void</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-polluntilready">
+      <pre><code class="language-typescript">pollUntilReady(
+  requireOK: boolean = false,
+  pollingInterval: void = [UNSUPPORTED].pollingInterval
+): void</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-handlemessage">
+      <pre><code class="language-typescript">protected handleMessage(data: PlatformData): void</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-enable">
+      <pre><code class="language-typescript">async enable(): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-disable">
+      <pre><code class="language-typescript">async disable(): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-cancel">
+      <pre><code class="language-typescript">async cancel(): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-query">
+      <pre><code class="language-typescript">async query(): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-setup">
+      <pre><code class="language-typescript">async setup(dataObj: DataRecordList): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="component-send">
+      <pre><code class="language-typescript">async send(
+  dataObj: DataRecordList | ScreenResolution | IlluminationData | BaggageData | CommonUsePaymentMessage | CommonUseBiometricMessage
+): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="datareadercomponent" class="api-section">
+      <h2>DataReaderComponent</h2>
+      <pre><code class="language-typescript">class DataReaderComponent extends Component</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  previousData: string[];</code></pre>
+    </section>
+      <h3>Methods</h3>
+
+    <section class="method" id="datareadercomponent-handlemessage">
+      <pre><code class="language-typescript">override handleMessage(data: PlatformData): void</code></pre>
+    </section>
+  
+
+    <section class="method" id="datareadercomponent-read">
+      <pre><code class="language-typescript">async read(ms: number = 30000): Promise&lt;string[]&gt;</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="barcodereader" class="api-section">
+      <h2>BarcodeReader</h2>
+      <pre><code class="language-typescript">class BarcodeReader extends DataReaderComponent</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="documentreader" class="api-section">
+      <h2>DocumentReader</h2>
+      <pre><code class="language-typescript">class DocumentReader extends DataReaderComponent</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="cardreader" class="api-section">
+      <h2>CardReader</h2>
+      <pre><code class="language-typescript">class CardReader extends DataReaderComponent</code></pre>
+      
+      
+      
+      <h3>Methods</h3>
+
+    <section class="method" id="cardreader-enablepayment">
+      <pre><code class="language-typescript">async enablePayment(yes: boolean): Promise&lt;void&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cardreader-readpayment">
+      <pre><code class="language-typescript">async readPayment(ms: number = 30000): Promise&lt;void&gt;</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="scale" class="api-section">
+      <h2>Scale</h2>
+      <pre><code class="language-typescript">class Scale extends DataReaderComponent</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="rfid" class="api-section">
+      <h2>RFID</h2>
+      <pre><code class="language-typescript">class RFID extends DataReaderComponent</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="camera" class="api-section">
+      <h2>Camera</h2>
+      <pre><code class="language-typescript">class Camera extends DataReaderComponent</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="aeasbd" class="api-section">
+      <h2>AEASBD</h2>
+      <pre><code class="language-typescript">class AEASBD extends Component</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="bhs" class="api-section">
+      <h2>BHS</h2>
+      <pre><code class="language-typescript">class BHS extends DataReaderComponent</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="printer" class="api-section">
+      <h2>Printer</h2>
+      <pre><code class="language-typescript">class Printer extends Component</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  feeder: Feeder;
+  dispenser: Dispenser;
+  logos: object;
+  pectabs: object;
+  get mediaPresent(): boolean;</code></pre>
+    </section>
+      <h3>Methods</h3>
+
+    <section class="method" id="printer-updatestate">
+      <pre><code class="language-typescript">override updateState(msg: PlatformData): void</code></pre>
+    </section>
+  
+
+    <section class="method" id="printer-setupitps">
+      <pre><code class="language-typescript">async setupITPS(commands: string[]): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="printer-senditps">
+      <pre><code class="language-typescript">async sendITPS(commands: string[]): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="printer-senditpscommand">
+      <pre><code class="language-typescript">async sendITPSCommand(cmd: string): Promise&lt;string&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="printer-getenvironment">
+      <pre><code class="language-typescript">async getEnvironment(): Promise&lt;Record&lt;string, string&gt;&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="printer-getpairedresponse">
+      <pre><code class="language-typescript">protected async getPairedResponse(cmd: string, n: number = 2): Promise&lt;string[]&gt;</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="bagtagprinter" class="api-section">
+      <h2>BagTagPrinter</h2>
+      <pre><code class="language-typescript">class BagTagPrinter extends Printer</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  pectabs: object;</code></pre>
+    </section>
+      
+    </section>
+  
+
+    <section id="boardingpassprinter" class="api-section">
+      <h2>BoardingPassPrinter</h2>
+      <pre><code class="language-typescript">class BoardingPassPrinter extends Printer</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  templates: object;</code></pre>
+    </section>
+      
+    </section>
+  
+
+    <section id="feeder" class="api-section">
+      <h2>Feeder</h2>
+      <pre><code class="language-typescript">class Feeder extends Component</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  printer?: Printer;</code></pre>
+    </section>
+      
+    </section>
+  
+
+    <section id="dispenser" class="api-section">
+      <h2>Dispenser</h2>
+      <pre><code class="language-typescript">class Dispenser extends Component</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  printer?: Printer;
+  get mediaPresent(): boolean;</code></pre>
+    </section>
+      
+    </section>
+  
+
+    <section id="keypad" class="api-section">
+      <h2>Keypad</h2>
+      <pre><code class="language-typescript">class Keypad extends Component</code></pre>
+      
+      
+      
+      <h3>Methods</h3>
+
+    <section class="method" id="keypad-handlemessage">
+      <pre><code class="language-typescript">override handleMessage(message: PlatformData): void</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="announcement" class="api-section">
+      <h2>Announcement</h2>
+      <pre><code class="language-typescript">class Announcement extends Component</code></pre>
+      
+      
+      
+      <h3>Methods</h3>
+
+    <section class="method" id="announcement-say">
+      <pre><code class="language-typescript">say(text: string, lang: string = &quot;en-US&quot;): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="announcement-play">
+      <pre><code class="language-typescript">play(xml: string): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="announcement-stop">
+      <pre><code class="language-typescript">stop(): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="announcement-pause">
+      <pre><code class="language-typescript">pause(): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="announcement-resume">
+      <pre><code class="language-typescript">resume(): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="illumination" class="api-section">
+      <h2>Illumination</h2>
+      <pre><code class="language-typescript">class Illumination extends Component</code></pre>
+      
+      
+      
+      <h3>Methods</h3>
+
+    <section class="method" id="illumination-enable">
+      <pre><code class="language-typescript">override async enable(
+  duration: number = 0,
+  color?: string | number[],
+  blink?: number[]
+): Promise&lt;PlatformData&gt;</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="headset" class="api-section">
+      <h2>Headset</h2>
+      <pre><code class="language-typescript">class Headset extends Component</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="biometric" class="api-section">
+      <h2>Biometric</h2>
+      <pre><code class="language-typescript">class Biometric extends Component</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="insertionbelt" class="api-section">
+      <h2>InsertionBelt</h2>
+      <pre><code class="language-typescript">class InsertionBelt extends Component</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="verificationbelt" class="api-section">
+      <h2>VerificationBelt</h2>
+      <pre><code class="language-typescript">class VerificationBelt extends Component</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="parkingbelt" class="api-section">
+      <h2>ParkingBelt</h2>
+      <pre><code class="language-typescript">class ParkingBelt extends Component</code></pre>
+      
+      
+      
+      
+    </section>
+  
+
+    <section id="platformresponseerror" class="api-section">
+      <h2>PlatformResponseError</h2>
+      <pre><code class="language-typescript">class PlatformResponseError extends Error</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  componentID?: number;
+  componentState: ComponentState | undefined;
+  requestID: UniqueId;
+  messageCode: MessageCodes;</code></pre>
+    </section>
+      
+    </section>
+  
+
+    <section id="statechange" class="api-section">
+      <h2>StateChange</h2>
+      <pre><code class="language-typescript">class StateChange</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  previous: ApplicationStateCodes;
+  current: ApplicationStateCodes;</code></pre>
+    </section>
+      
+    </section>
+  
+
+      </article>
+    </main>
+  </div>
+  <!-- End layout-container -->
+
+  <!-- Footer -->
+  <footer class="api-footer">
+    <div class="footer-content">
+      <p>
+        © 2025 Elevation AI. All rights reserved.
+         • <a href="/api">Documentation</a> • <a href="https://github.com/elevationai/cuss2-ts" target="_blank">GitHub</a> • <a href="https://jsr.io/@cuss/cuss2-ts" target="_blank">JSR Package</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Prism.js JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+  
+  <!-- API Documentation JavaScript -->
+  <script src="../assets/js/api-docs.js"></script>
+</body>
+</html>

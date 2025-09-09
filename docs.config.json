@@ -1,0 +1,30 @@
+{
+  "name": "Cuss2-ts",
+  "input": ".",
+  "output": "docs/api",
+  "githubUrl": "https://github.com/elevationai/cuss2-ts",
+  "skipAssets": false,
+  "index": {
+    "title": "Cuss2-ts API Documentation",
+    "description": "---"
+  },
+  "header": {
+    "project": "Cuss2-ts",
+    "nav": {
+      "Home": "../",
+      "API Reference": "./",
+      "Guides & Examples": "../examples/index.html",
+      "GitHub": "https://github.com/elevationai/cuss2-ts"
+    }
+  },
+  "footer": {
+    "text": "© 2025 Elevation AI. All rights reserved.",
+    "nav": {
+      "Documentation": "/api",
+      "GitHub": "https://github.com/elevationai/cuss2-ts",
+      "JSR Package": "https://jsr.io/@cuss/cuss2-ts"
+    }
+  },
+  "generatedAt": "2025-09-09T07:18:27.080Z",
+  "version": "1.0.0"
+}

@@ -131,6 +131,7 @@ export async function simulateStateChange(
   newState: AppState,
   payload?: unknown,
 ): Promise<void> {
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage({
     meta: {
       currentApplicationState: { applicationStateCode: newState },

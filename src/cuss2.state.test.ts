@@ -48,6 +48,7 @@ Deno.test("2.2 - State transitions should handle valid state transitions correct
   }
 
   // Mock disable for components
+  // @ts-ignore - accessing private method for testing
   cuss2._disableAllComponents = () => Promise.resolve();
 
   // Test STOPPED → INITIALIZE
@@ -200,6 +201,7 @@ Deno.test("2.2 - State transitions should disable all components when transition
 
   // Track if _disableAllComponents was called
   let disableAllCalled = false;
+  // @ts-ignore - accessing private method for testing
   cuss2._disableAllComponents = () => {
     disableAllCalled = true;
     return Promise.resolve();

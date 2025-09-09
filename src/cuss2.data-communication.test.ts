@@ -33,6 +33,7 @@ Deno.test("Section 4.1: Platform data message processing - should process platfo
     payload: {},
   } as unknown as PlatformData;
 
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify state was updated
@@ -63,6 +64,7 @@ Deno.test("Section 4.2: Session timeout handling - should emit sessionTimeout ev
     payload: {},
   } as unknown as PlatformData;
 
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify sessionTimeout event was emitted
@@ -87,6 +89,7 @@ Deno.test("Section 4.3: Invalid state handling - should close connection on inva
 
   // Should throw error
   await assertRejects(
+    // @ts-ignore - accessing private method for testing
     () => cuss2._handleWebSocketMessage(platformData),
     Error,
     "Platform in invalid state. Cannot continue.",
@@ -134,6 +137,7 @@ Deno.test("Section 4.4: Component state updates - should update component states
     },
   } as unknown as PlatformData;
 
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify component methods were called
@@ -189,6 +193,7 @@ Deno.test("Section 4.5: Unsolicited messages - should handle unsolicited compone
     },
   } as unknown as PlatformData;
 
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify checkRequiredComponentsAndSyncState was called for unsolicited message
@@ -224,6 +229,7 @@ Deno.test("Section 4.1: Platform data message - activated event on ACTIVE state"
     },
   } as unknown as PlatformData;
 
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify state and activation properties
@@ -335,6 +341,7 @@ Deno.test("Section 4.4: Component state updates - should check sync state for QU
     },
   } as unknown as PlatformData;
 
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify checkRequiredComponentsAndSyncState was called
@@ -377,6 +384,7 @@ Deno.test("Section 4: Edge case - handle missing component gracefully", async ()
     payload: {},
   } as unknown as PlatformData;
 
+  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Should not emit componentStateChange for missing component

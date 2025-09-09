@@ -513,13 +513,13 @@
     <nav>
         <div class="nav-container">
             <a href="index.html" class="nav-brand">
-                <span>🛫</span> CUSS2.ts
+                Cuss2.ts
             </a>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="api-reference.html">API Reference</a></li>
+                <li><a href="./api">API Reference</a></li>
                 <li><a href="examples/index.html">Guides & Examples</a></li>
-                
+
                 <li><a href="https://github.com/elevationai/cuss2-ts">GitHub</a></li>
             </ul>
         </div>
@@ -531,7 +531,7 @@
         <p class="hero-subtitle">TypeScript SDK for Common Use Self-Service v2 Platform</p>
         <div class="hero-buttons">
             <a href="examples/index.html" class="btn btn-primary">View Examples</a>
-            <a href="api-reference.html" class="btn btn-secondary">API Documentation</a>
+            <a href="/docs/api" class="btn btn-secondary">API Documentation</a>
         </div>
     </section>
 
@@ -575,7 +575,7 @@
     <section class="quick-start">
         <div class="container">
             <h2 class="section-title">Quick Start</h2>
-            
+
             <div class="code-tabs">
                 <button class="code-tab active" onclick="showTab('browser')">Browser</button>
                 <button class="code-tab" onclick="showTab('deno')">Deno</button>
@@ -657,7 +657,7 @@ const cuss2 = Cuss2.connect(
 cuss2.connected.then(async () => {
   console.log("Environment:", cuss2.environment);
   console.log("Components:", Object.keys(cuss2.components));
-  
+
   // Listen for state changes
   cuss2.on("stateChange", (change) => {
     console.log(`State: ${change.previous} → ${change.current}`);
@@ -748,29 +748,17 @@ cuss2.connected.then(async () => {
     <section class="container">
         <h2 class="section-title">API Reference</h2>
         <div class="api-cards">
-            <a href="api-reference.html#cuss2" class="api-card">
+            <a href="./api/cuss2.html" class="api-card">
                 <h3>Cuss2 Class</h3>
                 <p>Main SDK class for platform connection, state management, and component orchestration.</p>
             </a>
-            <a href="api-reference.html#connection" class="api-card">
+            <a href="./api/connection.html" class="api-card">
                 <h3>Connection</h3>
                 <p>WebSocket and OAuth management with automatic reconnection and token refresh.</p>
             </a>
-            <a href="api-reference.html#component" class="api-card">
+            <a href="./api/models.html" class="api-card">
                 <h3>Components</h3>
                 <p>Base component class and specialized implementations for all CUSS2 peripherals.</p>
-            </a>
-            <a href="api-reference.html#cuss2-events" class="api-card">
-                <h3>Events</h3>
-                <p>Typed event system for platform notifications, state changes, and component data.</p>
-            </a>
-            <a href="api-reference.html#states" class="api-card">
-                <h3>Application States</h3>
-                <p>Guide to the CUSS2 application lifecycle states and the state transition rules.</p>
-            </a>
-            <a href="api-reference.html#errors" class="api-card">
-                <h3>Error Handling</h3>
-                <p>Comprehensive error codes and handling strategies for platform and component errors.</p>
             </a>
         </div>
     </section>
@@ -778,8 +766,8 @@ cuss2.connected.then(async () => {
     <!-- Footer -->
     <footer>
         <div class="footer-content">
-            <p>© 2025 Elevation AI - All rights reserved • 
-                <a href="https://github.com/elevationai/cuss2-ts">GitHub</a> • 
+            <p>© 2025 Elevation AI - All rights reserved •
+                <a href="https://github.com/elevationai/cuss2-ts">GitHub</a> •
                 <a href="https://jsr.io/@cuss/cuss2-ts">JSR Package</a>
             </p>
         </div>
@@ -798,22 +786,22 @@ cuss2.connected.then(async () => {
             document.querySelectorAll('.code-content').forEach(content => {
                 content.classList.remove('active');
             });
-            
+
             // Remove active from all tabs
             document.querySelectorAll('.code-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             // Show selected content
             document.getElementById(tabName).classList.add('active');
-            
+
             // Mark clicked tab as active
             event.target.classList.add('active');
-            
+
             // Re-highlight syntax for newly visible code
             Prism.highlightAll();
         }
-        
+
         // Initial syntax highlighting
         document.addEventListener('DOMContentLoaded', () => {
             Prism.highlightAll();

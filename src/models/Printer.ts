@@ -102,7 +102,7 @@ export class Printer extends Component {
     return helpers.deserializeDictionary(es);
   }
 
-  async _getPairedResponse(cmd: string, n: number = 2): Promise<string[]> {
+  protected async getPairedResponse(cmd: string, n: number = 2): Promise<string[]> {
     const response = await this.sendITPSCommand(cmd);
     return helpers.split_every(response.substr(response.indexOf("OK") + 2), n) || [];
   }
@@ -113,7 +113,7 @@ export class Printer extends Component {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async (): Promise<string[]> => {
-      return await this._getPairedResponse("LS");
+      return await this.getPairedResponse("LS");
     },
   };
 
@@ -123,7 +123,7 @@ export class Printer extends Component {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async (): Promise<string[]> => {
-      return await this._getPairedResponse("PS");
+      return await this.getPairedResponse("PS");
     },
   };
 }

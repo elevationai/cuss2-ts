@@ -17,7 +17,7 @@ export class BagTagPrinter extends Printer {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async (): Promise<string[]> => {
-      return await this._getPairedResponse("PS", 4);
+      return await this.getPairedResponse("PS", 4);
     },
   };
 }

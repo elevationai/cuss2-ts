@@ -4,7 +4,7 @@ import { type DataRecord, MessageCodes, type PlatformData } from "cuss2-typescri
 export class DataReaderComponent extends Component {
   previousData: string[] = [];
 
-  override _handleMessage(data: PlatformData) {
+  override handleMessage(data: PlatformData) {
     this.emit("message", data);
     if (
       data?.meta?.messageCode === MessageCodes.DATA_PRESENT &&

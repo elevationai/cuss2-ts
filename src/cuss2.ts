@@ -44,7 +44,7 @@ import {
   PlatformDirectives,
   type ScreenResolution,
 } from "cuss2-typescript-models";
-import type { ComponentAPI } from "./models/ComponentAPI.ts";
+import type { ComponentAPI } from "./cuss2/ComponentAPI.ts";
 
 const {
   isAnnouncement,
@@ -82,7 +82,9 @@ export class Cuss2 extends EventEmitter {
 
   // State management
   private _currentState: StateChange = new StateChange(AppState.STOPPED, AppState.STOPPED);
-
+  /**
+   * How much gold the party starts with.
+   */
   bagTagPrinter?: BagTagPrinter;
   boardingPassPrinter?: BoardingPassPrinter;
   documentReader?: DocumentReader;
@@ -154,7 +156,7 @@ export class Cuss2 extends EventEmitter {
     }
   }
 
-  async _initialize(): Promise<undefined> {
+  private async _initialize(): Promise<undefined> {
     log("info", "Getting Environment Information");
     const environment = await this.api.getEnvironment();
 
@@ -180,7 +182,7 @@ export class Cuss2 extends EventEmitter {
     this.emit("connected", this);
   }
 
-  async _handleWebSocketMessage(platformData: PlatformData) {
+  private async _handleWebSocketMessage(platformData: PlatformData) {
     if (!platformData) return;
     const { meta, payload } = platformData;
 
@@ -511,7 +513,7 @@ export class Cuss2 extends EventEmitter {
     },
   };
 
-  async _disableAllComponents(): Promise<void> {
+  private async _disableAllComponents(): Promise<void> {
     if (this.components) {
       const componentList = Object.values(this.components) as Component[];
       for await (const component of componentList) {
@@ -641,7 +643,7 @@ export class Cuss2 extends EventEmitter {
     }
   }
 
-  _online: boolean = false;
+  private _online: boolean = false;
   get applicationOnline(): boolean {
     return this._online;
   }
@@ -650,3 +652,6 @@ export class Cuss2 extends EventEmitter {
     this.checkRequiredComponentsAndSyncState();
   }
 }
+
+// this is down here so that it outputs in the documentation after the Cuss2 class
+export type { ComponentAPI } from "./cuss2/ComponentAPI.ts";

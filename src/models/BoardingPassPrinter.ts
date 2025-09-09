@@ -17,7 +17,7 @@ export class BoardingPassPrinter extends Printer {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async (): Promise<string[]> => {
-      return await this._getPairedResponse("TA");
+      return await this.getPairedResponse("TA");
     },
   };
 }

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuss2-ts - Cuss2 API Reference</title>
+  <meta name="description" content="API documentation for cuss2 module">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <!-- Prism.js CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body class="api-page">
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <a href="../" class="logo">
+      Cuss2-ts
+    </a>
+    <ul class="nav-links">
+      <li><a href="../">Home</a></li>
+<li><a href="./">API Reference</a></li>
+<li><a href="../examples/index.html">Guides &amp; Examples</a></li>
+<li><a href="https://github.com/elevationai/cuss2-ts" target="_blank">GitHub</a></li>
+    </ul>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+  </nav>
+
+  <!-- Layout Container -->
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="api-sidebar-header">
+        <a href="./" class="api-back-link">
+          <span>←</span> Back to API Reference
+        </a>
+        <h2 class="api-page-title">Cuss2</h2>
+      </div>
+      
+      
+    <nav class="on-page-nav">
+      <ul>
+        
+      <li>
+        <a href="#cuss2">Cuss2</a>
+        <ul><li><a href="#cuss2-connect">connect()</a></li>
+<li><a href="#cuss2-requestinitializestate">requestInitializeState()</a></li>
+<li><a href="#cuss2-requestunavailablestate">requestUnavailableState()</a></li>
+<li><a href="#cuss2-requestavailablestate">requestAvailableState()</a></li>
+<li><a href="#cuss2-requestactivestate">requestActiveState()</a></li>
+<li><a href="#cuss2-requeststoppedstate">requestStoppedState()</a></li>
+<li><a href="#cuss2-requestreload">requestReload()</a></li>
+<li><a href="#cuss2-querycomponents">queryComponents()</a></li>
+<li><a href="#cuss2-checkrequiredcomponentsandsyncstate">checkRequiredComponentsAndSyncState()</a></li></ul>
+      </li>
+    
+
+      <li>
+        <a href="#componentapi">ComponentAPI</a>
+        
+      </li>
+    
+      </ul>
+    </nav>
+  
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <article class="content-wrapper">
+        <div class="page-header">
+          <h1>Cuss2 API Reference</h1>
+          <p>API documentation for cuss2 module</p>
+        </div>
+
+        
+    <section id="cuss2" class="api-section">
+      <h2>Cuss2</h2>
+      <pre><code class="language-typescript">class Cuss2 extends EventEmitter</code></pre>
+      
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  connection: Connection;
+  environment: EnvironmentLevel;
+  components: Record&lt;string, Component&gt; | undefined;
+  bagTagPrinter?: BagTagPrinter; // How much gold the party starts with.
+  boardingPassPrinter?: BoardingPassPrinter;
+  documentReader?: DocumentReader;
+  barcodeReader?: BarcodeReader;
+  illumination?: Illumination;
+  announcement?: Announcement;
+  keypad?: Keypad;
+  cardReader?: CardReader;
+  biometric?: Biometric;
+  scale?: Scale;
+  insertionBelt?: InsertionBelt;
+  verificationBelt?: VerificationBelt;
+  parkingBelt?: ParkingBelt;
+  rfid?: RFID;
+  headset?: Headset;
+  camera?: Camera;
+  bhs?: BHS;
+  aeasbd?: AEASBD;
+  pendingStateChange?: AppState;
+  multiTenant?: boolean;
+  accessibleMode: boolean;
+  language?: string;
+  api: ComponentAPI;
+  get state(): AppState;
+  get connected(): Promise&lt;unknown&gt;;
+  get unavailableComponents(): Component[];
+  get unavailableRequiredComponents(): Component[];
+  get applicationOnline(): boolean;
+  set applicationOnline(value: boolean);</code></pre>
+    </section>
+      <h3>Methods</h3>
+
+    <section class="method" id="cuss2-connect">
+      <pre><code class="language-typescript">static connect(
+  client_id: string,
+  client_secret: string,
+  wss: string = &quot;https://localhost:22222&quot;,
+  deviceID: string = &quot;00000000-0000-0000-0000-000000000000&quot;,
+  tokenURL?: string
+): Cuss2</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-requestinitializestate">
+      <pre><code class="language-typescript">async requestInitializeState(): Promise&lt;PlatformData | undefined&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-requestunavailablestate">
+      <pre><code class="language-typescript">async requestUnavailableState(): Promise&lt;PlatformData | undefined&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-requestavailablestate">
+      <pre><code class="language-typescript">async requestAvailableState(): Promise&lt;PlatformData | undefined&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-requestactivestate">
+      <pre><code class="language-typescript">async requestActiveState(): Promise&lt;PlatformData | undefined&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-requeststoppedstate">
+      <pre><code class="language-typescript">async requestStoppedState(): Promise&lt;PlatformData | undefined&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-requestreload">
+      <pre><code class="language-typescript">async requestReload(): Promise&lt;boolean&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-querycomponents">
+      <pre><code class="language-typescript">async queryComponents(): Promise&lt;boolean&gt;</code></pre>
+    </section>
+  
+
+    <section class="method" id="cuss2-checkrequiredcomponentsandsyncstate">
+      <pre><code class="language-typescript">checkRequiredComponentsAndSyncState(): void</code></pre>
+    </section>
+  
+    </section>
+  
+
+    <section id="componentapi" class="api-section">
+      <h2>ComponentAPI</h2>
+      <pre><code class="language-typescript">interface ComponentAPI</code></pre>
+      <p>Interface defining the API methods available for interacting with CUSS2 components</p>
+      
+      <h3>Properties</h3>
+    <section class="properties-block">
+      <pre><code class="language-typescript">  getEnvironment: () =&gt; Promise&lt;EnvironmentLevel&gt;; // Gets environment information from the CUSS2 platform
+  getComponents: () =&gt; Promise&lt;ComponentList&gt;; // Gets the list of available components from the CUSS2 platform
+  enable: (componentID: number) =&gt; Promise&lt;PlatformData&gt;; // Enable a component for user interaction
+  disable: (componentID: number) =&gt; Promise&lt;PlatformData&gt;; // Disable a component from user interaction
+  cancel: (componentID: number) =&gt; Promise&lt;PlatformData&gt;; // Cancel the current operation on a component
+  getStatus: (componentID: number) =&gt; Promise&lt;PlatformData&gt;; // Query the status of a component
+  setup: (componentID: number, dataObj: DataRecordList) =&gt; Promise&lt;PlatformData&gt;; // Configure a component with setup data
+  send: (componentID: number, dataObj: DataRecordList | ScreenResolution | IlluminationData | BaggageData | CommonUsePaymentMessage | CommonUseBiometricMessage) =&gt; Promise&lt;PlatformData&gt;; // Send data to a component
+  offer: (componentID: number) =&gt; Promise&lt;PlatformData&gt;; // Offer a component to the user
+  staterequest: (state: ApplicationStateCodes, reasonCode: ApplicationStateChangeReasonCodes, reason: string) =&gt; Promise&lt;PlatformData | undefined&gt;; // Request a state change for the application
+  announcement: object; // Announcement-specific operations</code></pre>
+    </section>
+      
+    </section>
+  
+
+      </article>
+    </main>
+  </div>
+  <!-- End layout-container -->
+
+  <!-- Footer -->
+  <footer class="api-footer">
+    <div class="footer-content">
+      <p>
+        © 2025 Elevation AI. All rights reserved.
+         • <a href="/api">Documentation</a> • <a href="https://github.com/elevationai/cuss2-ts" target="_blank">GitHub</a> • <a href="https://jsr.io/@cuss/cuss2-ts" target="_blank">JSR Package</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Prism.js JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+  
+  <!-- API Documentation JavaScript -->
+  <script src="../assets/js/api-docs.js"></script>
+</body>
+</html>

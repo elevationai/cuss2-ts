@@ -5,7 +5,7 @@ import { Feeder } from "./Feeder.ts";
 import { Dispenser } from "./Dispenser.ts";
 import type { Component } from "./Component.ts";
 import type { Cuss2 } from "../cuss2.ts";
-import type { ComponentAPI } from "./ComponentAPI.ts";
+import type { ComponentAPI } from "../cuss2/ComponentAPI.ts";
 import { DeviceType } from "./deviceType.ts";
 import { PlatformResponseError } from "./platformResponseError.ts";
 import {
@@ -288,6 +288,7 @@ Deno.test("Printer updateState should handle CUT n HOLD timeout correctly", () =
   printer.updateState(timeoutMessage);
 
   // Component state should be READY, not UNAVAILABLE
+  // @ts-ignore - accessing private property for testing
   assertEquals(printer._componentState, ComponentState.READY);
   assert(readyStateChangeEmitted);
 });
@@ -310,6 +311,7 @@ Deno.test("Printer updateState should query linked components when becoming read
   };
 
   // Start with printer not ready
+  // @ts-ignore - accessing private property for testing
   printer._componentState = ComponentState.UNAVAILABLE;
 
   // Update to ready state
@@ -441,7 +443,7 @@ Deno.test("Printer getEnvironment should parse response correctly", async () => 
   assertEquals(env.SN, "12345");
 });
 
-Deno.test("Printer _getPairedResponse should split response correctly", async () => {
+Deno.test("Printer getPairedResponse should split response correctly", async () => {
   const { printer, cuss2 } = createTestPrinter();
 
   // Set up mock response
@@ -450,7 +452,8 @@ Deno.test("Printer _getPairedResponse should split response correctly", async ()
     payload: [{ data: "LSOK123456789ABC" }] as DataRecordList,
   } as PlatformData;
 
-  const pairs = await printer._getPairedResponse("LS", 2);
+  // @ts-ignore - accessing protected method for testing
+  const pairs = await printer.getPairedResponse("LS", 2);
 
   // Should split after "OK" into pairs of 2
   assertEquals(pairs, ["12", "34", "56", "78", "9A", "BC"]);

@@ -8,8 +8,8 @@ export class Keypad extends Component {
     super(component, cuss2, DeviceType.KEY_PAD);
   }
 
-  override _handleMessage(message: PlatformData) {
-    super._handleMessage(message);
+  override handleMessage(message: PlatformData) {
+    super.handleMessage(message);
     if (message.meta.componentID !== this.id) return;
 
     const dataRecords = message.payload?.dataRecords;

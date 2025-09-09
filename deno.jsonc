@@ -1,6 +1,6 @@
 {
   "name": "@cuss/cuss2-ts",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "license": "MIT",
   "exports": "./mod.ts",
   "tasks": {
@@ -28,6 +28,7 @@
     "nextControlFlowPosition": "nextLine"
   },
   "exclude": [
-    "dist/"
+    "dist/",
+    "docs/"
   ]
 }

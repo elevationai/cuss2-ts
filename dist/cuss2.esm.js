@@ -940,7 +940,7 @@ var Build = {
     const meta = {};
     meta.requestID = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${Math.random().toString(36).substring(2, 15)}`;
     meta.directive = directive;
-    if (componentID) {
+    if (componentID !== void 0) {
       meta.componentID = componentID;
     }
     meta.deviceID = deviceID;
@@ -1097,7 +1097,7 @@ var Component = class extends import_events3.EventEmitter {
     });
     cuss2.on("message", (data) => {
       if (data?.meta?.componentID === this.id) {
-        this._handleMessage(data);
+        this.handleMessage(data);
       }
     });
     cuss2.on("deactivated", () => {
@@ -1151,7 +1151,7 @@ var Component = class extends import_events3.EventEmitter {
     };
     poll();
   }
-  _handleMessage(data) {
+  handleMessage(data) {
     this.emit("message", data);
   }
   async _call(action) {
@@ -1200,7 +1200,7 @@ var Component = class extends import_events3.EventEmitter {
 // src/models/DataReaderComponent.ts
 var DataReaderComponent = class extends Component {
   previousData = [];
-  _handleMessage(data) {
+  handleMessage(data) {
     this.emit("message", data);
     if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
       this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
@@ -1399,7 +1399,7 @@ var Printer = class extends Component {
     const es = await this.sendITPSCommand("ES");
     return helpers.deserializeDictionary(es);
   }
-  async _getPairedResponse(cmd, n = 2) {
+  async getPairedResponse(cmd, n = 2) {
     const response = await this.sendITPSCommand(cmd);
     return helpers.split_every(response.substr(response.indexOf("OK") + 2), n) || [];
   }
@@ -1409,7 +1409,7 @@ var Printer = class extends Component {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async () => {
-      return await this._getPairedResponse("LS");
+      return await this.getPairedResponse("LS");
     }
   };
   pectabs = {
@@ -1418,7 +1418,7 @@ var Printer = class extends Component {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async () => {
-      return await this._getPairedResponse("PS");
+      return await this.getPairedResponse("PS");
     }
   };
 };
@@ -1434,7 +1434,7 @@ var BagTagPrinter = class extends Printer {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async () => {
-      return await this._getPairedResponse("PS", 4);
+      return await this.getPairedResponse("PS", 4);
     }
   };
 };
@@ -1450,7 +1450,7 @@ var BoardingPassPrinter = class extends Printer {
       return !!response && response.indexOf("OK") > -1;
     },
     query: async () => {
-      return await this._getPairedResponse("TA");
+      return await this.getPairedResponse("TA");
     }
   };
 };
@@ -1460,8 +1460,8 @@ var Keypad = class extends Component {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.KEY_PAD);
   }
-  _handleMessage(message) {
-    super._handleMessage(message);
+  handleMessage(message) {
+    super.handleMessage(message);
     if (message.meta.componentID !== this.id)
       return;
     const dataRecords = message.payload?.dataRecords;
@@ -1852,7 +1852,10 @@ var Connection = class _Connection extends EventEmitter2 {
     if (data instanceof Object && !data.meta?.deviceID) {
       data.meta.deviceID = this.deviceID;
     }
-    this._socket?.send(JSON.stringify(data));
+    this.json(data);
+  }
+  json(obj) {
+    this._socket?.send(JSON.stringify(obj));
   }
   async sendAndGetResponse(applicationData) {
     if (!this.isOpen) {
@@ -2079,6 +2082,9 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
   components = void 0;
   // State management
   _currentState = new StateChange("STOPPED" /* STOPPED */, "STOPPED" /* STOPPED */);
+  /**
+   * How much gold the party starts with.
+   */
   bagTagPrinter;
   boardingPassPrinter;
   documentReader;

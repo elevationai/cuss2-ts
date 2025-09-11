@@ -133,8 +133,8 @@ export const Build = {
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${Math.random().toString(36).substring(2, 15)}`;
     meta.directive = directive;
-    // Only set componentID if it's defined
-    if (componentID) {
+    // Only set componentID if it's defined (check for undefined, not falsy)
+    if (componentID !== undefined) {
       meta.componentID = componentID;
     }
     meta.deviceID = deviceID;

@@ -185,3 +185,31 @@ Deno.test("Build.stateChange should work without brand", () => {
     assertEquals(result.payload.applicationState.applicationBrand, undefined);
   }
 });
+
+Deno.test("Build.applicationData should include componentID 0 when provided", () => {
+  // Test that componentID 0 is included (not treated as falsy)
+  const result = Build.applicationData(
+    PlatformDirectives.PERIPHERALS_QUERY,
+    { componentID: 0 },
+  );
+
+  // Check that componentID 0 is present in meta
+  assertEquals(result.meta.componentID, 0);
+  assertEquals(result.meta.directive, PlatformDirectives.PERIPHERALS_QUERY);
+  assertExists(result.meta.requestID);
+  assertEquals(result.meta.deviceID, "00000000-0000-0000-0000-000000000000");
+});
+
+Deno.test("Build.applicationData should not include componentID when undefined", () => {
+  // Test that componentID is not included when undefined
+  const result = Build.applicationData(
+    PlatformDirectives.PERIPHERALS_QUERY,
+    {},
+  );
+
+  // Check that componentID is not present in meta
+  assertEquals(result.meta.componentID, undefined);
+  assertEquals(result.meta.directive, PlatformDirectives.PERIPHERALS_QUERY);
+  assertExists(result.meta.requestID);
+  assertEquals(result.meta.deviceID, "00000000-0000-0000-0000-000000000000");
+});

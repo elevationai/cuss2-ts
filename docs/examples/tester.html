@@ -660,8 +660,8 @@
 
             if (!cuss2 || !cuss2.connection.isOpen) return;
 
-            // State transition rules - matches platform Python logic exactly
-            const stateTransitions = {
+            // Define what states applications can move to based on platform logic
+            const canMoveTo = {
               [ApplicationStateCodes.STOPPED]: ["initialize"],
               [ApplicationStateCodes.INITIALIZE]: ["available", "initialize", "unavailable", "reload", "stopped", "disabled"],
               [ApplicationStateCodes.UNAVAILABLE]: ["stopped", "suspended", "reload", "available"],
@@ -670,16 +670,24 @@
               [ApplicationStateCodes.RELOAD]: ["disabled", "initialize", "unavailable"],
               [ApplicationStateCodes.SUSPENDED]: ["available", "unavailable", "stopped"],
               [ApplicationStateCodes.DISABLED]: ["stopped", "initialize"],
-              // Note: Some states (suspended, disabled) don't have UI buttons but are included for complete validation
             };
 
-            // Enable valid transitions
-            const validTransitions = stateTransitions[currentState] || [];
-            validTransitions.forEach((action) => {
+            // Define what states applications are allowed to request
+            const canRequest = ["initialize", "unavailable", "available", "active", "reload"];
+
+            // Get transitions that are both valid to move to AND allowed to request
+            const validTransitions = canMoveTo[currentState] || [];
+            const allowedTransitions = validTransitions.filter(action => canRequest.includes(action));
+
+            // Enable buttons for allowed transitions
+            allowedTransitions.forEach((action) => {
               if (dom.elements.stateButtons[action]) {
                 dom.setButtonState(dom.elements.stateButtons[action], false);
               }
             });
+
+            // STOPPED button always stays disabled (not requestable by applications)
+            dom.setButtonState(dom.elements.stateButtons.stopped, true);
           },
 
           // Display environment info

@@ -1158,31 +1158,21 @@
 
           // Request state change
           async requestState(action) {
-            console.log(`DEBUG: requestState called with action: ${action}`);
             const request = this.stateRequests[action];
             if (!request) {
-              console.log(`DEBUG: No request found for action: ${action}`);
               return;
             }
 
-            console.log(`DEBUG: Found request for ${action}:`, request);
-
             // Check for confirmation requirement
             if (request.confirm && !confirm(request.confirm)) {
-              console.log(`DEBUG: User cancelled confirmation for ${action}`);
               return;
             }
 
             try {
-              console.log(`DEBUG: About to call cuss2.${request.method}()`);
-              console.log(`DEBUG: Current cuss2.state before request:`, cuss2.state);
-              console.log(`DEBUG: Current UI state display:`, dom.elements.currentState.textContent);
               const result = await cuss2[request.method]();
-              console.log(`DEBUG: ${request.method}() returned:`, result);
               logger.success(`Requested ${request.state} state`);
             }
             catch (error) {
-              console.log(`DEBUG: Error in ${request.method}():`, error);
               logger.error(`Failed to request ${request.state}: ${error.message}`);
             }
           },

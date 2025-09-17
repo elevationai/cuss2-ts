@@ -157,28 +157,179 @@
         padding: 10px;
       }
       .component-item {
-        padding: 10px;
-        margin: 5px 0;
+        padding: 15px;
+        margin: 10px 0;
         border: 1px solid rgba(100, 255, 218, 0.1);
-        border-radius: 4px;
+        border-radius: 8px;
         background: rgba(26, 26, 46, 0.4);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
       .component-item.ready {
-        background: rgba(100, 255, 218, 0.1);
-        border-color: #64ffda;
+        background: rgba(100, 255, 218, 0.05);
+        border-color: rgba(100, 255, 218, 0.3);
       }
       .component-item.enabled {
-        background: rgba(72, 202, 228, 0.1);
-        border-color: #48cae4;
+        background: rgba(72, 202, 228, 0.05);
+        border-color: rgba(72, 202, 228, 0.3);
+      }
+      .component-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .component-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .component-header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
       .component-name {
         font-weight: 600;
         color: #64ffda;
+        font-size: 16px;
       }
-      .component-status {
-        font-size: 12px;
+      .component-badges {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .component-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .component-badge.ready {
+        background: rgba(100, 255, 218, 0.2);
+        color: #64ffda;
+        border: 1px solid #64ffda;
+      }
+      .component-badge.not-ready {
+        background: rgba(255, 100, 100, 0.2);
+        color: #ff6464;
+        border: 1px solid #ff6464;
+      }
+      .component-badge.enabled {
+        background: rgba(72, 202, 228, 0.2);
+        color: #48cae4;
+        border: 1px solid #48cae4;
+      }
+      .component-badge.disabled {
+        background: rgba(108, 117, 125, 0.2);
         color: #a0a0a0;
-        margin-top: 5px;
+        border: 1px solid #6c757d;
+      }
+      .component-badge.status-ok {
+        background: rgba(100, 255, 218, 0.2);
+        color: #64ffda;
+        border: 1px solid #64ffda;
+      }
+      .component-badge.status-error {
+        background: rgba(255, 100, 100, 0.2);
+        color: #ff6464;
+        border: 1px solid #ff6464;
+      }
+      .component-badge.status-unavailable {
+        background: rgba(255, 100, 100, 0.2);
+        color: #ff6464;
+        border: 1px solid #ff6464;
+      }
+      .component-badge.status-not-responding {
+        background: rgba(255, 100, 100, 0.2);
+        color: #ff6464;
+        border: 1px solid #ff6464;
+      }
+      .component-badge.status-media-absent {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid #ffc107;
+      }
+      .component-badge.status-media-present {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid #ffc107;
+      }
+      .component-badge.status-wrong-application-state {
+        background: rgba(255, 100, 100, 0.2);
+        color: #ff6464;
+        border: 1px solid #ff6464;
+      }
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .toggle-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #a0a0a0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .toggle-switch {
+        position: relative;
+        width: 46px;
+        height: 22px;
+        background: rgba(108, 117, 125, 0.3);
+        border-radius: 11px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(108, 117, 125, 0.5);
+      }
+      .toggle-switch.enabled {
+        background: linear-gradient(135deg, #64ffda, #48cae4);
+        border-color: #64ffda;
+      }
+      .toggle-switch.pending {
+        background: linear-gradient(135deg, #ffc107, #ff9f00);
+        border-color: #ffc107;
+      }
+      .toggle-switch.disabled {
+        background: rgba(108, 117, 125, 0.3);
+        border-color: rgba(108, 117, 125, 0.5);
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .toggle-slider {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: #ffffff;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .toggle-switch.enabled .toggle-slider {
+        transform: translateX(24px);
+        background: #0f0f1e;
+      }
+      .toggle-switch.pending .toggle-slider {
+        background: #0f0f1e;
+        animation: togglePulse 1.5s infinite;
+      }
+      @keyframes togglePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      .toggle-switch:hover:not(.disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+      .toggle-switch.enabled:hover:not(.disabled) {
+        box-shadow: 0 4px 12px rgba(100, 255, 218, 0.4);
       }
       .log-container {
         background: #0a0a14;
@@ -509,25 +660,26 @@
 
             if (!cuss2 || !cuss2.connection.isOpen) return;
 
-            // State transition rules
+            // State transition rules - matches platform Python logic exactly
             const stateTransitions = {
               [ApplicationStateCodes.STOPPED]: ["initialize"],
-              [ApplicationStateCodes.INITIALIZE]: ["unavailable"],
-              [ApplicationStateCodes.UNAVAILABLE]: ["available", "reload"],
-              [ApplicationStateCodes.AVAILABLE]: ["unavailable", "active", "reload"],
-              [ApplicationStateCodes.ACTIVE]: ["available", "unavailable", "reload"],
+              [ApplicationStateCodes.INITIALIZE]: ["available", "initialize", "unavailable", "reload", "stopped", "disabled"],
+              [ApplicationStateCodes.UNAVAILABLE]: ["stopped", "suspended", "reload", "available"],
+              [ApplicationStateCodes.AVAILABLE]: ["suspended", "reload", "disabled", "active", "unavailable", "stopped"],
+              [ApplicationStateCodes.ACTIVE]: ["active", "unavailable", "disabled", "reload", "stopped", "available"],
+              [ApplicationStateCodes.RELOAD]: ["disabled", "initialize", "unavailable"],
+              [ApplicationStateCodes.SUSPENDED]: ["available", "unavailable", "stopped"],
+              [ApplicationStateCodes.DISABLED]: ["stopped", "initialize"],
+              // Note: Some states (suspended, disabled) don't have UI buttons but are included for complete validation
             };
 
             // Enable valid transitions
             const validTransitions = stateTransitions[currentState] || [];
             validTransitions.forEach((action) => {
-              dom.setButtonState(dom.elements.stateButtons[action], false);
+              if (dom.elements.stateButtons[action]) {
+                dom.setButtonState(dom.elements.stateButtons[action], false);
+              }
             });
-
-            // Stopped can be requested from any state except STOPPED
-            if (currentState !== ApplicationStateCodes.STOPPED) {
-              dom.setButtonState(dom.elements.stateButtons.stopped, false);
-            }
           },
 
           // Display environment info
@@ -563,17 +715,88 @@
             if (component.ready) item.classList.add("ready");
             if (component.enabled) item.classList.add("enabled");
 
-            item.innerHTML = `
-                    <div class="component-name">${component.deviceType} (ID: ${id})</div>
-                    <div class="component-status">
-                        Ready: ${component.ready ? "Yes" : "No"} |
-                        Enabled: ${component.enabled ? "Yes" : "No"} |
-                        Required: ${component.required ? "Yes" : "No"}
-                    </div>
-                `;
+            // Create badges for component status
+            const readyBadge = component.ready
+              ? '<span class="component-badge ready">Ready</span>'
+              : '<span class="component-badge not-ready">Not Ready</span>';
 
-            // Add click handler
-            item.addEventListener("click", () => componentHandlers.handleComponentClick(component));
+            // Only show enabled badge when actually enabled
+            const enabledBadge = component.enabled
+              ? '<span class="component-badge enabled">Enabled</span>'
+              : '';
+
+            // Create status badge if component has a status other than OK
+            let statusBadge = '';
+            if (component.status && component.status !== 'OK') {
+              const statusClass = `status-${component.status.toLowerCase().replace(/_/g, '-')}`;
+              statusBadge = `<span class="component-badge ${statusClass}">${component.status.replace(/_/g, ' ')}</span>`;
+            }
+
+            // Create toggle switch with proper state sync
+            const canToggle = component.ready;
+            const toggleClass = component.enabled ? 'enabled' : '';
+            const disabledClass = !canToggle ? 'disabled' : '';
+            const toggleSwitch = `
+              <div class="toggle-container">
+                <div class="toggle-switch ${toggleClass} ${disabledClass}" data-component-id="${id}" data-current-state="${component.enabled}">
+                  <div class="toggle-slider"></div>
+                </div>
+                <span class="toggle-label">Enabled</span>
+              </div>
+            `;
+
+            item.innerHTML = `
+              <div class="component-header">
+                <div class="component-header-left">
+                  <div class="component-name">${component.deviceType} (ID: ${id})</div>
+                  <div class="component-badges">
+                    ${enabledBadge}
+                    ${statusBadge}
+                  </div>
+                </div>
+                <div class="component-header-right">
+                  ${readyBadge}
+                  ${toggleSwitch}
+                </div>
+              </div>
+            `;
+
+            // Add toggle switch event listener
+            const toggleElement = item.querySelector('.toggle-switch');
+
+            toggleElement.addEventListener('click', async (e) => {
+              e.stopPropagation();
+
+              // Don't allow toggle if component is not ready or already pending
+              if (!component.ready || toggleElement.classList.contains('pending')) {
+                return;
+              }
+
+              const originalState = toggleElement.dataset.currentState === 'true';
+              const action = originalState ? 'disable' : 'enable';
+
+              // Set pending state immediately
+              toggleElement.classList.add('pending');
+              toggleElement.classList.remove('enabled');
+
+              try {
+                await componentHandlers.handleComponentAction(component, action);
+
+                // Success: Update based on actual component state
+                componentHandlers.syncToggleState(toggleElement, component);
+              } catch (error) {
+                // Error: Revert to original state
+                if (originalState) {
+                  toggleElement.classList.add('enabled');
+                } else {
+                  toggleElement.classList.remove('enabled');
+                }
+                toggleElement.dataset.currentState = originalState;
+              } finally {
+                // Always remove pending state
+                toggleElement.classList.remove('pending');
+              }
+            });
 
             return item;
           },
@@ -590,21 +813,42 @@
 
         // ===== COMPONENT HANDLERS =====
         const componentHandlers = {
-          // Handle component click
-          async handleComponentClick(component) {
+          // Handle component action (enable/disable)
+          async handleComponentAction(component, action) {
             const name = component.deviceType;
-            const action = component.enabled ? "disable" : "enable";
 
-            if (confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${name}?`)) {
-              try {
-                await component[action]();
-                logger.success(`${name} ${action}d`);
-                ui.displayComponents();
-              }
-              catch (error) {
-                logger.error(`Failed to ${action} ${name}: ${error.message}`);
-              }
+            try {
+              const actionText = action === 'enable' ? 'Enabling' : 'Disabling';
+              logger.info(`${actionText} ${name}...`);
+              await component[action]();
+              logger.success(`${name} ${action}d`);
             }
+            catch (error) {
+              logger.error(`Failed to ${action} ${name}: ${error.message}`);
+              throw error; // Re-throw so the toggle can handle the error state
+            }
+          },
+
+          // Sync toggle visual state with component state
+          syncToggleState(toggleElement, component) {
+            if (component.enabled) {
+              toggleElement.classList.add('enabled');
+            } else {
+              toggleElement.classList.remove('enabled');
+            }
+            toggleElement.dataset.currentState = component.enabled.toString();
+          },
+
+          // Update all toggle states after component refresh
+          updateAllToggleStates() {
+            if (!cuss2 || !cuss2.components) return;
+
+            Object.entries(cuss2.components).forEach(([id, component]) => {
+              const toggleElement = document.querySelector(`[data-component-id="${id}"]`);
+              if (toggleElement) {
+                this.syncToggleState(toggleElement, component);
+              }
+            });
           },
 
           // Setup component data listeners
@@ -687,6 +931,8 @@
                 handler: (newState) => {
                   logger.event(`Application deactivated, new state: ${newState}`);
                   ui.updateApplicationInfo(false);
+                  // Update the state display and buttons to reflect new state
+                  ui.updateStateDisplay(newState);
                 },
               },
               {
@@ -694,11 +940,22 @@
                 handler: (component) => {
                   logger.event(`Component ${component.deviceType} state changed`);
                   ui.displayComponents();
+                  // Ensure toggle states are synced after component refresh
+                  setTimeout(() => componentHandlers.updateAllToggleStates(), 10);
                 },
               },
               {
                 event: "sessionTimeout",
-                handler: () => logger.error("Session timeout"),
+                handler: () => {
+                  logger.error("Session timeout");
+                  // Session timeout typically moves application to STOPPED state
+                  // Update UI to reflect this state change
+                  if (cuss2 && cuss2.state) {
+                    ui.updateStateDisplay(cuss2.state);
+                    ui.updateApplicationInfo(false);
+                    ui.displayComponents(); // Update components as they may be disabled
+                  }
+                },
               },
               // {
               //     event: 'activated',
@@ -802,17 +1059,31 @@
 
           // Request state change
           async requestState(action) {
+            console.log(`DEBUG: requestState called with action: ${action}`);
             const request = this.stateRequests[action];
-            if (!request) return;
+            if (!request) {
+              console.log(`DEBUG: No request found for action: ${action}`);
+              return;
+            }
+
+            console.log(`DEBUG: Found request for ${action}:`, request);
 
             // Check for confirmation requirement
-            if (request.confirm && !confirm(request.confirm)) return;
+            if (request.confirm && !confirm(request.confirm)) {
+              console.log(`DEBUG: User cancelled confirmation for ${action}`);
+              return;
+            }
 
             try {
-              await cuss2[request.method]();
+              console.log(`DEBUG: About to call cuss2.${request.method}()`);
+              console.log(`DEBUG: Current cuss2.state before request:`, cuss2.state);
+              console.log(`DEBUG: Current UI state display:`, dom.elements.currentState.textContent);
+              const result = await cuss2[request.method]();
+              console.log(`DEBUG: ${request.method}() returned:`, result);
               logger.success(`Requested ${request.state} state`);
             }
             catch (error) {
+              console.log(`DEBUG: Error in ${request.method}():`, error);
               logger.error(`Failed to request ${request.state}: ${error.message}`);
             }
           },

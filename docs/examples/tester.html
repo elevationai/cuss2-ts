@@ -617,6 +617,53 @@
           },
         };
 
+        // ===== HTML TEMPLATES =====
+        const templates = {
+          // Environment details template
+          environmentDetails(env) {
+            return `
+              <div><strong>Device ID:</strong> ${env.deviceID || "-"}</div>
+              <div><strong>CUSS Version:</strong> ${env.cussVersions?.[0] || "-"}</div>
+              <div><strong>Location:</strong> ${env.deviceLocation?.airportCode || "-"}</div>
+            `;
+          },
+
+          // Component item template
+          componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch) {
+            return `
+              <div class="component-header">
+                <div class="component-header-left">
+                  <div class="component-name">${component.deviceType} (ID: ${id})</div>
+                  <div class="component-badges">
+                    ${enabledBadge}
+                    ${statusBadge}
+                  </div>
+                </div>
+                <div class="component-header-right">
+                  ${readyBadge}
+                  ${toggleSwitch}
+                </div>
+              </div>
+            `;
+          },
+
+          // Toggle switch template
+          toggleSwitch(id, component) {
+            const canToggle = component.ready;
+            const toggleClass = component.enabled ? 'enabled' : '';
+            const disabledClass = !canToggle ? 'disabled' : '';
+
+            return `
+              <div class="toggle-container">
+                <div class="toggle-switch ${toggleClass} ${disabledClass}" data-component-id="${id}" data-current-state="${component.enabled}">
+                  <div class="toggle-slider"></div>
+                </div>
+                <span class="toggle-label">Enabled</span>
+              </div>
+            `;
+          }
+        };
+
         // ===== UI UPDATE UTILITIES =====
         const ui = {
           // Connection status states
@@ -693,11 +740,7 @@
           // Display environment info
           displayEnvironment(env) {
             dom.setVisible(dom.elements.environmentInfo, true);
-            dom.elements.envDetails.innerHTML = `
-                    <div><strong>Device ID:</strong> ${env.deviceID || "-"}</div>
-                    <div><strong>CUSS Version:</strong> ${env.cussVersions?.[0] || "-"}</div>
-                    <div><strong>Location:</strong> ${env.deviceLocation?.airportCode || "-"}</div>
-                `;
+            dom.elements.envDetails.innerHTML = templates.environmentDetails(env);
           },
 
           // Display components
@@ -741,33 +784,9 @@
             }
 
             // Create toggle switch with proper state sync
-            const canToggle = component.ready;
-            const toggleClass = component.enabled ? 'enabled' : '';
-            const disabledClass = !canToggle ? 'disabled' : '';
-            const toggleSwitch = `
-              <div class="toggle-container">
-                <div class="toggle-switch ${toggleClass} ${disabledClass}" data-component-id="${id}" data-current-state="${component.enabled}">
-                  <div class="toggle-slider"></div>
-                </div>
-                <span class="toggle-label">Enabled</span>
-              </div>
-            `;
+            const toggleSwitch = templates.toggleSwitch(id, component);
 
-            item.innerHTML = `
-              <div class="component-header">
-                <div class="component-header-left">
-                  <div class="component-name">${component.deviceType} (ID: ${id})</div>
-                  <div class="component-badges">
-                    ${enabledBadge}
-                    ${statusBadge}
-                  </div>
-                </div>
-                <div class="component-header-right">
-                  ${readyBadge}
-                  ${toggleSwitch}
-                </div>
-              </div>
-            `;
+            item.innerHTML = templates.componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch);
 
             // Add toggle switch event listener
             const toggleElement = item.querySelector('.toggle-switch');

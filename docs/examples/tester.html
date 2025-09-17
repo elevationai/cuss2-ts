@@ -395,6 +395,40 @@
       .back-link:hover {
         transform: translateX(-5px);
       }
+      .timeout-banner {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+        z-index: 1000;
+        text-align: center;
+        min-width: 300px;
+        animation: slideDown 0.5s ease-out;
+      }
+      .timeout-banner strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 16px;
+      }
+      .timeout-banner p {
+        margin: 0;
+        font-size: 14px;
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
     </style>
   </head>
   <body>
@@ -661,6 +695,16 @@
                 <span class="toggle-label">Enabled</span>
               </div>
             `;
+          },
+
+          // Timeout warning banner template
+          timeoutWarning(seconds) {
+            return `
+              <div id="timeoutBanner" class="timeout-banner">
+                <strong>⚠️ Session Timeout Warning</strong>
+                <p>Application will be terminated in <span id="timeoutCounter">${seconds}</span> seconds</p>
+              </div>
+            `;
           }
         };
 
@@ -828,8 +872,41 @@
             return item;
           },
 
+          // Show timeout warning banner with countdown
+          showTimeoutWarning(seconds) {
+            // Remove any existing banner
+            const existingBanner = document.getElementById('timeoutBanner');
+            if (existingBanner) {
+              existingBanner.remove();
+            }
+
+            // Add banner to body
+            document.body.insertAdjacentHTML('afterbegin', templates.timeoutWarning(seconds));
+
+            // Start countdown timer
+            let remainingSeconds = seconds;
+            const counter = document.getElementById('timeoutCounter');
+
+            const countdown = setInterval(() => {
+              remainingSeconds--;
+              if (counter) {
+                counter.textContent = remainingSeconds;
+              }
+
+              if (remainingSeconds <= 0) {
+                clearInterval(countdown);
+              }
+            }, 1000);
+          },
+
           // Reset UI to disconnected state
           resetUI() {
+            // Remove timeout banner if present
+            const timeoutBanner = document.getElementById('timeoutBanner');
+            if (timeoutBanner) {
+              timeoutBanner.remove();
+            }
+
             dom.setVisible(dom.elements.environmentInfo, false);
             dom.elements.componentList.innerHTML =
               '<p style="color: #666;">Connect to see available components...</p>';
@@ -973,15 +1050,10 @@
               },
               {
                 event: "sessionTimeout",
-                handler: () => {
-                  logger.error("Session timeout");
-                  // Session timeout typically moves application to STOPPED state
-                  // Update UI to reflect this state change
-                  if (cuss2 && cuss2.state) {
-                    ui.updateStateDisplay(cuss2.state);
-                    ui.updateApplicationInfo(false);
-                    ui.displayComponents(); // Update components as they may be disabled
-                  }
+                handler: (env) => {
+                  const killTimeout = env?.killTimeout || 30; // Default to 30 seconds if not provided
+                  logger.error(`Session timeout warning - Application will be terminated in ${killTimeout} seconds`);
+                  ui.showTimeoutWarning(killTimeout);
                 },
               },
               // {

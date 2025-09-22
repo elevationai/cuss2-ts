@@ -429,6 +429,119 @@
           transform: translateX(-50%) translateY(0);
         }
       }
+      .mixed-content-banner {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(243, 156, 18, 0.4);
+        z-index: 1000;
+        max-width: 500px;
+        animation: slideDown 0.5s ease-out;
+      }
+      .mixed-content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .mixed-content-header strong {
+        font-size: 16px;
+      }
+      .dismiss-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background 0.2s ease;
+      }
+      .dismiss-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .mixed-content-banner p {
+        margin: 8px 0;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .mixed-content-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+      .suggested-url-btn {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        flex: 1;
+        min-width: 200px;
+      }
+      .suggested-url-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+      }
+      .continue-anyway-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+      .continue-anyway-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      .token-url-container {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .token-url-container input {
+        flex: 1;
+      }
+      .generate-token-btn {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #64ffda, #48cae4);
+        color: #0f0f1e;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+      .generate-token-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(100, 255, 218, 0.3);
+      }
+      .generate-token-btn:disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
+      }
     </style>
   </head>
   <body>
@@ -460,12 +573,14 @@
             </div>
             <div class="form-group">
               <label for="tokenUrl">Token URL (optional)</label>
-              <input
-                type="text"
-                id="tokenUrl"
-                value="http://localhost:22222/oauth/token"
-                placeholder="Leave empty to use WebSocket URL"
-              >
+              <div class="token-url-container">
+                <input
+                  type="text"
+                  id="tokenUrl"
+                  placeholder="http://localhost:22222/oauth/token"
+                >
+                <button type="button" id="generateTokenBtn" class="generate-token-btn">Generate</button>
+              </div>
             </div>
             <button type="submit" id="connectBtn">Connect</button>
             <button type="button" id="disconnectBtn" disabled>Disconnect</button>
@@ -536,6 +651,31 @@
           wss: urlParams.get("CUSS-WSS"),
           tokenUrl: urlParams.get("OAUTH-URL"),
           deviceId: urlParams.get("DEVICE-ID"),
+        };
+
+        // ===== URL UTILITIES =====
+        const urlUtils = {
+          // Check for mixed content issues
+          checkMixedContent(targetUrl) {
+            // Only check if current page is served over HTTPS
+            if (location.protocol !== 'https:') {
+              return { hasMixedContent: false };
+            }
+
+            try {
+              const url = new URL(targetUrl);
+              const isHttpTarget = url.protocol === 'http:' || url.protocol === 'ws:';
+
+              return {
+                hasMixedContent: isHttpTarget,
+                currentProtocol: location.protocol,
+                targetProtocol: url.protocol,
+                suggestedUrl: isHttpTarget ? targetUrl.replace(/^(ws|http):/, url.protocol === 'ws:' ? 'wss:' : 'https:') : targetUrl
+              };
+            } catch (error) {
+              return { hasMixedContent: false, error: error.message };
+            }
+          }
         };
 
         // ===== DOM HELPERS =====
@@ -705,6 +845,26 @@
                 <p>Application will be terminated in <span id="timeoutCounter">${seconds}</span> seconds</p>
               </div>
             `;
+          },
+
+          // Mixed content warning banner template
+          mixedContentWarning(currentProtocol, targetProtocol, suggestedUrl) {
+            return `
+              <div id="mixedContentBanner" class="mixed-content-banner">
+                <div class="mixed-content-header">
+                  <strong>🔒 Mixed Content Security Warning</strong>
+                  <button id="dismissMixedContent" class="dismiss-btn">×</button>
+                </div>
+                <p>This page is served over <strong>${currentProtocol.replace(':', '').toUpperCase()}</strong> but trying to connect to <strong>${targetProtocol.replace(':', '').toUpperCase()}</strong>.</p>
+                <p>Modern browsers block this for security reasons.</p>
+                <div class="mixed-content-actions">
+                  <button id="useSuggestedUrl" class="suggested-url-btn" data-url="${suggestedUrl}">
+                    Use Secure URL: ${suggestedUrl}
+                  </button>
+                  <button id="continueAnyway" class="continue-anyway-btn">Continue Anyway</button>
+                </div>
+              </div>
+            `;
           }
         };
 
@@ -754,7 +914,7 @@
             // Define what states applications can move to based on platform logic
             const canMoveTo = {
               [ApplicationStateCodes.STOPPED]: ["initialize"],
-              [ApplicationStateCodes.INITIALIZE]: ["available", "initialize", "unavailable", "reload", "stopped", "disabled"],
+              [ApplicationStateCodes.INITIALIZE]: ["unavailable", "stopped", "disabled"],
               [ApplicationStateCodes.UNAVAILABLE]: ["stopped", "suspended", "reload", "available"],
               [ApplicationStateCodes.AVAILABLE]: ["suspended", "reload", "disabled", "active", "unavailable", "stopped"],
               [ApplicationStateCodes.ACTIVE]: ["active", "unavailable", "disabled", "reload", "stopped", "available"],
@@ -899,12 +1059,75 @@
             }, 1000);
           },
 
+          // Show mixed content warning banner
+          showMixedContentWarning(mixedContentInfo, onContinue) {
+            // Remove any existing banner
+            const existingBanner = document.getElementById('mixedContentBanner');
+            if (existingBanner) {
+              existingBanner.remove();
+            }
+
+            // Add banner to body
+            document.body.insertAdjacentHTML('afterbegin',
+              templates.mixedContentWarning(
+                mixedContentInfo.currentProtocol,
+                mixedContentInfo.targetProtocol,
+                mixedContentInfo.suggestedUrl
+              )
+            );
+
+            // Set up event listeners
+            const dismissBtn = document.getElementById('dismissMixedContent');
+            const suggestedBtn = document.getElementById('useSuggestedUrl');
+            const continueBtn = document.getElementById('continueAnyway');
+
+            dismissBtn?.addEventListener('click', () => {
+              existingBanner?.remove();
+            });
+
+            suggestedBtn?.addEventListener('click', () => {
+              const suggestedUrl = suggestedBtn.dataset.url;
+
+              // Update WebSocket URL field
+              const wssInput = document.getElementById('wss');
+              if (wssInput) {
+                wssInput.value = suggestedUrl;
+                // Trigger input event to update OAuth URL
+                wssInput.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+
+              // Remove banner
+              document.getElementById('mixedContentBanner')?.remove();
+
+              // Log the change
+              logger.info(`Switched to secure URL: ${suggestedUrl}`);
+            });
+
+            continueBtn?.addEventListener('click', () => {
+              document.getElementById('mixedContentBanner')?.remove();
+              if (onContinue) onContinue();
+            });
+
+            return new Promise((resolve, reject) => {
+              // Return a promise that resolves when user makes a choice
+              continueBtn?.addEventListener('click', () => resolve('continue'));
+              suggestedBtn?.addEventListener('click', () => resolve('suggested'));
+              dismissBtn?.addEventListener('click', () => reject(new Error('User cancelled connection')));
+            });
+          },
+
           // Reset UI to disconnected state
           resetUI() {
             // Remove timeout banner if present
             const timeoutBanner = document.getElementById('timeoutBanner');
             if (timeoutBanner) {
               timeoutBanner.remove();
+            }
+
+            // Remove mixed content banner if present
+            const mixedContentBanner = document.getElementById('mixedContentBanner');
+            if (mixedContentBanner) {
+              mixedContentBanner.remove();
             }
 
             dom.setVisible(dom.elements.environmentInfo, false);
@@ -1091,36 +1314,33 @@
           // Connect to CUSS2
           async connect(config) {
             try {
-              logger.info("Connecting to CUSS2 platform...");
-              ui.updateConnectionStatus("CONNECTING");
+              // Check for mixed content issues before connecting
+              const mixedContentCheck = urlUtils.checkMixedContent(config.wss);
+              if (mixedContentCheck.hasMixedContent) {
+                logger.info("Mixed content detected, showing warning...");
 
-              cuss2 = Cuss2.connect(
-                config.clientId,
-                config.clientSecret,
-                config.wss,
-                config.deviceId || undefined,
-                config.tokenUrl || undefined,
-              );
+                try {
+                  const userChoice = await ui.showMixedContentWarning(mixedContentCheck, () => {
+                    // Continue anyway callback
+                    this.performConnection(config);
+                  });
 
-              // Setup all listeners
-              this.setupConnectionListeners();
-              this.setupPlatformListeners();
+                  if (userChoice === 'suggested') {
+                    // User chose to use suggested URL, but form should already be updated
+                    // Just return, the new URL will be used on next connection attempt
+                    return;
+                  } else if (userChoice === 'continue') {
+                    // User chose to continue anyway, proceed with connection
+                  }
+                } catch (error) {
+                  // User cancelled
+                  logger.info("Connection cancelled by user");
+                  ui.updateConnectionStatus("DISCONNECTED");
+                  return;
+                }
+              }
 
-              // Wait for connection
-              await cuss2.connected;
-
-              logger.success("Connected successfully!");
-              ui.updateConnectionStatus("CONNECTED");
-              dom.setButtonState(dom.elements.connectBtn, true);
-              dom.setButtonState(dom.elements.disconnectBtn, false);
-
-              // Display environment and components
-              ui.displayEnvironment(cuss2.environment);
-              ui.displayComponents();
-              ui.updateStateDisplay(cuss2.state);
-
-              // Setup component listeners
-              componentHandlers.setupComponentListeners();
+              await this.performConnection(config);
             }
             catch (error) {
               logger.error(`Connection failed: ${error.message}`);
@@ -1128,6 +1348,46 @@
               dom.setButtonState(dom.elements.connectBtn, false);
               dom.setButtonState(dom.elements.disconnectBtn, true);
             }
+          },
+
+          // Perform the actual connection
+          async performConnection(config) {
+            logger.info("Connecting to CUSS2 platform...");
+            ui.updateConnectionStatus("CONNECTING");
+
+            // Generate OAuth URL from WebSocket URL if token URL is not provided
+            const tokenUrl = config.tokenUrl?.trim() || generateOAuthUrl(config.wss);
+
+            logger.info(`Using WebSocket URL: ${config.wss}`);
+            logger.info(`Using OAuth Token URL: ${tokenUrl}`);
+
+            cuss2 = Cuss2.connect(
+              config.clientId,
+              config.clientSecret,
+              config.wss,
+              config.deviceId || undefined,
+              tokenUrl || undefined,
+            );
+
+            // Setup all listeners
+            this.setupConnectionListeners();
+            this.setupPlatformListeners();
+
+            // Wait for connection
+            await cuss2.connected;
+
+            logger.success("Connected successfully!");
+            ui.updateConnectionStatus("CONNECTED");
+            dom.setButtonState(dom.elements.connectBtn, true);
+            dom.setButtonState(dom.elements.disconnectBtn, false);
+
+            // Display environment and components
+            ui.displayEnvironment(cuss2.environment);
+            ui.displayComponents();
+            ui.updateStateDisplay(cuss2.state);
+
+            // Setup component listeners
+            componentHandlers.setupComponentListeners();
           },
 
           // Disconnect
@@ -1186,6 +1446,97 @@
         };
 
         // ===== INITIALIZATION =====
+
+        // Function to generate OAuth URL from WebSocket URL
+        function generateOAuthUrl(wsUrl) {
+          if (!wsUrl) return '';
+
+          try {
+            // Handle URLs that might not have protocol
+            const hasProtocol = wsUrl.startsWith('ws://') || wsUrl.startsWith('wss://') || wsUrl.startsWith('http://') || wsUrl.startsWith('https://');
+            const normalizedUrl = hasProtocol ? wsUrl : `http://${wsUrl}`;
+
+            const url = new URL(normalizedUrl);
+
+            // Map protocols: ws/wss/http/https → http/https
+            let httpScheme;
+            if (url.protocol === 'wss:') {
+              httpScheme = 'https:';
+            } else if (url.protocol === 'ws:') {
+              httpScheme = 'http:';
+            } else {
+              httpScheme = url.protocol; // Already http: or https:
+            }
+
+            // Construct OAuth URL
+            return `${httpScheme}//${url.host}/oauth/token`;
+          } catch (error) {
+            return '';
+          }
+        }
+
+        // Function to update Token URL placeholder text
+        function updateTokenUrlPlaceholder() {
+          const wssInput = document.getElementById("wss");
+          const tokenUrlInput = document.getElementById("tokenUrl");
+
+          if (wssInput && tokenUrlInput) {
+            const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
+            const placeholderUrl = generateOAuthUrl(wsUrl);
+            tokenUrlInput.placeholder = placeholderUrl;
+          }
+        }
+
+        // Function to check if WebSocket URL and Token URL are in sync
+        function areUrlsInSync() {
+          const wssInput = document.getElementById("wss");
+          const tokenUrlInput = document.getElementById("tokenUrl");
+
+          if (!wssInput || !tokenUrlInput) return true;
+
+          const currentTokenUrl = tokenUrlInput.value.trim();
+          const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
+          const expectedTokenUrl = generateOAuthUrl(wsUrl);
+
+          return currentTokenUrl === expectedTokenUrl;
+        }
+
+        // Function to update Generate/Regenerate button text and state
+        function updateGenerateButton() {
+          const tokenUrlInput = document.getElementById("tokenUrl");
+          const generateBtn = document.getElementById("generateTokenBtn");
+
+          if (tokenUrlInput && generateBtn) {
+            const hasValue = tokenUrlInput.value.trim() !== '';
+
+            if (!hasValue) {
+              // No value - show "Generate" and enable
+              generateBtn.textContent = 'Generate';
+              generateBtn.disabled = false;
+            } else {
+              // Has value - show "Regenerate"
+              generateBtn.textContent = 'Regenerate';
+
+              // Check if in sync
+              const inSync = areUrlsInSync();
+              generateBtn.disabled = inSync; // Disable when in sync, enable when out of sync
+            }
+          }
+        }
+
+        // Function to generate/fill Token URL
+        function generateTokenUrl() {
+          const wssInput = document.getElementById("wss");
+          const tokenUrlInput = document.getElementById("tokenUrl");
+
+          if (wssInput && tokenUrlInput) {
+            const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
+            const generatedUrl = generateOAuthUrl(wsUrl);
+            tokenUrlInput.value = generatedUrl;
+            updateGenerateButton();
+          }
+        }
+
         function init() {
           // Initialize DOM
           dom.init();
@@ -1198,6 +1549,39 @@
           if (queryConfig.wss) document.getElementById("wss").value = queryConfig.wss;
           if (queryConfig.tokenUrl) document.getElementById("tokenUrl").value = queryConfig.tokenUrl;
           if (queryConfig.deviceId) document.getElementById("deviceId").value = queryConfig.deviceId;
+
+          // Update Token URL placeholder based on WebSocket URL
+          updateTokenUrlPlaceholder();
+
+          // Initialize Generate/Regenerate button state
+          updateGenerateButton();
+
+          // Add event listeners for WebSocket URL changes
+          const wssInput = document.getElementById("wss");
+          if (wssInput) {
+            // Update placeholder and button when WebSocket URL changes
+            wssInput.addEventListener("input", () => {
+              updateTokenUrlPlaceholder();
+              updateGenerateButton(); // Check sync status
+            });
+            wssInput.addEventListener("change", () => {
+              updateTokenUrlPlaceholder();
+              updateGenerateButton(); // Check sync status
+            });
+          }
+
+          // Add event listener for Token URL changes (to update button)
+          const tokenUrlInput = document.getElementById("tokenUrl");
+          if (tokenUrlInput) {
+            tokenUrlInput.addEventListener("input", updateGenerateButton);
+            tokenUrlInput.addEventListener("change", updateGenerateButton);
+          }
+
+          // Add event listener for Generate/Regenerate button
+          const generateBtn = document.getElementById("generateTokenBtn");
+          if (generateBtn) {
+            generateBtn.addEventListener("click", generateTokenUrl);
+          }
 
           // Setup form submission
           dom.elements.form.addEventListener("submit", async (e) => {

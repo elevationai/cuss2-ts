@@ -20,9 +20,6 @@
     "async/retry": "jsr:@std/async@^1.0.13/retry",
     "ws": "npm:ws@8"
   },
-  "links": [
-    "../../elevationai/cuss2-typescript-models"
-  ],
   "fmt": {
     "lineWidth": 120,
     "nextControlFlowPosition": "nextLine"

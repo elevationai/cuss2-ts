@@ -17,15 +17,23 @@
     "@types/node": "npm:@types/node@^22.15.17",
     "cuss2-typescript-models": "jsr:@cuss/cuss2-typescript-models@2.0.1",
     "events": "./vendor/node-events-fixed.ts",
-    "async/retry": "jsr:@std/async@^1.0.13/retry",
-    "ws": "npm:ws@8"
+    "async/retry": "jsr:@std/async@^1.0.0/retry",
+    "ws": "npm:ws@8",
+    "@std/assert": "jsr:@std/assert@^1.0.0",
+    "@std/async": "jsr:@std/async@^1.0.0",
+    "@std/async/delay": "jsr:@std/async@^1.0.0/delay",
+    "@std/testing/mock": "jsr:@std/testing@^1.0.0/mock",
+    "@std/fs": "jsr:@std/fs@^1.0.0",
+    "@std/path": "jsr:@std/path@^1.0.0",
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.0",
+    "esbuild": "npm:esbuild@0.20.2",
+    "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@^0.11.1"
   },
-  "links": [
-    "../../elevationai/cuss2-typescript-models"
-  ],
   "fmt": {
-    "lineWidth": 120,
-    "nextControlFlowPosition": "nextLine"
+    "lineWidth": 140,
+    "proseWrap": "preserve",
+    "nextControlFlowPosition": "nextLine",
+    "exclude": ["dist/**"]
   },
   "exclude": [
     "dist/",

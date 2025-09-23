@@ -6,12 +6,7 @@
  */
 
 // Import the original enums
-import {
-  ComponentTypes,
-  CussDataTypes as _CussDataTypes,
-  DeviceTypes,
-  MediaTypes as _MediaTypes,
-} from "cuss2-typescript-models";
+import { ComponentTypes, CussDataTypes as _CussDataTypes, DeviceTypes, MediaTypes as _MediaTypes } from "cuss2-typescript-models";
 
 // Re-export other imports
 export type {

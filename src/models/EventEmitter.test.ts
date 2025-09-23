@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { EventEmitter } from "./EventEmitter.ts";
 
 Deno.test("EventEmitter - waitFor resolves with event data", async () => {

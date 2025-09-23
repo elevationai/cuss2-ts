@@ -1,5 +1,5 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert";
-import { delay } from "jsr:@std/async/delay";
+import { assertEquals, assertRejects } from "@std/assert";
+import { delay } from "@std/async/delay";
 import { Cuss2 } from "./cuss2.ts";
 import { Connection } from "./connection.ts";
 import { ApplicationStateCodes as AppState } from "cuss2-typescript-models";

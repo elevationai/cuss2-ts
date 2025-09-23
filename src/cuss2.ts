@@ -117,7 +117,7 @@ export class Cuss2 extends EventEmitter {
     if (this.connection.isOpen && this.components) {
       return Promise.resolve();
     }
-    return this.waitFor("connected", ["connection.authenticationError"]);
+    return this.waitFor("connected", ["connection.authenticationError", "connection.close"]);
   }
 
   private constructor(connection: Connection) {
@@ -130,7 +130,11 @@ export class Cuss2 extends EventEmitter {
 
     // Subscribe to messages from the connection
     connection.on("message", (e) => this._handleWebSocketMessage(e));
-    connection.on("open", () => this._initialize());
+    connection.on("open", () =>
+      this._initialize().catch((e) => {
+        log("error", "Initialization failed", e);
+        connection.emit("error", new Error("Initialization failed: " + e.message));
+      }));
   }
 
   static connect(
@@ -140,13 +144,7 @@ export class Cuss2 extends EventEmitter {
     deviceID: string = "00000000-0000-0000-0000-000000000000",
     tokenURL?: string,
   ): Cuss2 {
-    using connection = Connection.connect(
-      wss,
-      client_id,
-      client_secret,
-      deviceID,
-      tokenURL,
-    );
+    using connection = Connection.connect(wss, client_id, client_secret, deviceID, tokenURL);
     return new Cuss2(connection);
   }
 
@@ -361,9 +359,11 @@ export class Cuss2 extends EventEmitter {
 
     getStatus: async (componentID: number): Promise<PlatformData> => {
       this._ensureConnected();
+      log("verbose", `[getStatus()] querying component with ID: ${componentID}`);
       const ad = Build.applicationData(PlatformDirectives.PERIPHERALS_QUERY, {
         componentID: componentID,
       });
+      log("verbose", "[getStatus()] applicationData built:", ad);
       const response = await this.connection.sendAndGetResponse(ad);
       log("verbose", "[queryDevice()] response", response);
       return response;

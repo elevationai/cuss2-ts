@@ -1,13 +1,8 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { EventEmitter } from "./models/EventEmitter.ts";
 import { Cuss2 } from "./cuss2.ts";
 import { StateChange } from "./models/stateChange.ts";
-import {
-  ApplicationStateCodes as AppState,
-  type ComponentList,
-  type EnvironmentLevel,
-  type PlatformData,
-} from "cuss2-typescript-models";
+import { ApplicationStateCodes as AppState, type ComponentList, type EnvironmentLevel, type PlatformData } from "cuss2-typescript-models";
 import {
   type ComponentCharacteristics,
   ComponentTypes,

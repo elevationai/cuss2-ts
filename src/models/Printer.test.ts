@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertExists, assertRejects, assertThrows } from "jsr:@std/assert";
+import { assert, assertEquals, assertExists, assertRejects, assertThrows } from "@std/assert";
 import { EventEmitter } from "events";
 import { Printer } from "./Printer.ts";
 import { Feeder } from "./Feeder.ts";

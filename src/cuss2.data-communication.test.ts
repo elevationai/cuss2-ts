@@ -1,11 +1,6 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert";
-import { spy, stub } from "jsr:@std/testing/mock";
-import {
-  ApplicationStateCodes as AppState,
-  MessageCodes,
-  type PlatformData,
-  PlatformDirectives,
-} from "cuss2-typescript-models";
+import { assertEquals, assertRejects } from "@std/assert";
+import { spy, stub } from "@std/testing/mock";
+import { ApplicationStateCodes as AppState, MessageCodes, type PlatformData, PlatformDirectives } from "cuss2-typescript-models";
 import { createMockCuss2, setCurrentState, simulateStateChange } from "./test-helpers.ts";
 
 // Section 4: WebSocket Message Handling Tests

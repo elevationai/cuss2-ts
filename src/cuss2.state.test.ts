@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import { Cuss2 } from "./cuss2.ts";
 import { StateChange } from "./models/stateChange.ts";
 import { ApplicationStateCodes as AppState, type PlatformData } from "cuss2-typescript-models";

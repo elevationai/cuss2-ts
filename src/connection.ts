@@ -180,7 +180,8 @@ export class Connection extends EventEmitter {
     // Convert ws/wss protocols to http/https for OAuth endpoints
     if (url.startsWith("ws://")) {
       return url.replace(/^ws:/, "http:");
-    } else if (url.startsWith("wss://")) {
+    }
+    else if (url.startsWith("wss://")) {
       return url.replace(/^wss:/, "https:");
     }
     return url;

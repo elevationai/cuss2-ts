@@ -1,5 +1,5 @@
-import { assertEquals, assertExists, assertRejects, assertStringIncludes } from "jsr:@std/assert";
-import { delay } from "jsr:@std/async/delay";
+import { assertEquals, assertExists, assertRejects, assertStringIncludes } from "@std/assert";
+import { delay } from "@std/async/delay";
 
 import { Connection, global } from "./connection.ts";
 import { AuthenticationError } from "./models/Errors.ts";

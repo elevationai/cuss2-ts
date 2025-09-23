@@ -130,10 +130,11 @@ export class Cuss2 extends EventEmitter {
 
     // Subscribe to messages from the connection
     connection.on("message", (e) => this._handleWebSocketMessage(e));
-    connection.on("open", () => this._initialize().catch((e) => {
-      log("error", "Initialization failed", e);
-      connection.emit("error", new Error("Initialization failed: " + e.message));
-    }));
+    connection.on("open", () =>
+      this._initialize().catch((e) => {
+        log("error", "Initialization failed", e);
+        connection.emit("error", new Error("Initialization failed: " + e.message));
+      }));
   }
 
   static connect(
@@ -143,13 +144,7 @@ export class Cuss2 extends EventEmitter {
     deviceID: string = "00000000-0000-0000-0000-000000000000",
     tokenURL?: string,
   ): Cuss2 {
-    using connection = Connection.connect(
-      wss,
-      client_id,
-      client_secret,
-      deviceID,
-      tokenURL,
-    );
+    using connection = Connection.connect(wss, client_id, client_secret, deviceID, tokenURL);
     return new Cuss2(connection);
   }
 

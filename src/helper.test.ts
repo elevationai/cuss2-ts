@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assertInstanceOf } from "https://deno.land/std/testing/asserts.ts";
+import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
 import { Build, helpers, log, logger, LogMessage } from "./helper.ts";
 import {
   ApplicationStateChangeReasonCodes,

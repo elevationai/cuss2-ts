@@ -1268,9 +1268,7 @@ function _addListener(
       // No error code for this since it is a Warning
       const w = new genericNodeError(
         `Possible EventEmitter memory leak detected. ${existing.length} ${String(type)} listeners ` +
-          `added to ${
-            inspect(target, { depth: -1 })
-          }. MaxListeners is ${m}. Use emitter.setMaxListeners() to increase limit`,
+          `added to ${inspect(target, { depth: -1 })}. MaxListeners is ${m}. Use emitter.setMaxListeners() to increase limit`,
         {
           // @ts-expect-error
           name: "MaxListenersExceededWarning",

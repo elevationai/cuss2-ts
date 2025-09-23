@@ -1,5 +1,5 @@
-import { assertEquals } from "jsr:@std/assert";
-import { spy, stub } from "jsr:@std/testing/mock";
+import { assertEquals } from "@std/assert";
+import { spy, stub } from "@std/testing/mock";
 import { ApplicationStateCodes as AppState } from "cuss2-typescript-models";
 import { createMockCuss2, setCurrentState } from "./test-helpers.ts";
 import type { Component } from "./models/Component.ts";

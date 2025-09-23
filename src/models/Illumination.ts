@@ -22,15 +22,9 @@ export class Illumination extends Component {
     color?: string | number[],
     blink?: number[],
   ): Promise<PlatformData> {
-    const name = (typeof color === "string")
-      ? LightColorNameEnum[color as keyof typeof LightColorNameEnum] || undefined
-      : undefined;
-    const rgb = (Array.isArray(color) && color.length === 3)
-      ? { red: color[0], green: color[1], blue: color[2] }
-      : undefined;
-    const blinkRate = (Array.isArray(blink) && blink.length === 2)
-      ? { durationOn: blink[0], durationOff: blink[1] }
-      : undefined;
+    const name = (typeof color === "string") ? LightColorNameEnum[color as keyof typeof LightColorNameEnum] || undefined : undefined;
+    const rgb = (Array.isArray(color) && color.length === 3) ? { red: color[0], green: color[1], blue: color[2] } : undefined;
+    const blinkRate = (Array.isArray(blink) && blink.length === 2) ? { durationOn: blink[0], durationOff: blink[1] } : undefined;
 
     if (this.enabled) {
       await this.disable();

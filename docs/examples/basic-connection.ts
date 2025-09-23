@@ -1,6 +1,6 @@
 // deno run --allow-net examples/basic-connection.ts
 
-import { Cuss2 } from "../../mod.ts";
+import { Cuss2 } from "jsr:@cuss/cuss2-ts@1.0.12";
 
 // Example configuration - replace with your actual values
 const config = {

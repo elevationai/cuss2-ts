@@ -71,17 +71,21 @@ export class Connection extends EventEmitter {
     this.deviceID = deviceID;
     (this as EventEmitter).setMaxListeners(0); // Allow unlimited listeners
 
-    // Clean up baseURL
+    // Store cleaned base URL (removes query params and trailing slashes)
     this._baseURL = this._cleanBaseURL(baseURL);
 
-    // Set up token URL
+    // Set up token URL - ensure it uses HTTP/HTTPS for OAuth
+    const oauthUrl = tokenURL
+      ? this._convertToHttpProtocol(tokenURL)
+      : `${this._convertToHttpProtocol(this._baseURL)}/oauth/token`;
+
     this._auth = {
-      url: tokenURL ?? `${this._baseURL}/oauth/token`,
+      url: oauthUrl,
       client_id,
       client_secret,
     };
 
-    // Set up WebSocket URL
+    // Set up WebSocket URL from the original base URL
     this._socketURL = this._buildWebSocketURL(this._baseURL);
 
     this._retryOptions = {
@@ -170,6 +174,16 @@ export class Connection extends EventEmitter {
     const cleanURL = parts[0];
     // Remove trailing slash if present
     return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
+  }
+
+  private _convertToHttpProtocol(url: string): string {
+    // Convert ws/wss protocols to http/https for OAuth endpoints
+    if (url.startsWith("ws://")) {
+      return url.replace(/^ws:/, "http:");
+    } else if (url.startsWith("wss://")) {
+      return url.replace(/^wss:/, "https:");
+    }
+    return url;
   }
 
   private _buildWebSocketURL(baseURL: string): string {

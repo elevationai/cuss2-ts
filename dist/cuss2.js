@@ -30,9 +30,9 @@ var Cuss2 = (() => {
   ));
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // ../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
+  // ../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
   var require_events = __commonJS({
-    "../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
+    "../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
       "use strict";
       var R = typeof Reflect === "object" ? Reflect : null;
       var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
@@ -1603,13 +1603,13 @@ var Cuss2 = (() => {
     }
   };
 
-  // https://jsr.io/@std/async/1.0.13/_util.ts
+  // https://jsr.io/@std/async/1.0.14/_util.ts
   function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
     const exp = Math.min(cap, base * multiplier ** attempt);
     return (1 - jitter * Math.random()) * exp;
   }
 
-  // https://jsr.io/@std/async/1.0.13/retry.ts
+  // https://jsr.io/@std/async/1.0.14/retry.ts
   var RetryError = class extends Error {
     /**
      * Constructs a new {@linkcode RetryError} instance.
@@ -1695,8 +1695,9 @@ var Cuss2 = (() => {
       this.deviceID = deviceID;
       this.setMaxListeners(0);
       this._baseURL = this._cleanBaseURL(baseURL);
+      const oauthUrl = tokenURL ? this._convertToHttpProtocol(tokenURL) : `${this._convertToHttpProtocol(this._baseURL)}/oauth/token`;
       this._auth = {
-        url: tokenURL ?? `${this._baseURL}/oauth/token`,
+        url: oauthUrl,
         client_id,
         client_secret
       };
@@ -1768,6 +1769,14 @@ var Cuss2 = (() => {
       const parts = url.split("?");
       const cleanURL = parts[0];
       return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
+    }
+    _convertToHttpProtocol(url) {
+      if (url.startsWith("ws://")) {
+        return url.replace(/^ws:/, "http:");
+      } else if (url.startsWith("wss://")) {
+        return url.replace(/^wss:/, "https:");
+      }
+      return url;
     }
     _buildWebSocketURL(baseURL) {
       if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
@@ -2575,5 +2584,5 @@ var Cuss2 = (() => {
   }
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "1.0.10";
+  globalCtx.Cuss2.version = "1.0.12";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

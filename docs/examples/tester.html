@@ -634,8 +634,8 @@
         </div>
       </div>
 
-      <!-- Include the CUSS2 browser bundle -->
       <script type="module">
+        // Import CUSS2 and models directly
         import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
         import {
           ApplicationStateCodes,
@@ -1355,18 +1355,22 @@
             logger.info("Connecting to CUSS2 platform...");
             ui.updateConnectionStatus("CONNECTING");
 
-            // Generate OAuth URL from WebSocket URL if token URL is not provided
-            const tokenUrl = config.tokenUrl?.trim() || generateOAuthUrl(config.wss);
+            // Pass through the token URL if provided, otherwise let the library handle it
+            const tokenUrl = config.tokenUrl?.trim() || undefined;
 
             logger.info(`Using WebSocket URL: ${config.wss}`);
-            logger.info(`Using OAuth Token URL: ${tokenUrl}`);
+            if (tokenUrl) {
+              logger.info(`Using OAuth Token URL: ${tokenUrl}`);
+            } else {
+              logger.info(`OAuth Token URL will be derived from WebSocket URL by the library`);
+            }
 
             cuss2 = Cuss2.connect(
               config.clientId,
               config.clientSecret,
               config.wss,
               config.deviceId || undefined,
-              tokenUrl || undefined,
+              tokenUrl,
             );
 
             // Setup all listeners
@@ -1447,7 +1451,7 @@
 
         // ===== INITIALIZATION =====
 
-        // Function to generate OAuth URL from WebSocket URL
+        // Function to generate OAuth URL from WebSocket URL (for placeholder/UI only)
         function generateOAuthUrl(wsUrl) {
           if (!wsUrl) return '';
 
@@ -1458,7 +1462,7 @@
 
             const url = new URL(normalizedUrl);
 
-            // Map protocols: ws/wss/http/https → http/https
+            // Map protocols for UI display only: ws/wss/http/https → http/https
             let httpScheme;
             if (url.protocol === 'wss:') {
               httpScheme = 'https:';
@@ -1468,7 +1472,7 @@
               httpScheme = url.protocol; // Already http: or https:
             }
 
-            // Construct OAuth URL
+            // Construct OAuth URL for placeholder text
             return `${httpScheme}//${url.host}/oauth/token`;
           } catch (error) {
             return '';

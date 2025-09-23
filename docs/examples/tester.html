@@ -73,6 +73,16 @@
         border-color: #64ffda;
         box-shadow: 0 0 5px rgba(100, 255, 218, 0.3);
       }
+      input.error, select.error {
+        border-color: #ff6464 !important;
+        box-shadow: 0 0 5px rgba(255, 100, 100, 0.3) !important;
+      }
+      .field-error {
+        color: #ff6464;
+        font-size: 12px;
+        margin-top: 5px;
+        font-weight: 500;
+      }
       button {
         padding: 10px 20px;
         background: linear-gradient(135deg, #64ffda, #48cae4);
@@ -634,9 +644,11 @@
         </div>
       </div>
 
+      <!-- Include the CUSS2 browser bundle -->
+      <script src="https://esm.sh/jsr/@cuss/cuss2-ts@1.0.12"></script>
       <script type="module">
-        // Import CUSS2 and models directly
-        import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
+        // Wait for Cuss2 to be available and get it from the global scope
+        const Cuss2Class = window.Cuss2;
         import {
           ApplicationStateCodes,
           MessageCodes,
@@ -655,6 +667,32 @@
 
         // ===== URL UTILITIES =====
         const urlUtils = {
+          // Allowed protocols for CUSS2 connections
+          ALLOWED_PROTOCOLS: ['http:', 'https:', 'ws:', 'wss:'],
+
+          // Validate URL format and protocol
+          validateURL(url, urlType = 'URL') {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+              return { isValid: false, error: `${urlType} cannot be empty` };
+            }
+
+            try {
+              const parsedUrl = new URL(url.trim());
+
+              if (!this.ALLOWED_PROTOCOLS.includes(parsedUrl.protocol)) {
+                const allowedList = this.ALLOWED_PROTOCOLS.map(p => p.replace(':', '://')).join(', ');
+                return {
+                  isValid: false,
+                  error: `${urlType} uses unsupported protocol '${parsedUrl.protocol}'. Only ${allowedList} are supported.`
+                };
+              }
+
+              return { isValid: true, url: parsedUrl.href };
+            } catch (error) {
+              return { isValid: false, error: `${urlType} is not a valid URL format` };
+            }
+          },
+
           // Check for mixed content issues
           checkMixedContent(targetUrl) {
             // Only check if current page is served over HTTPS
@@ -754,6 +792,49 @@
           // Show/hide element
           setVisible(element, visible) {
             if (element) element.style.display = visible ? "block" : "none";
+          },
+
+          // Show validation error on input field
+          showFieldError(inputId, errorMessage) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            // Remove any existing error
+            this.clearFieldError(inputId);
+
+            // Add error class to input
+            input.classList.add('error');
+
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error';
+            errorDiv.id = `${inputId}-error`;
+            errorDiv.textContent = errorMessage;
+
+            // Insert error after input
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+          },
+
+          // Clear validation error from input field
+          clearFieldError(inputId) {
+            const input = document.getElementById(inputId);
+            const errorDiv = document.getElementById(`${inputId}-error`);
+
+            if (input) {
+              input.classList.remove('error');
+            }
+            if (errorDiv) {
+              errorDiv.remove();
+            }
+          },
+
+          // Clear all field errors
+          clearAllFieldErrors() {
+            const errorElements = document.querySelectorAll('.field-error');
+            const inputElements = document.querySelectorAll('.error');
+
+            errorElements.forEach(el => el.remove());
+            inputElements.forEach(el => el.classList.remove('error'));
           },
         };
 
@@ -1365,7 +1446,7 @@
               logger.info(`OAuth Token URL will be derived from WebSocket URL by the library`);
             }
 
-            cuss2 = Cuss2.connect(
+            cuss2 = Cuss2Class.connect(
               config.clientId,
               config.clientSecret,
               config.wss,
@@ -1590,8 +1671,77 @@
           // Setup form submission
           dom.elements.form.addEventListener("submit", async (e) => {
             e.preventDefault();
-            await connectionManager.connect(dom.getFormData());
+
+            // Clear any previous validation errors
+            dom.clearAllFieldErrors();
+
+            const formData = dom.getFormData();
+            let hasErrors = false;
+
+            // Validate WebSocket URL
+            const wssValidation = urlUtils.validateURL(formData.wss, 'WebSocket URL');
+            if (!wssValidation.isValid) {
+              dom.showFieldError('wss', wssValidation.error);
+              hasErrors = true;
+            }
+
+            // Validate Token URL if provided
+            if (formData.tokenUrl && formData.tokenUrl.trim() !== '') {
+              const tokenValidation = urlUtils.validateURL(formData.tokenUrl, 'Token URL');
+              if (!tokenValidation.isValid) {
+                dom.showFieldError('tokenUrl', tokenValidation.error);
+                hasErrors = true;
+              }
+            }
+
+            // Don't proceed if there are validation errors
+            if (hasErrors) {
+              logger.error('Please fix the validation errors before connecting');
+              return;
+            }
+
+            await connectionManager.connect(formData);
           });
+
+          // Setup real-time URL validation
+          if (wssInput) {
+            wssInput.addEventListener("blur", () => {
+              const value = wssInput.value.trim();
+              if (value) {
+                const validation = urlUtils.validateURL(value, 'WebSocket URL');
+                if (!validation.isValid) {
+                  dom.showFieldError('wss', validation.error);
+                } else {
+                  dom.clearFieldError('wss');
+                }
+              }
+            });
+
+            wssInput.addEventListener("input", () => {
+              // Clear error on input to give immediate feedback
+              dom.clearFieldError('wss');
+            });
+          }
+
+          if (tokenUrlInput) {
+            // Add validation listeners (in addition to existing ones)
+            tokenUrlInput.addEventListener("blur", () => {
+              const value = tokenUrlInput.value.trim();
+              if (value) {
+                const validation = urlUtils.validateURL(value, 'Token URL');
+                if (!validation.isValid) {
+                  dom.showFieldError('tokenUrl', validation.error);
+                } else {
+                  dom.clearFieldError('tokenUrl');
+                }
+              }
+            });
+
+            tokenUrlInput.addEventListener("input", () => {
+              // Clear error on input to give immediate feedback
+              dom.clearFieldError('tokenUrl');
+            });
+          }
 
           // Setup disconnect button
           dom.elements.disconnectBtn.addEventListener("click", () => connectionManager.disconnect());

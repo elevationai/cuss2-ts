@@ -645,10 +645,8 @@
       </div>
 
       <!-- Include the CUSS2 browser bundle -->
-      <script src="https://esm.sh/jsr/@cuss/cuss2-ts@1.0.12"></script>
       <script type="module">
-        // Wait for Cuss2 to be available and get it from the global scope
-        const Cuss2Class = window.Cuss2;
+        import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
         import {
           ApplicationStateCodes,
           MessageCodes,
@@ -1446,7 +1444,7 @@
               logger.info(`OAuth Token URL will be derived from WebSocket URL by the library`);
             }
 
-            cuss2 = Cuss2Class.connect(
+            cuss2 = Cuss2.connect(
               config.clientId,
               config.clientSecret,
               config.wss,

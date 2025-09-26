@@ -28,9 +28,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
+// ../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
 var require_events = __commonJS({
-  "../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
+  "../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
     "use strict";
     var R = typeof Reflect === "object" ? Reflect : null;
     var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
@@ -1588,13 +1588,13 @@ var AuthenticationError = class extends Cuss2Error {
   }
 };
 
-// https://jsr.io/@std/async/1.0.13/_util.ts
+// https://jsr.io/@std/async/1.0.14/_util.ts
 function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
   const exp = Math.min(cap, base * multiplier ** attempt);
   return (1 - jitter * Math.random()) * exp;
 }
 
-// https://jsr.io/@std/async/1.0.13/retry.ts
+// https://jsr.io/@std/async/1.0.14/retry.ts
 var RetryError = class extends Error {
   /**
    * Constructs a new {@linkcode RetryError} instance.
@@ -1679,9 +1679,14 @@ var Connection = class _Connection extends EventEmitter2 {
     super();
     this.deviceID = deviceID;
     this.setMaxListeners(0);
+    this._validateURL(baseURL, "Base URL");
+    if (tokenURL) {
+      this._validateURL(tokenURL, "Token URL");
+    }
     this._baseURL = this._cleanBaseURL(baseURL);
+    const oauthUrl = tokenURL ? this._convertToHttpProtocol(tokenURL) : `${this._convertToHttpProtocol(this._baseURL)}/oauth/token`;
     this._auth = {
-      url: tokenURL ?? `${this._baseURL}/oauth/token`,
+      url: oauthUrl,
       client_id,
       client_secret
     };
@@ -1749,18 +1754,47 @@ var Connection = class _Connection extends EventEmitter2 {
     setTimeout(() => connection._authenticateAndQueueTokenRefresh(), 10);
     return connection;
   }
+  _validateURL(url, urlType) {
+    const ALLOWED_PROTOCOLS = ["http:", "https:", "ws:", "wss:"];
+    try {
+      const parsedUrl = new URL(url);
+      if (!ALLOWED_PROTOCOLS.includes(parsedUrl.protocol)) {
+        throw new Error(
+          `${urlType} uses unsupported protocol '${parsedUrl.protocol}'. Only ${ALLOWED_PROTOCOLS.map((p) => p.replace(":", "://")).join(", ")} are supported.`
+        );
+      }
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(`${urlType} is not a valid URL: ${url}`);
+      }
+      throw error;
+    }
+  }
   _cleanBaseURL(url) {
     const parts = url.split("?");
     const cleanURL = parts[0];
     return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
   }
+  _convertToHttpProtocol(url) {
+    if (url.startsWith("ws://")) {
+      return url.replace(/^ws:/, "http:");
+    } else if (url.startsWith("wss://")) {
+      return url.replace(/^wss:/, "https:");
+    }
+    return url;
+  }
   _buildWebSocketURL(baseURL) {
     if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
       return `${baseURL}/platform/subscribe`;
     }
-    const protocol = baseURL.startsWith("https") ? "wss" : "ws";
-    const wsBase = baseURL.replace(/^https?:\/\//, "");
-    return `${protocol}://${wsBase}/platform/subscribe`;
+    if (baseURL.startsWith("https://")) {
+      const wsBase = baseURL.replace(/^https:\/\//, "");
+      return `wss://${wsBase}/platform/subscribe`;
+    } else if (baseURL.startsWith("http://")) {
+      const wsBase = baseURL.replace(/^http:\/\//, "");
+      return `ws://${wsBase}/platform/subscribe`;
+    }
+    throw new Error(`Unable to build WebSocket URL from base URL: ${baseURL}`);
   }
   async _authenticateAndQueueTokenRefresh() {
     log2("info", "Getting access_token");
@@ -2114,23 +2148,20 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
     if (this.connection.isOpen && this.components) {
       return Promise.resolve();
     }
-    return this.waitFor("connected", ["connection.authenticationError"]);
+    return this.waitFor("connected", ["connection.authenticationError", "connection.close"]);
   }
   constructor(connection) {
     super();
     this.connection = connection;
     this.setMaxListeners(100);
     connection.on("message", (e) => this._handleWebSocketMessage(e));
-    connection.on("open", () => this._initialize());
+    connection.on("open", () => this._initialize().catch((e) => {
+      log("error", "Initialization failed", e);
+      connection.emit("error", new Error("Initialization failed: " + e.message));
+    }));
   }
   static connect(client_id, client_secret, wss = "https://localhost:22222", deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
-    using connection = Connection.connect(
-      wss,
-      client_id,
-      client_secret,
-      deviceID,
-      tokenURL
-    );
+    using connection = Connection.connect(wss, client_id, client_secret, deviceID, tokenURL);
     return new _Cuss2(connection);
   }
   _ensureConnected() {
@@ -2295,9 +2326,11 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
     },
     getStatus: async (componentID) => {
       this._ensureConnected();
+      log("verbose", `[getStatus()] querying component with ID: ${componentID}`);
       const ad = Build.applicationData("peripherals_query" /* PERIPHERALS_QUERY */, {
         componentID
       });
+      log("verbose", "[getStatus()] applicationData built:", ad);
       const response = await this.connection.sendAndGetResponse(ad);
       log("verbose", "[queryDevice()] response", response);
       return response;

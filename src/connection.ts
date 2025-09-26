@@ -71,17 +71,29 @@ export class Connection extends EventEmitter {
     this.deviceID = deviceID;
     (this as EventEmitter).setMaxListeners(0); // Allow unlimited listeners
 
-    // Clean up baseURL
+    // Validate base URL protocol
+    this._validateURL(baseURL, "Base URL");
+
+    // Validate token URL protocol if provided
+    if (tokenURL) {
+      this._validateURL(tokenURL, "Token URL");
+    }
+
+    // Store cleaned base URL (removes query params and trailing slashes)
     this._baseURL = this._cleanBaseURL(baseURL);
 
-    // Set up token URL
+    // Set up token URL - always ensure OAuth uses HTTP/HTTPS protocol
+    const oauthUrl = tokenURL
+      ? this._convertToHttpProtocol(tokenURL) // Convert custom token URL to HTTP/HTTPS
+      : `${this._convertToHttpProtocol(this._baseURL)}/oauth/token`;
+
     this._auth = {
-      url: tokenURL ?? `${this._baseURL}/oauth/token`,
+      url: oauthUrl,
       client_id,
       client_secret,
     };
 
-    // Set up WebSocket URL
+    // Set up WebSocket URL from the original base URL
     this._socketURL = this._buildWebSocketURL(this._baseURL);
 
     this._retryOptions = {
@@ -163,6 +175,27 @@ export class Connection extends EventEmitter {
     return connection;
   }
 
+  private _validateURL(url: string, urlType: string): void {
+    const ALLOWED_PROTOCOLS = ["http:", "https:", "ws:", "wss:"];
+
+    try {
+      const parsedUrl = new URL(url);
+
+      if (!ALLOWED_PROTOCOLS.includes(parsedUrl.protocol)) {
+        throw new Error(
+          `${urlType} uses unsupported protocol '${parsedUrl.protocol}'. ` +
+            `Only ${ALLOWED_PROTOCOLS.map((p) => p.replace(":", "://")).join(", ")} are supported.`,
+        );
+      }
+    }
+    catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(`${urlType} is not a valid URL: ${url}`);
+      }
+      throw error; // Re-throw validation errors
+    }
+  }
+
   private _cleanBaseURL(url: string): string {
     // Remove query parameters if present
     // url.split always returns at least one element, so we can safely access [0]
@@ -172,17 +205,35 @@ export class Connection extends EventEmitter {
     return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
   }
 
+  private _convertToHttpProtocol(url: string): string {
+    // Convert ws/wss protocols to http/https for OAuth endpoints
+    if (url.startsWith("ws://")) {
+      return url.replace(/^ws:/, "http:");
+    }
+    else if (url.startsWith("wss://")) {
+      return url.replace(/^wss:/, "https:");
+    }
+    return url;
+  }
+
   private _buildWebSocketURL(baseURL: string): string {
     // If URL already has WebSocket protocol, return as is
     if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
       return `${baseURL}/platform/subscribe`;
     }
 
-    // Determine protocol based on existing URL
-    const protocol = baseURL.startsWith("https") ? "wss" : "ws";
-    const wsBase = baseURL.replace(/^https?:\/\//, "");
+    // For HTTP/HTTPS URLs, convert to WebSocket protocol
+    if (baseURL.startsWith("https://")) {
+      const wsBase = baseURL.replace(/^https:\/\//, "");
+      return `wss://${wsBase}/platform/subscribe`;
+    }
+    else if (baseURL.startsWith("http://")) {
+      const wsBase = baseURL.replace(/^http:\/\//, "");
+      return `ws://${wsBase}/platform/subscribe`;
+    }
 
-    return `${protocol}://${wsBase}/platform/subscribe`;
+    // This should never happen after validation, but provide a safety net
+    throw new Error(`Unable to build WebSocket URL from base URL: ${baseURL}`);
   }
 
   private async _authenticateAndQueueTokenRefresh(): Promise<void> {

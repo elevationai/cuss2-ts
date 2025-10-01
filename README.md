@@ -436,7 +436,7 @@ cuss2.on("stateChange", (stateChange) => {});
 cuss2.on("activated", (activationData) => {});
 cuss2.on("deactivated", (newState) => {});
 cuss2.on("message", (platformData) => {});
-cuss2.on("sessionTimeout", () => {});
+cuss2.on("sessionTimeout", (environment) => {});
 cuss2.on("componentStateChange", (component) => {});
 cuss2.on("queryError", (error) => {});
 
@@ -462,8 +462,9 @@ console.log("Capabilities:", env.platformCapabilities);
 
 ```typescript
 // Handle session timeout
-cuss2.on("sessionTimeout", () => {
-  console.log("Session timed out");
+cuss2.on("sessionTimeout", (environment) => {
+  const killTimeout = environment.killTimeout; // Time until app termination
+  console.log(`Session timeout warning - app will be killed in ${killTimeout} seconds`);
   // Implement re-authentication or cleanup
 });
 

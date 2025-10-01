@@ -62,9 +62,12 @@ Deno.test("Section 4.2: Session timeout handling - should emit sessionTimeout ev
   // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
-  // Verify sessionTimeout event was emitted
+  // Verify sessionTimeout event was emitted with environment data
   assertEquals(sessionTimeoutSpy.calls.length, 1);
-  assertEquals(sessionTimeoutSpy.calls[0].args[0], MessageCodes.SESSION_TIMEOUT);
+  // The event should emit the environment object, which contains killTimeout and sessionTimeout
+  const emittedEnv = sessionTimeoutSpy.calls[0].args[0];
+  assertEquals(typeof emittedEnv.killTimeout, "number");
+  assertEquals(typeof emittedEnv.sessionTimeout, "number");
 });
 
 Deno.test("Section 4.3: Invalid state handling - should close connection on invalid platform state", async () => {

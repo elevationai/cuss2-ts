@@ -190,7 +190,7 @@ export class Cuss2 extends EventEmitter {
     const currentState: AppState = meta.currentApplicationState.applicationStateCode;
 
     if (meta.messageCode === MessageCodes.SESSION_TIMEOUT) {
-      super.emit("sessionTimeout", meta.messageCode);
+      super.emit("sessionTimeout", this.environment);
     }
 
     if (!currentState) {

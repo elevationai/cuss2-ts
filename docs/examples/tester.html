@@ -1134,6 +1134,11 @@
 
               if (remainingSeconds <= 0) {
                 clearInterval(countdown);
+                // Remove the banner when countdown reaches 0
+                const banner = document.getElementById('timeoutBanner');
+                if (banner) {
+                  banner.remove();
+                }
               }
             }, 1000);
           },

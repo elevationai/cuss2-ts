@@ -159,8 +159,6 @@
         border: 1px solid #dc3545;
       }
       .component-list {
-        max-height: 400px;
-        overflow-y: auto;
         border: 1px solid rgba(100, 255, 218, 0.2);
         background: #0a0a14;
         border-radius: 8px;
@@ -340,6 +338,55 @@
       }
       .toggle-switch.enabled:hover:not(.disabled) {
         box-shadow: 0 4px 12px rgba(100, 255, 218, 0.4);
+      }
+      .component-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .component-action-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex: 1;
+        min-width: 200px;
+      }
+      .component-action-input {
+        flex: 1;
+        padding: 6px 10px;
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        background: #0a0a14;
+        color: #e0e0e0;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .component-action-input:focus {
+        outline: none;
+        border-color: #64ffda;
+        box-shadow: 0 0 5px rgba(100, 255, 218, 0.3);
+      }
+      .component-action-btn {
+        padding: 6px 14px;
+        background: linear-gradient(135deg, #64ffda, #48cae4);
+        color: #0f0f1e;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+      .component-action-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(100, 255, 218, 0.3);
+      }
+      .component-action-btn:disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
       }
       .log-container {
         background: #0a0a14;
@@ -897,6 +944,16 @@
                   ${toggleSwitch}
                 </div>
               </div>
+              <div class="component-actions">
+                <div class="component-action-group">
+                  <input type="text" class="component-action-input" id="setup-input-${id}" placeholder="Setup data (JSON)">
+                  <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
+                </div>
+                <div class="component-action-group">
+                  <input type="text" class="component-action-input" id="send-input-${id}" placeholder="Send data (JSON)">
+                  <button class="component-action-btn" data-action="send" data-component-id="${id}">Send</button>
+                </div>
+              </div>
             `;
           },
 
@@ -1108,6 +1165,33 @@
               }
             });
 
+            // Add SETUP and SEND button event listeners
+            const actionButtons = item.querySelectorAll('.component-action-btn');
+            actionButtons.forEach(button => {
+              button.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const action = button.dataset.action;
+                const componentId = button.dataset.componentId;
+                const inputId = `${action}-input-${componentId}`;
+                const input = document.getElementById(inputId);
+
+                if (!input) return;
+
+                const inputValue = input.value.trim();
+
+                // Disable button during operation
+                button.disabled = true;
+
+                try {
+                  await componentHandlers.handleComponentDataAction(component, action, inputValue);
+                } catch (error) {
+                  // Error is already logged in handler
+                } finally {
+                  button.disabled = false;
+                }
+              });
+            });
+
             return item;
           },
 
@@ -1232,6 +1316,41 @@
             catch (error) {
               logger.error(`Failed to ${action} ${name}: ${error.message}`);
               throw error; // Re-throw so the toggle can handle the error state
+            }
+          },
+
+          // Handle component data action (setup/send)
+          async handleComponentDataAction(component, action, inputValue) {
+            const name = component.deviceType;
+
+            try {
+              let data;
+
+              // Parse input if provided
+              if (inputValue) {
+                try {
+                  data = JSON.parse(inputValue);
+                } catch (parseError) {
+                  logger.error(`Invalid JSON for ${action}: ${parseError.message}`);
+                  throw new Error(`Invalid JSON: ${parseError.message}`);
+                }
+              }
+
+              const actionText = action.charAt(0).toUpperCase() + action.slice(1);
+              logger.info(`${actionText} ${name}${data ? ' with data: ' + JSON.stringify(data) : ''}...`);
+
+              // Call the appropriate method on the component
+              if (action === 'setup') {
+                await component.setup(data);
+              } else if (action === 'send') {
+                await component.send(data);
+              }
+
+              logger.success(`${name} ${action} completed`);
+            }
+            catch (error) {
+              logger.error(`Failed to ${action} ${name}: ${error.message}`);
+              throw error;
             }
           },
 

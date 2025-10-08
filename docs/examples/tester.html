@@ -700,6 +700,159 @@
         } from "https://esm.sh/jsr/@cuss/cuss2-typescript-models@latest";
         let cuss2 = null;
 
+        // ===== COMPONENT CAPABILITY DEFINITIONS =====
+        // Based on the CUSS Virtual Component Concept and our new hierarchy
+        const componentCapabilities = {
+          // Get capabilities for a component based on its type
+          getCapabilities(component) {
+            const deviceType = component.deviceType?.toLowerCase() || '';
+            const capabilities = [];
+
+            // All components have query (from BaseComponent)
+            capabilities.push('query');
+
+            // Check component type and add appropriate capabilities
+            if (this.isApplicationComponent(deviceType)) {
+              // ApplicationComponent: only query (no setup, cancel)
+              return capabilities;
+            }
+
+            // Most components have cancel and setup (from BaseComponent)
+            if (!this.isFeederComponent(deviceType)) {
+              capabilities.push('cancel', 'setup');
+            } else {
+              // Feeder only has query and offer
+              capabilities.push('offer');
+              return capabilities;
+            }
+
+            // Interactive components (enable/disable)
+            if (this.isInteractiveComponent(deviceType)) {
+              capabilities.push('enable', 'disable');
+            }
+
+            // Output components (send)
+            if (this.isOutputComponent(deviceType)) {
+              capabilities.push('send');
+            }
+
+            // Media components with offer capability
+            if (this.isMediaOfferCapable(deviceType)) {
+              capabilities.push('offer');
+            }
+
+            // Announcement components
+            if (this.isAnnouncementComponent(deviceType)) {
+              capabilities.push('play', 'pause', 'resume', 'stop');
+            }
+
+            // Input components with read capability
+            if (this.isDataReadCapable(deviceType)) {
+              capabilities.push('read');
+            }
+
+            // Conveyor components
+            if (this.isConveyorComponent(deviceType)) {
+              capabilities.push('forward', 'backward', 'process');
+            }
+
+            return capabilities;
+          },
+
+          // Component type checkers based on CUSS Virtual Component Concept
+          isApplicationComponent(type) {
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return normalizedType.includes('application');
+          },
+
+          isInteractiveComponent(type) {
+            // Components that can be enabled/disabled (all classes extending InteractiveComponent)
+            // Convert to lowercase and handle both underscore and non-underscore versions
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return [
+              // MediaInputComponent subclasses
+              'barcodereader', 'documentreader', 'cardreader', 'camera', 'rfid', 'passportreader',
+              // UserInputComponent subclasses
+              'keypad', 'keyboard',
+              // UserOutputComponent subclasses
+              'headset', 'biometric',
+              // MediaOutputComponent subclasses
+              'boardingpassprinter', 'bagtagprinter', 'printer', 'aeasbd',
+              // BaggageScaleComponent
+              'scale',
+              // DispenserComponent
+              'dispenser',
+              // InsertionBeltComponent
+              'insertionbelt',
+              // AnnouncementComponent - THIS WAS MISSING!
+              'announcement'
+            ].some(t => normalizedType.includes(t));
+          },
+
+          isOutputComponent(type) {
+            // Components that can send data (OutputCapable interface)
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return [
+              // DataOutputComponent (extends BaseComponent)
+              'illumination',
+              // MediaOutputComponent (extends InteractiveComponent)
+              'boardingpassprinter', 'bagtagprinter', 'printer', 'aeasbd',
+              // UserOutputComponent (extends InteractiveComponent)
+              'headset', 'biometric',
+              // ConveyorComponent and subclasses
+              'insertionbelt', 'verificationbelt', 'parkingbelt',
+              // Note: Announcement does NOT have send, it has play/pause/resume/stop
+              // Note: BHS is DataInputComponent, does NOT have send
+            ].some(t => normalizedType.includes(t));
+          },
+
+          isMediaOfferCapable(type) {
+            // DISPENSER type
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return normalizedType.includes('dispenser');
+          },
+
+          isAnnouncementComponent(type) {
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return normalizedType.includes('announcement');
+          },
+
+          isDataReadCapable(type) {
+            // Components with DataReadCapable interface
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return [
+              // MediaInputComponent subclasses
+              'barcodereader', 'documentreader', 'cardreader', 'passportreader',
+              'camera', 'rfid',
+              // BaggageScaleComponent
+              'scale',
+              // DataInputComponent
+              'bhs'
+              // Note: Biometric is UserOutputComponent, does NOT have read
+            ].some(t => normalizedType.includes(t));
+          },
+
+          isConveyorComponent(type) {
+            // Belt components
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return [
+              'insertionbelt', 'verificationbelt', 'parkingbelt'
+            ].some(t => normalizedType.includes(t));
+          },
+
+          isFeederComponent(type) {
+            // Feeder has offer but no enable/disable per spec
+            const normalizedType = type.toLowerCase().replace(/_/g, '');
+            return normalizedType.includes('feeder');
+          },
+
+          // Check if a specific capability is allowed for this component
+          hasCapability(component, capability) {
+            const capabilities = this.getCapabilities(component);
+            return capabilities.includes(capability);
+          }
+        };
+
         // ===== QUERY PARAMETER PARSING =====
         const urlParams = new URLSearchParams(window.location.search);
         const queryConfig = {
@@ -930,6 +1083,87 @@
 
           // Component item template
           componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch) {
+            // Get capabilities for this component
+            const capabilities = componentCapabilities.getCapabilities(component);
+
+            // Build action buttons based on capabilities
+            let actionsHtml = '';
+
+            // Query button (all components have this)
+            if (capabilities.includes('query')) {
+              actionsHtml += `<button class="component-action-btn" data-action="query" data-component-id="${id}">Query</button>`;
+            }
+
+            // Setup action (most components except Application and Feeder)
+            if (capabilities.includes('setup')) {
+              actionsHtml += `
+                <div class="component-action-group">
+                  <input type="text" class="component-action-input" id="setup-input-${id}" placeholder="Setup data (JSON)">
+                  <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
+                </div>
+              `;
+            }
+
+            // Send action (output components)
+            if (capabilities.includes('send')) {
+              actionsHtml += `
+                <div class="component-action-group">
+                  <input type="text" class="component-action-input" id="send-input-${id}" placeholder="Send data (JSON)">
+                  <button class="component-action-btn" data-action="send" data-component-id="${id}">Send</button>
+                </div>
+              `;
+            }
+
+            // Cancel button
+            if (capabilities.includes('cancel')) {
+              actionsHtml += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
+            }
+
+            // Offer button (dispensers and feeders)
+            if (capabilities.includes('offer')) {
+              actionsHtml += `<button class="component-action-btn" data-action="offer" data-component-id="${id}">Offer</button>`;
+            }
+
+            // Read action (input components)
+            if (capabilities.includes('read')) {
+              actionsHtml += `
+                <div class="component-action-group">
+                  <input type="text" class="component-action-input" id="read-input-${id}" placeholder="Timeout ms (default: 30000)">
+                  <button class="component-action-btn" data-action="read" data-component-id="${id}">Read</button>
+                </div>
+              `;
+            }
+
+            // Announcement controls
+            if (capabilities.includes('play')) {
+              actionsHtml += `
+                <div class="component-action-group">
+                  <input type="text" class="component-action-input" id="play-input-${id}" placeholder="SSML or text">
+                  <button class="component-action-btn" data-action="play" data-component-id="${id}">Play</button>
+                </div>
+              `;
+            }
+            if (capabilities.includes('pause')) {
+              actionsHtml += `<button class="component-action-btn" data-action="pause" data-component-id="${id}">Pause</button>`;
+            }
+            if (capabilities.includes('resume')) {
+              actionsHtml += `<button class="component-action-btn" data-action="resume" data-component-id="${id}">Resume</button>`;
+            }
+            if (capabilities.includes('stop')) {
+              actionsHtml += `<button class="component-action-btn" data-action="stop" data-component-id="${id}">Stop</button>`;
+            }
+
+            // Conveyor controls
+            if (capabilities.includes('forward')) {
+              actionsHtml += `<button class="component-action-btn" data-action="forward" data-component-id="${id}">Forward</button>`;
+            }
+            if (capabilities.includes('backward')) {
+              actionsHtml += `<button class="component-action-btn" data-action="backward" data-component-id="${id}">Backward</button>`;
+            }
+            if (capabilities.includes('process')) {
+              actionsHtml += `<button class="component-action-btn" data-action="process" data-component-id="${id}">Process</button>`;
+            }
+
             return `
               <div class="component-header">
                 <div class="component-header-left">
@@ -945,20 +1179,18 @@
                 </div>
               </div>
               <div class="component-actions">
-                <div class="component-action-group">
-                  <input type="text" class="component-action-input" id="setup-input-${id}" placeholder="Setup data (JSON)">
-                  <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
-                </div>
-                <div class="component-action-group">
-                  <input type="text" class="component-action-input" id="send-input-${id}" placeholder="Send data (JSON)">
-                  <button class="component-action-btn" data-action="send" data-component-id="${id}">Send</button>
-                </div>
+                ${actionsHtml}
               </div>
             `;
           },
 
           // Toggle switch template
           toggleSwitch(id, component) {
+            // Only show toggle for components that support enable/disable
+            if (!componentCapabilities.hasCapability(component, 'enable')) {
+              return '';
+            }
+
             const canToggle = component.ready;
             const toggleClass = component.enabled ? 'enabled' : '';
             const disabledClass = !canToggle ? 'disabled' : '';
@@ -1128,62 +1360,69 @@
 
             item.innerHTML = templates.componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch);
 
-            // Add toggle switch event listener
+            // Add toggle switch event listener (only if toggle exists)
             const toggleElement = item.querySelector('.toggle-switch');
 
-            toggleElement.addEventListener('click', async (e) => {
-              e.stopPropagation();
+            if (toggleElement) {
+              toggleElement.addEventListener('click', async (e) => {
+                e.stopPropagation();
 
-              // Don't allow toggle if component is not ready or already pending
-              if (!component.ready || toggleElement.classList.contains('pending')) {
-                return;
-              }
-
-              const originalState = toggleElement.dataset.currentState === 'true';
-              const action = originalState ? 'disable' : 'enable';
-
-              // Set pending state immediately
-              toggleElement.classList.add('pending');
-              toggleElement.classList.remove('enabled');
-
-              try {
-                await componentHandlers.handleComponentAction(component, action);
-
-                // Success: Update based on actual component state
-                componentHandlers.syncToggleState(toggleElement, component);
-              } catch (error) {
-                // Error: Revert to original state
-                if (originalState) {
-                  toggleElement.classList.add('enabled');
-                } else {
-                  toggleElement.classList.remove('enabled');
+                // Don't allow toggle if component is not ready or already pending
+                if (!component.ready || toggleElement.classList.contains('pending')) {
+                  return;
                 }
-                toggleElement.dataset.currentState = originalState;
-              } finally {
-                // Always remove pending state
-                toggleElement.classList.remove('pending');
-              }
-            });
 
-            // Add SETUP and SEND button event listeners
+                const originalState = toggleElement.dataset.currentState === 'true';
+                const action = originalState ? 'disable' : 'enable';
+
+                // Set pending state immediately
+                toggleElement.classList.add('pending');
+                toggleElement.classList.remove('enabled');
+
+                try {
+                  await componentHandlers.handleComponentAction(component, action);
+
+                  // Success: Update based on actual component state
+                  componentHandlers.syncToggleState(toggleElement, component);
+                } catch (error) {
+                  // Error: Revert to original state
+                  if (originalState) {
+                    toggleElement.classList.add('enabled');
+                  } else {
+                    toggleElement.classList.remove('enabled');
+                  }
+                  toggleElement.dataset.currentState = originalState;
+                } finally {
+                  // Always remove pending state
+                  toggleElement.classList.remove('pending');
+                }
+              });
+            }
+
+            // Add action button event listeners
             const actionButtons = item.querySelectorAll('.component-action-btn');
             actionButtons.forEach(button => {
               button.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const action = button.dataset.action;
                 const componentId = button.dataset.componentId;
-                const inputId = `${action}-input-${componentId}`;
-                const input = document.getElementById(inputId);
-
-                if (!input) return;
-
-                const inputValue = input.value.trim();
 
                 // Disable button during operation
                 button.disabled = true;
 
                 try {
-                  await componentHandlers.handleComponentDataAction(component, action, inputValue);
+                  // Check if this action requires input
+                  const inputId = `${action}-input-${componentId}`;
+                  const input = document.getElementById(inputId);
+
+                  if (input) {
+                    // Actions that need input data
+                    const inputValue = input.value.trim();
+                    await componentHandlers.handleComponentDataAction(component, action, inputValue);
+                  } else {
+                    // Actions without input (query, cancel, offer, pause, resume, stop, forward, backward, process)
+                    await componentHandlers.handleComponentSimpleAction(component, action);
+                  }
                 } catch (error) {
                   // Error is already logged in handler
                 } finally {
@@ -1319,34 +1558,72 @@
             }
           },
 
-          // Handle component data action (setup/send)
+          // Handle simple component actions (no input required)
+          async handleComponentSimpleAction(component, action) {
+            const name = component.deviceType;
+
+            try {
+              logger.info(`Executing ${action} on ${name}...`);
+
+              // Check if the method exists on the component
+              if (typeof component[action] === 'function') {
+                const result = await component[action]();
+                logger.success(`${action} completed on ${name}`);
+
+                // Log result for query actions
+                if (action === 'query' && result) {
+                  logger.event(`Query result: ${JSON.stringify(result.meta || result)}`);
+                }
+              } else {
+                throw new Error(`${action} not available on ${name}`);
+              }
+            } catch (error) {
+              logger.error(`Failed to ${action} ${name}: ${error.message}`);
+              throw error;
+            }
+          },
+
+          // Handle component data action (setup/send/play/read)
           async handleComponentDataAction(component, action, inputValue) {
             const name = component.deviceType;
 
             try {
-              let data;
+              let data = null;
 
-              // Parse input if provided
+              // Parse input based on action type
               if (inputValue) {
-                try {
-                  data = JSON.parse(inputValue);
-                } catch (parseError) {
-                  logger.error(`Invalid JSON for ${action}: ${parseError.message}`);
-                  throw new Error(`Invalid JSON: ${parseError.message}`);
+                if (action === 'read') {
+                  // For read, the input is timeout in milliseconds
+                  data = parseInt(inputValue) || 30000;
+                } else if (action === 'play') {
+                  // For play, it's just text/SSML (not JSON)
+                  data = inputValue;
+                } else {
+                  // For setup/send, parse as JSON
+                  try {
+                    data = JSON.parse(inputValue);
+                  } catch (parseError) {
+                    logger.error(`Invalid JSON for ${action}: ${parseError.message}`);
+                    throw new Error(`Invalid JSON: ${parseError.message}`);
+                  }
                 }
               }
 
               const actionText = action.charAt(0).toUpperCase() + action.slice(1);
-              logger.info(`${actionText} ${name}${data ? ' with data: ' + JSON.stringify(data) : ''}...`);
+              logger.info(`${actionText} ${name}${data !== null ? ' with: ' + (typeof data === 'object' ? JSON.stringify(data) : data) : ''}...`);
 
               // Call the appropriate method on the component
-              if (action === 'setup') {
-                await component.setup(data);
-              } else if (action === 'send') {
-                await component.send(data);
-              }
+              if (typeof component[action] === 'function') {
+                const result = data !== null ? await component[action](data) : await component[action]();
+                logger.success(`${name} ${action} completed`);
 
-              logger.success(`${name} ${action} completed`);
+                // Log result for read operations
+                if (action === 'read' && result) {
+                  logger.event(`Read data: ${JSON.stringify(result)}`);
+                }
+              } else {
+                throw new Error(`${action} not available on ${name}`);
+              }
             }
             catch (error) {
               logger.error(`Failed to ${action} ${name}: ${error.message}`);
@@ -1356,12 +1633,15 @@
 
           // Sync toggle visual state with component state
           syncToggleState(toggleElement, component) {
-            if (component.enabled) {
-              toggleElement.classList.add('enabled');
-            } else {
-              toggleElement.classList.remove('enabled');
+            // Check if component has enabled property (InteractiveComponents)
+            if (component.enabled !== undefined) {
+              if (component.enabled) {
+                toggleElement.classList.add('enabled');
+              } else {
+                toggleElement.classList.remove('enabled');
+              }
+              toggleElement.dataset.currentState = component.enabled.toString();
             }
-            toggleElement.dataset.currentState = component.enabled.toString();
           },
 
           // Update all toggle states after component refresh

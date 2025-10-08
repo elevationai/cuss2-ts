@@ -87,6 +87,7 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
     Feeder,
     Dispenser,
     Component,
+    BaseComponent,
   } = await import("./models/index.ts");
 
   // Mock component list with all types
@@ -94,7 +95,7 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
   const createComponentType = (
     id: number,
     createFn: (id: number) => EnvironmentComponent,
-    expectedClass: typeof Component,
+    expectedClass: typeof Component | typeof BaseComponent,
     property: string | null = null,
   ) => ({ id, component: createFn(id), expectedClass, property });
 
@@ -102,7 +103,7 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
     id: number,
     linkedIds: number[],
     createFn: (id: number, linkedIds: number[]) => EnvironmentComponent,
-    expectedClass: typeof Component,
+    expectedClass: typeof Component | typeof BaseComponent,
     property: string,
   ) => ({ id, component: createFn(id, linkedIds), expectedClass, property });
 

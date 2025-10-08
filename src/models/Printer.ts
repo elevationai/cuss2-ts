@@ -1,4 +1,5 @@
-import { Component } from "./Component.ts";
+import { MediaOutputComponent } from "./base/MediaOutputComponent.ts";
+import type { BaseComponent } from "./base/BaseComponent.ts";
 import { Feeder } from "./Feeder.ts";
 import { Dispenser } from "./Dispenser.ts";
 import type { DeviceType } from "./deviceType.ts";
@@ -15,7 +16,7 @@ import {
 } from "cuss2-typescript-models";
 import { PlatformResponseError } from "./platformResponseError.ts";
 
-export class Printer extends Component {
+export class Printer extends MediaOutputComponent {
   constructor(
     component: EnvironmentComponent,
     cuss2: Cuss2,
@@ -26,7 +27,7 @@ export class Printer extends Component {
     const missingLink = (msg: string) => {
       throw new Error(msg);
     };
-    const linked = component.linkedComponentIDs?.map((id) => cuss2.components?.[id as number] as Component) || [];
+    const linked = component.linkedComponentIDs?.map((id) => cuss2.components?.[id as number] as unknown as BaseComponent) || [];
 
     this.feeder = linked.find((c) => c instanceof Feeder) ||
       missingLink("Feeder not found for Printer " + this.id);

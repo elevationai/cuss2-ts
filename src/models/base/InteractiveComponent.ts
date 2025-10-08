@@ -1,0 +1,38 @@
+/**
+ * InteractiveComponent - Base for components that can be enabled/disabled
+ * Adds enable/disable methods to base component functionality
+ */
+
+import { BaseComponent } from "./BaseComponent.ts";
+import type { PlatformData } from "cuss2-typescript-models";
+import type { UserEnableCapable } from "../capabilities/ComponentCapabilities.ts";
+
+export abstract class InteractiveComponent extends BaseComponent implements UserEnableCapable {
+  enabled: boolean = false;
+
+  /**
+   * Enable the component for user interaction
+   * Available to: DISPENSER, USER_INPUT, USER_OUTPUT, MEDIA_INPUT,
+   *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
+   */
+  async enable(): Promise<PlatformData> {
+    this.pendingCalls++;
+    const pd = await this.api.enable(this.id).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    this.enabled = true;
+    return pd;
+  }
+
+  /**
+   * Disable the component from user interaction
+   * Available to: DISPENSER, USER_INPUT, USER_OUTPUT, MEDIA_INPUT,
+   *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
+   */
+  async disable(): Promise<PlatformData> {
+    this.pendingCalls++;
+    const pd = await this.api.disable(this.id).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    this.enabled = false;
+    return pd;
+  }
+}

@@ -197,12 +197,21 @@ export class Connection extends EventEmitter {
   }
 
   private _cleanBaseURL(url: string): string {
-    // Remove query parameters if present
-    // url.split always returns at least one element, so we can safely access [0]
-    const parts = url.split("?");
-    const cleanURL = parts[0];
-    // Remove trailing slash if present
-    return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
+    // Parse the URL to extract just the origin (protocol + hostname + port)
+    try {
+      const parsedUrl = new URL(url);
+      // Return just the origin (e.g., "https://localhost:22222")
+      // This strips any path, query parameters, or hash fragments
+      return parsedUrl.origin;
+    }
+    catch {
+      // Fallback to old behavior if URL parsing fails
+      // Remove query parameters if present
+      const parts = url.split("?");
+      const cleanURL = parts[0];
+      // Remove trailing slash if present
+      return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
+    }
   }
 
   private _convertToHttpProtocol(url: string): string {

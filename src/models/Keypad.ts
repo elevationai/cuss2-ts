@@ -1,9 +1,9 @@
-import { Component } from "./Component.ts";
+import { UserInputComponent } from "./base/UserInputComponent.ts";
 import { DeviceType } from "./deviceType.ts";
 import type { Cuss2 } from "../cuss2.ts";
 import type { EnvironmentComponent, PlatformData } from "cuss2-typescript-models";
 
-export class Keypad extends Component {
+export class Keypad extends UserInputComponent {
   constructor(component: EnvironmentComponent, cuss2: Cuss2) {
     super(component, cuss2, DeviceType.KEY_PAD);
   }

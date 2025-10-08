@@ -1,4 +1,4 @@
-import { Component } from "./Component.ts";
+import { DataOutputComponent } from "./base/DataOutputComponent.ts";
 import { DeviceType } from "./deviceType.ts";
 import type { Cuss2 } from "../cuss2.ts";
 import type { EnvironmentComponent, IlluminationData, PlatformData } from "cuss2-typescript-models";
@@ -12,12 +12,16 @@ enum LightColorNameEnum {
   White = "white",
 }
 
-export class Illumination extends Component {
+export class Illumination extends DataOutputComponent {
   constructor(component: EnvironmentComponent, cuss2: Cuss2) {
     super(component, cuss2, DeviceType.ILLUMINATION);
   }
 
-  override async enable(
+  /**
+   * Convenience method to control the illumination
+   * Note: Illumination is DATA_OUTPUT - no enable/disable per CUSS spec
+   */
+  async illuminate(
     duration: number = 0,
     color?: string | number[],
     blink?: number[],
@@ -26,17 +30,25 @@ export class Illumination extends Component {
     const rgb = (Array.isArray(color) && color.length === 3) ? { red: color[0], green: color[1], blue: color[2] } : undefined;
     const blinkRate = (Array.isArray(blink) && blink.length === 2) ? { durationOn: blink[0], durationOff: blink[1] } : undefined;
 
-    if (this.enabled) {
-      await this.disable();
-    }
-    await super.enable();
-
-    const dataObj = {
+    const illuminationData = {
       duration,
       lightColor: { name, rgb },
       blinkRate,
     } as IlluminationData;
 
-    return await this.send(dataObj);
+    // Send as DataRecordList
+    const dataRecords = [{
+      data: JSON.stringify(illuminationData),
+      dsTypes: ["DS_TYPES_DATASTRUCTURE" as unknown as never],
+    }];
+
+    return await this.send(dataRecords);
+  }
+
+  /**
+   * Turn off illumination
+   */
+  async turnOff(): Promise<PlatformData> {
+    return await this.illuminate(0);
   }
 }

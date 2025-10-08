@@ -55,22 +55,22 @@ var require_events = __commonJS({
     var NumberIsNaN = Number.isNaN || function NumberIsNaN2(value) {
       return value !== value;
     };
-    function EventEmitter4() {
-      EventEmitter4.init.call(this);
+    function EventEmitter5() {
+      EventEmitter5.init.call(this);
     }
-    module.exports = EventEmitter4;
+    module.exports = EventEmitter5;
     module.exports.once = once;
-    EventEmitter4.EventEmitter = EventEmitter4;
-    EventEmitter4.prototype._events = void 0;
-    EventEmitter4.prototype._eventsCount = 0;
-    EventEmitter4.prototype._maxListeners = void 0;
+    EventEmitter5.EventEmitter = EventEmitter5;
+    EventEmitter5.prototype._events = void 0;
+    EventEmitter5.prototype._eventsCount = 0;
+    EventEmitter5.prototype._maxListeners = void 0;
     var defaultMaxListeners = 10;
     function checkListener(listener) {
       if (typeof listener !== "function") {
         throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
       }
     }
-    Object.defineProperty(EventEmitter4, "defaultMaxListeners", {
+    Object.defineProperty(EventEmitter5, "defaultMaxListeners", {
       enumerable: true,
       get: function() {
         return defaultMaxListeners;
@@ -82,14 +82,14 @@ var require_events = __commonJS({
         defaultMaxListeners = arg;
       }
     });
-    EventEmitter4.init = function() {
+    EventEmitter5.init = function() {
       if (this._events === void 0 || this._events === Object.getPrototypeOf(this)._events) {
         this._events = /* @__PURE__ */ Object.create(null);
         this._eventsCount = 0;
       }
       this._maxListeners = this._maxListeners || void 0;
     };
-    EventEmitter4.prototype.setMaxListeners = function setMaxListeners(n) {
+    EventEmitter5.prototype.setMaxListeners = function setMaxListeners(n) {
       if (typeof n !== "number" || n < 0 || NumberIsNaN(n)) {
         throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + ".");
       }
@@ -98,13 +98,13 @@ var require_events = __commonJS({
     };
     function _getMaxListeners(that) {
       if (that._maxListeners === void 0)
-        return EventEmitter4.defaultMaxListeners;
+        return EventEmitter5.defaultMaxListeners;
       return that._maxListeners;
     }
-    EventEmitter4.prototype.getMaxListeners = function getMaxListeners() {
+    EventEmitter5.prototype.getMaxListeners = function getMaxListeners() {
       return _getMaxListeners(this);
     };
-    EventEmitter4.prototype.emit = function emit(type) {
+    EventEmitter5.prototype.emit = function emit(type) {
       var args = [];
       for (var i = 1; i < arguments.length; i++)
         args.push(arguments[i]);
@@ -182,11 +182,11 @@ var require_events = __commonJS({
       }
       return target;
     }
-    EventEmitter4.prototype.addListener = function addListener(type, listener) {
+    EventEmitter5.prototype.addListener = function addListener(type, listener) {
       return _addListener(this, type, listener, false);
     };
-    EventEmitter4.prototype.on = EventEmitter4.prototype.addListener;
-    EventEmitter4.prototype.prependListener = function prependListener(type, listener) {
+    EventEmitter5.prototype.on = EventEmitter5.prototype.addListener;
+    EventEmitter5.prototype.prependListener = function prependListener(type, listener) {
       return _addListener(this, type, listener, true);
     };
     function onceWrapper() {
@@ -205,17 +205,17 @@ var require_events = __commonJS({
       state.wrapFn = wrapped;
       return wrapped;
     }
-    EventEmitter4.prototype.once = function once2(type, listener) {
+    EventEmitter5.prototype.once = function once2(type, listener) {
       checkListener(listener);
       this.on(type, _onceWrap(this, type, listener));
       return this;
     };
-    EventEmitter4.prototype.prependOnceListener = function prependOnceListener(type, listener) {
+    EventEmitter5.prototype.prependOnceListener = function prependOnceListener(type, listener) {
       checkListener(listener);
       this.prependListener(type, _onceWrap(this, type, listener));
       return this;
     };
-    EventEmitter4.prototype.removeListener = function removeListener(type, listener) {
+    EventEmitter5.prototype.removeListener = function removeListener(type, listener) {
       var list, events, position, i, originalListener;
       checkListener(listener);
       events = this._events;
@@ -255,8 +255,8 @@ var require_events = __commonJS({
       }
       return this;
     };
-    EventEmitter4.prototype.off = EventEmitter4.prototype.removeListener;
-    EventEmitter4.prototype.removeAllListeners = function removeAllListeners(type) {
+    EventEmitter5.prototype.off = EventEmitter5.prototype.removeListener;
+    EventEmitter5.prototype.removeAllListeners = function removeAllListeners(type) {
       var listeners, events, i;
       events = this._events;
       if (events === void 0)
@@ -308,20 +308,20 @@ var require_events = __commonJS({
         return unwrap ? [evlistener.listener || evlistener] : [evlistener];
       return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
     }
-    EventEmitter4.prototype.listeners = function listeners(type) {
+    EventEmitter5.prototype.listeners = function listeners(type) {
       return _listeners(this, type, true);
     };
-    EventEmitter4.prototype.rawListeners = function rawListeners(type) {
+    EventEmitter5.prototype.rawListeners = function rawListeners(type) {
       return _listeners(this, type, false);
     };
-    EventEmitter4.listenerCount = function(emitter, type) {
+    EventEmitter5.listenerCount = function(emitter, type) {
       if (typeof emitter.listenerCount === "function") {
         return emitter.listenerCount(type);
       } else {
         return listenerCount.call(emitter, type);
       }
     };
-    EventEmitter4.prototype.listenerCount = listenerCount;
+    EventEmitter5.prototype.listenerCount = listenerCount;
     function listenerCount(type) {
       var events = this._events;
       if (events !== void 0) {
@@ -334,7 +334,7 @@ var require_events = __commonJS({
       }
       return 0;
     }
-    EventEmitter4.prototype.eventNames = function eventNames() {
+    EventEmitter5.prototype.eventNames = function eventNames() {
       return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
     };
     function arrayClone(arr, n) {
@@ -1197,16 +1197,231 @@ var Component = class extends import_events3.EventEmitter {
   }
 };
 
-// src/models/DataReaderComponent.ts
-var DataReaderComponent = class extends Component {
-  previousData = [];
+// src/models/base/BaseComponent.ts
+var import_events4 = __toESM(require_events());
+var BaseComponent = class extends import_events4.EventEmitter {
+  _component;
+  id;
+  api;
+  required = false;
+  _status = "OK" /* OK */;
+  _componentState = "UNAVAILABLE" /* UNAVAILABLE */;
+  deviceType;
+  pendingCalls = 0;
+  pollingInterval = 1e4;
+  _poller;
+  parent;
+  subcomponents = [];
+  get ready() {
+    return this._componentState === "READY" /* READY */;
+  }
+  get pending() {
+    return this.pendingCalls > 0;
+  }
+  get status() {
+    return this._status;
+  }
+  get componentState() {
+    return this._componentState;
+  }
+  constructor(component, cuss2, _type = DeviceType.UNKNOWN) {
+    super();
+    this.deviceType = _type;
+    this._component = component;
+    this.id = Number(component.componentID);
+    this.api = cuss2.api;
+    this.parent = null;
+    const characteristics = component.componentCharacteristics?.[0];
+    this.required = characteristics?.required || false;
+    this._componentState = "UNAVAILABLE" /* UNAVAILABLE */;
+    this._status = "OK" /* OK */;
+    this.setupEventListeners(cuss2);
+  }
+  setupEventListeners(cuss2) {
+    cuss2.on("message", (data) => {
+      if (data?.meta?.componentID === this.id) {
+        this.handleMessage(data);
+        this.updateState(data);
+      }
+    });
+    cuss2.on("deactivated", () => {
+    });
+  }
   handleMessage(data) {
     this.emit("message", data);
+  }
+  stateIsDifferent(msg) {
+    return this.status !== msg.meta.messageCode || this._componentState !== msg.meta.componentState;
+  }
+  updateState(msg) {
+    if (msg?.meta?.componentState) {
+      this._componentState = msg.meta.componentState;
+      this.emit("readyStateChange", this._componentState);
+    }
+    if (msg?.meta?.messageCode) {
+      this._status = msg.meta.messageCode;
+      this.emit("statusChange", this._status);
+    }
+  }
+  /**
+   * Query the current state/status of the component
+   * Available to ALL component types
+   */
+  async query() {
+    this.pendingCalls++;
+    return await this.api.getStatus(this.id).finally(() => this.pendingCalls--);
+  }
+  /**
+   * Cancel all currently executed and queued directives
+   * Available to ALL components except APPLICATION
+   */
+  async cancel() {
+    this.pendingCalls++;
+    return await this.api.cancel(this.id).finally(() => this.pendingCalls--);
+  }
+  /**
+   * Setup/configure the component
+   * Available to ALL components except APPLICATION
+   */
+  async setup(dataObj) {
+    this.pendingCalls++;
+    const pd = await this.api.setup(this.id, dataObj).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    return pd;
+  }
+  startPolling() {
+    if (!this._poller) {
+      this._poller = setInterval(async () => {
+        await this.query();
+      }, this.pollingInterval);
+    }
+  }
+  stopPolling() {
+    if (this._poller) {
+      clearInterval(this._poller);
+      this._poller = void 0;
+    }
+  }
+  pollUntilReady(requireOK = false, pollingInterval = this.pollingInterval) {
+    if (this._poller)
+      return;
+    const poll = () => {
+      if (this.ready && (!requireOK || this.status === "OK" /* OK */)) {
+        this._poller = void 0;
+        return;
+      }
+      this._poller = setTimeout(() => {
+        this.query().catch(Object).finally(poll);
+      }, pollingInterval);
+    };
+    poll();
+  }
+};
+
+// src/models/base/InteractiveComponent.ts
+var InteractiveComponent = class extends BaseComponent {
+  enabled = false;
+  /**
+   * Enable the component for user interaction
+   * Available to: DISPENSER, USER_INPUT, USER_OUTPUT, MEDIA_INPUT,
+   *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
+   */
+  async enable() {
+    this.pendingCalls++;
+    const pd = await this.api.enable(this.id).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    this.enabled = true;
+    return pd;
+  }
+  /**
+   * Disable the component from user interaction
+   * Available to: DISPENSER, USER_INPUT, USER_OUTPUT, MEDIA_INPUT,
+   *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
+   */
+  async disable() {
+    this.pendingCalls++;
+    const pd = await this.api.disable(this.id).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    this.enabled = false;
+    return pd;
+  }
+};
+
+// src/models/base/DataInputComponent.ts
+var DataInputComponent = class extends BaseComponent {
+  previousData = [];
+  handleMessage(data) {
+    super.handleMessage(data);
     if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
       this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
       this.emit("data", this.previousData);
     }
   }
+  /**
+   * Read data with timeout (no enable/disable for data components)
+   */
+  read(ms = 3e4) {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.off("data", dataHandler);
+        reject(new Error(`Timeout of ${ms}ms exceeded`));
+      }, ms);
+      const dataHandler = (data) => {
+        clearTimeout(timeoutId);
+        resolve(data);
+      };
+      this.once("data", dataHandler);
+    });
+  }
+};
+
+// src/models/base/DataOutputComponent.ts
+var DataOutputComponent = class extends BaseComponent {
+  /**
+   * Send data to the component
+   * Available to: DATA_OUTPUT components
+   */
+  async send(dataObj) {
+    this.pendingCalls++;
+    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    return pd;
+  }
+};
+
+// src/models/base/UserInputComponent.ts
+var UserInputComponent = class extends InteractiveComponent {
+  // User input components can be enabled/disabled but cannot send
+  // They receive input from users
+};
+
+// src/models/base/UserOutputComponent.ts
+var UserOutputComponent = class extends InteractiveComponent {
+  /**
+   * Send data to the component
+   * Available to: USER_OUTPUT components
+   */
+  async send(dataObj) {
+    this.pendingCalls++;
+    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    return pd;
+  }
+};
+
+// src/models/base/MediaInputComponent.ts
+var MediaInputComponent = class extends InteractiveComponent {
+  previousData = [];
+  handleMessage(data) {
+    super.handleMessage(data);
+    if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
+      this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
+      this.emit("data", this.previousData);
+    }
+  }
+  /**
+   * Convenience method to read data with timeout
+   */
   async read(ms = 3e4) {
     await this.enable();
     return new Promise((resolve, reject) => {
@@ -1223,22 +1438,218 @@ var DataReaderComponent = class extends Component {
   }
 };
 
+// src/models/base/MediaOutputComponent.ts
+var MediaOutputComponent = class extends InteractiveComponent {
+  /**
+   * Send data to the component (print jobs, etc.)
+   * Available to: MEDIA_OUTPUT components
+   */
+  async send(dataObj) {
+    this.pendingCalls++;
+    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    return pd;
+  }
+};
+
+// src/models/base/BaggageScaleComponent.ts
+var BaggageScaleComponent = class extends InteractiveComponent {
+  previousData = [];
+  handleMessage(data) {
+    super.handleMessage(data);
+    if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
+      this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
+      this.emit("data", this.previousData);
+    }
+  }
+  /**
+   * Read weight data with timeout
+   */
+  async read(ms = 3e4) {
+    await this.enable();
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.off("data", dataHandler);
+        reject(new Error(`Timeout of ${ms}ms exceeded`));
+      }, ms);
+      const dataHandler = (data) => {
+        clearTimeout(timeoutId);
+        resolve(data);
+      };
+      this.once("data", dataHandler);
+    }).finally(() => this.disable());
+  }
+};
+
+// src/models/base/AnnouncementComponent.ts
+var AnnouncementComponent = class extends InteractiveComponent {
+  /**
+   * Play SSML formatted audio
+   */
+  async play(xml) {
+    this.pendingCalls++;
+    return await this.api.announcement.play(this.id, xml).finally(() => this.pendingCalls--);
+  }
+  /**
+   * Pause current playback
+   */
+  async pause() {
+    this.pendingCalls++;
+    return await this.api.announcement.pause(this.id).finally(() => this.pendingCalls--);
+  }
+  /**
+   * Resume paused playback
+   */
+  async resume() {
+    this.pendingCalls++;
+    return await this.api.announcement.resume(this.id).finally(() => this.pendingCalls--);
+  }
+  /**
+   * Stop current playback
+   */
+  async stop() {
+    this.pendingCalls++;
+    return await this.api.announcement.stop(this.id).finally(() => this.pendingCalls--);
+  }
+  /**
+   * Convenience method for text-to-speech
+   */
+  say(text, lang = "en-US") {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+             xml:lang="${lang}">${text}</speak>`;
+    return this.play(xml);
+  }
+};
+
+// src/models/base/ConveyorComponent.ts
+var ConveyorComponent = class extends BaseComponent {
+  /**
+   * Send baggage data to the component
+   */
+  async send(dataObj) {
+    this.pendingCalls++;
+    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    return pd;
+  }
+  /**
+   * Move bag to next position or airport collector belt
+   */
+  forward() {
+    return Promise.reject(new Error("Conveyor forward operation not yet implemented"));
+  }
+  /**
+   * Move bag back to previous position or user
+   */
+  backward() {
+    return Promise.reject(new Error("Conveyor backward operation not yet implemented"));
+  }
+  /**
+   * Process/examine bag for weight, dimensions, LPNs, RFID
+   */
+  process() {
+    return Promise.reject(new Error("Conveyor process operation not yet implemented"));
+  }
+};
+
+// src/models/base/InsertionBeltComponent.ts
+var InsertionBeltComponent = class extends InteractiveComponent {
+  /**
+   * Send baggage data to the component
+   */
+  async send(dataObj) {
+    this.pendingCalls++;
+    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
+    this.updateState(pd);
+    return pd;
+  }
+  /**
+   * Offer the bag to the next component/user
+   */
+  async offer() {
+    this.pendingCalls++;
+    return await this.api.offer(this.id).finally(() => this.pendingCalls--);
+  }
+  /**
+   * Move bag to next position
+   */
+  forward() {
+    return Promise.reject(new Error("Conveyor forward operation not yet implemented"));
+  }
+  /**
+   * Move bag back to user
+   */
+  backward() {
+    return Promise.reject(new Error("Conveyor backward operation not yet implemented"));
+  }
+  /**
+   * Process/examine bag
+   */
+  process() {
+    return Promise.reject(new Error("Conveyor process operation not yet implemented"));
+  }
+};
+
+// src/models/base/DispenserComponent.ts
+var DispenserComponent = class extends InteractiveComponent {
+  _mediaPresent = false;
+  get mediaPresent() {
+    return this._mediaPresent;
+  }
+  set mediaPresent(value) {
+    this._mediaPresent = value;
+  }
+  handleMessage(data) {
+    super.handleMessage(data);
+    if (data?.meta?.messageCode === "MEDIA_PRESENT" /* MEDIA_PRESENT */) {
+      this._mediaPresent = true;
+      this.emit("mediaPresent", true);
+    } else if (data?.meta?.messageCode === "MEDIA_EMPTY" /* MEDIA_EMPTY */) {
+      this._mediaPresent = false;
+      this.emit("mediaPresent", false);
+    }
+  }
+  /**
+   * Offer document to user
+   */
+  async offer() {
+    this.pendingCalls++;
+    const pd = await this.api.offer(this.id).finally(() => this.pendingCalls--);
+    if (pd?.meta?.messageCode === "OK" /* OK */) {
+      this._mediaPresent = false;
+    }
+    return pd;
+  }
+};
+
+// src/models/base/FeederComponent.ts
+var FeederComponent = class extends BaseComponent {
+  /**
+   * Offer media from feeder
+   */
+  async offer() {
+    this.pendingCalls++;
+    return await this.api.offer(this.id).finally(() => this.pendingCalls--);
+  }
+};
+
 // src/models/BarcodeReader.ts
-var BarcodeReader = class extends DataReaderComponent {
+var BarcodeReader = class extends MediaInputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.BARCODE_READER);
   }
 };
 
 // src/models/DocumentReader.ts
-var DocumentReader = class extends DataReaderComponent {
+var DocumentReader = class extends MediaInputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.PASSPORT_READER);
   }
 };
 
 // src/models/CardReader.ts
-var CardReader = class extends DataReaderComponent {
+var CardReader = class extends MediaInputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.MSR_READER);
   }
@@ -1258,67 +1669,65 @@ var CardReader = class extends DataReaderComponent {
 };
 
 // src/models/Scale.ts
-var Scale = class extends DataReaderComponent {
+var Scale = class extends BaggageScaleComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.SCALE);
   }
 };
 
 // src/models/RFID.ts
-var RFID = class extends DataReaderComponent {
+var RFID = class extends MediaInputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.RFID);
   }
 };
 
 // src/models/Camera.ts
-var Camera = class extends DataReaderComponent {
+var Camera = class extends MediaInputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.CAMERA);
   }
 };
 
 // src/models/AEASBD.ts
-var AEASBD = class extends Component {
+var AEASBD = class extends MediaOutputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.AEASBD);
   }
+  // AEA Self Bag Drop - similar to printer, uses ITPS commands
 };
 
 // src/models/BHS.ts
-var BHS = class extends DataReaderComponent {
+var BHS = class extends DataInputComponent {
   constructor(component, cuss2) {
-    super(component, cuss2, DeviceType.CAMERA);
+    super(component, cuss2, DeviceType.BHS);
   }
 };
 
 // src/models/Feeder.ts
-var Feeder = class extends Component {
+var Feeder = class extends FeederComponent {
   printer;
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.FEEDER);
   }
+  // offer() method inherited from FeederComponent
 };
 
 // src/models/Dispenser.ts
-var Dispenser = class extends Component {
+var Dispenser = class extends DispenserComponent {
   printer;
-  _mediaPresent = false;
-  get mediaPresent() {
-    return this._mediaPresent;
-  }
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.DISPENSER);
     this.on("statusChange", (status) => {
       if (status === "MEDIA_PRESENT" /* MEDIA_PRESENT */) {
         this.pollUntilReady(true, 2e3);
-        if (!this._mediaPresent) {
-          this._mediaPresent = true;
+        if (!this.mediaPresent) {
+          this.mediaPresent = true;
           this.emit("mediaPresent", true);
         }
       } else {
-        if (this._mediaPresent) {
-          this._mediaPresent = false;
+        if (this.mediaPresent) {
+          this.mediaPresent = false;
           this.emit("mediaPresent", false);
         }
       }
@@ -1342,7 +1751,7 @@ var PlatformResponseError = class extends Error {
 };
 
 // src/models/Printer.ts
-var Printer = class extends Component {
+var Printer = class extends MediaOutputComponent {
   constructor(component, cuss2, _type) {
     super(component, cuss2, _type);
     const missingLink = (msg) => {
@@ -1456,7 +1865,7 @@ var BoardingPassPrinter = class extends Printer {
 };
 
 // src/models/Keypad.ts
-var Keypad = class extends Component {
+var Keypad = class extends UserInputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.KEY_PAD);
   }
@@ -1485,26 +1894,11 @@ var Keypad = class extends Component {
 };
 
 // src/models/Announcement.ts
-var Announcement = class extends Component {
+var Announcement = class extends AnnouncementComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.ANNOUNCEMENT);
   }
-  say(text, lang = "en-US") {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?><speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">${text}</speak>`;
-    return this.play(xml);
-  }
-  play(xml) {
-    return this.api.announcement.play(this.id, xml);
-  }
-  stop() {
-    return this.api.announcement.stop(this.id);
-  }
-  pause() {
-    return this.api.announcement.pause(this.id);
-  }
-  resume() {
-    return this.api.announcement.resume(this.id);
-  }
+  // All methods inherited from AnnouncementComponent
 };
 
 // src/models/Illumination.ts
@@ -1516,60 +1910,73 @@ var LightColorNameEnum = /* @__PURE__ */ ((LightColorNameEnum2) => {
   LightColorNameEnum2["White"] = "white";
   return LightColorNameEnum2;
 })(LightColorNameEnum || {});
-var Illumination = class extends Component {
+var Illumination = class extends DataOutputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.ILLUMINATION);
   }
-  async enable(duration = 0, color, blink) {
+  /**
+   * Convenience method to control the illumination
+   * Note: Illumination is DATA_OUTPUT - no enable/disable per CUSS spec
+   */
+  async illuminate(duration = 0, color, blink) {
     const name = typeof color === "string" ? LightColorNameEnum[color] || void 0 : void 0;
     const rgb = Array.isArray(color) && color.length === 3 ? { red: color[0], green: color[1], blue: color[2] } : void 0;
     const blinkRate = Array.isArray(blink) && blink.length === 2 ? { durationOn: blink[0], durationOff: blink[1] } : void 0;
-    if (this.enabled) {
-      await this.disable();
-    }
-    await super.enable();
-    const dataObj = {
+    const illuminationData = {
       duration,
       lightColor: { name, rgb },
       blinkRate
     };
-    return await this.send(dataObj);
+    const dataRecords = [{
+      data: JSON.stringify(illuminationData),
+      dsTypes: ["DS_TYPES_DATASTRUCTURE"]
+    }];
+    return await this.send(dataRecords);
+  }
+  /**
+   * Turn off illumination
+   */
+  async turnOff() {
+    return await this.illuminate(0);
   }
 };
 
 // src/models/Headset.ts
-var Headset = class extends Component {
+var Headset = class extends UserOutputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.HEADSET);
   }
 };
 
 // src/models/Biometric.ts
-var Biometric = class extends Component {
+var Biometric = class extends UserOutputComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.BIOMETRIC);
   }
+  // Can send CommonUseBiometricMessage via inherited send() method
 };
 
 // src/models/InsertionBelt.ts
-var InsertionBelt = class extends Component {
+var InsertionBelt = class extends InsertionBeltComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.INSERTION_BELT);
   }
 };
 
 // src/models/VerificationBelt.ts
-var VerificationBelt = class extends Component {
+var VerificationBelt = class extends ConveyorComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.VERIFICATION_BELT);
   }
+  // Cannot be enabled/disabled - only ConveyorComponent methods
 };
 
 // src/models/ParkingBelt.ts
-var ParkingBelt = class extends Component {
+var ParkingBelt = class extends ConveyorComponent {
   constructor(component, cuss2) {
     super(component, cuss2, DeviceType.PARKING_BELT);
   }
+  // Cannot be enabled/disabled - only ConveyorComponent methods
 };
 
 // src/models/Errors.ts
@@ -1771,9 +2178,14 @@ var Connection = class _Connection extends EventEmitter2 {
     }
   }
   _cleanBaseURL(url) {
-    const parts = url.split("?");
-    const cleanURL = parts[0];
-    return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
+    try {
+      const parsedUrl = new URL(url);
+      return parsedUrl.origin;
+    } catch {
+      const parts = url.split("?");
+      const cleanURL = parts[0];
+      return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
+    }
   }
   _convertToHttpProtocol(url) {
     if (url.startsWith("ws://")) {

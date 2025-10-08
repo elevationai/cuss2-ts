@@ -9,6 +9,7 @@ import {
   Announcement,
   BagTagPrinter,
   BarcodeReader,
+  type BaseComponent,
   BHS,
   Biometric,
   BoardingPassPrinter,
@@ -78,7 +79,7 @@ function validateComponentId(componentID: unknown) {
 export class Cuss2 extends EventEmitter {
   connection: Connection;
   environment: EnvironmentLevel = {} as EnvironmentLevel;
-  components: Record<string, Component> | undefined = undefined;
+  components: Record<string, Component | BaseComponent> | undefined = undefined;
 
   // State management
   private _currentState: StateChange = new StateChange(AppState.STOPPED, AppState.STOPPED);
@@ -266,7 +267,7 @@ export class Cuss2 extends EventEmitter {
       const componentList = response.payload?.componentList as ComponentList;
       if (this.components) return componentList;
 
-      const components: Record<string, Component> = this.components = {};
+      const components: Record<string, Component | BaseComponent> = this.components = {};
 
       //first find feeders & dispensers, so they can be linked when printers are created
       componentList.forEach((component) => {

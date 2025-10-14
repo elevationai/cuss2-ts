@@ -78,9 +78,6 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
     Keypad,
     Illumination,
     Headset,
-    InsertionBelt,
-    ParkingBelt,
-    VerificationBelt,
     RFID,
     BHS,
     AEASBD,
@@ -127,9 +124,6 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
     createComponentType(10, mockDevice.createKeypad, Keypad, "keypad"),
     createComponentType(11, mockDevice.createIllumination, Illumination, "illumination"),
     createComponentType(12, mockDevice.createHeadset, Headset, "headset"),
-    createComponentType(13, mockDevice.createInsertionBelt, InsertionBelt, "insertionBelt"),
-    createComponentType(14, mockDevice.createParkingBelt, ParkingBelt, "parkingBelt"),
-    createComponentType(15, mockDevice.createVerificationBelt, VerificationBelt, "verificationBelt"),
     createComponentType(16, mockDevice.createRFID, RFID, "rfid"),
     createComponentType(17, mockDevice.createBHS, BHS, "bhs"),
     createComponentType(18, mockDevice.createAEASBD, AEASBD, "aeasbd"),
@@ -233,13 +227,13 @@ Deno.test("3.4 - Component querying should query all components successfully", a
   // @ts-ignore - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
-  // Import Component class
-  const { Component } = await import("./models/index.ts");
+  // Import UnknownComponent class
+  const { UnknownComponent } = await import("./models/index.ts");
 
-  // Create mock components using real Component instances
-  const component1 = new Component(createMockComponent({ componentID: 1 }), cuss2);
-  const component2 = new Component(createMockComponent({ componentID: 2 }), cuss2);
-  const component3 = new Component(createMockComponent({ componentID: 3 }), cuss2);
+  // Create mock components using real UnknownComponent instances
+  const component1 = new UnknownComponent(createMockComponent({ componentID: 1 }), cuss2);
+  const component2 = new UnknownComponent(createMockComponent({ componentID: 2 }), cuss2);
+  const component3 = new UnknownComponent(createMockComponent({ componentID: 3 }), cuss2);
 
   // Track query calls
   let queryCalls = 0;
@@ -273,14 +267,14 @@ Deno.test("3.5 - Component query error handling should handle component query er
   // @ts-ignore - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
-  // Import Component class
-  const { Component } = await import("./models/index.ts");
+  // Import UnknownComponent class
+  const { UnknownComponent } = await import("./models/index.ts");
 
-  // Create mock components using real Component instances
-  const component1 = new Component(createMockComponent({ componentID: 1 }), cuss2);
-  const component2 = new Component(createMockComponent({ componentID: 2 }), cuss2);
-  const component3 = new Component(createMockComponent({ componentID: 3 }), cuss2);
-  const component4 = new Component(createMockComponent({ componentID: 4 }), cuss2);
+  // Create mock components using real UnknownComponent instances
+  const component1 = new UnknownComponent(createMockComponent({ componentID: 1 }), cuss2);
+  const component2 = new UnknownComponent(createMockComponent({ componentID: 2 }), cuss2);
+  const component3 = new UnknownComponent(createMockComponent({ componentID: 3 }), cuss2);
+  const component4 = new UnknownComponent(createMockComponent({ componentID: 4 }), cuss2);
 
   // Track query calls to ensure all are attempted
   let queryCalls = 0;
@@ -341,12 +335,12 @@ Deno.test("3.1 - Component discovery should handle empty component list", async 
   assertEquals(Object.keys(cuss2.components!).length, 0);
 });
 
-Deno.test("3.2 - Component type mapping should create generic Component for unknown types", async () => {
+Deno.test("3.2 - Component type mapping should create generic UnknownComponent for unknown types", async () => {
   const mockConnection = new MockConnection();
   // @ts-ignore - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
-  const { Component } = await import("./models/index.ts");
+  const { UnknownComponent } = await import("./models/index.ts");
 
   // Mock component with unknown type (no matching identification)
   mockConnection.sendAndGetResponse = () => {
@@ -359,7 +353,7 @@ Deno.test("3.2 - Component type mapping should create generic Component for unkn
             componentType: ComponentTypes.DATA_INPUT,
             componentCharacteristics: [
               createMockCharacteristics({
-                // No recognizable characteristics - will create generic Component
+                // No recognizable characteristics - will create generic UnknownComponent
                 deviceTypesList: [],
                 mediaTypesList: [],
                 dsTypesList: [],
@@ -373,8 +367,8 @@ Deno.test("3.2 - Component type mapping should create generic Component for unkn
 
   await cuss2.api.getComponents();
 
-  // Verify generic Component was created
+  // Verify generic UnknownComponent was created
   const component = cuss2.components!["1"];
-  assertEquals(component instanceof Component, true);
-  assertEquals(component.constructor.name, "Component");
+  assertEquals(component instanceof UnknownComponent, true);
+  assertEquals(component.constructor.name, "UnknownComponent");
 });

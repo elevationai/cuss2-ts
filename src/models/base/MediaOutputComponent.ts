@@ -5,6 +5,7 @@
  */
 
 import { InteractiveComponent } from "./InteractiveComponent.ts";
+import { executeSend } from "./componentUtils.ts";
 import type { OutputCapable } from "../capabilities/ComponentCapabilities.ts";
 import type { DataRecordList, PlatformData } from "cuss2-typescript-models";
 
@@ -14,9 +15,6 @@ export abstract class MediaOutputComponent extends InteractiveComponent implemen
    * Available to: MEDIA_OUTPUT components
    */
   async send(dataObj: DataRecordList): Promise<PlatformData> {
-    this.pendingCalls++;
-    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    return pd;
+    return await executeSend(this, dataObj, this.withPendingCall.bind(this));
   }
 }

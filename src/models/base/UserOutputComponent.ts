@@ -4,6 +4,7 @@
  */
 
 import { InteractiveComponent } from "./InteractiveComponent.ts";
+import { executeSend } from "./componentUtils.ts";
 import type { OutputCapable } from "../capabilities/ComponentCapabilities.ts";
 import type { CommonUseBiometricMessage, CommonUsePaymentMessage, DataRecordList, PlatformData } from "cuss2-typescript-models";
 
@@ -13,9 +14,6 @@ export abstract class UserOutputComponent extends InteractiveComponent implement
    * Available to: USER_OUTPUT components
    */
   async send(dataObj: DataRecordList | CommonUseBiometricMessage | CommonUsePaymentMessage): Promise<PlatformData> {
-    this.pendingCalls++;
-    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    return pd;
+    return await executeSend(this, dataObj, this.withPendingCall.bind(this));
   }
 }

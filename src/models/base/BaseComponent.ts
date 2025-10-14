@@ -26,6 +26,10 @@ export abstract class BaseComponent extends EventEmitter {
   parent: BaseComponent | null;
   subcomponents: BaseComponent[] = [];
 
+  // Optional enabled property for backward compatibility
+  // Only InteractiveComponent and its subclasses actually use this
+  enabled?: boolean;
+
   get ready(): boolean {
     return this._componentState === ComponentState.READY;
   }
@@ -63,6 +67,25 @@ export abstract class BaseComponent extends EventEmitter {
     this._status = MessageCodes.OK;
 
     this.setupEventListeners(cuss2);
+
+    // Handle subcomponent linking for components with linkedComponentIDs
+    if (component.linkedComponentIDs?.length) {
+      const name = this.deviceType;
+      const parentId = Math.min(
+        this.id,
+        ...component.linkedComponentIDs as number[],
+      );
+      if (parentId !== this.id) {
+        this.parent = cuss2.components?.[parentId] as BaseComponent;
+        // feeder and dispenser are created in the printer component
+        if (this.parent) {
+          this.parent.subcomponents.push(this);
+          // We need to use bracket notation to access dynamic properties
+          // Explicitly tell TypeScript that this is safe by using indexing
+          (this.parent as unknown as Record<string, BaseComponent>)[name] = this;
+        }
+      }
+    }
   }
 
   protected setupEventListeners(cuss2: Cuss2): void {
@@ -76,7 +99,10 @@ export abstract class BaseComponent extends EventEmitter {
 
     // Subscribe to deactivation events
     cuss2.on("deactivated", () => {
-      // Handle deactivation if needed
+      // Set enabled to false if this component uses the enabled property
+      if (this.enabled !== undefined) {
+        this.enabled = false;
+      }
     });
   }
 
@@ -89,12 +115,29 @@ export abstract class BaseComponent extends EventEmitter {
   }
 
   updateState(msg: PlatformData): void {
-    if (msg?.meta?.componentState) {
-      this._componentState = msg.meta.componentState as ComponentState;
-      this.emit("readyStateChange", this._componentState);
+    const { meta } = msg;
+
+    // Handle component state changes
+    if (meta?.componentState !== undefined && meta.componentState !== this._componentState) {
+      this._componentState = meta.componentState ?? ComponentState.UNAVAILABLE;
+
+      // Set enabled to false if not ready (for components that use enabled)
+      if (meta.componentState !== ComponentState.READY && this.enabled !== undefined) {
+        this.enabled = false;
+      }
+
+      // Emit readyStateChange with boolean for backward compatibility
+      this.emit("readyStateChange", meta.componentState === ComponentState.READY);
     }
-    if (msg?.meta?.messageCode) {
-      this._status = msg.meta.messageCode as MessageCodes;
+
+    // Auto-poll for required components that are not ready
+    if (!this.ready && this.required && !this._poller && this.pollingInterval > 0) {
+      this.pollUntilReady();
+    }
+
+    // Handle message code (status) changes
+    if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
+      this._status = meta.messageCode as MessageCodes;
       this.emit("statusChange", this._status);
     }
   }
@@ -104,8 +147,7 @@ export abstract class BaseComponent extends EventEmitter {
    * Available to ALL component types
    */
   async query(): Promise<PlatformData> {
-    this.pendingCalls++;
-    return await this.api.getStatus(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.getStatus(this.id));
   }
 
   /**
@@ -113,8 +155,7 @@ export abstract class BaseComponent extends EventEmitter {
    * Available to ALL components except APPLICATION
    */
   async cancel(): Promise<PlatformData> {
-    this.pendingCalls++;
-    return await this.api.cancel(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.cancel(this.id));
   }
 
   /**
@@ -122,8 +163,7 @@ export abstract class BaseComponent extends EventEmitter {
    * Available to ALL components except APPLICATION
    */
   async setup(dataObj: DataRecordList): Promise<PlatformData> {
-    this.pendingCalls++;
-    const pd = await this.api.setup(this.id, dataObj).finally(() => this.pendingCalls--);
+    const pd = await this.withPendingCall(() => this.api.setup(this.id, dataObj));
     this.updateState(pd);
     return pd;
   }
@@ -155,5 +195,22 @@ export abstract class BaseComponent extends EventEmitter {
       }, pollingInterval);
     };
     poll();
+  }
+
+  /**
+   * Wrapper for API calls that manages pendingCalls counter
+   * Increments before the call, decrements in finally block
+   * @param apiCall - The API call to execute
+   * @returns Promise with the API call result
+   */
+  protected async withPendingCall<T extends PlatformData>(
+    apiCall: () => Promise<T>
+  ): Promise<T> {
+    this.pendingCalls++;
+    try {
+      return await apiCall();
+    } finally {
+      this.pendingCalls--;
+    }
   }
 }

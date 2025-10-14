@@ -123,24 +123,6 @@ export class ComponentInterrogation {
       !!mediaTypesHas(mediaTypes, MediaTypes.RFID);
   };
 
-  static isInsertionBelt = (component: EnvironmentComponent): boolean => {
-    const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return false;
-    return component.componentType === ComponentTypes.INSERTION_BELT;
-  };
-
-  static isVerificationBelt = (component: EnvironmentComponent): boolean => {
-    const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return false;
-    return component.componentType === ComponentTypes.VERIFICATION_BELT;
-  };
-
-  static isParkingBelt = (component: EnvironmentComponent): boolean => {
-    const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return false;
-    return component.componentType === ComponentTypes.PARKING_BELT;
-  };
-
   static isAEASBD = (component: EnvironmentComponent): boolean => {
     if (component.componentType !== ComponentTypes.USER_OUTPUT) return false;
     const charac0 = component.componentCharacteristics?.[0];

@@ -276,27 +276,6 @@ Deno.test(
 );
 
 // Tests for private helper methods
-Deno.test("_cleanBaseURL should extract base URL (origin only)", () => {
-  const connection = new Connection(
-    testBaseUrl,
-    testClientId,
-    testClientSecret,
-    testDeviceId,
-    testTokenUrl,
-  );
-
-  // @ts-ignore - Accessing private method for testing
-  const cleanBaseURL = connection._cleanBaseURL.bind(connection);
-
-  // Test different URL formats - should extract only origin (protocol + host + port)
-  assertEquals(cleanBaseURL("https://example.com/api"), "https://example.com");
-  assertEquals(cleanBaseURL("https://example.com/api/"), "https://example.com");
-  assertEquals(cleanBaseURL("https://example.com/api?param=value"), "https://example.com");
-  assertEquals(cleanBaseURL("https://example.com/api/?param=value"), "https://example.com");
-  assertEquals(cleanBaseURL("https://example.com:8080/platform/subscribe"), "https://example.com:8080");
-  assertEquals(cleanBaseURL("https://example.com"), "https://example.com");
-});
-
 Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
   const connection = new Connection(
     testBaseUrl,

@@ -204,12 +204,13 @@ export abstract class BaseComponent extends EventEmitter {
    * @returns Promise with the API call result
    */
   protected async withPendingCall<T extends PlatformData>(
-    apiCall: () => Promise<T>
+    apiCall: () => Promise<T>,
   ): Promise<T> {
     this.pendingCalls++;
     try {
       return await apiCall();
-    } finally {
+    }
+    finally {
       this.pendingCalls--;
     }
   }

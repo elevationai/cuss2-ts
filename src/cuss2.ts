@@ -499,7 +499,7 @@ export class Cuss2 extends EventEmitter {
       const componentList = Object.values(this.components) as BaseComponent[];
       for await (const component of componentList) {
         // Check if component has enable/disable capability (InteractiveComponent)
-        if ('enabled' in component && (component as InteractiveComponent).enabled) {
+        if ("enabled" in component && (component as InteractiveComponent).enabled) {
           await (component as InteractiveComponent).disable();
         }
       }

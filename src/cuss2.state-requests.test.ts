@@ -3,7 +3,7 @@ import { spy, stub } from "@std/testing/mock";
 import { ApplicationStateCodes as AppState, type PlatformData } from "cuss2-typescript-models";
 import { createMockCuss2, MockConnection, setCurrentState } from "./test-helpers.ts";
 import { Cuss2 } from "./cuss2.ts";
-import type { Component } from "./models/Component.ts";
+import type { InteractiveComponent } from "./models/index.ts";
 
 // Section 6: State Request Methods Tests
 
@@ -104,17 +104,17 @@ Deno.test("Section 6.2: requestUnavailableState - should disable components when
   const mockComponent1 = {
     enabled: true,
     disable: () => Promise.resolve(),
-  } as unknown as Component;
+  } as unknown as InteractiveComponent;
 
   const mockComponent2 = {
     enabled: true,
     disable: () => Promise.resolve(),
-  } as unknown as Component;
+  } as unknown as InteractiveComponent;
 
   const mockComponent3 = {
     enabled: false, // Already disabled
     disable: () => Promise.resolve(),
-  } as unknown as Component;
+  } as unknown as InteractiveComponent;
 
   // @ts-ignore - accessing private property for testing
   cuss2.components = {
@@ -195,7 +195,7 @@ Deno.test("Section 6.3: requestAvailableState - should disable components when t
   const mockComponent = {
     enabled: true,
     disable: () => Promise.resolve(),
-  } as unknown as Component;
+  } as unknown as InteractiveComponent;
 
   // @ts-ignore - accessing private property for testing
   cuss2.components = { "1": mockComponent };

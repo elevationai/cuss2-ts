@@ -11,7 +11,6 @@ export class FeederComponent extends BaseComponent implements MediaOfferCapable 
    * Offer media from feeder
    */
   async offer(): Promise<PlatformData> {
-    this.pendingCalls++;
-    return await this.api.offer(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.offer(this.id));
   }
 }

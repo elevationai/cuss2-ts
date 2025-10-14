@@ -33,8 +33,7 @@ export class DispenserComponent extends InteractiveComponent implements MediaOff
    * Offer document to user
    */
   async offer(): Promise<PlatformData> {
-    this.pendingCalls++;
-    const pd = await this.api.offer(this.id).finally(() => this.pendingCalls--);
+    const pd = await this.withPendingCall(() => this.api.offer(this.id));
     if (pd?.meta?.messageCode === MessageCodes.OK) {
       this._mediaPresent = false;
     }

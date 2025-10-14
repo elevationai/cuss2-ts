@@ -4,11 +4,11 @@
  */
 
 import { BaseComponent } from "./BaseComponent.ts";
-import type { PlatformData } from "cuss2-typescript-models";
+import { MessageCodes, type PlatformData } from "cuss2-typescript-models";
 import type { UserEnableCapable } from "../capabilities/ComponentCapabilities.ts";
 
 export abstract class InteractiveComponent extends BaseComponent implements UserEnableCapable {
-  enabled: boolean = false;
+  override enabled: boolean = false;
 
   /**
    * Enable the component for user interaction
@@ -16,8 +16,7 @@ export abstract class InteractiveComponent extends BaseComponent implements User
    *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
    */
   async enable(): Promise<PlatformData> {
-    this.pendingCalls++;
-    const pd = await this.api.enable(this.id).finally(() => this.pendingCalls--);
+    const pd = await this.withPendingCall(() => this.api.enable(this.id));
     this.updateState(pd);
     this.enabled = true;
     return pd;
@@ -29,10 +28,20 @@ export abstract class InteractiveComponent extends BaseComponent implements User
    *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
    */
   async disable(): Promise<PlatformData> {
-    this.pendingCalls++;
-    const pd = await this.api.disable(this.id).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    this.enabled = false;
-    return pd;
+    try {
+      const pd = await this.withPendingCall(() => this.api.disable(this.id));
+      this.updateState(pd);
+      this.enabled = false;
+      return pd;
+    } catch (e: unknown) {
+      // Handle OUT_OF_SEQUENCE error gracefully
+      const pd = e as PlatformData;
+      if (pd?.meta?.messageCode === MessageCodes.OUT_OF_SEQUENCE) {
+        this.enabled = false;
+        return pd;
+      }
+      // Re-throw other errors
+      return Promise.reject(e);
+    }
   }
 }

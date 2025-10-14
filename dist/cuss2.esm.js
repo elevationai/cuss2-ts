@@ -55,22 +55,22 @@ var require_events = __commonJS({
     var NumberIsNaN = Number.isNaN || function NumberIsNaN2(value) {
       return value !== value;
     };
-    function EventEmitter5() {
-      EventEmitter5.init.call(this);
+    function EventEmitter4() {
+      EventEmitter4.init.call(this);
     }
-    module.exports = EventEmitter5;
+    module.exports = EventEmitter4;
     module.exports.once = once;
-    EventEmitter5.EventEmitter = EventEmitter5;
-    EventEmitter5.prototype._events = void 0;
-    EventEmitter5.prototype._eventsCount = 0;
-    EventEmitter5.prototype._maxListeners = void 0;
+    EventEmitter4.EventEmitter = EventEmitter4;
+    EventEmitter4.prototype._events = void 0;
+    EventEmitter4.prototype._eventsCount = 0;
+    EventEmitter4.prototype._maxListeners = void 0;
     var defaultMaxListeners = 10;
     function checkListener(listener) {
       if (typeof listener !== "function") {
         throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
       }
     }
-    Object.defineProperty(EventEmitter5, "defaultMaxListeners", {
+    Object.defineProperty(EventEmitter4, "defaultMaxListeners", {
       enumerable: true,
       get: function() {
         return defaultMaxListeners;
@@ -82,14 +82,14 @@ var require_events = __commonJS({
         defaultMaxListeners = arg;
       }
     });
-    EventEmitter5.init = function() {
+    EventEmitter4.init = function() {
       if (this._events === void 0 || this._events === Object.getPrototypeOf(this)._events) {
         this._events = /* @__PURE__ */ Object.create(null);
         this._eventsCount = 0;
       }
       this._maxListeners = this._maxListeners || void 0;
     };
-    EventEmitter5.prototype.setMaxListeners = function setMaxListeners(n) {
+    EventEmitter4.prototype.setMaxListeners = function setMaxListeners(n) {
       if (typeof n !== "number" || n < 0 || NumberIsNaN(n)) {
         throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + ".");
       }
@@ -98,13 +98,13 @@ var require_events = __commonJS({
     };
     function _getMaxListeners(that) {
       if (that._maxListeners === void 0)
-        return EventEmitter5.defaultMaxListeners;
+        return EventEmitter4.defaultMaxListeners;
       return that._maxListeners;
     }
-    EventEmitter5.prototype.getMaxListeners = function getMaxListeners() {
+    EventEmitter4.prototype.getMaxListeners = function getMaxListeners() {
       return _getMaxListeners(this);
     };
-    EventEmitter5.prototype.emit = function emit(type) {
+    EventEmitter4.prototype.emit = function emit(type) {
       var args = [];
       for (var i = 1; i < arguments.length; i++)
         args.push(arguments[i]);
@@ -182,11 +182,11 @@ var require_events = __commonJS({
       }
       return target;
     }
-    EventEmitter5.prototype.addListener = function addListener(type, listener) {
+    EventEmitter4.prototype.addListener = function addListener(type, listener) {
       return _addListener(this, type, listener, false);
     };
-    EventEmitter5.prototype.on = EventEmitter5.prototype.addListener;
-    EventEmitter5.prototype.prependListener = function prependListener(type, listener) {
+    EventEmitter4.prototype.on = EventEmitter4.prototype.addListener;
+    EventEmitter4.prototype.prependListener = function prependListener(type, listener) {
       return _addListener(this, type, listener, true);
     };
     function onceWrapper() {
@@ -205,17 +205,17 @@ var require_events = __commonJS({
       state.wrapFn = wrapped;
       return wrapped;
     }
-    EventEmitter5.prototype.once = function once2(type, listener) {
+    EventEmitter4.prototype.once = function once2(type, listener) {
       checkListener(listener);
       this.on(type, _onceWrap(this, type, listener));
       return this;
     };
-    EventEmitter5.prototype.prependOnceListener = function prependOnceListener(type, listener) {
+    EventEmitter4.prototype.prependOnceListener = function prependOnceListener(type, listener) {
       checkListener(listener);
       this.prependListener(type, _onceWrap(this, type, listener));
       return this;
     };
-    EventEmitter5.prototype.removeListener = function removeListener(type, listener) {
+    EventEmitter4.prototype.removeListener = function removeListener(type, listener) {
       var list, events, position, i, originalListener;
       checkListener(listener);
       events = this._events;
@@ -255,8 +255,8 @@ var require_events = __commonJS({
       }
       return this;
     };
-    EventEmitter5.prototype.off = EventEmitter5.prototype.removeListener;
-    EventEmitter5.prototype.removeAllListeners = function removeAllListeners(type) {
+    EventEmitter4.prototype.off = EventEmitter4.prototype.removeListener;
+    EventEmitter4.prototype.removeAllListeners = function removeAllListeners(type) {
       var listeners, events, i;
       events = this._events;
       if (events === void 0)
@@ -308,20 +308,20 @@ var require_events = __commonJS({
         return unwrap ? [evlistener.listener || evlistener] : [evlistener];
       return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
     }
-    EventEmitter5.prototype.listeners = function listeners(type) {
+    EventEmitter4.prototype.listeners = function listeners(type) {
       return _listeners(this, type, true);
     };
-    EventEmitter5.prototype.rawListeners = function rawListeners(type) {
+    EventEmitter4.prototype.rawListeners = function rawListeners(type) {
       return _listeners(this, type, false);
     };
-    EventEmitter5.listenerCount = function(emitter, type) {
+    EventEmitter4.listenerCount = function(emitter, type) {
       if (typeof emitter.listenerCount === "function") {
         return emitter.listenerCount(type);
       } else {
         return listenerCount.call(emitter, type);
       }
     };
-    EventEmitter5.prototype.listenerCount = listenerCount;
+    EventEmitter4.prototype.listenerCount = listenerCount;
     function listenerCount(type) {
       var events = this._events;
       if (events !== void 0) {
@@ -334,7 +334,7 @@ var require_events = __commonJS({
       }
       return 0;
     }
-    EventEmitter5.prototype.eventNames = function eventNames() {
+    EventEmitter4.prototype.eventNames = function eventNames() {
       return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
     };
     function arrayClone(arr, n) {
@@ -1028,7 +1028,7 @@ var EventEmitter2 = class _EventEmitter extends import_events2.EventEmitter {
   }
 };
 
-// src/models/Component.ts
+// src/models/base/BaseComponent.ts
 var import_events3 = __toESM(require_events());
 
 // src/models/deviceType.ts
@@ -1060,146 +1060,8 @@ var DeviceType = {
   BHS: "BHS"
 };
 
-// src/models/Component.ts
-var Component = class extends import_events3.EventEmitter {
-  _component;
-  id;
-  api;
-  // Using definite assignment assertion
-  required = false;
-  _status = "OK" /* OK */;
-  _componentState = "UNAVAILABLE" /* UNAVAILABLE */;
-  deviceType;
-  pendingCalls = 0;
-  enabled = false;
-  pollingInterval = 1e4;
-  _poller;
-  parent;
-  subcomponents = [];
-  get ready() {
-    return this._componentState === "READY" /* READY */;
-  }
-  get pending() {
-    return this.pendingCalls > 0;
-  }
-  get status() {
-    return this._status;
-  }
-  constructor(component, cuss2, _type = DeviceType.UNKNOWN) {
-    super();
-    this._component = component;
-    this.id = Number(component.componentID);
-    this.deviceType = _type;
-    this.parent = null;
-    Object.defineProperty(this, "api", {
-      get: () => cuss2.api,
-      enumerable: false
-    });
-    cuss2.on("message", (data) => {
-      if (data?.meta?.componentID === this.id) {
-        this.handleMessage(data);
-      }
-    });
-    cuss2.on("deactivated", () => {
-      this.enabled = false;
-    });
-    if (component.linkedComponentIDs?.length) {
-      const name = this.deviceType;
-      const parentId = Math.min(
-        this.id,
-        ...component.linkedComponentIDs
-      );
-      if (parentId !== this.id) {
-        this.parent = cuss2.components?.[parentId];
-        if (this.parent) {
-          this.parent.subcomponents.push(this);
-          this.parent[name] = this;
-        }
-      }
-    }
-  }
-  stateIsDifferent(msg) {
-    return this.status !== msg.meta.messageCode || this._componentState !== msg.meta.componentState;
-  }
-  updateState(msg) {
-    const { meta } = msg;
-    if (meta.componentState !== this._componentState) {
-      this._componentState = meta.componentState ?? "UNAVAILABLE" /* UNAVAILABLE */;
-      if (meta.componentState !== "READY" /* READY */) {
-        this.enabled = false;
-      }
-      this.emit("readyStateChange", meta.componentState === "READY" /* READY */);
-    }
-    if (!this.ready && this.required && !this._poller && this.pollingInterval > 0) {
-      this.pollUntilReady();
-    }
-    if (this.status !== meta.messageCode) {
-      this._status = meta.messageCode;
-      this.emit("statusChange", meta.messageCode);
-    }
-  }
-  pollUntilReady(requireOK = false, pollingInterval = this.pollingInterval) {
-    if (this._poller)
-      return;
-    const poll = () => {
-      if (this.ready && (!requireOK || this.status === "OK" /* OK */)) {
-        return this._poller = void 0;
-      }
-      this._poller = setTimeout(() => {
-        this.query().catch(Object).finally(poll);
-      }, pollingInterval);
-    };
-    poll();
-  }
-  handleMessage(data) {
-    this.emit("message", data);
-  }
-  async _call(action) {
-    this.pendingCalls++;
-    try {
-      return await action();
-    } catch (e) {
-      return await Promise.reject(e);
-    } finally {
-      this.pendingCalls--;
-    }
-  }
-  async enable() {
-    const r = await this._call(() => this.api.enable(this.id));
-    this.enabled = true;
-    return r;
-  }
-  async disable() {
-    try {
-      const r = await this._call(() => this.api.disable(this.id));
-      this.enabled = false;
-      return r;
-    } catch (e) {
-      const pd = e;
-      if (pd.meta.messageCode === "OUT_OF_SEQUENCE" /* OUT_OF_SEQUENCE */) {
-        this.enabled = false;
-        return pd;
-      }
-      return Promise.reject(e);
-    }
-  }
-  async cancel() {
-    return await this._call(() => this.api.cancel(this.id));
-  }
-  async query() {
-    return await this._call(() => this.api.getStatus(this.id));
-  }
-  async setup(dataObj) {
-    return await this._call(() => this.api.setup(this.id, dataObj));
-  }
-  async send(dataObj) {
-    return await this._call(() => this.api.send(this.id, dataObj));
-  }
-};
-
 // src/models/base/BaseComponent.ts
-var import_events4 = __toESM(require_events());
-var BaseComponent = class extends import_events4.EventEmitter {
+var BaseComponent = class extends import_events3.EventEmitter {
   _component;
   id;
   api;
@@ -1212,6 +1074,9 @@ var BaseComponent = class extends import_events4.EventEmitter {
   _poller;
   parent;
   subcomponents = [];
+  // Optional enabled property for backward compatibility
+  // Only InteractiveComponent and its subclasses actually use this
+  enabled;
   get ready() {
     return this._componentState === "READY" /* READY */;
   }
@@ -1236,6 +1101,20 @@ var BaseComponent = class extends import_events4.EventEmitter {
     this._componentState = "UNAVAILABLE" /* UNAVAILABLE */;
     this._status = "OK" /* OK */;
     this.setupEventListeners(cuss2);
+    if (component.linkedComponentIDs?.length) {
+      const name = this.deviceType;
+      const parentId = Math.min(
+        this.id,
+        ...component.linkedComponentIDs
+      );
+      if (parentId !== this.id) {
+        this.parent = cuss2.components?.[parentId];
+        if (this.parent) {
+          this.parent.subcomponents.push(this);
+          this.parent[name] = this;
+        }
+      }
+    }
   }
   setupEventListeners(cuss2) {
     cuss2.on("message", (data) => {
@@ -1245,6 +1124,9 @@ var BaseComponent = class extends import_events4.EventEmitter {
       }
     });
     cuss2.on("deactivated", () => {
+      if (this.enabled !== void 0) {
+        this.enabled = false;
+      }
     });
   }
   handleMessage(data) {
@@ -1254,12 +1136,19 @@ var BaseComponent = class extends import_events4.EventEmitter {
     return this.status !== msg.meta.messageCode || this._componentState !== msg.meta.componentState;
   }
   updateState(msg) {
-    if (msg?.meta?.componentState) {
-      this._componentState = msg.meta.componentState;
-      this.emit("readyStateChange", this._componentState);
+    const { meta } = msg;
+    if (meta?.componentState !== void 0 && meta.componentState !== this._componentState) {
+      this._componentState = meta.componentState ?? "UNAVAILABLE" /* UNAVAILABLE */;
+      if (meta.componentState !== "READY" /* READY */ && this.enabled !== void 0) {
+        this.enabled = false;
+      }
+      this.emit("readyStateChange", meta.componentState === "READY" /* READY */);
     }
-    if (msg?.meta?.messageCode) {
-      this._status = msg.meta.messageCode;
+    if (!this.ready && this.required && !this._poller && this.pollingInterval > 0) {
+      this.pollUntilReady();
+    }
+    if (meta?.messageCode !== void 0 && this._status !== meta.messageCode) {
+      this._status = meta.messageCode;
       this.emit("statusChange", this._status);
     }
   }
@@ -1268,24 +1157,21 @@ var BaseComponent = class extends import_events4.EventEmitter {
    * Available to ALL component types
    */
   async query() {
-    this.pendingCalls++;
-    return await this.api.getStatus(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.getStatus(this.id));
   }
   /**
    * Cancel all currently executed and queued directives
    * Available to ALL components except APPLICATION
    */
   async cancel() {
-    this.pendingCalls++;
-    return await this.api.cancel(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.cancel(this.id));
   }
   /**
    * Setup/configure the component
    * Available to ALL components except APPLICATION
    */
   async setup(dataObj) {
-    this.pendingCalls++;
-    const pd = await this.api.setup(this.id, dataObj).finally(() => this.pendingCalls--);
+    const pd = await this.withPendingCall(() => this.api.setup(this.id, dataObj));
     this.updateState(pd);
     return pd;
   }
@@ -1316,6 +1202,20 @@ var BaseComponent = class extends import_events4.EventEmitter {
     };
     poll();
   }
+  /**
+   * Wrapper for API calls that manages pendingCalls counter
+   * Increments before the call, decrements in finally block
+   * @param apiCall - The API call to execute
+   * @returns Promise with the API call result
+   */
+  async withPendingCall(apiCall) {
+    this.pendingCalls++;
+    try {
+      return await apiCall();
+    } finally {
+      this.pendingCalls--;
+    }
+  }
 };
 
 // src/models/base/InteractiveComponent.ts
@@ -1327,8 +1227,7 @@ var InteractiveComponent = class extends BaseComponent {
    *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
    */
   async enable() {
-    this.pendingCalls++;
-    const pd = await this.api.enable(this.id).finally(() => this.pendingCalls--);
+    const pd = await this.withPendingCall(() => this.api.enable(this.id));
     this.updateState(pd);
     this.enabled = true;
     return pd;
@@ -1339,10 +1238,68 @@ var InteractiveComponent = class extends BaseComponent {
    *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
    */
   async disable() {
-    this.pendingCalls++;
-    const pd = await this.api.disable(this.id).finally(() => this.pendingCalls--);
+    try {
+      const pd = await this.withPendingCall(() => this.api.disable(this.id));
+      this.updateState(pd);
+      this.enabled = false;
+      return pd;
+    } catch (e) {
+      const pd = e;
+      if (pd?.meta?.messageCode === "OUT_OF_SEQUENCE" /* OUT_OF_SEQUENCE */) {
+        this.enabled = false;
+        return pd;
+      }
+      return Promise.reject(e);
+    }
+  }
+};
+
+// src/models/base/UnknownComponent.ts
+var UnknownComponent = class extends BaseComponent {
+  // Add enabled property for compatibility
+  enabled = false;
+  constructor(component, cuss2) {
+    super(component, cuss2, DeviceType.UNKNOWN);
+    console.warn(
+      `Unknown component type detected: ${component.componentType}. Using UnknownComponent fallback. This component will have limited functionality.`
+    );
+  }
+  /**
+   * Enable the component - provided for backward compatibility
+   * UnknownComponent may or may not support enable/disable based on actual device type
+   */
+  async enable() {
+    const pd = await this.withPendingCall(() => this.api.enable(this.id));
     this.updateState(pd);
-    this.enabled = false;
+    this.enabled = true;
+    return pd;
+  }
+  /**
+   * Disable the component - provided for backward compatibility
+   * UnknownComponent may or may not support disable based on actual device type
+   */
+  async disable() {
+    try {
+      const pd = await this.withPendingCall(() => this.api.disable(this.id));
+      this.updateState(pd);
+      this.enabled = false;
+      return pd;
+    } catch (e) {
+      const pd = e;
+      if (pd?.meta?.messageCode === "OUT_OF_SEQUENCE" /* OUT_OF_SEQUENCE */) {
+        this.enabled = false;
+        return pd;
+      }
+      return Promise.reject(e);
+    }
+  }
+  /**
+   * Send data to the component - provided for backward compatibility
+   * UnknownComponent accepts all data types since we don't know its actual capabilities
+   */
+  async send(dataObj) {
+    const pd = await this.withPendingCall(() => this.api.send(this.id, dataObj));
+    this.updateState(pd);
     return pd;
   }
 };
@@ -1375,6 +1332,15 @@ var DataInputComponent = class extends BaseComponent {
   }
 };
 
+// src/models/base/componentUtils.ts
+async function executeSend(component, dataObj) {
+  const pd = await component.withPendingCall(
+    () => component.api.send(component.id, dataObj)
+  );
+  component.updateState(pd);
+  return pd;
+}
+
 // src/models/base/DataOutputComponent.ts
 var DataOutputComponent = class extends BaseComponent {
   /**
@@ -1382,10 +1348,7 @@ var DataOutputComponent = class extends BaseComponent {
    * Available to: DATA_OUTPUT components
    */
   async send(dataObj) {
-    this.pendingCalls++;
-    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    return pd;
+    return executeSend(this, dataObj);
   }
 };
 
@@ -1402,10 +1365,7 @@ var UserOutputComponent = class extends InteractiveComponent {
    * Available to: USER_OUTPUT components
    */
   async send(dataObj) {
-    this.pendingCalls++;
-    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    return pd;
+    return executeSend(this, dataObj);
   }
 };
 
@@ -1445,10 +1405,7 @@ var MediaOutputComponent = class extends InteractiveComponent {
    * Available to: MEDIA_OUTPUT components
    */
   async send(dataObj) {
-    this.pendingCalls++;
-    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    return pd;
+    return executeSend(this, dataObj);
   }
 };
 
@@ -1487,29 +1444,25 @@ var AnnouncementComponent = class extends InteractiveComponent {
    * Play SSML formatted audio
    */
   async play(xml) {
-    this.pendingCalls++;
-    return await this.api.announcement.play(this.id, xml).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.announcement.play(this.id, xml));
   }
   /**
    * Pause current playback
    */
   async pause() {
-    this.pendingCalls++;
-    return await this.api.announcement.pause(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.announcement.pause(this.id));
   }
   /**
    * Resume paused playback
    */
   async resume() {
-    this.pendingCalls++;
-    return await this.api.announcement.resume(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.announcement.resume(this.id));
   }
   /**
    * Stop current playback
    */
   async stop() {
-    this.pendingCalls++;
-    return await this.api.announcement.stop(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.announcement.stop(this.id));
   }
   /**
    * Convenience method for text-to-speech
@@ -1519,75 +1472,6 @@ var AnnouncementComponent = class extends InteractiveComponent {
       <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
              xml:lang="${lang}">${text}</speak>`;
     return this.play(xml);
-  }
-};
-
-// src/models/base/ConveyorComponent.ts
-var ConveyorComponent = class extends BaseComponent {
-  /**
-   * Send baggage data to the component
-   */
-  async send(dataObj) {
-    this.pendingCalls++;
-    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    return pd;
-  }
-  /**
-   * Move bag to next position or airport collector belt
-   */
-  forward() {
-    return Promise.reject(new Error("Conveyor forward operation not yet implemented"));
-  }
-  /**
-   * Move bag back to previous position or user
-   */
-  backward() {
-    return Promise.reject(new Error("Conveyor backward operation not yet implemented"));
-  }
-  /**
-   * Process/examine bag for weight, dimensions, LPNs, RFID
-   */
-  process() {
-    return Promise.reject(new Error("Conveyor process operation not yet implemented"));
-  }
-};
-
-// src/models/base/InsertionBeltComponent.ts
-var InsertionBeltComponent = class extends InteractiveComponent {
-  /**
-   * Send baggage data to the component
-   */
-  async send(dataObj) {
-    this.pendingCalls++;
-    const pd = await this.api.send(this.id, dataObj).finally(() => this.pendingCalls--);
-    this.updateState(pd);
-    return pd;
-  }
-  /**
-   * Offer the bag to the next component/user
-   */
-  async offer() {
-    this.pendingCalls++;
-    return await this.api.offer(this.id).finally(() => this.pendingCalls--);
-  }
-  /**
-   * Move bag to next position
-   */
-  forward() {
-    return Promise.reject(new Error("Conveyor forward operation not yet implemented"));
-  }
-  /**
-   * Move bag back to user
-   */
-  backward() {
-    return Promise.reject(new Error("Conveyor backward operation not yet implemented"));
-  }
-  /**
-   * Process/examine bag
-   */
-  process() {
-    return Promise.reject(new Error("Conveyor process operation not yet implemented"));
   }
 };
 
@@ -1614,8 +1498,7 @@ var DispenserComponent = class extends InteractiveComponent {
    * Offer document to user
    */
   async offer() {
-    this.pendingCalls++;
-    const pd = await this.api.offer(this.id).finally(() => this.pendingCalls--);
+    const pd = await this.withPendingCall(() => this.api.offer(this.id));
     if (pd?.meta?.messageCode === "OK" /* OK */) {
       this._mediaPresent = false;
     }
@@ -1629,8 +1512,7 @@ var FeederComponent = class extends BaseComponent {
    * Offer media from feeder
    */
   async offer() {
-    this.pendingCalls++;
-    return await this.api.offer(this.id).finally(() => this.pendingCalls--);
+    return await this.withPendingCall(() => this.api.offer(this.id));
   }
 };
 
@@ -1956,29 +1838,6 @@ var Biometric = class extends UserOutputComponent {
   // Can send CommonUseBiometricMessage via inherited send() method
 };
 
-// src/models/InsertionBelt.ts
-var InsertionBelt = class extends InsertionBeltComponent {
-  constructor(component, cuss2) {
-    super(component, cuss2, DeviceType.INSERTION_BELT);
-  }
-};
-
-// src/models/VerificationBelt.ts
-var VerificationBelt = class extends ConveyorComponent {
-  constructor(component, cuss2) {
-    super(component, cuss2, DeviceType.VERIFICATION_BELT);
-  }
-  // Cannot be enabled/disabled - only ConveyorComponent methods
-};
-
-// src/models/ParkingBelt.ts
-var ParkingBelt = class extends ConveyorComponent {
-  constructor(component, cuss2) {
-    super(component, cuss2, DeviceType.PARKING_BELT);
-  }
-  // Cannot be enabled/disabled - only ConveyorComponent methods
-};
-
 // src/models/Errors.ts
 var Cuss2Error = class extends Error {
   constructor(message) {
@@ -2090,7 +1949,7 @@ var Connection = class _Connection extends EventEmitter2 {
     if (tokenURL) {
       this._validateURL(tokenURL, "Token URL");
     }
-    this._baseURL = this._cleanBaseURL(baseURL);
+    this._baseURL = new URL(baseURL).origin;
     const oauthUrl = tokenURL ? this._convertToHttpProtocol(tokenURL) : `${this._convertToHttpProtocol(this._baseURL)}/oauth/token`;
     this._auth = {
       url: oauthUrl,
@@ -2175,16 +2034,6 @@ var Connection = class _Connection extends EventEmitter2 {
         throw new Error(`${urlType} is not a valid URL: ${url}`);
       }
       throw error;
-    }
-  }
-  _cleanBaseURL(url) {
-    try {
-      const parsedUrl = new URL(url);
-      return parsedUrl.origin;
-    } catch {
-      const parts = url.split("?");
-      const cleanURL = parts[0];
-      return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
     }
   }
   _convertToHttpProtocol(url) {
@@ -2458,24 +2307,6 @@ var ComponentInterrogation = class {
     const mediaTypes = charac0.mediaTypesList;
     return !!deviceTypesHas(charac0.deviceTypesList, "CONTACTLESS" /* CONTACTLESS */) && !!mediaTypesHas(mediaTypes, MediaTypes2.RFID);
   };
-  static isInsertionBelt = (component) => {
-    const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0)
-      return false;
-    return component.componentType === "INSERTION_BELT" /* INSERTION_BELT */;
-  };
-  static isVerificationBelt = (component) => {
-    const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0)
-      return false;
-    return component.componentType === "VERIFICATION_BELT" /* VERIFICATION_BELT */;
-  };
-  static isParkingBelt = (component) => {
-    const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0)
-      return false;
-    return component.componentType === "PARKING_BELT" /* PARKING_BELT */;
-  };
   static isAEASBD = (component) => {
     if (component.componentType !== "USER_OUTPUT" /* USER_OUTPUT */)
       return false;
@@ -2510,10 +2341,7 @@ var {
   isHeadset,
   isScale,
   isCamera,
-  isInsertionBelt,
-  isParkingBelt,
   isRFIDReader,
-  isVerificationBelt,
   isAEASBD,
   isBHS
 } = ComponentInterrogation;
@@ -2541,9 +2369,6 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
   cardReader;
   biometric;
   scale;
-  insertionBelt;
-  verificationBelt;
-  parkingBelt;
   rfid;
   headset;
   camera;
@@ -2707,15 +2532,6 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
           instance = this.scale = new Scale(component, this);
         } else if (isCamera(component)) {
           instance = this.camera = new Camera(component, this);
-        } else if (isInsertionBelt(component)) {
-          instance = this.insertionBelt = new InsertionBelt(component, this);
-        } else if (isVerificationBelt(component)) {
-          instance = this.verificationBelt = new VerificationBelt(
-            component,
-            this
-          );
-        } else if (isParkingBelt(component)) {
-          instance = this.parkingBelt = new ParkingBelt(component, this);
         } else if (isRFIDReader(component)) {
           instance = this.rfid = new RFID(component, this);
         } else if (isBHS(component)) {
@@ -2731,7 +2547,7 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
         } else if (isHeadset(component)) {
           instance = this.headset = new Headset(component, this);
         } else
-          instance = new Component(component, this);
+          instance = new UnknownComponent(component, this);
         return components[id] = instance;
       });
       return componentList;
@@ -2865,7 +2681,7 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
     if (this.components) {
       const componentList = Object.values(this.components);
       for await (const component of componentList) {
-        if (component.enabled) {
+        if ("enabled" in component && component.enabled) {
           await component.disable();
         }
       }

@@ -1,11 +1,10 @@
-// Legacy exports for backward compatibility
-export { Component } from "./Component.ts";
-export { DataReaderComponent } from "./DataReaderComponent.ts";
-
 // New base component hierarchy
 export { BaseComponent } from "./base/BaseComponent.ts";
-export { ApplicationComponent } from "./base/ApplicationComponent.ts";
 export { InteractiveComponent } from "./base/InteractiveComponent.ts";
+
+// Backward compatibility: Component is now an alias for UnknownComponent
+// UnknownComponent provides all the methods that the legacy Component had
+export { UnknownComponent as Component } from "./base/UnknownComponent.ts";
 export { DataInputComponent } from "./base/DataInputComponent.ts";
 export { DataOutputComponent } from "./base/DataOutputComponent.ts";
 export { UserInputComponent } from "./base/UserInputComponent.ts";
@@ -14,15 +13,13 @@ export { MediaInputComponent } from "./base/MediaInputComponent.ts";
 export { MediaOutputComponent } from "./base/MediaOutputComponent.ts";
 export { BaggageScaleComponent } from "./base/BaggageScaleComponent.ts";
 export { AnnouncementComponent } from "./base/AnnouncementComponent.ts";
-export { ConveyorComponent } from "./base/ConveyorComponent.ts";
-export { InsertionBeltComponent } from "./base/InsertionBeltComponent.ts";
 export { DispenserComponent } from "./base/DispenserComponent.ts";
 export { FeederComponent } from "./base/FeederComponent.ts";
+export { UnknownComponent } from "./base/UnknownComponent.ts";
 
 // Export capability interfaces
 export type {
   AnnouncementCapable,
-  ConveyorCapable,
   DataReadCapable,
   MediaOfferCapable,
   OutputCapable,
@@ -52,11 +49,6 @@ export { Announcement } from "./Announcement.ts";
 export { Illumination } from "./Illumination.ts";
 export { Headset } from "./Headset.ts";
 export { Biometric } from "./Biometric.ts";
-
-// Belt components
-export { InsertionBelt } from "./InsertionBelt.ts";
-export { VerificationBelt } from "./VerificationBelt.ts";
-export { ParkingBelt } from "./ParkingBelt.ts";
 
 // Types
 export { DeviceType } from "./deviceType.ts";

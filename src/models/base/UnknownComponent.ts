@@ -12,15 +12,15 @@
 import { BaseComponent } from "./BaseComponent.ts";
 import type { Cuss2 } from "../../cuss2.ts";
 import {
-  MessageCodes,
-  type EnvironmentComponent,
-  type PlatformData,
-  type DataRecordList,
-  type ScreenResolution,
-  type IlluminationData,
   type BaggageData,
+  type CommonUseBiometricMessage,
   type CommonUsePaymentMessage,
-  type CommonUseBiometricMessage
+  type DataRecordList,
+  type EnvironmentComponent,
+  type IlluminationData,
+  MessageCodes,
+  type PlatformData,
+  type ScreenResolution,
 } from "cuss2-typescript-models";
 import { DeviceType } from "../deviceType.ts";
 
@@ -36,7 +36,7 @@ export class UnknownComponent extends BaseComponent {
 
     console.warn(
       `Unknown component type detected: ${component.componentType}. ` +
-      `Using UnknownComponent fallback. This component will have limited functionality.`
+        `Using UnknownComponent fallback. This component will have limited functionality.`,
     );
   }
 
@@ -61,7 +61,8 @@ export class UnknownComponent extends BaseComponent {
       this.updateState(pd);
       this.enabled = false;
       return pd;
-    } catch (e: unknown) {
+    }
+    catch (e: unknown) {
       // Handle OUT_OF_SEQUENCE error gracefully
       const pd = e as PlatformData;
       if (pd?.meta?.messageCode === MessageCodes.OUT_OF_SEQUENCE) {

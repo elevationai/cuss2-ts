@@ -33,7 +33,8 @@ export abstract class InteractiveComponent extends BaseComponent implements User
       this.updateState(pd);
       this.enabled = false;
       return pd;
-    } catch (e: unknown) {
+    }
+    catch (e: unknown) {
       // Handle OUT_OF_SEQUENCE error gracefully
       const pd = e as PlatformData;
       if (pd?.meta?.messageCode === MessageCodes.OUT_OF_SEQUENCE) {

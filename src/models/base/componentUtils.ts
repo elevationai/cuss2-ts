@@ -4,18 +4,23 @@
  */
 
 import type {
-  PlatformData,
-  DataRecordList,
   BaggageData,
   CommonUseBiometricMessage,
   CommonUsePaymentMessage,
+  DataRecordList,
   IlluminationData,
-  ScreenResolution
+  PlatformData,
+  ScreenResolution,
 } from "cuss2-typescript-models";
 
 // Type for all possible send data types
-type SendDataTypes = DataRecordList | BaggageData | CommonUseBiometricMessage |
-  CommonUsePaymentMessage | IlluminationData | ScreenResolution;
+type SendDataTypes =
+  | DataRecordList
+  | BaggageData
+  | CommonUseBiometricMessage
+  | CommonUsePaymentMessage
+  | IlluminationData
+  | ScreenResolution;
 
 /**
  * Shared implementation for the send() method used by output components
@@ -37,11 +42,9 @@ export async function executeSend<T extends SendDataTypes>(
     updateState(pd: PlatformData): void;
   },
   dataObj: T,
-  withPendingCall: <R extends PlatformData>(apiCall: () => Promise<R>) => Promise<R>
+  withPendingCall: <R extends PlatformData>(apiCall: () => Promise<R>) => Promise<R>,
 ): Promise<PlatformData> {
-  const pd = await withPendingCall(() =>
-    component.api.send(component.id, dataObj)
-  );
+  const pd = await withPendingCall(() => component.api.send(component.id, dataObj));
   component.updateState(pd);
   return pd;
 }

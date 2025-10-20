@@ -26,7 +26,6 @@ export abstract class BaseComponent extends EventEmitter {
   parent: BaseComponent | null;
   subcomponents: BaseComponent[] = [];
 
-  // Optional enabled property for backward compatibility
   // Only InteractiveComponent and its subclasses actually use this
   enabled?: boolean;
 
@@ -126,7 +125,7 @@ export abstract class BaseComponent extends EventEmitter {
         this.enabled = false;
       }
 
-      // Emit readyStateChange with boolean for backward compatibility
+      // Emit readyStateChange with current component state
       this.emit("readyStateChange", meta.componentState === ComponentState.READY);
     }
 

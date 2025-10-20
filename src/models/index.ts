@@ -2,8 +2,7 @@
 export { BaseComponent } from "./base/BaseComponent.ts";
 export { InteractiveComponent } from "./base/InteractiveComponent.ts";
 
-// Backward compatibility: Component is now an alias for UnknownComponent
-// UnknownComponent provides all the methods that the legacy Component had
+// Component is an alias for UnknownComponent
 export { UnknownComponent as Component } from "./base/UnknownComponent.ts";
 export { DataInputComponent } from "./base/DataInputComponent.ts";
 export { DataOutputComponent } from "./base/DataOutputComponent.ts";

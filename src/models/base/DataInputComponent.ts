@@ -8,7 +8,7 @@ import type { DataReadCapable } from "../capabilities/ComponentCapabilities.ts";
 import { type DataRecord, MessageCodes, type PlatformData } from "cuss2-typescript-models";
 
 export abstract class DataInputComponent extends BaseComponent implements DataReadCapable {
-  previousData: string[] = [];
+  previousData: DataRecord[] = [];
 
   override handleMessage(data: PlatformData) {
     super.handleMessage(data);
@@ -16,7 +16,7 @@ export abstract class DataInputComponent extends BaseComponent implements DataRe
       data?.meta?.messageCode === MessageCodes.DATA_PRESENT &&
       data?.payload?.dataRecords?.length
     ) {
-      this.previousData = data?.payload?.dataRecords?.map((dr: DataRecord) => dr?.data || "") as string[];
+      this.previousData = data.payload.dataRecords;
       this.emit("data", this.previousData);
     }
   }
@@ -24,14 +24,14 @@ export abstract class DataInputComponent extends BaseComponent implements DataRe
   /**
    * Read data with timeout (no enable/disable for data components)
    */
-  read(ms: number = 30000): Promise<string[]> {
-    return new Promise<string[]>((resolve, reject) => {
+  read(ms: number = 30000): Promise<DataRecord[]> {
+    return new Promise<DataRecord[]>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         this.off("data", dataHandler);
         reject(new Error(`Timeout of ${ms}ms exceeded`));
       }, ms);
 
-      const dataHandler = (data: string[]): void => {
+      const dataHandler = (data: DataRecord[]): void => {
         clearTimeout(timeoutId);
         resolve(data);
       };

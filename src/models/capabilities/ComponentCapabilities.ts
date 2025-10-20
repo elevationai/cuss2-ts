@@ -7,6 +7,7 @@ import type {
   BaggageData,
   CommonUseBiometricMessage,
   CommonUsePaymentMessage,
+  DataRecord,
   DataRecordList,
   IlluminationData,
   PlatformData,
@@ -67,5 +68,5 @@ export interface AnnouncementCapable {
  * Convenience interface for devices that capture data
  */
 export interface DataReadCapable {
-  read(ms?: number): Promise<string[]>;
+  read(ms?: number): Promise<DataRecord[]>;
 }

@@ -25,7 +25,7 @@ import {
 import { DeviceType } from "../deviceType.ts";
 
 export class UnknownComponent extends BaseComponent {
-  // Add enabled property for compatibility
+  // Add enabled property
   override enabled: boolean = false;
 
   constructor(
@@ -41,7 +41,7 @@ export class UnknownComponent extends BaseComponent {
   }
 
   /**
-   * Enable the component - provided for backward compatibility
+   * Enable the component
    * UnknownComponent may or may not support enable/disable based on actual device type
    */
   async enable(): Promise<PlatformData> {
@@ -52,7 +52,7 @@ export class UnknownComponent extends BaseComponent {
   }
 
   /**
-   * Disable the component - provided for backward compatibility
+   * Disable the component
    * UnknownComponent may or may not support disable based on actual device type
    */
   async disable(): Promise<PlatformData> {
@@ -75,7 +75,7 @@ export class UnknownComponent extends BaseComponent {
   }
 
   /**
-   * Send data to the component - provided for backward compatibility
+   * Send data to the component
    * UnknownComponent accepts all data types since we don't know its actual capabilities
    */
   async send(

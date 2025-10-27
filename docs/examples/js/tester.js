@@ -519,7 +519,10 @@ const templates = {
   timeoutWarning(seconds) {
     return `
       <div id="timeoutBanner" class="timeout-banner">
-        <strong>⚠️ Session Timeout Warning</strong>
+        <div class="timeout-header">
+          <strong>⚠️ Session Timeout Warning</strong>
+          <button id="dismissTimeout" class="dismiss-btn">×</button>
+        </div>
         <p>Application will be terminated in <span id="timeoutCounter">${seconds}</span> seconds</p>
       </div>
     `;
@@ -806,8 +809,17 @@ const ui = {
     return item;
   },
 
+  // Store the timeout countdown interval so we can clear it
+  _timeoutCountdown: null,
+
   // Show timeout warning banner with countdown
   showTimeoutWarning(seconds) {
+    // Clear any existing countdown
+    if (this._timeoutCountdown) {
+      clearInterval(this._timeoutCountdown);
+      this._timeoutCountdown = null;
+    }
+
     // Remove any existing banner
     const existingBanner = document.getElementById('timeoutBanner');
     if (existingBanner) {
@@ -817,20 +829,44 @@ const ui = {
     // Add banner to body
     document.body.insertAdjacentHTML('afterbegin', templates.timeoutWarning(seconds));
 
+    // Add dismiss button handler
+    const dismissBtn = document.getElementById('dismissTimeout');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        this.dismissTimeoutWarning();
+      });
+    }
+
     // Start countdown timer
     let remainingSeconds = seconds;
     const counter = document.getElementById('timeoutCounter');
 
-    const countdown = setInterval(() => {
+    this._timeoutCountdown = setInterval(() => {
       remainingSeconds--;
       if (counter) {
         counter.textContent = remainingSeconds;
       }
 
       if (remainingSeconds <= 0) {
-        clearInterval(countdown);
+        clearInterval(this._timeoutCountdown);
+        this._timeoutCountdown = null;
       }
     }, 1000);
+  },
+
+  // Dismiss timeout warning banner
+  dismissTimeoutWarning() {
+    // Clear countdown interval
+    if (this._timeoutCountdown) {
+      clearInterval(this._timeoutCountdown);
+      this._timeoutCountdown = null;
+    }
+
+    // Remove banner
+    const banner = document.getElementById('timeoutBanner');
+    if (banner) {
+      banner.remove();
+    }
   },
 
   // Show mixed content warning banner
@@ -892,11 +928,8 @@ const ui = {
 
   // Reset UI to disconnected state
   resetUI() {
-    // Remove timeout banner if present
-    const timeoutBanner = document.getElementById('timeoutBanner');
-    if (timeoutBanner) {
-      timeoutBanner.remove();
-    }
+    // Dismiss timeout banner (clears countdown and removes banner)
+    this.dismissTimeoutWarning();
 
     // Remove mixed content banner if present
     const mixedContentBanner = document.getElementById('mixedContentBanner');
@@ -1101,6 +1134,8 @@ const connectionManager = {
         handler: () => {
           logger.event("Application activated");
           ui.updateApplicationInfo(true);
+          // Dismiss timeout warning when successfully reactivated
+          ui.dismissTimeoutWarning();
         },
       },
       {
@@ -1110,6 +1145,8 @@ const connectionManager = {
           ui.updateApplicationInfo(false);
           // Update the state display and buttons to reflect new state
           ui.updateStateDisplay(newState);
+          // Dismiss timeout warning when leaving ACTIVE state
+          ui.dismissTimeoutWarning();
         },
       },
       {
@@ -1123,10 +1160,21 @@ const connectionManager = {
       },
       {
         event: "sessionTimeout",
-        handler: (env) => {
+        handler: async (env) => {
           const killTimeout = env?.killTimeout || 30; // Default to 30 seconds if not provided
           logger.error(`Session timeout warning - Application will be terminated in ${killTimeout} seconds`);
           ui.showTimeoutWarning(killTimeout);
+
+          // Per CUSS2 spec, application should transition to AVAILABLE state on session timeout
+          if (cuss2 && cuss2.state === ApplicationStateCodes.ACTIVE) {
+            logger.info("Session timeout received - transitioning to AVAILABLE state");
+            try {
+              await cuss2.requestAvailableState();
+              logger.success("Successfully transitioned to AVAILABLE state");
+            } catch (error) {
+              logger.error(`Failed to transition to AVAILABLE state: ${error.message}`);
+            }
+          }
         },
       },
     ];

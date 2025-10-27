@@ -557,9 +557,14 @@ button:disabled {
   animation: slideDown 0.5s ease-out;
 }
 
-.timeout-banner strong {
-  display: block;
-  margin-bottom: 5px;
+.timeout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.timeout-header strong {
   font-size: 16px;
 }
 

@@ -28,9 +28,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
+// ../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
 var require_events = __commonJS({
-  "../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
+  "../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
     "use strict";
     var R = typeof Reflect === "object" ? Reflect : null;
     var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
@@ -1588,13 +1588,13 @@ var AuthenticationError = class extends Cuss2Error {
   }
 };
 
-// https://jsr.io/@std/async/1.0.14/_util.ts
+// https://jsr.io/@std/async/1.0.15/_util.ts
 function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
   const exp = Math.min(cap, base * multiplier ** attempt);
   return (1 - jitter * Math.random()) * exp;
 }
 
-// https://jsr.io/@std/async/1.0.14/retry.ts
+// https://jsr.io/@std/async/1.0.15/retry.ts
 var RetryError = class extends Error {
   /**
    * Constructs a new {@linkcode RetryError} instance.
@@ -2006,7 +2006,7 @@ var ComponentInterrogation = class {
     return deviceTypesHas(charac0.deviceTypesList, "ILLUMINATION" /* ILLUMINATION */);
   };
   static isHeadset = (component) => {
-    if (component.componentType !== "USER_INPUT" /* USER_INPUT */)
+    if (component.componentType !== "MEDIA_INPUT" /* MEDIA_INPUT */)
       return;
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0)

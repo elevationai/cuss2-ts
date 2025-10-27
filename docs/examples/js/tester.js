@@ -750,9 +750,21 @@ const ui = {
           // Log the change
           logger.info(`Component ${component.deviceType} marked as ${newRequired ? 'REQUIRED' : 'NOT REQUIRED'}`);
 
-          // Immediately trigger state sync to enforce CUSS2 required device rules
+          // Enforce CUSS2 required device rules based on the change
           if (cuss2) {
-            cuss2.checkRequiredComponentsAndSyncState();
+            // Only trigger state changes if the logic makes sense
+            if (newRequired && !component.ready) {
+              // Marking an unavailable component as required → force UNAVAILABLE
+              logger.info(`Required component ${component.deviceType} is not ready - requesting UNAVAILABLE state`);
+              cuss2.requestUnavailableState();
+            } else if (!newRequired) {
+              // Unmarking a component as required → check if we can leave UNAVAILABLE
+              // Only call sync if we're in UNAVAILABLE and might be able to transition to AVAILABLE
+              if (cuss2.state === ApplicationStateCodes.UNAVAILABLE) {
+                cuss2.checkRequiredComponentsAndSyncState();
+              }
+            }
+            // If marking a READY component as required while in ACTIVE/AVAILABLE → do nothing
           }
 
           // Refresh the component display to show updated badge

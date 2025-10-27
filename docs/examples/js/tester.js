@@ -1139,6 +1139,15 @@ const connectionManager = {
           logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
           ui.updateStateDisplay(stateChange.current);
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
+
+          // Set applicationOnline flag to enable required component monitoring
+          // Online when in AVAILABLE or ACTIVE (user is present)
+          if (cuss2) {
+            cuss2.applicationOnline =
+              stateChange.current === ApplicationStateCodes.AVAILABLE ||
+              stateChange.current === ApplicationStateCodes.ACTIVE;
+            logger.info(`Application online: ${cuss2.applicationOnline}`);
+          }
         },
       },
       {

@@ -1,7 +1,5 @@
 // ===== IMPORTS =====
-// Using global Cuss2 from script tag (see tester.html)
-// Cuss2 is available as a global variable from the UMD bundle
-const { ApplicationStateCodes, ComponentState, MessageCodes } = Cuss2.Models;
+import { Cuss2, ApplicationStateCodes, ComponentState, MessageCodes } from "https://esm.sh/jsr/@cuss/cuss2-typescript-models@latest";
 
 let cuss2 = null;
 

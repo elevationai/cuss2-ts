@@ -1,5 +1,5 @@
 // ===== IMPORTS =====
-import { Cuss2, ApplicationStateCodes, ComponentState, MessageCodes } from "https://esm.sh/jsr/@cuss/cuss2-typescript-models@latest";
+import { Cuss2, ApplicationStateCodes, ComponentState, MessageCodes } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
 
 let cuss2 = null;
 

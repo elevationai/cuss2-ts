@@ -462,11 +462,11 @@ const templates = {
           <div class="component-name">${component.deviceType} (ID: ${id})</div>
           <div class="component-badges">
             ${enabledBadge}
-            ${statusBadge}
             ${requiredBadge}
           </div>
         </div>
         <div class="component-header-right">
+          ${statusBadge}
           ${readyBadge}
           ${requiredToggle}
           ${toggleSwitch}
@@ -685,7 +685,13 @@ const ui = {
     let statusBadge = '';
     if (component.status && component.status !== 'OK') {
       const statusClass = `status-${component.status.toLowerCase().replace(/_/g, '-')}`;
-      statusBadge = `<span class="component-badge ${statusClass}">${component.status.replace(/_/g, ' ')}</span>`;
+
+      // Determine if this is a temporary status that should fade out
+      const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+      const isTemporary = temporaryStatuses.includes(component.status);
+      const fadeClass = isTemporary ? 'fade-out' : '';
+
+      statusBadge = `<span class="component-badge ${statusClass} ${fadeClass}" data-status="${component.status}">${component.status.replace(/_/g, ' ')}</span>`;
     }
 
     // Create toggle switches with proper state sync
@@ -1201,8 +1207,9 @@ const connectionManager = {
       },
       {
         event: "sessionTimeout",
-        handler: async (env) => {
-          const killTimeout = env?.killTimeout || 30; // Default to 30 seconds if not provided
+        handler: async () => {
+          // Get killTimeout from the environment data (fetched during initialization)
+          const killTimeout = cuss2?.environment?.killTimeout || 30; // Default to 30 seconds if not provided
           logger.error(`Session timeout warning - Application will be terminated in ${killTimeout} seconds`);
           ui.showTimeoutWarning(killTimeout);
 

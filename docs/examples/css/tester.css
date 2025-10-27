@@ -322,6 +322,24 @@ button:disabled {
   border: 1px solid #ff6464;
 }
 
+/* Fade out animation for temporary status badges */
+.component-badge.fade-out {
+  animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 .component-badge.status-media-absent,
 .component-badge.status-media-present {
   background: rgba(255, 193, 7, 0.2);

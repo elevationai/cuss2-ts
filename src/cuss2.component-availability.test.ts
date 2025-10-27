@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import { spy, stub } from "@std/testing/mock";
 import { ApplicationStateCodes as AppState } from "cuss2-typescript-models";
 import { createMockCuss2, setCurrentState } from "./test-helpers.ts";
-import type { Component } from "./models/Component.ts";
+import type { BaseComponent } from "./models/index.ts";
 
 // Section 7: Component Availability Tests
 
@@ -11,10 +11,10 @@ Deno.test("Section 7.1: unavailableComponents getter - should return components 
 
   // Create mock components with different ready states
   const mockComponents = {
-    "1": { id: 1, ready: true, required: true } as unknown as Component,
-    "2": { id: 2, ready: false, required: true } as unknown as Component,
-    "3": { id: 3, ready: false, required: false } as unknown as Component,
-    "4": { id: 4, ready: true, required: false } as unknown as Component,
+    "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
+    "2": { id: 2, ready: false, required: true } as unknown as BaseComponent,
+    "3": { id: 3, ready: false, required: false } as unknown as BaseComponent,
+    "4": { id: 4, ready: true, required: false } as unknown as BaseComponent,
   };
 
   // @ts-ignore - accessing private property for testing
@@ -24,10 +24,10 @@ Deno.test("Section 7.1: unavailableComponents getter - should return components 
 
   // Should return only components that are not ready (components 2 and 3)
   assertEquals(unavailable.length, 2);
-  assertEquals(unavailable.some((c: Component) => c.id === 2), true);
-  assertEquals(unavailable.some((c: Component) => c.id === 3), true);
-  assertEquals(unavailable.some((c: Component) => c.id === 1), false);
-  assertEquals(unavailable.some((c: Component) => c.id === 4), false);
+  assertEquals(unavailable.some((c: BaseComponent) => c.id === 2), true);
+  assertEquals(unavailable.some((c: BaseComponent) => c.id === 3), true);
+  assertEquals(unavailable.some((c: BaseComponent) => c.id === 1), false);
+  assertEquals(unavailable.some((c: BaseComponent) => c.id === 4), false);
 });
 
 Deno.test("Section 7.1: unavailableComponents getter - should return empty array when no components", () => {
@@ -47,11 +47,11 @@ Deno.test("Section 7.2: unavailableRequiredComponents getter - should return req
 
   // Create mock components with different ready and required states
   const mockComponents = {
-    "1": { id: 1, ready: true, required: true } as unknown as Component,
-    "2": { id: 2, ready: false, required: true } as unknown as Component,
-    "3": { id: 3, ready: false, required: false } as unknown as Component,
-    "4": { id: 4, ready: true, required: false } as unknown as Component,
-    "5": { id: 5, ready: false, required: true } as unknown as Component,
+    "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
+    "2": { id: 2, ready: false, required: true } as unknown as BaseComponent,
+    "3": { id: 3, ready: false, required: false } as unknown as BaseComponent,
+    "4": { id: 4, ready: true, required: false } as unknown as BaseComponent,
+    "5": { id: 5, ready: false, required: true } as unknown as BaseComponent,
   };
 
   // @ts-ignore - accessing private property for testing
@@ -61,11 +61,11 @@ Deno.test("Section 7.2: unavailableRequiredComponents getter - should return req
 
   // Should return only components that are both not ready AND required (components 2 and 5)
   assertEquals(unavailableRequired.length, 2);
-  assertEquals(unavailableRequired.some((c: Component) => c.id === 2), true);
-  assertEquals(unavailableRequired.some((c: Component) => c.id === 5), true);
-  assertEquals(unavailableRequired.some((c: Component) => c.id === 3), false); // Not required
-  assertEquals(unavailableRequired.some((c: Component) => c.id === 1), false); // Ready
-  assertEquals(unavailableRequired.some((c: Component) => c.id === 4), false); // Ready
+  assertEquals(unavailableRequired.some((c: BaseComponent) => c.id === 2), true);
+  assertEquals(unavailableRequired.some((c: BaseComponent) => c.id === 5), true);
+  assertEquals(unavailableRequired.some((c: BaseComponent) => c.id === 3), false); // Not required
+  assertEquals(unavailableRequired.some((c: BaseComponent) => c.id === 1), false); // Ready
+  assertEquals(unavailableRequired.some((c: BaseComponent) => c.id === 4), false); // Ready
 });
 
 Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - all required components available → request AVAILABLE state", () => {
@@ -76,9 +76,9 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - all required compo
 
   // Create mock components - all required components are ready
   const mockComponents = {
-    "1": { id: 1, ready: true, required: true } as unknown as Component,
-    "2": { id: 2, ready: true, required: true } as unknown as Component,
-    "3": { id: 3, ready: false, required: false } as unknown as Component, // Not required, so doesn't matter
+    "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
+    "2": { id: 2, ready: true, required: true } as unknown as BaseComponent,
+    "3": { id: 3, ready: false, required: false } as unknown as BaseComponent, // Not required, so doesn't matter
   };
 
   // @ts-ignore - accessing private property for testing
@@ -111,9 +111,9 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - some required comp
 
   // Create mock components - some required components are not ready
   const mockComponents = {
-    "1": { id: 1, ready: true, required: true } as unknown as Component,
-    "2": { id: 2, ready: false, required: true } as unknown as Component, // Required but not ready
-    "3": { id: 3, ready: true, required: false } as unknown as Component,
+    "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
+    "2": { id: 2, ready: false, required: true } as unknown as BaseComponent, // Required but not ready
+    "3": { id: 3, ready: true, required: false } as unknown as BaseComponent,
   };
 
   // @ts-ignore - accessing private property for testing
@@ -142,8 +142,8 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - offline → reques
 
   // Create mock components - all ready but we're offline
   const mockComponents = {
-    "1": { id: 1, ready: true, required: true } as unknown as Component,
-    "2": { id: 2, ready: true, required: true } as unknown as Component,
+    "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
+    "2": { id: 2, ready: true, required: true } as unknown as BaseComponent,
   };
 
   // @ts-ignore - accessing private property for testing
@@ -173,7 +173,7 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - should not trigger
 
   // Create mock components - all required components are ready
   const mockComponents = {
-    "1": { id: 1, ready: true, required: true } as unknown as Component,
+    "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
   };
 
   // @ts-ignore - accessing private property for testing
@@ -205,7 +205,7 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - should not change 
 
   // Create mock components - all required components are ready
   const mockComponents = {
-    "1": { id: 1, ready: true, required: true } as unknown as Component,
+    "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
   };
 
   // @ts-ignore - accessing private property for testing
@@ -279,9 +279,9 @@ Deno.test("Section 7.1: unavailableComponents getter - should handle mixed compo
 
   // Create mock components including some with undefined ready state
   const mockComponents = {
-    "1": { id: 1, ready: true } as unknown as Component,
-    "2": { id: 2, ready: false } as unknown as Component,
-    "3": { id: 3 } as unknown as Component, // ready is undefined, should be treated as not ready
+    "1": { id: 1, ready: true } as unknown as BaseComponent,
+    "2": { id: 2, ready: false } as unknown as BaseComponent,
+    "3": { id: 3 } as unknown as BaseComponent, // ready is undefined, should be treated as not ready
   };
 
   // @ts-ignore - accessing private property for testing
@@ -291,8 +291,8 @@ Deno.test("Section 7.1: unavailableComponents getter - should handle mixed compo
 
   // Components 2 and 3 should be unavailable
   assertEquals(unavailable.length, 2);
-  assertEquals(unavailable.some((c: Component) => c.id === 2), true);
-  assertEquals(unavailable.some((c: Component) => c.id === 3), true);
+  assertEquals(unavailable.some((c: BaseComponent) => c.id === 2), true);
+  assertEquals(unavailable.some((c: BaseComponent) => c.id === 3), true);
 });
 
 Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - logs required unavailable components", () => {
@@ -318,14 +318,14 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - logs required unav
     ready: false,
     required: true,
     constructor: { name: "BarcodeReader" },
-  } as unknown as Component;
+  } as unknown as BaseComponent;
 
   const mockComponent2 = {
     id: 2,
     ready: false,
     required: true,
     constructor: { name: "CardReader" },
-  } as unknown as Component;
+  } as unknown as BaseComponent;
 
   const mockComponents = {
     "1": mockComponent1,

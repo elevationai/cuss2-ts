@@ -1043,7 +1043,7 @@ var Cuss2 = (() => {
     }
   };
 
-  // src/models/Component.ts
+  // src/models/base/BaseComponent.ts
   var import_events3 = __toESM(require_events());
 
   // src/models/deviceType.ts
@@ -1075,22 +1075,23 @@ var Cuss2 = (() => {
     BHS: "BHS"
   };
 
-  // src/models/Component.ts
-  var Component = class extends import_events3.EventEmitter {
+  // src/models/base/BaseComponent.ts
+  var BaseComponent = class extends import_events3.EventEmitter {
     _component;
     id;
     api;
-    // Using definite assignment assertion
     required = false;
     _status = "OK" /* OK */;
     _componentState = "UNAVAILABLE" /* UNAVAILABLE */;
     deviceType;
     pendingCalls = 0;
-    enabled = false;
     pollingInterval = 1e4;
     _poller;
     parent;
     subcomponents = [];
+    // Optional enabled property for backward compatibility
+    // Only InteractiveComponent and its subclasses actually use this
+    enabled;
     get ready() {
       return this._componentState === "READY" /* READY */;
     }
@@ -1100,24 +1101,21 @@ var Cuss2 = (() => {
     get status() {
       return this._status;
     }
+    get componentState() {
+      return this._componentState;
+    }
     constructor(component, cuss2, _type = DeviceType.UNKNOWN) {
       super();
+      this.deviceType = _type;
       this._component = component;
       this.id = Number(component.componentID);
-      this.deviceType = _type;
+      this.api = cuss2.api;
       this.parent = null;
-      Object.defineProperty(this, "api", {
-        get: () => cuss2.api,
-        enumerable: false
-      });
-      cuss2.on("message", (data) => {
-        if (data?.meta?.componentID === this.id) {
-          this.handleMessage(data);
-        }
-      });
-      cuss2.on("deactivated", () => {
-        this.enabled = false;
-      });
+      const characteristics = component.componentCharacteristics?.[0];
+      this.required = characteristics?.required || false;
+      this._componentState = "UNAVAILABLE" /* UNAVAILABLE */;
+      this._status = "OK" /* OK */;
+      this.setupEventListeners(cuss2);
       if (component.linkedComponentIDs?.length) {
         const name = this.deviceType;
         const parentId = Math.min(
@@ -1133,14 +1131,30 @@ var Cuss2 = (() => {
         }
       }
     }
+    setupEventListeners(cuss2) {
+      cuss2.on("message", (data) => {
+        if (data?.meta?.componentID === this.id) {
+          this.handleMessage(data);
+          this.updateState(data);
+        }
+      });
+      cuss2.on("deactivated", () => {
+        if (this.enabled !== void 0) {
+          this.enabled = false;
+        }
+      });
+    }
+    handleMessage(data) {
+      this.emit("message", data);
+    }
     stateIsDifferent(msg) {
       return this.status !== msg.meta.messageCode || this._componentState !== msg.meta.componentState;
     }
     updateState(msg) {
       const { meta } = msg;
-      if (meta.componentState !== this._componentState) {
+      if (meta?.componentState !== void 0 && meta.componentState !== this._componentState) {
         this._componentState = meta.componentState ?? "UNAVAILABLE" /* UNAVAILABLE */;
-        if (meta.componentState !== "READY" /* READY */) {
+        if (meta.componentState !== "READY" /* READY */ && this.enabled !== void 0) {
           this.enabled = false;
         }
         this.emit("readyStateChange", meta.componentState === "READY" /* READY */);
@@ -1148,9 +1162,45 @@ var Cuss2 = (() => {
       if (!this.ready && this.required && !this._poller && this.pollingInterval > 0) {
         this.pollUntilReady();
       }
-      if (this.status !== meta.messageCode) {
+      if (meta?.messageCode !== void 0 && this._status !== meta.messageCode) {
         this._status = meta.messageCode;
-        this.emit("statusChange", meta.messageCode);
+        this.emit("statusChange", this._status);
+      }
+    }
+    /**
+     * Query the current state/status of the component
+     * Available to ALL component types
+     */
+    async query() {
+      return await this.withPendingCall(() => this.api.getStatus(this.id));
+    }
+    /**
+     * Cancel all currently executed and queued directives
+     * Available to ALL components except APPLICATION
+     */
+    async cancel() {
+      return await this.withPendingCall(() => this.api.cancel(this.id));
+    }
+    /**
+     * Setup/configure the component
+     * Available to ALL components except APPLICATION
+     */
+    async setup(dataObj) {
+      const pd = await this.withPendingCall(() => this.api.setup(this.id, dataObj));
+      this.updateState(pd);
+      return pd;
+    }
+    startPolling() {
+      if (!this._poller) {
+        this._poller = setInterval(async () => {
+          await this.query();
+        }, this.pollingInterval);
+      }
+    }
+    stopPolling() {
+      if (this._poller) {
+        clearInterval(this._poller);
+        this._poller = void 0;
       }
     }
     pollUntilReady(requireOK = false, pollingInterval = this.pollingInterval) {
@@ -1158,7 +1208,8 @@ var Cuss2 = (() => {
         return;
       const poll = () => {
         if (this.ready && (!requireOK || this.status === "OK" /* OK */)) {
-          return this._poller = void 0;
+          this._poller = void 0;
+          return;
         }
         this._poller = setTimeout(() => {
           this.query().catch(Object).finally(poll);
@@ -1166,62 +1217,186 @@ var Cuss2 = (() => {
       };
       poll();
     }
-    handleMessage(data) {
-      this.emit("message", data);
-    }
-    async _call(action) {
+    /**
+     * Wrapper for API calls that manages pendingCalls counter
+     * Increments before the call, decrements in finally block
+     * @param apiCall - The API call to execute
+     * @returns Promise with the API call result
+     */
+    async withPendingCall(apiCall) {
       this.pendingCalls++;
       try {
-        return await action();
-      } catch (e) {
-        return await Promise.reject(e);
+        return await apiCall();
       } finally {
         this.pendingCalls--;
       }
     }
+  };
+
+  // src/models/base/InteractiveComponent.ts
+  var InteractiveComponent = class extends BaseComponent {
+    enabled = false;
+    /**
+     * Enable the component for user interaction
+     * Available to: DISPENSER, USER_INPUT, USER_OUTPUT, MEDIA_INPUT,
+     *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
+     */
     async enable() {
-      const r = await this._call(() => this.api.enable(this.id));
+      const pd = await this.withPendingCall(() => this.api.enable(this.id));
+      this.updateState(pd);
       this.enabled = true;
-      return r;
+      return pd;
     }
+    /**
+     * Disable the component from user interaction
+     * Available to: DISPENSER, USER_INPUT, USER_OUTPUT, MEDIA_INPUT,
+     *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
+     */
     async disable() {
       try {
-        const r = await this._call(() => this.api.disable(this.id));
+        const pd = await this.withPendingCall(() => this.api.disable(this.id));
+        this.updateState(pd);
         this.enabled = false;
-        return r;
+        return pd;
       } catch (e) {
         const pd = e;
-        if (pd.meta.messageCode === "OUT_OF_SEQUENCE" /* OUT_OF_SEQUENCE */) {
+        if (pd?.meta?.messageCode === "OUT_OF_SEQUENCE" /* OUT_OF_SEQUENCE */) {
           this.enabled = false;
           return pd;
         }
         return Promise.reject(e);
       }
     }
-    async cancel() {
-      return await this._call(() => this.api.cancel(this.id));
+  };
+
+  // src/models/base/UnknownComponent.ts
+  var UnknownComponent = class extends BaseComponent {
+    // Add enabled property for compatibility
+    enabled = false;
+    constructor(component, cuss2) {
+      super(component, cuss2, DeviceType.UNKNOWN);
+      console.warn(
+        `Unknown component type detected: ${component.componentType}. Using UnknownComponent fallback. This component will have limited functionality.`
+      );
     }
-    async query() {
-      return await this._call(() => this.api.getStatus(this.id));
+    /**
+     * Enable the component - provided for backward compatibility
+     * UnknownComponent may or may not support enable/disable based on actual device type
+     */
+    async enable() {
+      const pd = await this.withPendingCall(() => this.api.enable(this.id));
+      this.updateState(pd);
+      this.enabled = true;
+      return pd;
     }
-    async setup(dataObj) {
-      return await this._call(() => this.api.setup(this.id, dataObj));
+    /**
+     * Disable the component - provided for backward compatibility
+     * UnknownComponent may or may not support disable based on actual device type
+     */
+    async disable() {
+      try {
+        const pd = await this.withPendingCall(() => this.api.disable(this.id));
+        this.updateState(pd);
+        this.enabled = false;
+        return pd;
+      } catch (e) {
+        const pd = e;
+        if (pd?.meta?.messageCode === "OUT_OF_SEQUENCE" /* OUT_OF_SEQUENCE */) {
+          this.enabled = false;
+          return pd;
+        }
+        return Promise.reject(e);
+      }
     }
+    /**
+     * Send data to the component - provided for backward compatibility
+     * UnknownComponent accepts all data types since we don't know its actual capabilities
+     */
     async send(dataObj) {
-      return await this._call(() => this.api.send(this.id, dataObj));
+      const pd = await this.withPendingCall(() => this.api.send(this.id, dataObj));
+      this.updateState(pd);
+      return pd;
     }
   };
 
-  // src/models/DataReaderComponent.ts
-  var DataReaderComponent = class extends Component {
+  // src/models/base/DataInputComponent.ts
+  var DataInputComponent = class extends BaseComponent {
     previousData = [];
     handleMessage(data) {
-      this.emit("message", data);
+      super.handleMessage(data);
       if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
         this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
         this.emit("data", this.previousData);
       }
     }
+    /**
+     * Read data with timeout (no enable/disable for data components)
+     */
+    read(ms = 3e4) {
+      return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          this.off("data", dataHandler);
+          reject(new Error(`Timeout of ${ms}ms exceeded`));
+        }, ms);
+        const dataHandler = (data) => {
+          clearTimeout(timeoutId);
+          resolve(data);
+        };
+        this.once("data", dataHandler);
+      });
+    }
+  };
+
+  // src/models/base/componentUtils.ts
+  async function executeSend(component, dataObj) {
+    const pd = await component.withPendingCall(
+      () => component.api.send(component.id, dataObj)
+    );
+    component.updateState(pd);
+    return pd;
+  }
+
+  // src/models/base/DataOutputComponent.ts
+  var DataOutputComponent = class extends BaseComponent {
+    /**
+     * Send data to the component
+     * Available to: DATA_OUTPUT components
+     */
+    async send(dataObj) {
+      return executeSend(this, dataObj);
+    }
+  };
+
+  // src/models/base/UserInputComponent.ts
+  var UserInputComponent = class extends InteractiveComponent {
+    // User input components can be enabled/disabled but cannot send
+    // They receive input from users
+  };
+
+  // src/models/base/UserOutputComponent.ts
+  var UserOutputComponent = class extends InteractiveComponent {
+    /**
+     * Send data to the component
+     * Available to: USER_OUTPUT components
+     */
+    async send(dataObj) {
+      return executeSend(this, dataObj);
+    }
+  };
+
+  // src/models/base/MediaInputComponent.ts
+  var MediaInputComponent = class extends InteractiveComponent {
+    previousData = [];
+    handleMessage(data) {
+      super.handleMessage(data);
+      if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
+        this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
+        this.emit("data", this.previousData);
+      }
+    }
+    /**
+     * Convenience method to read data with timeout
+     */
     async read(ms = 3e4) {
       await this.enable();
       return new Promise((resolve, reject) => {
@@ -1238,22 +1413,140 @@ var Cuss2 = (() => {
     }
   };
 
+  // src/models/base/MediaOutputComponent.ts
+  var MediaOutputComponent = class extends InteractiveComponent {
+    /**
+     * Send data to the component (print jobs, etc.)
+     * Available to: MEDIA_OUTPUT components
+     */
+    async send(dataObj) {
+      return executeSend(this, dataObj);
+    }
+  };
+
+  // src/models/base/BaggageScaleComponent.ts
+  var BaggageScaleComponent = class extends InteractiveComponent {
+    previousData = [];
+    handleMessage(data) {
+      super.handleMessage(data);
+      if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
+        this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
+        this.emit("data", this.previousData);
+      }
+    }
+    /**
+     * Read weight data with timeout
+     */
+    async read(ms = 3e4) {
+      await this.enable();
+      return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          this.off("data", dataHandler);
+          reject(new Error(`Timeout of ${ms}ms exceeded`));
+        }, ms);
+        const dataHandler = (data) => {
+          clearTimeout(timeoutId);
+          resolve(data);
+        };
+        this.once("data", dataHandler);
+      }).finally(() => this.disable());
+    }
+  };
+
+  // src/models/base/AnnouncementComponent.ts
+  var AnnouncementComponent = class extends InteractiveComponent {
+    /**
+     * Play SSML formatted audio
+     */
+    async play(xml) {
+      return await this.withPendingCall(() => this.api.announcement.play(this.id, xml));
+    }
+    /**
+     * Pause current playback
+     */
+    async pause() {
+      return await this.withPendingCall(() => this.api.announcement.pause(this.id));
+    }
+    /**
+     * Resume paused playback
+     */
+    async resume() {
+      return await this.withPendingCall(() => this.api.announcement.resume(this.id));
+    }
+    /**
+     * Stop current playback
+     */
+    async stop() {
+      return await this.withPendingCall(() => this.api.announcement.stop(this.id));
+    }
+    /**
+     * Convenience method for text-to-speech
+     */
+    say(text, lang = "en-US") {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+             xml:lang="${lang}">${text}</speak>`;
+      return this.play(xml);
+    }
+  };
+
+  // src/models/base/DispenserComponent.ts
+  var DispenserComponent = class extends InteractiveComponent {
+    _mediaPresent = false;
+    get mediaPresent() {
+      return this._mediaPresent;
+    }
+    set mediaPresent(value) {
+      this._mediaPresent = value;
+    }
+    handleMessage(data) {
+      super.handleMessage(data);
+      if (data?.meta?.messageCode === "MEDIA_PRESENT" /* MEDIA_PRESENT */) {
+        this._mediaPresent = true;
+        this.emit("mediaPresent", true);
+      } else if (data?.meta?.messageCode === "MEDIA_EMPTY" /* MEDIA_EMPTY */) {
+        this._mediaPresent = false;
+        this.emit("mediaPresent", false);
+      }
+    }
+    /**
+     * Offer document to user
+     */
+    async offer() {
+      const pd = await this.withPendingCall(() => this.api.offer(this.id));
+      if (pd?.meta?.messageCode === "OK" /* OK */) {
+        this._mediaPresent = false;
+      }
+      return pd;
+    }
+  };
+
+  // src/models/base/FeederComponent.ts
+  var FeederComponent = class extends BaseComponent {
+    /**
+     * Offer media from feeder
+     */
+    async offer() {
+      return await this.withPendingCall(() => this.api.offer(this.id));
+    }
+  };
+
   // src/models/BarcodeReader.ts
-  var BarcodeReader = class extends DataReaderComponent {
+  var BarcodeReader = class extends MediaInputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.BARCODE_READER);
     }
   };
 
   // src/models/DocumentReader.ts
-  var DocumentReader = class extends DataReaderComponent {
+  var DocumentReader = class extends MediaInputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.PASSPORT_READER);
     }
   };
 
   // src/models/CardReader.ts
-  var CardReader = class extends DataReaderComponent {
+  var CardReader = class extends MediaInputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.MSR_READER);
     }
@@ -1273,67 +1566,65 @@ var Cuss2 = (() => {
   };
 
   // src/models/Scale.ts
-  var Scale = class extends DataReaderComponent {
+  var Scale = class extends BaggageScaleComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.SCALE);
     }
   };
 
   // src/models/RFID.ts
-  var RFID = class extends DataReaderComponent {
+  var RFID = class extends MediaInputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.RFID);
     }
   };
 
   // src/models/Camera.ts
-  var Camera = class extends DataReaderComponent {
+  var Camera = class extends MediaInputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.CAMERA);
     }
   };
 
   // src/models/AEASBD.ts
-  var AEASBD = class extends Component {
+  var AEASBD = class extends MediaOutputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.AEASBD);
     }
+    // AEA Self Bag Drop - similar to printer, uses ITPS commands
   };
 
   // src/models/BHS.ts
-  var BHS = class extends DataReaderComponent {
+  var BHS = class extends DataInputComponent {
     constructor(component, cuss2) {
-      super(component, cuss2, DeviceType.CAMERA);
+      super(component, cuss2, DeviceType.BHS);
     }
   };
 
   // src/models/Feeder.ts
-  var Feeder = class extends Component {
+  var Feeder = class extends FeederComponent {
     printer;
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.FEEDER);
     }
+    // offer() method inherited from FeederComponent
   };
 
   // src/models/Dispenser.ts
-  var Dispenser = class extends Component {
+  var Dispenser = class extends DispenserComponent {
     printer;
-    _mediaPresent = false;
-    get mediaPresent() {
-      return this._mediaPresent;
-    }
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.DISPENSER);
       this.on("statusChange", (status) => {
         if (status === "MEDIA_PRESENT" /* MEDIA_PRESENT */) {
           this.pollUntilReady(true, 2e3);
-          if (!this._mediaPresent) {
-            this._mediaPresent = true;
+          if (!this.mediaPresent) {
+            this.mediaPresent = true;
             this.emit("mediaPresent", true);
           }
         } else {
-          if (this._mediaPresent) {
-            this._mediaPresent = false;
+          if (this.mediaPresent) {
+            this.mediaPresent = false;
             this.emit("mediaPresent", false);
           }
         }
@@ -1357,7 +1648,7 @@ var Cuss2 = (() => {
   };
 
   // src/models/Printer.ts
-  var Printer = class extends Component {
+  var Printer = class extends MediaOutputComponent {
     constructor(component, cuss2, _type) {
       super(component, cuss2, _type);
       const missingLink = (msg) => {
@@ -1471,7 +1762,7 @@ var Cuss2 = (() => {
   };
 
   // src/models/Keypad.ts
-  var Keypad = class extends Component {
+  var Keypad = class extends UserInputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.KEY_PAD);
     }
@@ -1500,26 +1791,11 @@ var Cuss2 = (() => {
   };
 
   // src/models/Announcement.ts
-  var Announcement = class extends Component {
+  var Announcement = class extends AnnouncementComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.ANNOUNCEMENT);
     }
-    say(text, lang = "en-US") {
-      const xml = `<?xml version="1.0" encoding="UTF-8"?><speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">${text}</speak>`;
-      return this.play(xml);
-    }
-    play(xml) {
-      return this.api.announcement.play(this.id, xml);
-    }
-    stop() {
-      return this.api.announcement.stop(this.id);
-    }
-    pause() {
-      return this.api.announcement.pause(this.id);
-    }
-    resume() {
-      return this.api.announcement.resume(this.id);
-    }
+    // All methods inherited from AnnouncementComponent
   };
 
   // src/models/Illumination.ts
@@ -1531,60 +1807,50 @@ var Cuss2 = (() => {
     LightColorNameEnum2["White"] = "white";
     return LightColorNameEnum2;
   })(LightColorNameEnum || {});
-  var Illumination = class extends Component {
+  var Illumination = class extends DataOutputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.ILLUMINATION);
     }
-    async enable(duration = 0, color, blink) {
+    /**
+     * Convenience method to control the illumination
+     * Note: Illumination is DATA_OUTPUT - no enable/disable per CUSS spec
+     */
+    async illuminate(duration = 0, color, blink) {
       const name = typeof color === "string" ? LightColorNameEnum[color] || void 0 : void 0;
       const rgb = Array.isArray(color) && color.length === 3 ? { red: color[0], green: color[1], blue: color[2] } : void 0;
       const blinkRate = Array.isArray(blink) && blink.length === 2 ? { durationOn: blink[0], durationOff: blink[1] } : void 0;
-      if (this.enabled) {
-        await this.disable();
-      }
-      await super.enable();
-      const dataObj = {
+      const illuminationData = {
         duration,
         lightColor: { name, rgb },
         blinkRate
       };
-      return await this.send(dataObj);
+      const dataRecords = [{
+        data: JSON.stringify(illuminationData),
+        dsTypes: ["DS_TYPES_DATASTRUCTURE"]
+      }];
+      return await this.send(dataRecords);
+    }
+    /**
+     * Turn off illumination
+     */
+    async turnOff() {
+      return await this.illuminate(0);
     }
   };
 
   // src/models/Headset.ts
-  var Headset = class extends Component {
+  var Headset = class extends UserOutputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.HEADSET);
     }
   };
 
   // src/models/Biometric.ts
-  var Biometric = class extends Component {
+  var Biometric = class extends UserOutputComponent {
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.BIOMETRIC);
     }
-  };
-
-  // src/models/InsertionBelt.ts
-  var InsertionBelt = class extends Component {
-    constructor(component, cuss2) {
-      super(component, cuss2, DeviceType.INSERTION_BELT);
-    }
-  };
-
-  // src/models/VerificationBelt.ts
-  var VerificationBelt = class extends Component {
-    constructor(component, cuss2) {
-      super(component, cuss2, DeviceType.VERIFICATION_BELT);
-    }
-  };
-
-  // src/models/ParkingBelt.ts
-  var ParkingBelt = class extends Component {
-    constructor(component, cuss2) {
-      super(component, cuss2, DeviceType.PARKING_BELT);
-    }
+    // Can send CommonUseBiometricMessage via inherited send() method
   };
 
   // src/models/Errors.ts
@@ -1698,7 +1964,7 @@ var Cuss2 = (() => {
       if (tokenURL) {
         this._validateURL(tokenURL, "Token URL");
       }
-      this._baseURL = this._cleanBaseURL(baseURL);
+      this._baseURL = new URL(baseURL).origin;
       const oauthUrl = tokenURL ? this._convertToHttpProtocol(tokenURL) : `${this._convertToHttpProtocol(this._baseURL)}/oauth/token`;
       this._auth = {
         url: oauthUrl,
@@ -1784,11 +2050,6 @@ var Cuss2 = (() => {
         }
         throw error;
       }
-    }
-    _cleanBaseURL(url) {
-      const parts = url.split("?");
-      const cleanURL = parts[0];
-      return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
     }
     _convertToHttpProtocol(url) {
       if (url.startsWith("ws://")) {
@@ -2061,24 +2322,6 @@ var Cuss2 = (() => {
       const mediaTypes = charac0.mediaTypesList;
       return !!deviceTypesHas(charac0.deviceTypesList, "CONTACTLESS" /* CONTACTLESS */) && !!mediaTypesHas(mediaTypes, MediaTypes2.RFID);
     };
-    static isInsertionBelt = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return component.componentType === "INSERTION_BELT" /* INSERTION_BELT */;
-    };
-    static isVerificationBelt = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return component.componentType === "VERIFICATION_BELT" /* VERIFICATION_BELT */;
-    };
-    static isParkingBelt = (component) => {
-      const charac0 = component.componentCharacteristics?.[0];
-      if (!charac0)
-        return false;
-      return component.componentType === "PARKING_BELT" /* PARKING_BELT */;
-    };
     static isAEASBD = (component) => {
       if (component.componentType !== "USER_OUTPUT" /* USER_OUTPUT */)
         return false;
@@ -2113,10 +2356,7 @@ var Cuss2 = (() => {
     isHeadset,
     isScale,
     isCamera,
-    isInsertionBelt,
-    isParkingBelt,
     isRFIDReader,
-    isVerificationBelt,
     isAEASBD,
     isBHS
   } = ComponentInterrogation;
@@ -2144,9 +2384,6 @@ var Cuss2 = (() => {
     cardReader;
     biometric;
     scale;
-    insertionBelt;
-    verificationBelt;
-    parkingBelt;
     rfid;
     headset;
     camera;
@@ -2310,15 +2547,6 @@ var Cuss2 = (() => {
             instance = this.scale = new Scale(component, this);
           } else if (isCamera(component)) {
             instance = this.camera = new Camera(component, this);
-          } else if (isInsertionBelt(component)) {
-            instance = this.insertionBelt = new InsertionBelt(component, this);
-          } else if (isVerificationBelt(component)) {
-            instance = this.verificationBelt = new VerificationBelt(
-              component,
-              this
-            );
-          } else if (isParkingBelt(component)) {
-            instance = this.parkingBelt = new ParkingBelt(component, this);
           } else if (isRFIDReader(component)) {
             instance = this.rfid = new RFID(component, this);
           } else if (isBHS(component)) {
@@ -2334,7 +2562,7 @@ var Cuss2 = (() => {
           } else if (isHeadset(component)) {
             instance = this.headset = new Headset(component, this);
           } else
-            instance = new Component(component, this);
+            instance = new UnknownComponent(component, this);
           return components[id] = instance;
         });
         return componentList;
@@ -2468,7 +2696,7 @@ var Cuss2 = (() => {
       if (this.components) {
         const componentList = Object.values(this.components);
         for await (const component of componentList) {
-          if (component.enabled) {
+          if ("enabled" in component && component.enabled) {
             await component.disable();
           }
         }
@@ -2608,5 +2836,5 @@ var Cuss2 = (() => {
   }
 
   // Add version info (consider making this dynamic, e.g., from a version file or package.json)
-  globalCtx.Cuss2.version = "1.0.12";
+  globalCtx.Cuss2.version = "1.0.13";
 })(typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : this);

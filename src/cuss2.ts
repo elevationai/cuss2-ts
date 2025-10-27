@@ -9,24 +9,23 @@ import {
   Announcement,
   BagTagPrinter,
   BarcodeReader,
+  type BaseComponent,
   BHS,
   Biometric,
   BoardingPassPrinter,
   Camera,
   CardReader,
-  Component,
   Dispenser,
   DocumentReader,
   Feeder,
   Headset,
   Illumination,
-  InsertionBelt,
+  type InteractiveComponent,
   Keypad,
-  ParkingBelt,
   RFID,
   Scale,
-  VerificationBelt,
 } from "./models/index.ts";
+import { UnknownComponent } from "./models/base/UnknownComponent.ts";
 
 import {
   ApplicationStateChangeReasonCodes as ChangeReason,
@@ -61,10 +60,7 @@ const {
   isHeadset,
   isScale,
   isCamera,
-  isInsertionBelt,
-  isParkingBelt,
   isRFIDReader,
-  isVerificationBelt,
   isAEASBD,
   isBHS,
 } = ComponentInterrogation;
@@ -78,7 +74,7 @@ function validateComponentId(componentID: unknown) {
 export class Cuss2 extends EventEmitter {
   connection: Connection;
   environment: EnvironmentLevel = {} as EnvironmentLevel;
-  components: Record<string, Component> | undefined = undefined;
+  components: Record<string, BaseComponent> | undefined = undefined;
 
   // State management
   private _currentState: StateChange = new StateChange(AppState.STOPPED, AppState.STOPPED);
@@ -95,9 +91,6 @@ export class Cuss2 extends EventEmitter {
   cardReader?: CardReader;
   biometric?: Biometric;
   scale?: Scale;
-  insertionBelt?: InsertionBelt;
-  verificationBelt?: VerificationBelt;
-  parkingBelt?: ParkingBelt;
   rfid?: RFID;
   headset?: Headset;
   camera?: Camera;
@@ -266,7 +259,7 @@ export class Cuss2 extends EventEmitter {
       const componentList = response.payload?.componentList as ComponentList;
       if (this.components) return componentList;
 
-      const components: Record<string, Component> = this.components = {};
+      const components: Record<string, BaseComponent> = this.components = {};
 
       //first find feeders & dispensers, so they can be linked when printers are created
       componentList.forEach((component) => {
@@ -319,18 +312,6 @@ export class Cuss2 extends EventEmitter {
         else if (isCamera(component)) {
           instance = this.camera = new Camera(component, this);
         }
-        else if (isInsertionBelt(component)) {
-          instance = this.insertionBelt = new InsertionBelt(component, this);
-        }
-        else if (isVerificationBelt(component)) {
-          instance = this.verificationBelt = new VerificationBelt(
-            component,
-            this,
-          );
-        }
-        else if (isParkingBelt(component)) {
-          instance = this.parkingBelt = new ParkingBelt(component, this);
-        }
         else if (isRFIDReader(component)) {
           instance = this.rfid = new RFID(component, this);
         }
@@ -349,9 +330,9 @@ export class Cuss2 extends EventEmitter {
         else if (isHeadset(component)) {
           instance = this.headset = new Headset(component, this);
         }
-        else instance = new Component(component, this);
+        else instance = new UnknownComponent(component, this);
 
-        return components[id] = instance as Component;
+        return components[id] = instance as BaseComponent;
       });
 
       return componentList;
@@ -515,10 +496,11 @@ export class Cuss2 extends EventEmitter {
 
   private async _disableAllComponents(): Promise<void> {
     if (this.components) {
-      const componentList = Object.values(this.components) as Component[];
+      const componentList = Object.values(this.components) as BaseComponent[];
       for await (const component of componentList) {
-        if (component.enabled) {
-          await component.disable();
+        // Check if component has enable/disable capability (InteractiveComponent)
+        if ("enabled" in component && (component as InteractiveComponent).enabled) {
+          await (component as InteractiveComponent).disable();
         }
       }
 
@@ -597,7 +579,7 @@ export class Cuss2 extends EventEmitter {
     if (!this.components) {
       return false;
     }
-    const componentList = Object.values(this.components) as Component[];
+    const componentList = Object.values(this.components) as BaseComponent[];
     await Promise.all(
       componentList.map((c) =>
         c.query()
@@ -607,13 +589,13 @@ export class Cuss2 extends EventEmitter {
     return true;
   }
 
-  get unavailableComponents(): Component[] {
-    const components = Object.values(this.components || {}) as Component[];
-    return components.filter((c: Component) => !c.ready);
+  get unavailableComponents(): BaseComponent[] {
+    const components = Object.values(this.components || {}) as BaseComponent[];
+    return components.filter((c: BaseComponent) => !c.ready);
   }
 
-  get unavailableRequiredComponents(): Component[] {
-    return this.unavailableComponents.filter((c: Component) => c.required);
+  get unavailableRequiredComponents(): BaseComponent[] {
+    return this.unavailableComponents.filter((c: BaseComponent) => c.required);
   }
 
   checkRequiredComponentsAndSyncState(): void {
@@ -633,7 +615,7 @@ export class Cuss2 extends EventEmitter {
         log(
           "verbose",
           "[checkRequiredComponentsAndSyncState] Required components UNAVAILABLE:",
-          inactiveRequiredComponents.map((c: Component) => c.constructor.name),
+          inactiveRequiredComponents.map((c: BaseComponent) => c.constructor.name),
         );
         this.requestUnavailableState();
       }

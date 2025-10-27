@@ -10,7 +10,7 @@ export class BoardingPassPrinter extends Printer {
 
   templates: {
     clear: (id?: string) => Promise<boolean>;
-    query: (id?: string) => Promise<string[]>;
+    query: () => Promise<string[]>;
   } = {
     clear: async (id = ""): Promise<boolean> => {
       const response = await this.sendITPSCommand("TC" + id);

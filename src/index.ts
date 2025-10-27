@@ -1,6 +1,6 @@
 export * from "cuss2-typescript-models";
 export * from "./cuss2.ts";
-export * from "./models/Component.ts";
+export { Component } from "./models/index.ts"; // Component is now an alias for UnknownComponent
 export * from "./models/deviceType.ts";
 export * from "./models/stateChange.ts";
 export * from "./models/platformResponseError.ts";

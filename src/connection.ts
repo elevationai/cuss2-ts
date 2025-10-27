@@ -79,8 +79,8 @@ export class Connection extends EventEmitter {
       this._validateURL(tokenURL, "Token URL");
     }
 
-    // Store cleaned base URL (removes query params and trailing slashes)
-    this._baseURL = this._cleanBaseURL(baseURL);
+    // Store just the origin (protocol + hostname + port), stripping any path/query/hash
+    this._baseURL = new URL(baseURL).origin;
 
     // Set up token URL - always ensure OAuth uses HTTP/HTTPS protocol
     const oauthUrl = tokenURL
@@ -194,15 +194,6 @@ export class Connection extends EventEmitter {
       }
       throw error; // Re-throw validation errors
     }
-  }
-
-  private _cleanBaseURL(url: string): string {
-    // Remove query parameters if present
-    // url.split always returns at least one element, so we can safely access [0]
-    const parts = url.split("?");
-    const cleanURL = parts[0];
-    // Remove trailing slash if present
-    return cleanURL.endsWith("/") ? cleanURL.slice(0, -1) : cleanURL;
   }
 
   private _convertToHttpProtocol(url: string): string {

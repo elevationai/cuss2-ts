@@ -3,7 +3,7 @@ import { EventEmitter } from "events";
 import { Printer } from "./Printer.ts";
 import { Feeder } from "./Feeder.ts";
 import { Dispenser } from "./Dispenser.ts";
-import type { Component } from "./Component.ts";
+import type { BaseComponent } from "./base/BaseComponent.ts";
 import type { Cuss2 } from "../cuss2.ts";
 import type { ComponentAPI } from "../cuss2/ComponentAPI.ts";
 import { DeviceType } from "./deviceType.ts";
@@ -49,7 +49,7 @@ const createMeta = (
 // Mock classes for testing
 class MockCuss2 extends EventEmitter {
   api: MockComponentAPI;
-  components: Record<number, Component> = {};
+  components: Record<number, BaseComponent> = {};
 
   constructor() {
     super();

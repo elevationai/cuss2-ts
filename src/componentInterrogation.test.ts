@@ -504,66 +504,6 @@ Deno.test("ComponentInterrogation - isRFIDReader", () => {
   assertEquals(ComponentInterrogation.isRFIDReader(noCharacteristics), false);
 });
 
-Deno.test("ComponentInterrogation - isInsertionBelt", () => {
-  const insertionBelt = createMockComponent({
-    componentType: ComponentTypes.INSERTION_BELT,
-    componentCharacteristics: [createMockCharacteristics()],
-  });
-
-  const otherComponent = createMockComponent({
-    componentType: ComponentTypes.DATA_INPUT,
-    componentCharacteristics: [createMockCharacteristics()],
-  });
-
-  const noCharacteristics = createMockComponent({
-    componentType: ComponentTypes.INSERTION_BELT,
-  });
-
-  assertEquals(ComponentInterrogation.isInsertionBelt(insertionBelt), true);
-  assertEquals(ComponentInterrogation.isInsertionBelt(otherComponent), false);
-  assertEquals(ComponentInterrogation.isInsertionBelt(noCharacteristics), false);
-});
-
-Deno.test("ComponentInterrogation - isVerificationBelt", () => {
-  const verificationBelt = createMockComponent({
-    componentType: ComponentTypes.VERIFICATION_BELT,
-    componentCharacteristics: [createMockCharacteristics()],
-  });
-
-  const otherComponent = createMockComponent({
-    componentType: ComponentTypes.DATA_INPUT,
-    componentCharacteristics: [createMockCharacteristics()],
-  });
-
-  const noCharacteristics = createMockComponent({
-    componentType: ComponentTypes.VERIFICATION_BELT,
-  });
-
-  assertEquals(ComponentInterrogation.isVerificationBelt(verificationBelt), true);
-  assertEquals(ComponentInterrogation.isVerificationBelt(otherComponent), false);
-  assertEquals(ComponentInterrogation.isVerificationBelt(noCharacteristics), false);
-});
-
-Deno.test("ComponentInterrogation - isParkingBelt", () => {
-  const parkingBelt = createMockComponent({
-    componentType: ComponentTypes.PARKING_BELT,
-    componentCharacteristics: [createMockCharacteristics()],
-  });
-
-  const otherComponent = createMockComponent({
-    componentType: ComponentTypes.DATA_INPUT,
-    componentCharacteristics: [createMockCharacteristics()],
-  });
-
-  const noCharacteristics = createMockComponent({
-    componentType: ComponentTypes.PARKING_BELT,
-  });
-
-  assertEquals(ComponentInterrogation.isParkingBelt(parkingBelt), true);
-  assertEquals(ComponentInterrogation.isParkingBelt(otherComponent), false);
-  assertEquals(ComponentInterrogation.isParkingBelt(noCharacteristics), false);
-});
-
 Deno.test("ComponentInterrogation - isAEASBD", () => {
   const aeasbd = createMockComponent({
     componentType: ComponentTypes.USER_OUTPUT,

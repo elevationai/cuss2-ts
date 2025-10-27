@@ -592,6 +592,9 @@ const ui = {
 
     if (!cuss2 || !cuss2.connection.isOpen) return;
 
+    // Check if there are any unavailable required components
+    const hasUnavailableRequiredComponents = cuss2.unavailableRequiredComponents?.length > 0;
+
     // Define what states applications can move to based on platform logic
     const canMoveTo = {
       [ApplicationStateCodes.STOPPED]: ["initialize"],
@@ -609,7 +612,21 @@ const ui = {
 
     // Get transitions that are both valid to move to AND allowed to request
     const validTransitions = canMoveTo[currentState] || [];
-    const allowedTransitions = validTransitions.filter(action => canRequest.includes(action));
+    let allowedTransitions = validTransitions.filter(action => canRequest.includes(action));
+
+    // If there are unavailable required components, block transitions to AVAILABLE and ACTIVE
+    if (hasUnavailableRequiredComponents) {
+      allowedTransitions = allowedTransitions.filter(action => {
+        // Only allow transitions that don't require all components to be healthy
+        // Block AVAILABLE and ACTIVE - these require all required components to be ready
+        return action !== 'available' && action !== 'active';
+      });
+
+      // Log the restriction for user awareness
+      if (allowedTransitions.length < validTransitions.filter(action => canRequest.includes(action)).length) {
+        logger.info(`AVAILABLE/ACTIVE transitions blocked: ${cuss2.unavailableRequiredComponents.length} required component(s) unavailable`);
+      }
+    }
 
     // Enable buttons for allowed transitions
     allowedTransitions.forEach((action) => {
@@ -769,6 +786,9 @@ const ui = {
 
           // Refresh the component display to show updated badge
           ui.displayComponents();
+
+          // Update state buttons to reflect new required component status
+          ui.updateStateButtons(cuss2.state);
         } catch (error) {
           logger.error(`Failed to toggle required state: ${error.message}`);
           // Revert on error
@@ -1177,6 +1197,8 @@ const connectionManager = {
           ui.displayComponents();
           // Ensure toggle states are synced after component refresh
           setTimeout(() => componentHandlers.updateAllToggleStates(), 10);
+          // Update state buttons to reflect required component availability
+          ui.updateStateButtons(cuss2.state);
         },
       },
       {

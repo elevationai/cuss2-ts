@@ -329,6 +329,12 @@ button:disabled {
   border: 1px solid #ffc107;
 }
 
+.component-badge.required {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ff6464;
+  border: 1px solid #ff6464;
+}
+
 /* ===== TOGGLE SWITCHES ===== */
 .toggle-container {
   display: flex;
@@ -360,6 +366,11 @@ button:disabled {
   border-color: #64ffda;
 }
 
+.toggle-switch.required {
+  background: linear-gradient(135deg, #ff6464, #ee5a24);
+  border-color: #ff6464;
+}
+
 .toggle-switch.pending {
   background: linear-gradient(135deg, #ffc107, #ff9f00);
   border-color: #ffc107;
@@ -384,7 +395,8 @@ button:disabled {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-switch.enabled .toggle-slider {
+.toggle-switch.enabled .toggle-slider,
+.toggle-switch.required .toggle-slider {
   transform: translateX(24px);
   background: #0f0f1e;
 }
@@ -406,6 +418,10 @@ button:disabled {
 
 .toggle-switch.enabled:hover:not(.disabled) {
   box-shadow: 0 4px 12px rgba(100, 255, 218, 0.4);
+}
+
+.toggle-switch.required:hover:not(.disabled) {
+  box-shadow: 0 4px 12px rgba(255, 100, 100, 0.4);
 }
 
 /* ===== COMPONENT ACTIONS ===== */

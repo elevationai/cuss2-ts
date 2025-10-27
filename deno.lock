@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@cuss/cuss2-ts@1.0.12": "1.0.12",
     "jsr:@cuss/cuss2-typescript-models@2.0.1": "2.0.1",
     "jsr:@deno/cache-dir@0.13.2": "0.13.2",
     "jsr:@deno/cache-dir@0.8": "0.8.0",
@@ -40,6 +41,14 @@
     "npm:ws@8": "8.18.2"
   },
   "jsr": {
+    "@cuss/cuss2-ts@1.0.12": {
+      "integrity": "8e17f5d80ebf5d9a1ae5472f6b67dd4a055f2560a660eb11552dc2d14381557e",
+      "dependencies": [
+        "jsr:@cuss/cuss2-typescript-models",
+        "jsr:@std/async",
+        "npm:ws"
+      ]
+    },
     "@cuss/cuss2-typescript-models@2.0.1": {
       "integrity": "ee82abef1991c298a3fac1ed9b41d5f37b6732db98c172c5c6d4507ecdcb66b5"
     },

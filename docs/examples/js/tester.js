@@ -1,5 +1,7 @@
 // ===== IMPORTS =====
-import { Cuss2, ApplicationStateCodes, ComponentState, MessageCodes } from "https://esm.sh/jsr/@cuss/cuss2-typescript-models@latest";
+// Using global Cuss2 from script tag (see tester.html)
+// Cuss2 is available as a global variable from the UMD bundle
+const { ApplicationStateCodes, ComponentState, MessageCodes } = Cuss2.Models;
 
 let cuss2 = null;
 
@@ -374,7 +376,7 @@ const templates = {
   },
 
   // Component item template
-  componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch) {
+  componentItem(id, component, enabledBadge, statusBadge, requiredBadge, readyBadge, toggleSwitch, requiredToggle) {
     // Get capabilities for this component
     const capabilities = componentCapabilities.getCapabilities(component);
 
@@ -463,10 +465,12 @@ const templates = {
           <div class="component-badges">
             ${enabledBadge}
             ${statusBadge}
+            ${requiredBadge}
           </div>
         </div>
         <div class="component-header-right">
           ${readyBadge}
+          ${requiredToggle}
           ${toggleSwitch}
         </div>
       </div>
@@ -493,6 +497,20 @@ const templates = {
           <div class="toggle-slider"></div>
         </div>
         <span class="toggle-label">Enabled</span>
+      </div>
+    `;
+  },
+
+  // Required toggle switch template
+  requiredToggle(id, component) {
+    const toggleClass = component.required ? 'required' : '';
+
+    return `
+      <div class="toggle-container">
+        <div class="toggle-switch toggle-required ${toggleClass}" data-component-id="${id}" data-current-required="${component.required}">
+          <div class="toggle-slider"></div>
+        </div>
+        <span class="toggle-label">Required</span>
       </div>
     `;
   },
@@ -640,6 +658,11 @@ const ui = {
       ? '<span class="component-badge enabled">Enabled</span>'
       : '';
 
+    // Show required badge when component is required
+    const requiredBadge = component.required
+      ? '<span class="component-badge required">Required</span>'
+      : '';
+
     // Create status badge if component has a status other than OK
     let statusBadge = '';
     if (component.status && component.status !== 'OK') {
@@ -647,13 +670,14 @@ const ui = {
       statusBadge = `<span class="component-badge ${statusClass}">${component.status.replace(/_/g, ' ')}</span>`;
     }
 
-    // Create toggle switch with proper state sync
+    // Create toggle switches with proper state sync
     const toggleSwitch = templates.toggleSwitch(id, component);
+    const requiredToggle = templates.requiredToggle(id, component);
 
-    item.innerHTML = templates.componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch);
+    item.innerHTML = templates.componentItem(id, component, enabledBadge, statusBadge, requiredBadge, readyBadge, toggleSwitch, requiredToggle);
 
     // Add toggle switch event listener (only if toggle exists)
-    const toggleElement = item.querySelector('.toggle-switch');
+    const toggleElement = item.querySelector('.toggle-switch:not(.toggle-required)');
 
     if (toggleElement) {
       toggleElement.addEventListener('click', async (e) => {
@@ -687,6 +711,62 @@ const ui = {
         } finally {
           // Always remove pending state
           toggleElement.classList.remove('pending');
+        }
+      });
+    }
+
+    // Add required toggle event listener
+    const requiredToggleElement = item.querySelector('.toggle-required');
+    if (requiredToggleElement) {
+      requiredToggleElement.addEventListener('click', async (e) => {
+        e.stopPropagation();
+
+        // Don't allow toggle if already pending
+        if (requiredToggleElement.classList.contains('pending')) {
+          return;
+        }
+
+        const currentRequired = requiredToggleElement.dataset.currentRequired === 'true';
+        const newRequired = !currentRequired;
+
+        // Set pending state immediately
+        requiredToggleElement.classList.add('pending');
+
+        try {
+          // Update the component's required property
+          component.required = newRequired;
+
+          // Update toggle visual state
+          if (newRequired) {
+            requiredToggleElement.classList.add('required');
+          } else {
+            requiredToggleElement.classList.remove('required');
+          }
+          requiredToggleElement.dataset.currentRequired = newRequired;
+
+          // Log the change
+          logger.info(`Component ${component.deviceType} marked as ${newRequired ? 'REQUIRED' : 'NOT REQUIRED'}`);
+
+          // Immediately trigger state sync to enforce CUSS2 required device rules
+          if (cuss2) {
+            cuss2.checkRequiredComponentsAndSyncState();
+          }
+
+          // Refresh the component display to show updated badge
+          ui.displayComponents();
+        } catch (error) {
+          logger.error(`Failed to toggle required state: ${error.message}`);
+          // Revert on error
+          component.required = currentRequired;
+          if (currentRequired) {
+            requiredToggleElement.classList.add('required');
+          } else {
+            requiredToggleElement.classList.remove('required');
+          }
+          requiredToggleElement.dataset.currentRequired = currentRequired;
+        } finally {
+          // Always remove pending state
+          requiredToggleElement.classList.remove('pending');
         }
       });
     }

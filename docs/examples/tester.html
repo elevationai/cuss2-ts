@@ -13,8 +13,8 @@
       <p class="subtitle">Testing interface for the CUSS2 platform with full component interaction capabilities</p>
 
       <div class="grid">
-        <!-- Connection Panel -->
-        <div class="panel">
+        <!-- Connection Panel (shown when disconnected) -->
+        <div id="connectionPanel" class="panel panel-centered">
           <h2>Connection</h2>
           <form id="connectionForm" class="connection-form">
             <div class="form-group">
@@ -44,21 +44,27 @@
                 <button type="button" id="generateTokenBtn" class="generate-token-btn">Generate</button>
               </div>
             </div>
-            <button type="submit" id="connectBtn">Connect</button>
-            <button type="button" id="disconnectBtn" disabled>Disconnect</button>
+            <div id="connectButtonContainer">
+              <button type="submit" id="connectBtn">Connect</button>
+            </div>
+            <div id="connectionStatusContainer" class="connection-status-container" style="display: none;">
+              <div class="token-url-container">
+                <div id="connectionStatus" class="status connecting">Connecting...</div>
+                <button type="button" id="cancelConnectionBtn" class="cancel-connection-btn">Cancel</button>
+              </div>
+            </div>
           </form>
-
-          <div id="connectionStatus" class="status disconnected">Disconnected</div>
-
-          <div id="environmentInfo" class="environment-info" style="display: none">
-            <h3>Environment</h3>
-            <div id="envDetails"></div>
-          </div>
         </div>
 
-        <!-- State Management Panel -->
-        <div class="panel">
-          <h2>State Management</h2>
+        <!-- State Management Panel (shown when connected, replaces Connection panel) -->
+        <div id="stateManagementPanel" class="panel" style="display: none">
+          <div class="panel-header">
+            <h2>State Management</h2>
+            <button type="button" id="disconnectBtn" class="disconnect-btn-header">Disconnect</button>
+          </div>
+
+          <div id="connectionStatusConnected" class="status connected" style="display: none">Connected</div>
+
           <div>
             <strong>Current State:</strong>
             <span id="currentState" class="state-badge STOPPED">STOPPED</span>
@@ -81,8 +87,14 @@
           </div>
         </div>
 
+        <!-- Environment Panel (shown when connected, full right side) -->
+        <div id="environmentPanel" class="panel" style="display: none">
+          <h2>Environment</h2>
+          <div id="envDetails"></div>
+        </div>
+
         <!-- Components Panel -->
-        <div class="panel full-width">
+        <div id="componentsPanel" class="panel full-width" style="display: none">
           <h2>Components</h2>
           <div id="componentList" class="component-list">
             <p style="color: #666">Connect to see available components...</p>
@@ -90,7 +102,7 @@
         </div>
 
         <!-- Event Log Panel -->
-        <div class="panel full-width">
+        <div id="eventLogPanel" class="panel full-width panel-centered">
           <h2>Event Log</h2>
           <div id="logContainer" class="log-container"></div>
         </div>

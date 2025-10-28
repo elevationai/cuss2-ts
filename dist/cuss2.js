@@ -1089,7 +1089,6 @@ var Cuss2 = (() => {
     _poller;
     parent;
     subcomponents = [];
-    // Optional enabled property for backward compatibility
     // Only InteractiveComponent and its subclasses actually use this
     enabled;
     get ready() {
@@ -1271,7 +1270,7 @@ var Cuss2 = (() => {
 
   // src/models/base/UnknownComponent.ts
   var UnknownComponent = class extends BaseComponent {
-    // Add enabled property for compatibility
+    // Add enabled property
     enabled = false;
     constructor(component, cuss2) {
       super(component, cuss2, DeviceType.UNKNOWN);
@@ -1280,7 +1279,7 @@ var Cuss2 = (() => {
       );
     }
     /**
-     * Enable the component - provided for backward compatibility
+     * Enable the component
      * UnknownComponent may or may not support enable/disable based on actual device type
      */
     async enable() {
@@ -1290,7 +1289,7 @@ var Cuss2 = (() => {
       return pd;
     }
     /**
-     * Disable the component - provided for backward compatibility
+     * Disable the component
      * UnknownComponent may or may not support disable based on actual device type
      */
     async disable() {
@@ -1309,7 +1308,7 @@ var Cuss2 = (() => {
       }
     }
     /**
-     * Send data to the component - provided for backward compatibility
+     * Send data to the component
      * UnknownComponent accepts all data types since we don't know its actual capabilities
      */
     async send(dataObj) {
@@ -1325,7 +1324,7 @@ var Cuss2 = (() => {
     handleMessage(data) {
       super.handleMessage(data);
       if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
-        this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
+        this.previousData = data.payload.dataRecords;
         this.emit("data", this.previousData);
       }
     }
@@ -1348,10 +1347,8 @@ var Cuss2 = (() => {
   };
 
   // src/models/base/componentUtils.ts
-  async function executeSend(component, dataObj) {
-    const pd = await component.withPendingCall(
-      () => component.api.send(component.id, dataObj)
-    );
+  async function executeSend(component, dataObj, withPendingCall) {
+    const pd = await withPendingCall(() => component.api.send(component.id, dataObj));
     component.updateState(pd);
     return pd;
   }
@@ -1363,7 +1360,7 @@ var Cuss2 = (() => {
      * Available to: DATA_OUTPUT components
      */
     async send(dataObj) {
-      return executeSend(this, dataObj);
+      return await executeSend(this, dataObj, this.withPendingCall.bind(this));
     }
   };
 
@@ -1380,7 +1377,7 @@ var Cuss2 = (() => {
      * Available to: USER_OUTPUT components
      */
     async send(dataObj) {
-      return executeSend(this, dataObj);
+      return await executeSend(this, dataObj, this.withPendingCall.bind(this));
     }
   };
 
@@ -1390,7 +1387,7 @@ var Cuss2 = (() => {
     handleMessage(data) {
       super.handleMessage(data);
       if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
-        this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
+        this.previousData = data.payload.dataRecords;
         this.emit("data", this.previousData);
       }
     }
@@ -1420,7 +1417,7 @@ var Cuss2 = (() => {
      * Available to: MEDIA_OUTPUT components
      */
     async send(dataObj) {
-      return executeSend(this, dataObj);
+      return await executeSend(this, dataObj, this.withPendingCall.bind(this));
     }
   };
 
@@ -1430,7 +1427,7 @@ var Cuss2 = (() => {
     handleMessage(data) {
       super.handleMessage(data);
       if (data?.meta?.messageCode === "DATA_PRESENT" /* DATA_PRESENT */ && data?.payload?.dataRecords?.length) {
-        this.previousData = data?.payload?.dataRecords?.map((dr) => dr?.data || "");
+        this.previousData = data.payload.dataRecords;
         this.emit("data", this.previousData);
       }
     }
@@ -1869,13 +1866,13 @@ var Cuss2 = (() => {
     }
   };
 
-  // https://jsr.io/@std/async/1.0.14/_util.ts
+  // https://jsr.io/@std/async/1.0.15/_util.ts
   function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
     const exp = Math.min(cap, base * multiplier ** attempt);
     return (1 - jitter * Math.random()) * exp;
   }
 
-  // https://jsr.io/@std/async/1.0.14/retry.ts
+  // https://jsr.io/@std/async/1.0.15/retry.ts
   var RetryError = class extends Error {
     /**
      * Constructs a new {@linkcode RetryError} instance.
@@ -1950,6 +1947,7 @@ var Cuss2 = (() => {
     _socketURL;
     _socket;
     _refresher = null;
+    _abortController;
     deviceID;
     access_token = "";
     _retryOptions;
@@ -1985,6 +1983,7 @@ var Cuss2 = (() => {
     }
     async authorize() {
       log2("info", `Authorizing client '${this._auth.client_id}'`, this._auth.url);
+      this._abortController = new AbortController();
       const params = new URLSearchParams();
       params.append("client_id", this._auth.client_id);
       params.append("client_secret", this._auth.client_secret);
@@ -1993,27 +1992,36 @@ var Cuss2 = (() => {
       const result = await retry(async () => {
         log2("info", `Retrying client '${this._auth.client_id}'`);
         this.emit("authenticating", ++attempts);
-        const response = await global.fetch(this._auth.url, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          redirect: "follow",
-          body: params.toString()
-          // Form-encoded data
-        });
-        if (response.status === 401) {
-          return new AuthenticationError("Invalid Credentials", 401);
+        try {
+          const response = await global.fetch(this._auth.url, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            redirect: "follow",
+            body: params.toString(),
+            // Form-encoded data
+            signal: this._abortController.signal
+          });
+          if (response.status === 401) {
+            return new AuthenticationError("Invalid Credentials", 401);
+          }
+          if (response.status >= 400) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          const auth = {
+            access_token: data.access_token,
+            expires_in: data.expires_in,
+            token_type: data.token_type
+          };
+          this.emit("authenticated", auth);
+          return auth;
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") {
+            log2("info", "Authentication aborted");
+            return new AuthenticationError("Authentication aborted", 0);
+          }
+          throw error;
         }
-        if (response.status >= 400) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        const auth = {
-          access_token: data.access_token,
-          expires_in: data.expires_in,
-          token_type: data.token_type
-        };
-        this.emit("authenticated", auth);
-        return auth;
       }, this._retryOptions);
       if (result instanceof AuthenticationError) {
         this.emit("authenticationError", result);
@@ -2191,6 +2199,10 @@ var Cuss2 = (() => {
       if (this._refresher) {
         global.clearTimeout(this._refresher);
         this._refresher = null;
+      }
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = void 0;
       }
       this._socket?.close(code, reason);
     }

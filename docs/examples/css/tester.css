@@ -39,6 +39,43 @@ body {
   grid-column: 1 / -1;
 }
 
+.panel-centered {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  grid-column: 1 / -1;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.disconnect-btn-header {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #ff6464, #ee5a24);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.disconnect-btn-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 100, 100, 0.4);
+}
+
 /* ===== TYPOGRAPHY ===== */
 h1 {
   color: #64ffda;
@@ -165,6 +202,36 @@ button:disabled {
   background: rgba(255, 200, 100, 0.1);
   border: 1px solid #ffc864;
   color: #ffc864;
+}
+
+.connection-status-container {
+  margin-top: 10px;
+}
+
+.connection-status-container .status {
+  flex: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancel-connection-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #ff6464, #ee5a24);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.cancel-connection-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 100, 100, 0.4);
 }
 
 /* ===== STATE BADGES ===== */
@@ -322,11 +389,35 @@ button:disabled {
   border: 1px solid #ff6464;
 }
 
+/* Fade out animation for temporary status badges */
+.component-badge.fade-out {
+  animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 .component-badge.status-media-absent,
 .component-badge.status-media-present {
   background: rgba(255, 193, 7, 0.2);
   color: #ffc107;
   border: 1px solid #ffc107;
+}
+
+.component-badge.required {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ff6464;
+  border: 1px solid #ff6464;
 }
 
 /* ===== TOGGLE SWITCHES ===== */
@@ -360,6 +451,11 @@ button:disabled {
   border-color: #64ffda;
 }
 
+.toggle-switch.required {
+  background: linear-gradient(135deg, #ff6464, #ee5a24);
+  border-color: #ff6464;
+}
+
 .toggle-switch.pending {
   background: linear-gradient(135deg, #ffc107, #ff9f00);
   border-color: #ffc107;
@@ -384,7 +480,8 @@ button:disabled {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-switch.enabled .toggle-slider {
+.toggle-switch.enabled .toggle-slider,
+.toggle-switch.required .toggle-slider {
   transform: translateX(24px);
   background: #0f0f1e;
 }
@@ -406,6 +503,10 @@ button:disabled {
 
 .toggle-switch.enabled:hover:not(.disabled) {
   box-shadow: 0 4px 12px rgba(100, 255, 218, 0.4);
+}
+
+.toggle-switch.required:hover:not(.disabled) {
+  box-shadow: 0 4px 12px rgba(255, 100, 100, 0.4);
 }
 
 /* ===== COMPONENT ACTIONS ===== */
@@ -516,12 +617,54 @@ button:disabled {
   background: rgba(26, 26, 46, 0.4);
   padding: 10px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   border: 1px solid rgba(100, 255, 218, 0.1);
+  margin-top: 15px;
 }
 
-.environment-info div {
-  margin: 5px 0;
+.environment-info h3 {
+  color: #64ffda;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+  padding-bottom: 5px;
+}
+
+.env-group {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(100, 255, 218, 0.1);
+}
+
+.env-group:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.env-group strong {
+  color: #48cae4;
+  font-size: 14px;
+}
+
+.env-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+  padding: 2px 0;
+}
+
+.env-label {
+  color: #a0a0a0;
+  font-weight: 500;
+}
+
+.env-value {
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+  text-align: right;
 }
 
 /* ===== BANNERS ===== */
@@ -541,9 +684,14 @@ button:disabled {
   animation: slideDown 0.5s ease-out;
 }
 
-.timeout-banner strong {
-  display: block;
-  margin-bottom: 5px;
+.timeout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.timeout-header strong {
   font-size: 16px;
 }
 

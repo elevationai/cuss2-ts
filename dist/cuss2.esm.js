@@ -28,9 +28,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
+// ../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
 var require_events = __commonJS({
-  "../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
+  "../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
     "use strict";
     var R = typeof Reflect === "object" ? Reflect : null;
     var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
@@ -1851,13 +1851,13 @@ var AuthenticationError = class extends Cuss2Error {
   }
 };
 
-// https://jsr.io/@std/async/1.0.15/_util.ts
+// https://jsr.io/@std/async/1.0.14/_util.ts
 function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
   const exp = Math.min(cap, base * multiplier ** attempt);
   return (1 - jitter * Math.random()) * exp;
 }
 
-// https://jsr.io/@std/async/1.0.15/retry.ts
+// https://jsr.io/@std/async/1.0.14/retry.ts
 var RetryError = class extends Error {
   /**
    * Constructs a new {@linkcode RetryError} instance.
@@ -1932,6 +1932,7 @@ var Connection = class _Connection extends EventEmitter2 {
   _socketURL;
   _socket;
   _refresher = null;
+  _abortController;
   deviceID;
   access_token = "";
   _retryOptions;
@@ -1967,6 +1968,7 @@ var Connection = class _Connection extends EventEmitter2 {
   }
   async authorize() {
     log2("info", `Authorizing client '${this._auth.client_id}'`, this._auth.url);
+    this._abortController = new AbortController();
     const params = new URLSearchParams();
     params.append("client_id", this._auth.client_id);
     params.append("client_secret", this._auth.client_secret);
@@ -1975,27 +1977,36 @@ var Connection = class _Connection extends EventEmitter2 {
     const result = await retry(async () => {
       log2("info", `Retrying client '${this._auth.client_id}'`);
       this.emit("authenticating", ++attempts);
-      const response = await global.fetch(this._auth.url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        redirect: "follow",
-        body: params.toString()
-        // Form-encoded data
-      });
-      if (response.status === 401) {
-        return new AuthenticationError("Invalid Credentials", 401);
+      try {
+        const response = await global.fetch(this._auth.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          redirect: "follow",
+          body: params.toString(),
+          // Form-encoded data
+          signal: this._abortController.signal
+        });
+        if (response.status === 401) {
+          return new AuthenticationError("Invalid Credentials", 401);
+        }
+        if (response.status >= 400) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const auth = {
+          access_token: data.access_token,
+          expires_in: data.expires_in,
+          token_type: data.token_type
+        };
+        this.emit("authenticated", auth);
+        return auth;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          log2("info", "Authentication aborted");
+          return new AuthenticationError("Authentication aborted", 0);
+        }
+        throw error;
       }
-      if (response.status >= 400) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      const auth = {
-        access_token: data.access_token,
-        expires_in: data.expires_in,
-        token_type: data.token_type
-      };
-      this.emit("authenticated", auth);
-      return auth;
     }, this._retryOptions);
     if (result instanceof AuthenticationError) {
       this.emit("authenticationError", result);
@@ -2173,6 +2184,10 @@ var Connection = class _Connection extends EventEmitter2 {
     if (this._refresher) {
       global.clearTimeout(this._refresher);
       this._refresher = null;
+    }
+    if (this._abortController) {
+      this._abortController.abort();
+      this._abortController = void 0;
     }
     this._socket?.close(code, reason);
   }

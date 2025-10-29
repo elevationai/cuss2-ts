@@ -45,6 +45,7 @@ export class Connection extends EventEmitter {
   _socketURL: string;
   _socket?: WebSocket;
   _refresher: ReturnType<typeof setTimeout> | null = null;
+  _abortController?: AbortController;
   deviceID: UniqueId;
   access_token = "";
   _retryOptions: {
@@ -109,6 +110,9 @@ export class Connection extends EventEmitter {
   private async authorize(): Promise<AuthResponse> {
     log("info", `Authorizing client '${this._auth.client_id}'`, this._auth.url);
 
+    // Create new abort controller for this authentication attempt
+    this._abortController = new AbortController();
+
     const params = new URLSearchParams();
     params.append("client_id", this._auth.client_id);
     params.append("client_secret", this._auth.client_secret);
@@ -118,30 +122,43 @@ export class Connection extends EventEmitter {
     const result = await retry(async () => {
       log("info", `Retrying client '${this._auth.client_id}'`);
       this.emit("authenticating", ++attempts);
-      const response = await global.fetch(this._auth.url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        redirect: "follow",
-        body: params.toString(), // Form-encoded data
-      });
 
-      if (response.status === 401) {
-        // Return the error instead of throwing it to stop retries
-        return new AuthenticationError("Invalid Credentials", 401);
+      try {
+        const response = await global.fetch(this._auth.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          redirect: "follow",
+          body: params.toString(), // Form-encoded data
+          signal: this._abortController!.signal,
+        });
+
+        if (response.status === 401) {
+          // Return the error instead of throwing it to stop retries
+          return new AuthenticationError("Invalid Credentials", 401);
+        }
+
+        if (response.status >= 400) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const auth = {
+          access_token: data.access_token,
+          expires_in: data.expires_in,
+          token_type: data.token_type,
+        };
+        this.emit("authenticated", auth);
+        return auth;
       }
-
-      if (response.status >= 400) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      catch (error) {
+        // If the request was aborted, stop retrying by returning an error
+        if (error instanceof Error && error.name === "AbortError") {
+          log("info", "Authentication aborted");
+          return new AuthenticationError("Authentication aborted", 0);
+        }
+        // Re-throw other errors to continue retrying
+        throw error;
       }
-
-      const data = await response.json();
-      const auth = {
-        access_token: data.access_token,
-        expires_in: data.expires_in,
-        token_type: data.token_type,
-      };
-      this.emit("authenticated", auth);
-      return auth;
     }, this._retryOptions);
 
     // Check if the result is an authentication error
@@ -378,6 +395,12 @@ export class Connection extends EventEmitter {
     if (this._refresher) {
       global.clearTimeout(this._refresher);
       this._refresher = null;
+    }
+
+    // Abort any ongoing fetch requests
+    if (this._abortController) {
+      this._abortController.abort();
+      this._abortController = undefined;
     }
 
     this._socket?.close(code, reason);

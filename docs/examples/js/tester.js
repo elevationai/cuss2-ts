@@ -214,13 +214,23 @@ const dom = {
     connectBtn: null,
     disconnectBtn: null,
     connectionStatus: null,
+    connectionStatusConnected: null,
     currentState: null,
     componentList: null,
     logContainer: null,
-    environmentInfo: null,
     envDetails: null,
     stateButtons: {},
     appInfo: {},
+    // Panels
+    connectionPanel: null,
+    stateManagementPanel: null,
+    environmentPanel: null,
+    componentsPanel: null,
+    eventLogPanel: null,
+    // New connection UI elements
+    connectButtonContainer: null,
+    connectionStatusContainer: null,
+    cancelConnectionBtn: null,
   },
 
   // Initialize DOM element cache
@@ -229,11 +239,23 @@ const dom = {
     this.elements.connectBtn = document.getElementById("connectBtn");
     this.elements.disconnectBtn = document.getElementById("disconnectBtn");
     this.elements.connectionStatus = document.getElementById("connectionStatus");
+    this.elements.connectionStatusConnected = document.getElementById("connectionStatusConnected");
     this.elements.currentState = document.getElementById("currentState");
     this.elements.componentList = document.getElementById("componentList");
     this.elements.logContainer = document.getElementById("logContainer");
-    this.elements.environmentInfo = document.getElementById("environmentInfo");
     this.elements.envDetails = document.getElementById("envDetails");
+
+    // Panels
+    this.elements.connectionPanel = document.getElementById("connectionPanel");
+    this.elements.stateManagementPanel = document.getElementById("stateManagementPanel");
+    this.elements.environmentPanel = document.getElementById("environmentPanel");
+    this.elements.componentsPanel = document.getElementById("componentsPanel");
+    this.elements.eventLogPanel = document.getElementById("eventLogPanel");
+
+    // New connection UI elements
+    this.elements.connectButtonContainer = document.getElementById("connectButtonContainer");
+    this.elements.connectionStatusContainer = document.getElementById("connectionStatusContainer");
+    this.elements.cancelConnectionBtn = document.getElementById("cancelConnectionBtn");
 
     // State buttons
     this.elements.stateButtons = {
@@ -366,15 +388,45 @@ const logger = {
 const templates = {
   // Environment details template
   environmentDetails(env) {
-    return `
-      <div><strong>Device ID:</strong> ${env.deviceID || "-"}</div>
-      <div><strong>CUSS Version:</strong> ${env.cussVersions?.[0] || "-"}</div>
-      <div><strong>Location:</strong> ${env.deviceLocation?.airportCode || "-"}</div>
-    `;
+    // Helper to format values
+    const formatValue = (value) => {
+      if (value === null || value === undefined) return '-';
+      if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+      if (typeof value === 'object') return JSON.stringify(value, null, 2);
+      return String(value);
+    };
+
+    // Build HTML for all environment properties
+    let html = '';
+
+    // Device Info
+    html += `<div class="env-group"><strong>Device Information</strong></div>`;
+    html += `<div class="env-item"><span class="env-label">Device ID:</span> <span class="env-value">${formatValue(env.deviceID)}</span></div>`;
+    html += `<div class="env-item"><span class="env-label">Device Name:</span> <span class="env-value">${formatValue(env.deviceModelName)}</span></div>`;
+    if (env.deviceLocation) {
+      html += `<div class="env-item"><span class="env-label">Airport Code:</span> <span class="env-value">${formatValue(env.deviceLocation.airportCode)}</span></div>`;
+      html += `<div class="env-item"><span class="env-label">Terminal:</span> <span class="env-value">${formatValue(env.deviceLocation.terminalID)}</span></div>`;
+      html += `<div class="env-item"><span class="env-label">Gate:</span> <span class="env-value">${formatValue(env.deviceLocation.gateID)}</span></div>`;
+    }
+
+    // CUSS Version Info
+    html += `<div class="env-group"><strong>CUSS Platform</strong></div>`;
+    html += `<div class="env-item"><span class="env-label">CUSS Versions:</span> <span class="env-value">${env.cussVersions?.join(', ') || '-'}</span></div>`;
+    html += `<div class="env-item"><span class="env-label">OS Name:</span> <span class="env-value">${formatValue(env.osName)}</span></div>`;
+    html += `<div class="env-item"><span class="env-label">OS Version:</span> <span class="env-value">${formatValue(env.osVersion)}</span></div>`;
+
+    // Session Timeouts
+    html += `<div class="env-group"><strong>Session Timeouts</strong></div>`;
+    html += `<div class="env-item"><span class="env-label">Session Timeout:</span> <span class="env-value">${formatValue(env.sessionTimeout)}s</span></div>`;
+    html += `<div class="env-item"><span class="env-label">Kill Timeout:</span> <span class="env-value">${formatValue(env.killTimeout)}s</span></div>`;
+    html += `<div class="env-item"><span class="env-label">Expected ACK Time:</span> <span class="env-value">${formatValue(env.expectedAckTime)}ms</span></div>`;
+    html += `<div class="env-item"><span class="env-label">Max Cache Time:</span> <span class="env-value">${formatValue(env.maxCacheTime)}s</span></div>`;
+
+    return html;
   },
 
   // Component item template
-  componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch) {
+  componentItem(id, component, readyBadge, toggleSwitch, requiredToggle) {
     // Get capabilities for this component
     const capabilities = componentCapabilities.getCapabilities(component);
 
@@ -460,13 +512,11 @@ const templates = {
       <div class="component-header">
         <div class="component-header-left">
           <div class="component-name">${component.deviceType} (ID: ${id})</div>
-          <div class="component-badges">
-            ${enabledBadge}
-            ${statusBadge}
-          </div>
         </div>
         <div class="component-header-right">
+          <div class="component-badges"></div>
           ${readyBadge}
+          ${requiredToggle}
           ${toggleSwitch}
         </div>
       </div>
@@ -497,11 +547,28 @@ const templates = {
     `;
   },
 
+  // Required toggle switch template
+  requiredToggle(id, component) {
+    const toggleClass = component.required ? 'required' : '';
+
+    return `
+      <div class="toggle-container">
+        <div class="toggle-switch toggle-required ${toggleClass}" data-component-id="${id}" data-current-required="${component.required}">
+          <div class="toggle-slider"></div>
+        </div>
+        <span class="toggle-label">Required</span>
+      </div>
+    `;
+  },
+
   // Timeout warning banner template
   timeoutWarning(seconds) {
     return `
       <div id="timeoutBanner" class="timeout-banner">
-        <strong>⚠️ Session Timeout Warning</strong>
+        <div class="timeout-header">
+          <strong>⚠️ Session Timeout Warning</strong>
+          <button id="dismissTimeout" class="dismiss-btn">×</button>
+        </div>
         <p>Application will be terminated in <span id="timeoutCounter">${seconds}</span> seconds</p>
       </div>
     `;
@@ -541,8 +608,45 @@ const ui = {
   // Update connection status
   updateConnectionStatus(state) {
     const status = this.connectionStates[state];
-    dom.setClass(dom.elements.connectionStatus, status.class);
-    dom.setText(dom.elements.connectionStatus, status.text);
+
+    if (state === "CONNECTED") {
+      // Switch to State Management view (connected)
+      dom.setVisible(dom.elements.connectionPanel, false);
+      dom.setVisible(dom.elements.stateManagementPanel, true);
+      dom.setVisible(dom.elements.environmentPanel, true);
+      dom.setVisible(dom.elements.componentsPanel, true);
+      dom.elements.eventLogPanel.classList.remove('panel-centered');
+      dom.setVisible(dom.elements.connectionStatusConnected, true);
+      dom.setClass(dom.elements.connectionStatusConnected, status.class);
+      dom.setText(dom.elements.connectionStatusConnected, status.text);
+
+      // Reset connection form UI
+      dom.setVisible(dom.elements.connectButtonContainer, true);
+      dom.setVisible(dom.elements.connectionStatusContainer, false);
+    } else if (state === "CONNECTING") {
+      // Show status bar with cancel button instead of connect button
+      dom.setVisible(dom.elements.connectButtonContainer, false);
+      dom.setVisible(dom.elements.connectionStatusContainer, true);
+      dom.setClass(dom.elements.connectionStatus, status.class);
+      dom.setText(dom.elements.connectionStatus, status.text);
+    } else {
+      // Switch to Connection view (disconnected/failed)
+      dom.setVisible(dom.elements.connectionPanel, true);
+      dom.setVisible(dom.elements.stateManagementPanel, false);
+      dom.setVisible(dom.elements.environmentPanel, false);
+      dom.setVisible(dom.elements.componentsPanel, false);
+      dom.elements.eventLogPanel.classList.add('panel-centered');
+
+      // Show connect button, hide status
+      dom.setVisible(dom.elements.connectButtonContainer, true);
+      dom.setVisible(dom.elements.connectionStatusContainer, false);
+
+      // Update status text for any error messages
+      if (state === "FAILED" || state === "DISCONNECTED") {
+        dom.setClass(dom.elements.connectionStatus, status.class);
+        dom.setText(dom.elements.connectionStatus, status.text);
+      }
+    }
   },
 
   // Update state display
@@ -571,6 +675,9 @@ const ui = {
 
     if (!cuss2 || !cuss2.connection.isOpen) return;
 
+    // Check if there are any unavailable required components
+    const hasUnavailableRequiredComponents = cuss2.unavailableRequiredComponents?.length > 0;
+
     // Define what states applications can move to based on platform logic
     const canMoveTo = {
       [ApplicationStateCodes.STOPPED]: ["initialize"],
@@ -588,7 +695,21 @@ const ui = {
 
     // Get transitions that are both valid to move to AND allowed to request
     const validTransitions = canMoveTo[currentState] || [];
-    const allowedTransitions = validTransitions.filter(action => canRequest.includes(action));
+    let allowedTransitions = validTransitions.filter(action => canRequest.includes(action));
+
+    // If there are unavailable required components, block transitions to AVAILABLE and ACTIVE
+    if (hasUnavailableRequiredComponents) {
+      allowedTransitions = allowedTransitions.filter(action => {
+        // Only allow transitions that don't require all components to be healthy
+        // Block AVAILABLE and ACTIVE - these require all required components to be ready
+        return action !== 'available' && action !== 'active';
+      });
+
+      // Log the restriction for user awareness
+      if (allowedTransitions.length < validTransitions.filter(action => canRequest.includes(action)).length) {
+        logger.info(`AVAILABLE/ACTIVE transitions blocked: ${cuss2.unavailableRequiredComponents.length} required component(s) unavailable`);
+      }
+    }
 
     // Enable buttons for allowed transitions
     allowedTransitions.forEach((action) => {
@@ -603,7 +724,6 @@ const ui = {
 
   // Display environment info
   displayEnvironment(env) {
-    dom.setVisible(dom.elements.environmentInfo, true);
     dom.elements.envDetails.innerHTML = templates.environmentDetails(env);
   },
 
@@ -635,25 +755,14 @@ const ui = {
       ? '<span class="component-badge ready">Ready</span>'
       : '<span class="component-badge not-ready">Not Ready</span>';
 
-    // Only show enabled badge when actually enabled
-    const enabledBadge = component.enabled
-      ? '<span class="component-badge enabled">Enabled</span>'
-      : '';
-
-    // Create status badge if component has a status other than OK
-    let statusBadge = '';
-    if (component.status && component.status !== 'OK') {
-      const statusClass = `status-${component.status.toLowerCase().replace(/_/g, '-')}`;
-      statusBadge = `<span class="component-badge ${statusClass}">${component.status.replace(/_/g, ' ')}</span>`;
-    }
-
-    // Create toggle switch with proper state sync
+    // Create toggle switches with proper state sync
     const toggleSwitch = templates.toggleSwitch(id, component);
+    const requiredToggle = templates.requiredToggle(id, component);
 
-    item.innerHTML = templates.componentItem(id, component, enabledBadge, statusBadge, readyBadge, toggleSwitch);
+    item.innerHTML = templates.componentItem(id, component, readyBadge, toggleSwitch, requiredToggle);
 
     // Add toggle switch event listener (only if toggle exists)
-    const toggleElement = item.querySelector('.toggle-switch');
+    const toggleElement = item.querySelector('.toggle-switch:not(.toggle-required)');
 
     if (toggleElement) {
       toggleElement.addEventListener('click', async (e) => {
@@ -672,7 +781,7 @@ const ui = {
         toggleElement.classList.remove('enabled');
 
         try {
-          await componentHandlers.handleComponentAction(component, action);
+          await componentHandlers.handleComponentAction(component, action, id);
 
           // Success: Update based on actual component state
           componentHandlers.syncToggleState(toggleElement, component);
@@ -687,6 +796,77 @@ const ui = {
         } finally {
           // Always remove pending state
           toggleElement.classList.remove('pending');
+        }
+      });
+    }
+
+    // Add required toggle event listener
+    const requiredToggleElement = item.querySelector('.toggle-required');
+    if (requiredToggleElement) {
+      requiredToggleElement.addEventListener('click', async (e) => {
+        e.stopPropagation();
+
+        // Don't allow toggle if already pending
+        if (requiredToggleElement.classList.contains('pending')) {
+          return;
+        }
+
+        const currentRequired = requiredToggleElement.dataset.currentRequired === 'true';
+        const newRequired = !currentRequired;
+
+        // Set pending state immediately
+        requiredToggleElement.classList.add('pending');
+
+        try {
+          // Update the component's required property
+          component.required = newRequired;
+
+          // Update toggle visual state
+          if (newRequired) {
+            requiredToggleElement.classList.add('required');
+          } else {
+            requiredToggleElement.classList.remove('required');
+          }
+          requiredToggleElement.dataset.currentRequired = newRequired;
+
+          // Log the change
+          logger.info(`Component ${component.deviceType} marked as ${newRequired ? 'REQUIRED' : 'NOT REQUIRED'}`);
+
+          // Enforce CUSS2 required device rules based on the change
+          if (cuss2) {
+            // Only trigger state changes if the logic makes sense
+            if (newRequired && !component.ready) {
+              // Marking an unavailable component as required → force UNAVAILABLE
+              logger.info(`Required component ${component.deviceType} is not ready - requesting UNAVAILABLE state`);
+              cuss2.requestUnavailableState();
+            } else if (!newRequired) {
+              // Unmarking a component as required → check if we can leave UNAVAILABLE
+              // Only call sync if we're in UNAVAILABLE and might be able to transition to AVAILABLE
+              if (cuss2.state === ApplicationStateCodes.UNAVAILABLE) {
+                cuss2.checkRequiredComponentsAndSyncState();
+              }
+            }
+            // If marking a READY component as required while in ACTIVE/AVAILABLE → do nothing
+          }
+
+          // Refresh the component display to show updated badge
+          ui.displayComponents();
+
+          // Update state buttons to reflect new required component status
+          ui.updateStateButtons(cuss2.state);
+        } catch (error) {
+          logger.error(`Failed to toggle required state: ${error.message}`);
+          // Revert on error
+          component.required = currentRequired;
+          if (currentRequired) {
+            requiredToggleElement.classList.add('required');
+          } else {
+            requiredToggleElement.classList.remove('required');
+          }
+          requiredToggleElement.dataset.currentRequired = currentRequired;
+        } finally {
+          // Always remove pending state
+          requiredToggleElement.classList.remove('pending');
         }
       });
     }
@@ -710,10 +890,10 @@ const ui = {
           if (input) {
             // Actions that need input data
             const inputValue = input.value.trim();
-            await componentHandlers.handleComponentDataAction(component, action, inputValue);
+            await componentHandlers.handleComponentDataAction(component, action, inputValue, componentId);
           } else {
             // Actions without input (query, cancel, offer, pause, resume, stop, forward, backward, process)
-            await componentHandlers.handleComponentSimpleAction(component, action);
+            await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
         } catch (error) {
           // Error is already logged in handler
@@ -726,8 +906,17 @@ const ui = {
     return item;
   },
 
+  // Store the timeout countdown interval so we can clear it
+  _timeoutCountdown: null,
+
   // Show timeout warning banner with countdown
   showTimeoutWarning(seconds) {
+    // Clear any existing countdown
+    if (this._timeoutCountdown) {
+      clearInterval(this._timeoutCountdown);
+      this._timeoutCountdown = null;
+    }
+
     // Remove any existing banner
     const existingBanner = document.getElementById('timeoutBanner');
     if (existingBanner) {
@@ -737,20 +926,44 @@ const ui = {
     // Add banner to body
     document.body.insertAdjacentHTML('afterbegin', templates.timeoutWarning(seconds));
 
+    // Add dismiss button handler
+    const dismissBtn = document.getElementById('dismissTimeout');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        this.dismissTimeoutWarning();
+      });
+    }
+
     // Start countdown timer
     let remainingSeconds = seconds;
     const counter = document.getElementById('timeoutCounter');
 
-    const countdown = setInterval(() => {
+    this._timeoutCountdown = setInterval(() => {
       remainingSeconds--;
       if (counter) {
         counter.textContent = remainingSeconds;
       }
 
       if (remainingSeconds <= 0) {
-        clearInterval(countdown);
+        clearInterval(this._timeoutCountdown);
+        this._timeoutCountdown = null;
       }
     }, 1000);
+  },
+
+  // Dismiss timeout warning banner
+  dismissTimeoutWarning() {
+    // Clear countdown interval
+    if (this._timeoutCountdown) {
+      clearInterval(this._timeoutCountdown);
+      this._timeoutCountdown = null;
+    }
+
+    // Remove banner
+    const banner = document.getElementById('timeoutBanner');
+    if (banner) {
+      banner.remove();
+    }
   },
 
   // Show mixed content warning banner
@@ -812,11 +1025,8 @@ const ui = {
 
   // Reset UI to disconnected state
   resetUI() {
-    // Remove timeout banner if present
-    const timeoutBanner = document.getElementById('timeoutBanner');
-    if (timeoutBanner) {
-      timeoutBanner.remove();
-    }
+    // Dismiss timeout banner (clears countdown and removes banner)
+    this.dismissTimeoutWarning();
 
     // Remove mixed content banner if present
     const mixedContentBanner = document.getElementById('mixedContentBanner');
@@ -824,7 +1034,11 @@ const ui = {
       mixedContentBanner.remove();
     }
 
-    dom.setVisible(dom.elements.environmentInfo, false);
+    // Switch back to Connection panel
+    dom.setVisible(dom.elements.connectionPanel, true);
+    dom.setVisible(dom.elements.stateManagementPanel, false);
+    dom.setVisible(dom.elements.environmentPanel, false);
+
     dom.elements.componentList.innerHTML =
       '<p style="color: #666;">Connect to see available components...</p>';
     this.updateStateDisplay("STOPPED");
@@ -832,10 +1046,47 @@ const ui = {
   },
 };
 
+// Helper function to show a temporary status badge for a component
+function showComponentStatusBadge(componentId, status) {
+  // Find the component element
+  const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
+  if (!componentElement) return;
+
+  // Find the badges container
+  const badgesContainer = componentElement.querySelector('.component-badges');
+  if (!badgesContainer) return;
+
+  // Remove any existing status badge
+  const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
+  if (existingStatusBadge) {
+    existingStatusBadge.remove();
+  }
+
+  // Create new status badge
+  const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
+  const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+  const isTemporary = temporaryStatuses.includes(status);
+  const fadeClass = isTemporary ? 'fade-out' : '';
+
+  const badge = document.createElement('span');
+  badge.className = `component-badge status-badge ${statusClass} ${fadeClass}`;
+  badge.textContent = status.replace(/_/g, ' ');
+
+  // Add to container
+  badgesContainer.appendChild(badge);
+
+  // If temporary, remove after animation completes
+  if (isTemporary) {
+    badge.addEventListener('animationend', () => {
+      badge.remove();
+    }, { once: true });
+  }
+}
+
 // ===== COMPONENT HANDLERS =====
 const componentHandlers = {
   // Handle component action (enable/disable)
-  async handleComponentAction(component, action) {
+  async handleComponentAction(component, action, componentId) {
     const name = component.deviceType;
 
     try {
@@ -848,10 +1099,16 @@ const componentHandlers = {
       logger.error(`Failed to ${action} ${name}: ${error.message}`);
       throw error; // Re-throw so the toggle can handle the error state
     }
+    finally {
+      // Show status badge if component has non-OK status
+      if (component.status && component.status !== 'OK') {
+        showComponentStatusBadge(componentId, component.status);
+      }
+    }
   },
 
   // Handle simple component actions (no input required)
-  async handleComponentSimpleAction(component, action) {
+  async handleComponentSimpleAction(component, action, componentId) {
     const name = component.deviceType;
 
     try {
@@ -873,10 +1130,16 @@ const componentHandlers = {
       logger.error(`Failed to ${action} ${name}: ${error.message}`);
       throw error;
     }
+    finally {
+      // Show status badge if component has non-OK status
+      if (component.status && component.status !== 'OK') {
+        showComponentStatusBadge(componentId, component.status);
+      }
+    }
   },
 
   // Handle component data action (setup/send/play/read)
-  async handleComponentDataAction(component, action, inputValue) {
+  async handleComponentDataAction(component, action, inputValue, componentId) {
     const name = component.deviceType;
 
     try {
@@ -920,6 +1183,12 @@ const componentHandlers = {
     catch (error) {
       logger.error(`Failed to ${action} ${name}: ${error.message}`);
       throw error;
+    }
+    finally {
+      // Show status badge if component has non-OK status
+      if (component.status && component.status !== 'OK') {
+        showComponentStatusBadge(componentId, component.status);
+      }
     }
   },
 
@@ -1014,6 +1283,15 @@ const connectionManager = {
           logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
           ui.updateStateDisplay(stateChange.current);
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
+
+          // Set applicationOnline flag to enable required component monitoring
+          // Online when in AVAILABLE or ACTIVE (user is present)
+          if (cuss2) {
+            cuss2.applicationOnline =
+              stateChange.current === ApplicationStateCodes.AVAILABLE ||
+              stateChange.current === ApplicationStateCodes.ACTIVE;
+            logger.info(`Application online: ${cuss2.applicationOnline}`);
+          }
         },
       },
       {
@@ -1021,6 +1299,8 @@ const connectionManager = {
         handler: () => {
           logger.event("Application activated");
           ui.updateApplicationInfo(true);
+          // Dismiss timeout warning when successfully reactivated
+          ui.dismissTimeoutWarning();
         },
       },
       {
@@ -1030,6 +1310,8 @@ const connectionManager = {
           ui.updateApplicationInfo(false);
           // Update the state display and buttons to reflect new state
           ui.updateStateDisplay(newState);
+          // Dismiss timeout warning when leaving ACTIVE state
+          ui.dismissTimeoutWarning();
         },
       },
       {
@@ -1039,14 +1321,28 @@ const connectionManager = {
           ui.displayComponents();
           // Ensure toggle states are synced after component refresh
           setTimeout(() => componentHandlers.updateAllToggleStates(), 10);
+          // Update state buttons to reflect required component availability
+          ui.updateStateButtons(cuss2.state);
         },
       },
       {
         event: "sessionTimeout",
-        handler: (env) => {
-          const killTimeout = env?.killTimeout || 30; // Default to 30 seconds if not provided
+        handler: async () => {
+          // Get killTimeout from the environment data (fetched during initialization)
+          const killTimeout = cuss2?.environment?.killTimeout || 30; // Default to 30 seconds if not provided
           logger.error(`Session timeout warning - Application will be terminated in ${killTimeout} seconds`);
           ui.showTimeoutWarning(killTimeout);
+
+          // Per CUSS2 spec, application should transition to AVAILABLE state on session timeout
+          if (cuss2 && cuss2.state === ApplicationStateCodes.ACTIVE) {
+            logger.info("Session timeout received - transitioning to AVAILABLE state");
+            try {
+              await cuss2.requestAvailableState();
+              logger.success("Successfully transitioned to AVAILABLE state");
+            } catch (error) {
+              logger.error(`Failed to transition to AVAILABLE state: ${error.message}`);
+            }
+          }
         },
       },
     ];
@@ -1100,6 +1396,22 @@ const connectionManager = {
     logger.info("Connecting to CUSS2 platform...");
     ui.updateConnectionStatus("CONNECTING");
 
+    // Close any existing connection before attempting a new one
+    // This prevents old connections from continuing retry attempts
+    if (cuss2) {
+      logger.info("Closing previous connection before new attempt...");
+      try {
+        // Close the websocket connection
+        cuss2.connection.close(1000, "New connection attempt");
+
+        // Wait a bit for cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (e) {
+        logger.error(`Error closing previous connection: ${e.message}`);
+      }
+      cuss2 = null;
+    }
+
     // Pass through the token URL if provided, otherwise let the library handle it
     const tokenUrl = config.tokenUrl?.trim() || undefined;
 
@@ -1137,6 +1449,18 @@ const connectionManager = {
 
     // Setup component listeners
     componentHandlers.setupComponentListeners();
+  },
+
+  // Cancel ongoing connection attempt
+  cancelConnection() {
+    logger.info("Cancelling connection attempt...");
+    if (cuss2) {
+      // Close the connection which will abort any ongoing OAuth attempts
+      cuss2.connection.close(1000, "Connection cancelled by user");
+      cuss2 = null;
+    }
+    ui.updateConnectionStatus("DISCONNECTED");
+    logger.info("Connection attempt cancelled");
   },
 
   // Disconnect
@@ -1409,6 +1733,9 @@ function init() {
 
   // Setup disconnect button
   dom.elements.disconnectBtn.addEventListener("click", () => connectionManager.disconnect());
+
+  // Setup cancel connection button
+  dom.elements.cancelConnectionBtn.addEventListener("click", () => connectionManager.cancelConnection());
 
   // Setup state buttons
   stateManager.setupStateButtons();

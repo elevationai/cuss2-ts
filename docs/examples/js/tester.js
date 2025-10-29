@@ -425,103 +425,346 @@ const templates = {
     return html;
   },
 
-  // Component item template
+  // Component item template with 2-row layout
   componentItem(id, component, readyBadge, toggleSwitch, requiredToggle) {
     // Get capabilities for this component
     const capabilities = componentCapabilities.getCapabilities(component);
 
-    // Build action buttons based on capabilities
-    let actionsHtml = '';
+    // Determine which device-specific template to use
+    const deviceType = component.deviceType?.toLowerCase() || '';
+    const normalizedType = deviceType.replace(/_/g, '');
 
-    // Query button (all components have this)
-    if (capabilities.includes('query')) {
-      actionsHtml += `<button class="component-action-btn" data-action="query" data-component-id="${id}">Query</button>`;
+    // Select appropriate template
+    if (componentCapabilities.isAnnouncementComponent(deviceType)) {
+      return this.announcementTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle);
+    } else if (componentCapabilities.isConveyorComponent(deviceType)) {
+      return this.conveyorTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle);
+    } else if (componentCapabilities.isFeederComponent(deviceType)) {
+      return this.feederTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle);
+    } else if (componentCapabilities.isDataReadCapable(deviceType)) {
+      return this.mediaInputTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle);
+    } else if (componentCapabilities.isOutputComponent(deviceType)) {
+      return this.outputTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle);
+    } else {
+      // Default template for other components
+      return this.defaultTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle);
     }
+  },
 
-    // Setup action (most components except Application and Feeder)
+  // Default template for components (2-row layout)
+  defaultTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle) {
+    let leftColumn = '';
+    let rightColumn = '';
+
     if (capabilities.includes('setup')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="setup-input-${id}" placeholder="Setup data (JSON)">
+      leftColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Setup</label>
+          <textarea class="component-action-textarea" id="setup-input-${id}" placeholder="Setup data (JSON)" rows="5"></textarea>
           <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
         </div>
       `;
     }
 
-    // Send action (output components)
-    if (capabilities.includes('send')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="send-input-${id}" placeholder="Send data (JSON)">
-          <button class="component-action-btn" data-action="send" data-component-id="${id}">Send</button>
-        </div>
-      `;
-    }
-
-    // Cancel button
-    if (capabilities.includes('cancel')) {
-      actionsHtml += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
-    }
-
-    // Offer button (dispensers and feeders)
+    // Build right column buttons (Cancel, Offer, etc.)
+    let rightButtons = '';
     if (capabilities.includes('offer')) {
-      actionsHtml += `<button class="component-action-btn" data-action="offer" data-component-id="${id}">Offer</button>`;
+      rightButtons += `<button class="component-action-btn" data-action="offer" data-component-id="${id}">Offer</button>`;
+    }
+    if (capabilities.includes('cancel')) {
+      rightButtons += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
     }
 
-    // Read action (input components)
-    if (capabilities.includes('read')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="read-input-${id}" placeholder="Timeout ms (default: 30000)">
-          <button class="component-action-btn" data-action="read" data-component-id="${id}">Read</button>
+    if (rightButtons) {
+      rightColumn = `
+        <div class="component-action-column">
+          <div class="component-action-buttons">
+            ${rightButtons}
+          </div>
         </div>
       `;
-    }
-
-    // Announcement controls
-    if (capabilities.includes('play')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="play-input-${id}" placeholder="SSML or text">
-          <button class="component-action-btn" data-action="play" data-component-id="${id}">Play</button>
-        </div>
-      `;
-    }
-    if (capabilities.includes('pause')) {
-      actionsHtml += `<button class="component-action-btn" data-action="pause" data-component-id="${id}">Pause</button>`;
-    }
-    if (capabilities.includes('resume')) {
-      actionsHtml += `<button class="component-action-btn" data-action="resume" data-component-id="${id}">Resume</button>`;
-    }
-    if (capabilities.includes('stop')) {
-      actionsHtml += `<button class="component-action-btn" data-action="stop" data-component-id="${id}">Stop</button>`;
-    }
-
-    // Conveyor controls
-    if (capabilities.includes('forward')) {
-      actionsHtml += `<button class="component-action-btn" data-action="forward" data-component-id="${id}">Forward</button>`;
-    }
-    if (capabilities.includes('backward')) {
-      actionsHtml += `<button class="component-action-btn" data-action="backward" data-component-id="${id}">Backward</button>`;
-    }
-    if (capabilities.includes('process')) {
-      actionsHtml += `<button class="component-action-btn" data-action="process" data-component-id="${id}">Process</button>`;
     }
 
     return `
-      <div class="component-header">
-        <div class="component-header-left">
+      <div class="component-title-row">
+        <div class="component-title-left">
           <div class="component-name">${component.deviceType} (ID: ${id})</div>
-        </div>
-        <div class="component-header-right">
           <div class="component-badges"></div>
           ${readyBadge}
+        </div>
+        <div class="component-controls">
+          <button class="component-action-btn component-query-btn" data-action="query" data-component-id="${id}">Query</button>
           ${requiredToggle}
           ${toggleSwitch}
         </div>
       </div>
-      <div class="component-actions">
-        ${actionsHtml}
+      <div class="component-actions-row">
+        ${leftColumn}
+        ${rightColumn}
+      </div>
+    `;
+  },
+
+  // Media Input template (BARCODE_READER, PASSPORT_READER, SCALE, etc.)
+  mediaInputTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle) {
+    let leftColumn = '';
+    let rightColumn = '';
+
+    if (capabilities.includes('setup')) {
+      leftColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Setup</label>
+          <textarea class="component-action-textarea" id="setup-input-${id}" placeholder="Setup data (JSON)" rows="5"></textarea>
+          <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
+        </div>
+      `;
+    }
+
+    if (capabilities.includes('read')) {
+      let readButtons = `<button class="component-action-btn" data-action="read" data-component-id="${id}">Read</button>`;
+      if (capabilities.includes('cancel')) {
+        readButtons += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
+      }
+
+      rightColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Read</label>
+          <input type="text" class="component-action-input" id="read-input-${id}" placeholder="Timeout ms (default: 30000)">
+          <div class="component-action-buttons">
+            ${readButtons}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="component-title-row">
+        <div class="component-title-left">
+          <div class="component-name">${component.deviceType} (ID: ${id})</div>
+          <div class="component-badges"></div>
+          ${readyBadge}
+        </div>
+        <div class="component-controls">
+          <button class="component-action-btn component-query-btn" data-action="query" data-component-id="${id}">Query</button>
+          ${requiredToggle}
+          ${toggleSwitch}
+        </div>
+      </div>
+      <div class="component-actions-row">
+        ${leftColumn}
+        ${rightColumn}
+      </div>
+    `;
+  },
+
+  // Output template (HEADSET, BOARDING_PASS_PRINTER, etc.)
+  outputTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle) {
+    let leftColumn = '';
+    let rightColumn = '';
+
+    if (capabilities.includes('setup')) {
+      leftColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Setup</label>
+          <textarea class="component-action-textarea" id="setup-input-${id}" placeholder="Setup data (JSON)" rows="5"></textarea>
+          <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
+        </div>
+      `;
+    }
+
+    if (capabilities.includes('send')) {
+      let sendButtons = `<button class="component-action-btn" data-action="send" data-component-id="${id}">Send</button>`;
+      if (capabilities.includes('cancel')) {
+        sendButtons += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
+      }
+
+      rightColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Send</label>
+          <textarea class="component-action-textarea" id="send-input-${id}" placeholder="Send data (JSON)" rows="5"></textarea>
+          <div class="component-action-buttons">
+            ${sendButtons}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="component-title-row">
+        <div class="component-title-left">
+          <div class="component-name">${component.deviceType} (ID: ${id})</div>
+          <div class="component-badges"></div>
+          ${readyBadge}
+        </div>
+        <div class="component-controls">
+          <button class="component-action-btn component-query-btn" data-action="query" data-component-id="${id}">Query</button>
+          ${requiredToggle}
+          ${toggleSwitch}
+        </div>
+      </div>
+      <div class="component-actions-row">
+        ${leftColumn}
+        ${rightColumn}
+      </div>
+    `;
+  },
+
+  // Announcement template (ANNOUNCEMENT)
+  announcementTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle) {
+    let leftColumn = '';
+    let rightColumn = '';
+
+    if (capabilities.includes('setup')) {
+      leftColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Setup</label>
+          <textarea class="component-action-textarea" id="setup-input-${id}" placeholder="Setup data (JSON)" rows="5"></textarea>
+          <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
+        </div>
+      `;
+    }
+
+    if (capabilities.includes('play')) {
+      // Playback controls - group them together under the Play textarea
+      let playbackButtons = `<button class="component-action-btn" data-action="play" data-component-id="${id}">Play</button>`;
+
+      if (capabilities.includes('pause')) {
+        playbackButtons += `<button class="component-action-btn" data-action="pause" data-component-id="${id}">Pause</button>`;
+      }
+      if (capabilities.includes('resume')) {
+        playbackButtons += `<button class="component-action-btn" data-action="resume" data-component-id="${id}">Resume</button>`;
+      }
+      if (capabilities.includes('stop')) {
+        playbackButtons += `<button class="component-action-btn" data-action="stop" data-component-id="${id}">Stop</button>`;
+      }
+      if (capabilities.includes('cancel')) {
+        playbackButtons += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
+      }
+
+      rightColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Play</label>
+          <textarea class="component-action-textarea" id="play-input-${id}" placeholder="SSML or text" rows="5"></textarea>
+          <div class="component-action-buttons">
+            ${playbackButtons}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="component-title-row">
+        <div class="component-title-left">
+          <div class="component-name">${component.deviceType} (ID: ${id})</div>
+          <div class="component-badges"></div>
+          ${readyBadge}
+        </div>
+        <div class="component-controls">
+          <button class="component-action-btn component-query-btn" data-action="query" data-component-id="${id}">Query</button>
+          ${requiredToggle}
+          ${toggleSwitch}
+        </div>
+      </div>
+      <div class="component-actions-row">
+        ${leftColumn}
+        ${rightColumn}
+      </div>
+    `;
+  },
+
+  // Conveyor template (INSERTION_BELT, VERIFICATION_BELT, etc.)
+  conveyorTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle) {
+    let leftColumn = '';
+    let rightColumn = '';
+
+    if (capabilities.includes('setup')) {
+      leftColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Setup</label>
+          <textarea class="component-action-textarea" id="setup-input-${id}" placeholder="Setup data (JSON)" rows="5"></textarea>
+          <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
+        </div>
+      `;
+    }
+
+    if (capabilities.includes('send')) {
+      // Conveyor controls - group them together under the Send textarea
+      let conveyorButtons = `<button class="component-action-btn" data-action="send" data-component-id="${id}">Send</button>`;
+
+      if (capabilities.includes('forward')) {
+        conveyorButtons += `<button class="component-action-btn" data-action="forward" data-component-id="${id}">Forward</button>`;
+      }
+      if (capabilities.includes('backward')) {
+        conveyorButtons += `<button class="component-action-btn" data-action="backward" data-component-id="${id}">Backward</button>`;
+      }
+      if (capabilities.includes('process')) {
+        conveyorButtons += `<button class="component-action-btn" data-action="process" data-component-id="${id}">Process</button>`;
+      }
+      if (capabilities.includes('cancel')) {
+        conveyorButtons += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
+      }
+
+      rightColumn = `
+        <div class="component-action-column">
+          <label class="component-action-label">Send</label>
+          <textarea class="component-action-textarea" id="send-input-${id}" placeholder="Send data (JSON)" rows="5"></textarea>
+          <div class="component-action-buttons">
+            ${conveyorButtons}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="component-title-row">
+        <div class="component-title-left">
+          <div class="component-name">${component.deviceType} (ID: ${id})</div>
+          <div class="component-badges"></div>
+          ${readyBadge}
+        </div>
+        <div class="component-controls">
+          <button class="component-action-btn component-query-btn" data-action="query" data-component-id="${id}">Query</button>
+          ${requiredToggle}
+          ${toggleSwitch}
+        </div>
+      </div>
+      <div class="component-actions-row">
+        ${leftColumn}
+        ${rightColumn}
+      </div>
+    `;
+  },
+
+  // Feeder template (FEEDER, DISPENSER)
+  feederTemplate(id, component, capabilities, readyBadge, toggleSwitch, requiredToggle) {
+    // Feeder only has Offer, no Setup - just put Offer in left column
+    let leftColumn = '';
+
+    if (capabilities.includes('offer')) {
+      leftColumn = `
+        <div class="component-action-column">
+          <div class="component-action-buttons">
+            <button class="component-action-btn" data-action="offer" data-component-id="${id}">Offer</button>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="component-title-row">
+        <div class="component-title-left">
+          <div class="component-name">${component.deviceType} (ID: ${id})</div>
+          <div class="component-badges"></div>
+          ${readyBadge}
+        </div>
+        <div class="component-controls">
+          <button class="component-action-btn component-query-btn" data-action="query" data-component-id="${id}">Query</button>
+          ${requiredToggle}
+          ${toggleSwitch}
+        </div>
+      </div>
+      <div class="component-actions-row">
+        ${leftColumn}
       </div>
     `;
   },

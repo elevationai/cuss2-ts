@@ -124,10 +124,12 @@ export class Cuss2 extends EventEmitter {
     // Subscribe to messages from the connection
     connection.on("message", (e) => this._handleWebSocketMessage(e));
     connection.on("open", () =>
-      this._initialize().catch((e) => {
-        log("error", "Initialization failed", e);
-        connection.emit("error", new Error("Initialization failed: " + e.message));
-      }));
+      setTimeout(() => {
+        this._initialize().catch((e) => {
+          log("error", "Initialization failed", e);
+          connection.emit("error", new Error("Initialization failed: " + e.message));
+        });
+      }, 2000));
   }
 
   static connect(

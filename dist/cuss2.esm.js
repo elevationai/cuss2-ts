@@ -28,9 +28,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
+// ../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
 var require_events = __commonJS({
-  "../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
+  "../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
     "use strict";
     var R = typeof Reflect === "object" ? Reflect : null;
     var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
@@ -1851,13 +1851,13 @@ var AuthenticationError = class extends Cuss2Error {
   }
 };
 
-// https://jsr.io/@std/async/1.0.14/_util.ts
+// https://jsr.io/@std/async/1.0.15/_util.ts
 function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
   const exp = Math.min(cap, base * multiplier ** attempt);
   return (1 - jitter * Math.random()) * exp;
 }
 
-// https://jsr.io/@std/async/1.0.14/retry.ts
+// https://jsr.io/@std/async/1.0.15/retry.ts
 var RetryError = class extends Error {
   /**
    * Constructs a new {@linkcode RetryError} instance.
@@ -2404,10 +2404,12 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
     this.connection = connection;
     this.setMaxListeners(100);
     connection.on("message", (e) => this._handleWebSocketMessage(e));
-    connection.on("open", () => this._initialize().catch((e) => {
-      log("error", "Initialization failed", e);
-      connection.emit("error", new Error("Initialization failed: " + e.message));
-    }));
+    connection.on("open", () => setTimeout(() => {
+      this._initialize().catch((e) => {
+        log("error", "Initialization failed", e);
+        connection.emit("error", new Error("Initialization failed: " + e.message));
+      });
+    }, 2e3));
   }
   static connect(client_id, client_secret, wss = "https://localhost:22222", deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
     using connection = Connection.connect(wss, client_id, client_secret, deviceID, tokenURL);

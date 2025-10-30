@@ -16,9 +16,13 @@ export abstract class InteractiveComponent extends BaseComponent implements User
    *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
    */
   async enable(): Promise<PlatformData> {
+    console.log(`[DEBUG InteractiveComponent] enable() called, enabled before=${this.enabled}`);
     const pd = await this.withPendingCall(() => this.api.enable(this.id));
+    console.log(`[DEBUG InteractiveComponent] enable() received response:`, pd);
     this.updateState(pd);
+    console.log(`[DEBUG InteractiveComponent] enable() after updateState, enabled=${this.enabled}`);
     this.enabled = true;
+    console.log(`[DEBUG InteractiveComponent] enable() after setting enabled=true, enabled=${this.enabled}`);
     return pd;
   }
 

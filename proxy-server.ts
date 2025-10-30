@@ -62,9 +62,11 @@ Deno.serve({ port: PROXY_PORT }, async (req) => {
       statusText: response.statusText,
       headers: responseHeaders,
     });
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Proxy error:", error);
-    return new Response(`Proxy error: ${error.message}`, {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return new Response(`Proxy error: ${errorMessage}`, {
       status: 502,
       headers: {
         "Access-Control-Allow-Origin": "*",

@@ -146,14 +146,20 @@
     <!-- Setup Action Template -->
     <template id="setup-action-template">
       <label class="component-action-label">Setup</label>
-      <textarea class="component-action-textarea setup-textarea" placeholder="Setup data (JSON)" rows="5"></textarea>
+      <select class="component-action-dropdown setup-dropdown" style="display: none;">
+        <option value="">Select AEA command...</option>
+      </select>
+      <textarea class="component-action-textarea setup-textarea" placeholder="Setup data (ITPS command)" rows="5"></textarea>
       <button class="component-action-btn setup-btn" data-action="setup">Setup</button>
     </template>
 
     <!-- Send Action Template -->
     <template id="send-action-template">
       <label class="component-action-label">Send</label>
-      <textarea class="component-action-textarea send-textarea" placeholder="Send data (JSON)" rows="5"></textarea>
+      <select class="component-action-dropdown send-dropdown" style="display: none;">
+        <option value="">Select AEA command...</option>
+      </select>
+      <textarea class="component-action-textarea send-textarea" placeholder="Send data (ITPS command)" rows="5"></textarea>
       <div class="component-action-buttons send-buttons"></div>
     </template>
 

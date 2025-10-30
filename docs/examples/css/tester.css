@@ -652,6 +652,36 @@ button:disabled {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Dropdown for AEA commands */
+.component-action-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(100, 255, 218, 0.2);
+  background: #0a0a14;
+  color: #e0e0e0;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.component-action-dropdown:hover {
+  border-color: rgba(100, 255, 218, 0.5);
+}
+
+.component-action-dropdown:focus {
+  outline: none;
+  border-color: #64ffda;
+  box-shadow: 0 0 5px rgba(100, 255, 218, 0.3);
+}
+
+.component-action-dropdown option {
+  background: #0a0a14;
+  color: #e0e0e0;
+  padding: 8px;
+}
+
 .component-action-btn {
   padding: 8px 16px;
   background: linear-gradient(135deg, #64ffda, #48cae4);

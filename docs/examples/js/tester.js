@@ -987,7 +987,7 @@ const ui = {
   },
 
   // Show mixed content warning banner
-  showMixedContentWarning(mixedContentInfo, onContinue) {
+  showMixedContentWarning(mixedContentInfo) {
     // Remove any existing banner
     const existingBanner = document.getElementById('mixedContentBanner');
     if (existingBanner) {
@@ -1032,7 +1032,6 @@ const ui = {
 
     continueBtn?.addEventListener('click', () => {
       document.getElementById('mixedContentBanner')?.remove();
-      if (onContinue) onContinue();
     });
 
     return new Promise((resolve, reject) => {
@@ -1381,10 +1380,7 @@ const connectionManager = {
         logger.info("Mixed content detected, showing warning...");
 
         try {
-          const userChoice = await ui.showMixedContentWarning(mixedContentCheck, () => {
-            // Continue anyway callback
-            this.performConnection(config);
-          });
+          const userChoice = await ui.showMixedContentWarning(mixedContentCheck);
 
           if (userChoice === 'suggested') {
             // User chose to use suggested URL, but form should already be updated

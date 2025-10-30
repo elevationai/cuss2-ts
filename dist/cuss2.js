@@ -1948,6 +1948,7 @@ var Cuss2 = (() => {
     _socket;
     _refresher = null;
     _abortController;
+    _isClosed = false;
     deviceID;
     access_token = "";
     _retryOptions;
@@ -1990,6 +1991,10 @@ var Cuss2 = (() => {
       params.append("grant_type", "client_credentials");
       let attempts = 0;
       const result = await retry(async () => {
+        if (this._isClosed) {
+          log2("info", "Authentication stopped - connection closed");
+          return new AuthenticationError("Connection closed", 0);
+        }
         log2("info", `Retrying client '${this._auth.client_id}'`);
         this.emit("authenticating", ++attempts);
         try {
@@ -2101,6 +2106,10 @@ var Cuss2 = (() => {
     _createWebSocketAndAttachEventHandlers() {
       let attempts = 0;
       retry(() => new Promise((resolve, reject) => {
+        if (this._isClosed) {
+          log2("info", "WebSocket connection stopped - connection closed");
+          return resolve(false);
+        }
         if (this.isOpen) {
           return resolve(true);
         }
@@ -2196,6 +2205,7 @@ var Cuss2 = (() => {
       }
     }
     close(code, reason) {
+      this._isClosed = true;
       if (this._refresher) {
         global.clearTimeout(this._refresher);
         this._refresher = null;

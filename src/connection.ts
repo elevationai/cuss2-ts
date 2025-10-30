@@ -46,6 +46,7 @@ export class Connection extends EventEmitter {
   _socket?: WebSocket;
   _refresher: ReturnType<typeof setTimeout> | null = null;
   _abortController?: AbortController;
+  _isClosed: boolean = false;
   deviceID: UniqueId;
   access_token = "";
   _retryOptions: {
@@ -120,6 +121,12 @@ export class Connection extends EventEmitter {
     let attempts = 0;
 
     const result = await retry(async () => {
+      // Check if connection has been closed
+      if (this._isClosed) {
+        log("info", "Authentication stopped - connection closed");
+        return new AuthenticationError("Connection closed", 0);
+      }
+
       log("info", `Retrying client '${this._auth.client_id}'`);
       this.emit("authenticating", ++attempts);
 
@@ -273,6 +280,12 @@ export class Connection extends EventEmitter {
 
     retry(() =>
       new Promise<boolean>((resolve, reject) => {
+        // Check if connection has been closed
+        if (this._isClosed) {
+          log("info", "WebSocket connection stopped - connection closed");
+          return resolve(false);
+        }
+
         if (this.isOpen) {
           return resolve(true);
         }
@@ -392,6 +405,9 @@ export class Connection extends EventEmitter {
   }
 
   close(code?: number, reason?: string): void {
+    // Set closed flag to stop retries
+    this._isClosed = true;
+
     if (this._refresher) {
       global.clearTimeout(this._refresher);
       this._refresher = null;

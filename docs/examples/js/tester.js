@@ -425,140 +425,171 @@ const templates = {
     return html;
   },
 
-  // Component item template
-  componentItem(id, component, readyBadge, toggleSwitch, requiredToggle) {
-    // Get capabilities for this component
+  // Component item template - creates DOM elements from HTML template
+  componentItem(id, component) {
+    // Clone the base component template
+    const template = document.getElementById('component-template');
+    const clone = template.content.cloneNode(true);
+    const componentEl = clone.querySelector('.component-item');
+
+    // Set component state classes
+    if (component.ready) componentEl.classList.add('ready');
+    if (component.enabled) componentEl.classList.add('enabled');
+
+    // Populate title row
+    const componentName = clone.querySelector('.component-name');
+    componentName.textContent = `${component.deviceType} (ID: ${id})`;
+
+    // Set ready badge
+    const readyBadge = clone.querySelector('.ready-badge');
+    if (component.ready) {
+      readyBadge.textContent = 'Ready';
+      readyBadge.classList.add('ready');
+    } else {
+      readyBadge.textContent = 'Not Ready';
+      readyBadge.classList.add('not-ready');
+    }
+
+    // Setup Query button
+    const queryBtn = clone.querySelector('[data-action="query"]');
+    queryBtn.dataset.componentId = id;
+
+    // Setup Required toggle
+    const requiredToggle = clone.querySelector('.toggle-required');
+    requiredToggle.dataset.componentId = id;
+    requiredToggle.dataset.currentRequired = component.required;
+    if (component.required) {
+      requiredToggle.classList.add('required');
+    }
+
+    // Setup Enabled toggle (only if component supports it)
+    const enabledToggleContainer = clone.querySelector('.enabled-toggle-container');
+    if (componentCapabilities.hasCapability(component, 'enable')) {
+      enabledToggleContainer.style.display = '';
+      const enabledToggle = clone.querySelector('.enabled-toggle-container .toggle-switch');
+      enabledToggle.dataset.componentId = id;
+      enabledToggle.dataset.currentState = component.enabled;
+
+      if (component.enabled) {
+        enabledToggle.classList.add('enabled');
+      }
+      if (!component.ready) {
+        enabledToggle.classList.add('disabled');
+      }
+    }
+
+    // Get capabilities and populate action columns
     const capabilities = componentCapabilities.getCapabilities(component);
+    const leftColumn = clone.querySelector('.left-column');
+    const rightColumn = clone.querySelector('.right-column');
 
-    // Build action buttons based on capabilities
-    let actionsHtml = '';
+      // Populate columns based on component type
+    this.populateActionColumns(leftColumn, rightColumn, id, component, capabilities);
 
-    // Query button (all components have this)
-    if (capabilities.includes('query')) {
-      actionsHtml += `<button class="component-action-btn" data-action="query" data-component-id="${id}">Query</button>`;
-    }
+    return clone;
+  },
 
-    // Setup action (most components except Application and Feeder)
+  // Populate action columns based on component capabilities
+  populateActionColumns(leftColumn, rightColumn, id, component, capabilities) {
+    // Left column - Setup (most components)
     if (capabilities.includes('setup')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="setup-input-${id}" placeholder="Setup data (JSON)">
-          <button class="component-action-btn" data-action="setup" data-component-id="${id}">Setup</button>
-        </div>
-      `;
+      const setupTemplate = document.getElementById('setup-action-template');
+      const setupClone = setupTemplate.content.cloneNode(true);
+      const textarea = setupClone.querySelector('.setup-textarea');
+      const button = setupClone.querySelector('.setup-btn');
+
+      textarea.id = `setup-input-${id}`;
+      button.dataset.componentId = id;
+
+      leftColumn.appendChild(setupClone);
     }
 
-    // Send action (output components)
+    // Right column - varies by component type
+    const deviceType = component.deviceType?.toLowerCase() || '';
+
     if (capabilities.includes('send')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="send-input-${id}" placeholder="Send data (JSON)">
-          <button class="component-action-btn" data-action="send" data-component-id="${id}">Send</button>
-        </div>
-      `;
-    }
+      // Output components (HEADSET, BOARDING_PASS_PRINTER, CONVEYOR)
+      const sendTemplate = document.getElementById('send-action-template');
+      const sendClone = sendTemplate.content.cloneNode(true);
+      const textarea = sendClone.querySelector('.send-textarea');
+      const buttonsContainer = sendClone.querySelector('.send-buttons');
 
-    // Cancel button
-    if (capabilities.includes('cancel')) {
-      actionsHtml += `<button class="component-action-btn" data-action="cancel" data-component-id="${id}">Cancel</button>`;
-    }
+      textarea.id = `send-input-${id}`;
 
-    // Offer button (dispensers and feeders)
-    if (capabilities.includes('offer')) {
-      actionsHtml += `<button class="component-action-btn" data-action="offer" data-component-id="${id}">Offer</button>`;
-    }
+      // Add Send button
+      this.addButton(buttonsContainer, 'Send', 'send', id);
 
-    // Read action (input components)
-    if (capabilities.includes('read')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="read-input-${id}" placeholder="Timeout ms (default: 30000)">
-          <button class="component-action-btn" data-action="read" data-component-id="${id}">Read</button>
-        </div>
-      `;
-    }
+      // Add additional buttons for specific types
+      if (componentCapabilities.isConveyorComponent(deviceType)) {
+        if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
+        if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
+        if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
+      }
+      if (capabilities.includes('cancel')) {
+        this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
+      }
 
-    // Announcement controls
-    if (capabilities.includes('play')) {
-      actionsHtml += `
-        <div class="component-action-group">
-          <input type="text" class="component-action-input" id="play-input-${id}" placeholder="SSML or text">
-          <button class="component-action-btn" data-action="play" data-component-id="${id}">Play</button>
-        </div>
-      `;
-    }
-    if (capabilities.includes('pause')) {
-      actionsHtml += `<button class="component-action-btn" data-action="pause" data-component-id="${id}">Pause</button>`;
-    }
-    if (capabilities.includes('resume')) {
-      actionsHtml += `<button class="component-action-btn" data-action="resume" data-component-id="${id}">Resume</button>`;
-    }
-    if (capabilities.includes('stop')) {
-      actionsHtml += `<button class="component-action-btn" data-action="stop" data-component-id="${id}">Stop</button>`;
-    }
+      rightColumn.appendChild(sendClone);
+    } else if (capabilities.includes('play')) {
+      // Announcement components
+      const playTemplate = document.getElementById('play-action-template');
+      const playClone = playTemplate.content.cloneNode(true);
+      const textarea = playClone.querySelector('.play-textarea');
+      const buttonsContainer = playClone.querySelector('.play-buttons');
 
-    // Conveyor controls
-    if (capabilities.includes('forward')) {
-      actionsHtml += `<button class="component-action-btn" data-action="forward" data-component-id="${id}">Forward</button>`;
-    }
-    if (capabilities.includes('backward')) {
-      actionsHtml += `<button class="component-action-btn" data-action="backward" data-component-id="${id}">Backward</button>`;
-    }
-    if (capabilities.includes('process')) {
-      actionsHtml += `<button class="component-action-btn" data-action="process" data-component-id="${id}">Process</button>`;
-    }
+      textarea.id = `play-input-${id}`;
 
-    return `
-      <div class="component-header">
-        <div class="component-header-left">
-          <div class="component-name">${component.deviceType} (ID: ${id})</div>
-        </div>
-        <div class="component-header-right">
-          <div class="component-badges"></div>
-          ${readyBadge}
-          ${requiredToggle}
-          ${toggleSwitch}
-        </div>
-      </div>
-      <div class="component-actions">
-        ${actionsHtml}
-      </div>
-    `;
+      // Add playback control buttons
+      this.addButton(buttonsContainer, 'Play', 'play', id);
+      if (capabilities.includes('pause')) this.addButton(buttonsContainer, 'Pause', 'pause', id);
+      if (capabilities.includes('resume')) this.addButton(buttonsContainer, 'Resume', 'resume', id);
+      if (capabilities.includes('stop')) this.addButton(buttonsContainer, 'Stop', 'stop', id);
+      if (capabilities.includes('cancel')) this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
+
+      rightColumn.appendChild(playClone);
+    } else if (capabilities.includes('read')) {
+      // Media input components
+      const readTemplate = document.getElementById('read-action-template');
+      const readClone = readTemplate.content.cloneNode(true);
+      const input = readClone.querySelector('.read-input');
+      const buttonsContainer = readClone.querySelector('.read-buttons');
+
+      input.id = `read-input-${id}`;
+
+      // Add Read and Cancel buttons
+      this.addButton(buttonsContainer, 'Read', 'read', id);
+      if (capabilities.includes('cancel')) {
+        this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
+      }
+
+      rightColumn.appendChild(readClone);
+    } else {
+      // Default right column - just buttons (Offer, Cancel, etc.)
+      const rightButtonsTemplate = document.getElementById('right-buttons-template');
+      const rightButtonsClone = rightButtonsTemplate.content.cloneNode(true);
+      const buttonsContainer = rightButtonsClone.querySelector('.right-buttons');
+
+      if (capabilities.includes('offer')) {
+        this.addButton(buttonsContainer, 'Offer', 'offer', id);
+      }
+      if (capabilities.includes('cancel')) {
+        this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
+      }
+
+      if (buttonsContainer.children.length > 0) {
+        rightColumn.appendChild(rightButtonsClone);
+      }
+    }
   },
 
-  // Toggle switch template
-  toggleSwitch(id, component) {
-    // Only show toggle for components that support enable/disable
-    if (!componentCapabilities.hasCapability(component, 'enable')) {
-      return '';
-    }
-
-    const canToggle = component.ready;
-    const toggleClass = component.enabled ? 'enabled' : '';
-    const disabledClass = !canToggle ? 'disabled' : '';
-
-    return `
-      <div class="toggle-container">
-        <div class="toggle-switch ${toggleClass} ${disabledClass}" data-component-id="${id}" data-current-state="${component.enabled}">
-          <div class="toggle-slider"></div>
-        </div>
-        <span class="toggle-label">Enabled</span>
-      </div>
-    `;
-  },
-
-  // Required toggle switch template
-  requiredToggle(id, component) {
-    const toggleClass = component.required ? 'required' : '';
-
-    return `
-      <div class="toggle-container">
-        <div class="toggle-switch toggle-required ${toggleClass}" data-component-id="${id}" data-current-required="${component.required}">
-          <div class="toggle-slider"></div>
-        </div>
-        <span class="toggle-label">Required</span>
-      </div>
-    `;
+  // Helper to add a button to a container
+  addButton(container, text, action, componentId) {
+    const button = document.createElement('button');
+    button.className = 'component-action-btn';
+    button.textContent = text;
+    button.dataset.action = action;
+    button.dataset.componentId = componentId;
+    container.appendChild(button);
   },
 
   // Timeout warning banner template
@@ -744,22 +775,11 @@ const ui = {
 
   // Create a component item element
   createComponentItem(id, component) {
-    const item = document.createElement("div");
-    item.className = "component-item";
+    // Use the new template-based approach
+    const fragment = templates.componentItem(id, component);
 
-    if (component.ready) item.classList.add("ready");
-    if (component.enabled) item.classList.add("enabled");
-
-    // Create badges for component status
-    const readyBadge = component.ready
-      ? '<span class="component-badge ready">Ready</span>'
-      : '<span class="component-badge not-ready">Not Ready</span>';
-
-    // Create toggle switches with proper state sync
-    const toggleSwitch = templates.toggleSwitch(id, component);
-    const requiredToggle = templates.requiredToggle(id, component);
-
-    item.innerHTML = templates.componentItem(id, component, readyBadge, toggleSwitch, requiredToggle);
+    // Extract the actual element from the DocumentFragment
+    const item = fragment.querySelector('.component-item');
 
     // Add toggle switch event listener (only if toggle exists)
     const toggleElement = item.querySelector('.toggle-switch:not(.toggle-required)');

@@ -290,7 +290,7 @@ button:disabled {
   background: rgba(26, 26, 46, 0.4);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .component-item.ready {
@@ -301,6 +301,53 @@ button:disabled {
 .component-item.enabled {
   background: rgba(72, 202, 228, 0.05);
   border-color: rgba(72, 202, 228, 0.3);
+}
+
+/* Row 1: Title row with controls */
+.component-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.component-title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.component-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Row 2: Common controls row (deprecated - kept for backward compatibility) */
+.component-common-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Row 2: Actions row (now row 2 in new layout) - 2-column grid */
+.component-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .component-actions-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .component-header {
@@ -517,17 +564,55 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+/* Deprecated - kept for backward compatibility */
 .component-action-group {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: flex-start;
   flex: 1;
-  min-width: 200px;
+  min-width: 300px;
+}
+
+/* New column-based layout for actions */
+.component-action-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+}
+
+.component-action-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64ffda;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.component-action-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.component-action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-top: auto;
+}
+
+.component-action-buttons .component-action-btn {
+  flex: 0 0 auto;
+  min-width: 100px;
 }
 
 .component-action-input {
-  flex: 1;
-  padding: 6px 10px;
+  width: 100%;
+  padding: 8px 12px;
   border: 1px solid rgba(100, 255, 218, 0.2);
   background: #0a0a14;
   color: #e0e0e0;
@@ -541,8 +626,34 @@ button:disabled {
   box-shadow: 0 0 5px rgba(100, 255, 218, 0.3);
 }
 
+.component-action-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(100, 255, 218, 0.2);
+  background: #0a0a14;
+  color: #e0e0e0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.component-action-textarea:focus {
+  outline: none;
+  border-color: #64ffda;
+  box-shadow: 0 0 5px rgba(100, 255, 218, 0.3);
+}
+
+.component-action-textarea::placeholder {
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 .component-action-btn {
-  padding: 6px 14px;
+  padding: 8px 16px;
   background: linear-gradient(135deg, #64ffda, #48cae4);
   color: #0f0f1e;
   border: none;
@@ -552,6 +663,18 @@ button:disabled {
   font-weight: 600;
   transition: all 0.3s ease;
   white-space: nowrap;
+  align-self: flex-start;
+  min-width: 100px;
+}
+
+.component-action-btn.component-query-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-width: auto;
+}
+
+.component-action-btn.component-action-btn-standalone {
+  align-self: auto;
 }
 
 .component-action-btn:hover:not(:disabled) {

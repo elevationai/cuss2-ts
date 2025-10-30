@@ -109,6 +109,73 @@
       </div>
     </div>
 
+    <!-- Component Templates -->
+    <template id="component-template">
+      <div class="component-item">
+        <div class="component-title-row">
+          <div class="component-title-left">
+            <div class="component-name"></div>
+            <div class="component-badges"></div>
+            <span class="component-badge ready-badge"></span>
+          </div>
+          <div class="component-controls">
+            <button class="component-action-btn component-query-btn" data-action="query">Query</button>
+            <div class="toggle-container required-toggle-container">
+              <div class="toggle-switch toggle-required">
+                <div class="toggle-slider"></div>
+              </div>
+              <span class="toggle-label">Required</span>
+            </div>
+            <div class="toggle-container enabled-toggle-container" style="display: none;">
+              <div class="toggle-switch">
+                <div class="toggle-slider"></div>
+              </div>
+              <span class="toggle-label">Enabled</span>
+            </div>
+          </div>
+        </div>
+        <div class="component-actions-row">
+          <!-- Left column -->
+          <div class="component-action-column left-column"></div>
+          <!-- Right column -->
+          <div class="component-action-column right-column"></div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Setup Action Template -->
+    <template id="setup-action-template">
+      <label class="component-action-label">Setup</label>
+      <textarea class="component-action-textarea setup-textarea" placeholder="Setup data (JSON)" rows="5"></textarea>
+      <button class="component-action-btn setup-btn" data-action="setup">Setup</button>
+    </template>
+
+    <!-- Send Action Template -->
+    <template id="send-action-template">
+      <label class="component-action-label">Send</label>
+      <textarea class="component-action-textarea send-textarea" placeholder="Send data (JSON)" rows="5"></textarea>
+      <div class="component-action-buttons send-buttons"></div>
+    </template>
+
+    <!-- Read Action Template -->
+    <template id="read-action-template">
+      <label class="component-action-label">Read</label>
+      <input type="text" class="component-action-input read-input" placeholder="Timeout ms (default: 30000)">
+      <div class="component-action-buttons read-buttons"></div>
+    </template>
+
+    <!-- Play Action Template -->
+    <template id="play-action-template">
+      <label class="component-action-label">Play</label>
+      <textarea class="component-action-textarea play-textarea" placeholder="SSML or text" rows="5"></textarea>
+      <div class="component-action-buttons play-buttons"></div>
+    </template>
+
+    <!-- Right Column Buttons Template -->
+    <template id="right-buttons-template">
+      <div class="component-action-buttons right-buttons"></div>
+    </template>
+
     <!-- Include the CUSS2 library and application JavaScript -->
     <script type="module" src="js/tester.js"></script>
   </body>

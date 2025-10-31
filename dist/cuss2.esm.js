@@ -1156,7 +1156,9 @@ var BaseComponent = class extends import_events3.EventEmitter {
    * Available to ALL component types
    */
   async query() {
-    return await this.withPendingCall(() => this.api.getStatus(this.id));
+    const pd = await this.withPendingCall(() => this.api.getStatus(this.id));
+    this.updateState(pd);
+    return pd;
   }
   /**
    * Cancel all currently executed and queued directives

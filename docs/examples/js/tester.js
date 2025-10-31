@@ -1000,9 +1000,6 @@ const ui = {
             // If marking a READY component as required while in ACTIVE/AVAILABLE → do nothing
           }
 
-          // Refresh the component display to show updated badge
-          ui.displayComponents();
-
           // Update state buttons to reflect new required component status
           ui.updateStateButtons(cuss2.state);
         } catch (error) {
@@ -1354,18 +1351,13 @@ const componentHandlers = {
   // Sync toggle visual state with component state
   syncToggleState(toggleElement, component) {
     // Check if component has enabled property (InteractiveComponents)
-    logger.info(`[DEBUG] syncToggleState called: component.enabled = ${component.enabled}, enabled !== undefined = ${component.enabled !== undefined}`);
     if (component.enabled !== undefined) {
       if (component.enabled) {
         toggleElement.classList.add('enabled');
-        logger.info(`[DEBUG] syncToggleState: Added 'enabled' class`);
       } else {
         toggleElement.classList.remove('enabled');
-        logger.info(`[DEBUG] syncToggleState: Removed 'enabled' class`);
       }
       toggleElement.dataset.currentState = component.enabled.toString();
-    } else {
-      logger.info(`[DEBUG] syncToggleState: component.enabled is undefined, no state change`);
     }
   },
 

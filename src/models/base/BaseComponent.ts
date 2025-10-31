@@ -147,7 +147,9 @@ export abstract class BaseComponent extends EventEmitter {
    * Available to ALL component types
    */
   async query(): Promise<PlatformData> {
-    return await this.withPendingCall(() => this.api.getStatus(this.id));
+    const pd = await this.withPendingCall(() => this.api.getStatus(this.id));
+    this.updateState(pd);
+    return pd;
   }
 
   /**

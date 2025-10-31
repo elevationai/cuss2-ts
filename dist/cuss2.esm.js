@@ -1138,14 +1138,9 @@ var BaseComponent = class extends import_events3.EventEmitter {
     const { meta } = msg;
     if (meta?.componentState !== void 0 && meta.componentState !== this._componentState) {
       this._componentState = meta.componentState ?? "UNAVAILABLE" /* UNAVAILABLE */;
-      console.log(
-        `[DEBUG BaseComponent] updateState: componentState=${meta.componentState}, READY=${"READY" /* READY */}, enabled before=${this.enabled}`
-      );
       if (meta.componentState === "UNAVAILABLE" /* UNAVAILABLE */ && this.enabled !== void 0) {
-        console.log(`[DEBUG BaseComponent] updateState: Setting enabled=false because componentState is UNAVAILABLE`);
         this.enabled = false;
       }
-      console.log(`[DEBUG BaseComponent] updateState: enabled after=${this.enabled}`);
       this.emit("readyStateChange", meta.componentState === "READY" /* READY */);
     }
     if (!this.ready && this.required && !this._poller && this.pollingInterval > 0) {
@@ -1231,14 +1226,9 @@ var InteractiveComponent = class extends BaseComponent {
    *               MEDIA_OUTPUT, DISPLAY, BAGGAGE_SCALE, INSERTION_BELT, ANNOUNCEMENT
    */
   async enable() {
-    console.log(`[DEBUG InteractiveComponent] enable() called, enabled before=${this.enabled}`);
     const pd = await this.withPendingCall(() => this.api.enable(this.id));
-    console.log(`[DEBUG InteractiveComponent] enable() received response:`, pd);
-    console.log(`[DEBUG InteractiveComponent] response componentState=${pd.meta?.componentState}`);
     this.updateState(pd);
-    console.log(`[DEBUG InteractiveComponent] enable() after updateState, enabled=${this.enabled}`);
     this.enabled = true;
-    console.log(`[DEBUG InteractiveComponent] enable() after setting enabled=true, enabled=${this.enabled}`);
     return pd;
   }
   /**

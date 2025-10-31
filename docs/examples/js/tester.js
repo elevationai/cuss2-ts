@@ -935,10 +935,6 @@ const ui = {
 
           // Success: Get fresh component reference and update based on actual component state
           const freshComponent = cuss2.components[id];
-          logger.info(`[DEBUG Toggle] After ${action}:`);
-          logger.info(`  - closure component.enabled = ${component.enabled}`);
-          logger.info(`  - fresh component.enabled = ${freshComponent?.enabled}`);
-          logger.info(`  - components are same object? ${component === freshComponent}`);
           componentHandlers.syncToggleState(toggleElement, freshComponent || component);
         } catch (error) {
           // Error: Revert to original state
@@ -1247,9 +1243,7 @@ const componentHandlers = {
     try {
       const actionText = action === 'enable' ? 'Enabling' : 'Disabling';
       logger.info(`${actionText} ${name}...`);
-      logger.info(`[DEBUG] Before ${action}: component.enabled = ${component.enabled}`);
       await component[action]();
-      logger.info(`[DEBUG] After ${action}: component.enabled = ${component.enabled}`);
       logger.success(`${name} ${action}d`);
     }
     catch (error) {

@@ -934,9 +934,12 @@ const ui = {
           await componentHandlers.handleComponentAction(component, action, id);
 
           // Success: Get fresh component reference and update based on actual component state
-          const freshComponent = cuss2.components.get(id);
-          logger.info(`[DEBUG Toggle] After ${action}, component.enabled = ${component.enabled}, freshComponent.enabled = ${freshComponent?.enabled}`);
-          componentHandlers.syncToggleState(toggleElement, freshComponent || component);
+          // Use setTimeout to ensure all state updates have completed
+          setTimeout(() => {
+            const freshComponent = cuss2.components.get(id);
+            logger.info(`[DEBUG Toggle] After ${action}, component.enabled = ${component.enabled}, freshComponent.enabled = ${freshComponent?.enabled}`);
+            componentHandlers.syncToggleState(toggleElement, freshComponent || component);
+          }, 50);
         } catch (error) {
           // Error: Revert to original state
           if (originalState) {

@@ -1527,9 +1527,9 @@ const connectionManager = {
         event: "componentStateChange",
         handler: (component) => {
           logger.event(`Component ${component.deviceType} state changed`);
-          ui.displayComponents();
-          // Ensure toggle states are synced after component refresh
-          setTimeout(() => componentHandlers.updateAllToggleStates(), 10);
+          // Don't redisplay all components on every state change - too aggressive
+          // Just update the toggle states to reflect current component state
+          componentHandlers.updateAllToggleStates();
           // Update state buttons to reflect required component availability
           ui.updateStateButtons(cuss2.state);
         },

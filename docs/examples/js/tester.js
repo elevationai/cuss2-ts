@@ -933,8 +933,10 @@ const ui = {
         try {
           await componentHandlers.handleComponentAction(component, action, id);
 
-          // Success: Update based on actual component state
-          componentHandlers.syncToggleState(toggleElement, component);
+          // Success: Get fresh component reference and update based on actual component state
+          const freshComponent = cuss2.components.get(id);
+          logger.info(`[DEBUG Toggle] After ${action}, component.enabled = ${component.enabled}, freshComponent.enabled = ${freshComponent?.enabled}`);
+          componentHandlers.syncToggleState(toggleElement, freshComponent || component);
         } catch (error) {
           // Error: Revert to original state
           if (originalState) {

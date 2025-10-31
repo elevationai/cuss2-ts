@@ -534,44 +534,35 @@ const templates = {
       button.dataset.componentId = id;
 
       // Check if this is a printer component and populate dropdown
-      const deviceType = component.deviceType?.toLowerCase() || '';
-      const normalizedType = deviceType.replace(/_/g, '');
-      const isPrinter = normalizedType.includes('printer');
+      let commandSet = null;
+      if (component.deviceType === 'BOARDING_PASS_PRINTER') {
+        commandSet = aeaCommands.boardingPassPrinter;
+      } else if (component.deviceType === 'BAG_TAG_PRINTER') {
+        commandSet = aeaCommands.bagTagPrinter;
+      }
 
-      if (isPrinter && dropdown) {
-        // Determine which printer type
-        let commandSet = null;
-        if (normalizedType.includes('boardingpass')) {
-          commandSet = aeaCommands.boardingPassPrinter;
-        } else if (normalizedType.includes('bagtag')) {
-          commandSet = aeaCommands.bagTagPrinter;
-        }
+      if (commandSet && dropdown) {
+        // Populate dropdown with commands
+        Object.entries(commandSet).forEach(([name, command]) => {
+          const option = document.createElement('option');
+          option.value = command;
+          option.textContent = name;
+          dropdown.appendChild(option);
+        });
 
-        if (commandSet) {
-          // Populate dropdown with commands
-          Object.entries(commandSet).forEach(([name, command]) => {
-            const option = document.createElement('option');
-            option.value = command;
-            option.textContent = name;
-            dropdown.appendChild(option);
-          });
-
-          // Show dropdown and add change listener
-          dropdown.style.display = 'block';
-          dropdown.addEventListener('change', (e) => {
-            if (e.target.value) {
-              textarea.value = e.target.value;
-            }
-          });
-        }
+        // Show dropdown and add change listener
+        dropdown.style.display = 'block';
+        dropdown.addEventListener('change', (e) => {
+          if (e.target.value) {
+            textarea.value = e.target.value;
+          }
+        });
       }
 
       leftColumn.appendChild(setupClone);
     }
 
     // Right column - varies by component type
-    const deviceType = component.deviceType?.toLowerCase() || '';
-
     if (capabilities.includes('send')) {
       // Output components (HEADSET, BOARDING_PASS_PRINTER, CONVEYOR)
       const sendTemplate = document.getElementById('send-action-template');
@@ -583,42 +574,36 @@ const templates = {
       textarea.id = `send-input-${id}`;
 
       // Check if this is a printer component and populate dropdown
-      const normalizedSendType = deviceType.replace(/_/g, '');
-      const isPrinter = normalizedSendType.includes('printer');
+      let commandSet = null;
+      if (component.deviceType === 'BOARDING_PASS_PRINTER') {
+        commandSet = aeaCommands.boardingPassPrinter;
+      } else if (component.deviceType === 'BAG_TAG_PRINTER') {
+        commandSet = aeaCommands.bagTagPrinter;
+      }
 
-      if (isPrinter && dropdown) {
-        // Determine which printer type
-        let commandSet = null;
-        if (normalizedSendType.includes('boardingpass')) {
-          commandSet = aeaCommands.boardingPassPrinter;
-        } else if (normalizedSendType.includes('bagtag')) {
-          commandSet = aeaCommands.bagTagPrinter;
-        }
+      if (commandSet && dropdown) {
+        // Populate dropdown with commands
+        Object.entries(commandSet).forEach(([name, command]) => {
+          const option = document.createElement('option');
+          option.value = command;
+          option.textContent = name;
+          dropdown.appendChild(option);
+        });
 
-        if (commandSet) {
-          // Populate dropdown with commands
-          Object.entries(commandSet).forEach(([name, command]) => {
-            const option = document.createElement('option');
-            option.value = command;
-            option.textContent = name;
-            dropdown.appendChild(option);
-          });
-
-          // Show dropdown and add change listener
-          dropdown.style.display = 'block';
-          dropdown.addEventListener('change', (e) => {
-            if (e.target.value) {
-              textarea.value = e.target.value;
-            }
-          });
-        }
+        // Show dropdown and add change listener
+        dropdown.style.display = 'block';
+        dropdown.addEventListener('change', (e) => {
+          if (e.target.value) {
+            textarea.value = e.target.value;
+          }
+        });
       }
 
       // Add Send button
       this.addButton(buttonsContainer, 'Send', 'send', id);
 
       // Add additional buttons for specific types
-      if (componentCapabilities.isConveyorComponent(deviceType)) {
+      if (componentCapabilities.isConveyorComponent(component.deviceType)) {
         if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
         if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
         if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
@@ -656,9 +641,8 @@ const templates = {
       input.id = `read-input-${id}`;
 
       // Check if this is a barcode reader or document reader and populate dropdown with test data
-      const normalizedReadType = deviceType.replace(/_/g, '');
-      const isBarcodeReader = normalizedReadType.includes('barcode');
-      const isDocumentReader = normalizedReadType.includes('document');
+      const isBarcodeReader = component.deviceType === 'BARCODE_READER';
+      const isDocumentReader = component.deviceType === 'PASSPORT_READER';
 
       if (isBarcodeReader && dropdown && aeaCommands.barcodeReader) {
         // Populate dropdown with example barcode data for testing/reference

@@ -119,7 +119,9 @@ export abstract class BaseComponent extends EventEmitter {
     // Handle component state changes
     if (meta?.componentState !== undefined && meta.componentState !== this._componentState) {
       this._componentState = meta.componentState ?? ComponentState.UNAVAILABLE;
-      console.log(`[DEBUG BaseComponent] updateState: componentState=${meta.componentState}, READY=${ComponentState.READY}, enabled before=${this.enabled}`);
+      console.log(
+        `[DEBUG BaseComponent] updateState: componentState=${meta.componentState}, READY=${ComponentState.READY}, enabled before=${this.enabled}`,
+      );
 
       // Set enabled to false if not ready (for components that use enabled)
       if (meta.componentState !== ComponentState.READY && this.enabled !== undefined) {

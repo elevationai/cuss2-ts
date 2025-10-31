@@ -1197,8 +1197,8 @@ const ui = {
   },
 };
 
-// Helper function to show a temporary status badge for a component
-function showComponentStatusBadge(componentId, status) {
+// Helper function to show or remove status badge for a component
+function updateComponentStatusBadge(componentId, status) {
   // Find the component element
   const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
   if (!componentElement) return;
@@ -1213,7 +1213,12 @@ function showComponentStatusBadge(componentId, status) {
     existingStatusBadge.remove();
   }
 
-  // Create new status badge
+  // If status is OK, just remove the badge and return (no badge needed)
+  if (!status || status === 'OK') {
+    return;
+  }
+
+  // Create new status badge for non-OK status
   const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
   const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
   const isTemporary = temporaryStatuses.includes(status);
@@ -1251,10 +1256,8 @@ const componentHandlers = {
       throw error; // Re-throw so the toggle can handle the error state
     }
     finally {
-      // Show status badge if component has non-OK status
-      if (component.status && component.status !== 'OK') {
-        showComponentStatusBadge(componentId, component.status);
-      }
+      // Update status badge based on current component status
+      updateComponentStatusBadge(componentId, component.status);
     }
   },
 
@@ -1282,10 +1285,8 @@ const componentHandlers = {
       throw error;
     }
     finally {
-      // Show status badge if component has non-OK status
-      if (component.status && component.status !== 'OK') {
-        showComponentStatusBadge(componentId, component.status);
-      }
+      // Update status badge based on current component status
+      updateComponentStatusBadge(componentId, component.status);
     }
   },
 
@@ -1344,10 +1345,8 @@ const componentHandlers = {
       throw error;
     }
     finally {
-      // Show status badge if component has non-OK status
-      if (component.status && component.status !== 'OK') {
-        showComponentStatusBadge(componentId, component.status);
-      }
+      // Update status badge based on current component status
+      updateComponentStatusBadge(componentId, component.status);
     }
   },
 

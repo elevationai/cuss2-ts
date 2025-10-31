@@ -1153,9 +1153,11 @@ var Cuss2 = (() => {
       const { meta } = msg;
       if (meta?.componentState !== void 0 && meta.componentState !== this._componentState) {
         this._componentState = meta.componentState ?? "UNAVAILABLE" /* UNAVAILABLE */;
-        console.log(`[DEBUG BaseComponent] updateState: componentState=${meta.componentState}, READY=${"READY" /* READY */}, enabled before=${this.enabled}`);
-        if (meta.componentState !== "READY" /* READY */ && this.enabled !== void 0) {
-          console.log(`[DEBUG BaseComponent] updateState: Setting enabled=false because componentState is not READY`);
+        console.log(
+          `[DEBUG BaseComponent] updateState: componentState=${meta.componentState}, READY=${"READY" /* READY */}, enabled before=${this.enabled}`
+        );
+        if (meta.componentState === "UNAVAILABLE" /* UNAVAILABLE */ && this.enabled !== void 0) {
+          console.log(`[DEBUG BaseComponent] updateState: Setting enabled=false because componentState is UNAVAILABLE`);
           this.enabled = false;
         }
         console.log(`[DEBUG BaseComponent] updateState: enabled after=${this.enabled}`);
@@ -1247,6 +1249,7 @@ var Cuss2 = (() => {
       console.log(`[DEBUG InteractiveComponent] enable() called, enabled before=${this.enabled}`);
       const pd = await this.withPendingCall(() => this.api.enable(this.id));
       console.log(`[DEBUG InteractiveComponent] enable() received response:`, pd);
+      console.log(`[DEBUG InteractiveComponent] response componentState=${pd.meta?.componentState}`);
       this.updateState(pd);
       console.log(`[DEBUG InteractiveComponent] enable() after updateState, enabled=${this.enabled}`);
       this.enabled = true;

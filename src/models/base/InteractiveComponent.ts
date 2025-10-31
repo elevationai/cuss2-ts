@@ -19,6 +19,7 @@ export abstract class InteractiveComponent extends BaseComponent implements User
     console.log(`[DEBUG InteractiveComponent] enable() called, enabled before=${this.enabled}`);
     const pd = await this.withPendingCall(() => this.api.enable(this.id));
     console.log(`[DEBUG InteractiveComponent] enable() received response:`, pd);
+    console.log(`[DEBUG InteractiveComponent] response componentState=${pd.meta?.componentState}`);
     this.updateState(pd);
     console.log(`[DEBUG InteractiveComponent] enable() after updateState, enabled=${this.enabled}`);
     this.enabled = true;

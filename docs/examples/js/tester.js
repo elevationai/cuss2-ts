@@ -936,7 +936,7 @@ const ui = {
           // Success: Get fresh component reference and update based on actual component state
           // Use setTimeout to ensure all state updates have completed
           setTimeout(() => {
-            const freshComponent = cuss2.components.find(c => c.id === id);
+            const freshComponent = cuss2.components[id];
             logger.info(`[DEBUG Toggle] After ${action}, component.enabled = ${component.enabled}, freshComponent.enabled = ${freshComponent?.enabled}`);
             componentHandlers.syncToggleState(toggleElement, freshComponent || component);
           }, 50);

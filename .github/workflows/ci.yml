@@ -54,7 +54,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: "."
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'

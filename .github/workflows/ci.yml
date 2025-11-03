@@ -40,3 +40,6 @@ jobs:
 
       - name: Run type checking
         run: deno check mod.ts
+
+      - name: Build dist files
+        run: deno task build

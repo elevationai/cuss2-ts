@@ -28,9 +28,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
+// ../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js
 var require_events = __commonJS({
-  "../../../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
+  "../../Library/Caches/deno/deno_esbuild/registry.npmjs.org/events@3.3.0/node_modules/events/events.js"(exports, module) {
     "use strict";
     var R = typeof Reflect === "object" ? Reflect : null;
     var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
@@ -1138,7 +1138,7 @@ var BaseComponent = class extends import_events3.EventEmitter {
     const { meta } = msg;
     if (meta?.componentState !== void 0 && meta.componentState !== this._componentState) {
       this._componentState = meta.componentState ?? "UNAVAILABLE" /* UNAVAILABLE */;
-      if (meta.componentState !== "READY" /* READY */ && this.enabled !== void 0) {
+      if (meta.componentState === "UNAVAILABLE" /* UNAVAILABLE */ && this.enabled !== void 0) {
         this.enabled = false;
       }
       this.emit("readyStateChange", meta.componentState === "READY" /* READY */);
@@ -1156,7 +1156,9 @@ var BaseComponent = class extends import_events3.EventEmitter {
    * Available to ALL component types
    */
   async query() {
-    return await this.withPendingCall(() => this.api.getStatus(this.id));
+    const pd = await this.withPendingCall(() => this.api.getStatus(this.id));
+    this.updateState(pd);
+    return pd;
   }
   /**
    * Cancel all currently executed and queued directives
@@ -1851,13 +1853,13 @@ var AuthenticationError = class extends Cuss2Error {
   }
 };
 
-// https://jsr.io/@std/async/1.0.14/_util.ts
+// https://jsr.io/@std/async/1.0.15/_util.ts
 function exponentialBackoffWithJitter(cap, base, attempt, multiplier, jitter) {
   const exp = Math.min(cap, base * multiplier ** attempt);
   return (1 - jitter * Math.random()) * exp;
 }
 
-// https://jsr.io/@std/async/1.0.14/retry.ts
+// https://jsr.io/@std/async/1.0.15/retry.ts
 var RetryError = class extends Error {
   /**
    * Constructs a new {@linkcode RetryError} instance.
@@ -1933,6 +1935,7 @@ var Connection = class _Connection extends EventEmitter2 {
   _socket;
   _refresher = null;
   _abortController;
+  _isClosed = false;
   deviceID;
   access_token = "";
   _retryOptions;
@@ -1975,6 +1978,10 @@ var Connection = class _Connection extends EventEmitter2 {
     params.append("grant_type", "client_credentials");
     let attempts = 0;
     const result = await retry(async () => {
+      if (this._isClosed) {
+        log2("info", "Authentication stopped - connection closed");
+        return new AuthenticationError("Connection closed", 0);
+      }
       log2("info", `Retrying client '${this._auth.client_id}'`);
       this.emit("authenticating", ++attempts);
       try {
@@ -2086,6 +2093,10 @@ var Connection = class _Connection extends EventEmitter2 {
   _createWebSocketAndAttachEventHandlers() {
     let attempts = 0;
     retry(() => new Promise((resolve, reject) => {
+      if (this._isClosed) {
+        log2("info", "WebSocket connection stopped - connection closed");
+        return resolve(false);
+      }
       if (this.isOpen) {
         return resolve(true);
       }
@@ -2181,6 +2192,7 @@ var Connection = class _Connection extends EventEmitter2 {
     }
   }
   close(code, reason) {
+    this._isClosed = true;
     if (this._refresher) {
       global.clearTimeout(this._refresher);
       this._refresher = null;
@@ -2404,10 +2416,12 @@ var Cuss2 = class _Cuss2 extends EventEmitter2 {
     this.connection = connection;
     this.setMaxListeners(100);
     connection.on("message", (e) => this._handleWebSocketMessage(e));
-    connection.on("open", () => this._initialize().catch((e) => {
-      log("error", "Initialization failed", e);
-      connection.emit("error", new Error("Initialization failed: " + e.message));
-    }));
+    connection.on("open", () => {
+      this._initialize().catch((e) => {
+        log("error", "Initialization failed", e);
+        connection.emit("error", new Error("Initialization failed: " + e.message));
+      });
+    });
   }
   static connect(client_id, client_secret, wss = "https://localhost:22222", deviceID = "00000000-0000-0000-0000-000000000000", tokenURL) {
     using connection = Connection.connect(wss, client_id, client_secret, deviceID, tokenURL);

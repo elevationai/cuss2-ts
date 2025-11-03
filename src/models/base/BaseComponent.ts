@@ -120,8 +120,9 @@ export abstract class BaseComponent extends EventEmitter {
     if (meta?.componentState !== undefined && meta.componentState !== this._componentState) {
       this._componentState = meta.componentState ?? ComponentState.UNAVAILABLE;
 
-      // Set enabled to false if not ready (for components that use enabled)
-      if (meta.componentState !== ComponentState.READY && this.enabled !== undefined) {
+      // Only set enabled to false if component becomes UNAVAILABLE
+      // Don't touch enabled state for other state transitions (READY, ENABLED, etc.)
+      if (meta.componentState === ComponentState.UNAVAILABLE && this.enabled !== undefined) {
         this.enabled = false;
       }
 
@@ -146,7 +147,9 @@ export abstract class BaseComponent extends EventEmitter {
    * Available to ALL component types
    */
   async query(): Promise<PlatformData> {
-    return await this.withPendingCall(() => this.api.getStatus(this.id));
+    const pd = await this.withPendingCall(() => this.api.getStatus(this.id));
+    this.updateState(pd);
+    return pd;
   }
 
   /**

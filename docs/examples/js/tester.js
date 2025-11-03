@@ -202,6 +202,7 @@ const queryConfig = {
   wss: urlParams.get("CUSS-WSS"),
   tokenUrl: urlParams.get("OAUTH-URL"),
   deviceId: urlParams.get("DEVICE-ID"),
+  go: urlParams.get("go"),
 };
 
 // ===== URL UTILITIES =====
@@ -1658,6 +1659,12 @@ const connectionManager = {
 
     // Setup component listeners
     componentHandlers.setupComponentListeners();
+
+    // If auto-progressing to a state, do it now
+    if (queryConfig.go) { // intentionally do no run if go is empty string
+      const targetState = queryConfig.go.toUpperCase();
+      await stateManager.progressToState(targetState);
+    }
   },
 
   // Cancel ongoing connection attempt
@@ -1724,6 +1731,33 @@ const stateManager = {
     Object.entries(dom.elements.stateButtons).forEach(([action, button]) => {
       button.addEventListener("click", () => this.requestState(action));
     });
+  },
+
+  // Progress through states to reach a target state
+  async progressToState(targetState) {
+    if (!cuss2) {
+      logger.error("Cannot progress to state: not connected");
+      return;
+    }
+
+    // Validate target state
+    const targetIndex = ["UNAVAILABLE", "AVAILABLE", "ACTIVE"].indexOf(targetState);
+    if (targetIndex === -1) {
+      logger.error(`Invalid target state: ${targetState}`);
+      return;
+    }
+
+    logger.info(`Auto-progressing to ${targetState} state...`);
+
+    const s1 = (await cuss2.requestUnavailableState())?.meta.currentApplicationState.applicationStateCode;
+    if(s1 !== ApplicationStateCodes.UNAVAILABLE || targetIndex === 0) {
+      return;
+    }
+    const s2 = (await cuss2.requestAvailableState())?.meta.currentApplicationState.applicationStateCode;
+    if(s2 !== ApplicationStateCodes.AVAILABLE || targetIndex === 1) {
+      return;
+    }
+    await cuss2.requestActiveState();
   },
 };
 
@@ -1951,6 +1985,12 @@ function init() {
 
   // Initial log message
   logger.info("CUSS2 Browser Client Demo ready");
+
+  // Auto-connect if 'go' parameter is present
+  if (typeof queryConfig.go === "string") {
+    logger.info(`Auto-connect requested with target state: ${queryConfig.go.toUpperCase()}`);
+    dom.elements.form.requestSubmit();
+  }
 }
 
 // Initialize when DOM is ready

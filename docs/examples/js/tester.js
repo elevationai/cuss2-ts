@@ -1,5 +1,5 @@
 // ===== IMPORTS =====
-import { Cuss2, Models } from "/dist/cuss2.esm.js";
+import { Cuss2, Models } from "../../dist/cuss2.esm.js";
 const { ApplicationStateCodes, ComponentState, MessageCodes } = Models;
 
 let cuss2 = null;

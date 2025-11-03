@@ -200,10 +200,10 @@ export class Cuss2 extends EventEmitter {
       super.emit("stateChange", this._currentState);
 
       if (currentState === AppState.UNAVAILABLE) {
-        await this.queryComponents().catch((e) => {
-          log("error", "error querying components", e);
-          super.emit("queryError", e);
-        });
+        // await this.queryComponents().catch((e) => {
+        //   log("error", "error querying components", e);
+        //   super.emit("queryError", e);
+        // });
         if (this._online) {
           this.checkRequiredComponentsAndSyncState();
         }

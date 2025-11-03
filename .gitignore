@@ -46,6 +46,7 @@ deno.lock
 
 # Build output
 dist/
+docs/dist/
 
 .claude
 CLAUDE.local.md

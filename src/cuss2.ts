@@ -174,7 +174,7 @@ export class Cuss2 extends EventEmitter {
     this.emit("connected", this);
   }
 
-  private async _handleWebSocketMessage(platformData: PlatformData) {
+  private _handleWebSocketMessage(platformData: PlatformData) {
     if (!platformData) return;
     const { meta, payload } = platformData;
 

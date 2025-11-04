@@ -8,7 +8,7 @@
     "test": "deno test --allow-net --allow-read --allow-env",
     "example": "deno run --allow-net --allow-env docs/examples/basic-connection.ts",
     "serve": "deno run --allow-net --allow-read https://deno.land/std/http/file_server.ts docs/examples",
-    "serve-https": "bash scripts/serve-https.sh"
+    "serve-https": "deno run --allow-net --allow-read --allow-write --allow-run --allow-env scripts/serve-https.ts"
   },
   "compilerOptions": {
     "strict": true,

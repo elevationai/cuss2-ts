@@ -54,6 +54,3 @@ CLAUDE.md
 scratch.ts
 
 specs/
-
-# Self-signed certificates for local HTTPS testing
-.certs/

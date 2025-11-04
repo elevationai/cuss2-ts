@@ -1156,7 +1156,7 @@ const ui = {
     const continueBtn = document.getElementById('continueAnyway');
 
     dismissBtn?.addEventListener('click', () => {
-      existingBanner?.remove();
+      document.getElementById('mixedContentBanner')?.remove();
     });
 
     suggestedBtn?.addEventListener('click', () => {

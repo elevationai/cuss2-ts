@@ -1536,6 +1536,8 @@ const connectionManager = {
           componentHandlers.updateAllToggleStates();
           // Update state buttons to reflect required component availability
           ui.updateStateButtons(cuss2.state);
+          // Update the status badge to reflect the new component status
+          updateComponentStatusBadge(component.id, component.status);
         },
       },
       {

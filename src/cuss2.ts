@@ -535,7 +535,8 @@ export class Cuss2 extends EventEmitter {
     if (okToChange && this.state === AppState.ACTIVE) {
       try {
         await this._disableAllComponents();
-      } catch (error) {
+      }
+      catch (error) {
         log("error", "Error disabling components before requesting UNAVAILABLE state", error);
       }
     }
@@ -550,7 +551,8 @@ export class Cuss2 extends EventEmitter {
     if (okToChange && this.state === AppState.ACTIVE) {
       try {
         await this._disableAllComponents();
-      } catch (error) {
+      }
+      catch (error) {
         log("error", "Error disabling components before requesting AVAILABLE state", error);
       }
     }

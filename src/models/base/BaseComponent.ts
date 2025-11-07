@@ -207,7 +207,7 @@ export abstract class BaseComponent extends EventEmitter {
   }
 
   /**
-   * Wrapper for API calls that manages pendingCalls countergl
+   * Wrapper for API calls that manages pendingCalls counter
    *
    * Increments before the call, decrements in finally block
    * @param apiCall - The API call to execute

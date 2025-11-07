@@ -185,13 +185,20 @@ export abstract class BaseComponent extends EventEmitter {
     }
   }
 
-  pollUntilReady(requireOK = false, pollingInterval = this.pollingInterval): void {
+  pollUntilReady(requireOK?: boolean, pollingInterval?: number): void {
+    // Polling for printers, feeders, and dispensers needs to consider MEDIA_ABSENT, MEDIA_LOW, MEDIA_FULL, and MEDIA_PRESENT
+    // as READY states as well as the usual OK for other components.
     if (this._poller) return;
     const poll = () => {
-      if (this.ready && (!requireOK || this.status === MessageCodes.OK)) {
-        this._poller = undefined;
-        return;
+      if (
+        this.ready &&
+        (!requireOK ||
+          (this.status === MessageCodes.OK || this.status === MessageCodes.MEDIA_ABSENT || this.status === MessageCodes.MEDIA_LOW ||
+            this.status === MessageCodes.MEDIA_FULL || this.status === MessageCodes.MEDIA_PRESENT))
+      ) {
+        return this._poller = undefined;
       }
+
       this._poller = setTimeout(() => {
         this.query().catch(Object).finally(poll);
       }, pollingInterval);
@@ -200,7 +207,8 @@ export abstract class BaseComponent extends EventEmitter {
   }
 
   /**
-   * Wrapper for API calls that manages pendingCalls counter
+   * Wrapper for API calls that manages pendingCalls countergl
+   *
    * Increments before the call, decrements in finally block
    * @param apiCall - The API call to execute
    * @returns Promise with the API call result

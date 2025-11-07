@@ -501,7 +501,12 @@ export class Cuss2 extends EventEmitter {
       for await (const component of componentList) {
         // Check if component has enable/disable capability (InteractiveComponent)
         if ("enabled" in component && (component as InteractiveComponent).enabled) {
-          await (component as InteractiveComponent).disable();
+          try {
+            await (component as InteractiveComponent).disable();
+          }
+          catch (error) {
+            log("error", `Failed to disable component ID ${component.id}:`, error);
+          }
         }
       }
 
@@ -533,12 +538,7 @@ export class Cuss2 extends EventEmitter {
       this.state === AppState.ACTIVE;
 
     if (okToChange && this.state === AppState.ACTIVE) {
-      try {
-        await this._disableAllComponents();
-      }
-      catch (error) {
-        log("error", "Error disabling components before requesting UNAVAILABLE state", error);
-      }
+      await this._disableAllComponents();
     }
 
     return okToChange ? this.api.staterequest(AppState.UNAVAILABLE) : Promise.resolve(undefined);
@@ -549,12 +549,7 @@ export class Cuss2 extends EventEmitter {
     const okToChange = this.state === AppState.UNAVAILABLE || this.state === AppState.ACTIVE;
 
     if (okToChange && this.state === AppState.ACTIVE) {
-      try {
-        await this._disableAllComponents();
-      }
-      catch (error) {
-        log("error", "Error disabling components before requesting AVAILABLE state", error);
-      }
+      await this._disableAllComponents();
     }
 
     return okToChange ? this.api.staterequest(AppState.AVAILABLE) : Promise.resolve(undefined);

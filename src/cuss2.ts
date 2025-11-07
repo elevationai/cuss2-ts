@@ -501,7 +501,12 @@ export class Cuss2 extends EventEmitter {
       for await (const component of componentList) {
         // Check if component has enable/disable capability (InteractiveComponent)
         if ("enabled" in component && (component as InteractiveComponent).enabled) {
-          await (component as InteractiveComponent).disable();
+          try {
+            await (component as InteractiveComponent).disable();
+          }
+          catch (error) {
+            log("error", `Failed to disable component ID ${component.id}:`, error);
+          }
         }
       }
 

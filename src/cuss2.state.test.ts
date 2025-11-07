@@ -216,3 +216,39 @@ Deno.test("2.2 - State transitions should disable all components when transition
   // Verify components were disabled
   assertEquals(disableAllCalled, true);
 });
+
+Deno.test("2.3 - State transitions should proceed even when component disable fails", async () => {
+  const { cuss2, mockConnection } = createMockCuss2WithStateTracking();
+
+  // Track if state request was made despite disable failure
+  let stateRequestMade = false;
+  mockConnection.sendAndGetResponse = () => {
+    stateRequestMade = true;
+    return Promise.resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData);
+  };
+
+  // Mock _disableAllComponents to throw an error
+  // @ts-ignore - accessing private method for testing
+  cuss2._disableAllComponents = () => {
+    return Promise.reject(new Error("Component disable failed"));
+  };
+
+  // Test ACTIVE → AVAILABLE with disable failure
+  setCurrentState(cuss2, AppState.ACTIVE);
+  const result1 = await cuss2.requestAvailableState();
+
+  // Verify state request was still made
+  assertEquals(stateRequestMade, true);
+  assertEquals(result1?.meta?.messageCode, "OK");
+
+  // Reset tracker
+  stateRequestMade = false;
+
+  // Test ACTIVE → UNAVAILABLE with disable failure
+  setCurrentState(cuss2, AppState.ACTIVE);
+  const result2 = await cuss2.requestUnavailableState();
+
+  // Verify state request was still made
+  assertEquals(stateRequestMade, true);
+  assertEquals(result2?.meta?.messageCode, "OK");
+});

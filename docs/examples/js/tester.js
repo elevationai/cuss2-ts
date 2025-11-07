@@ -1254,6 +1254,26 @@ function updateComponentStatusBadge(componentId, status) {
   }
 }
 
+function updateComponentReadyBadge(componentId, ready) {
+  // Find the component element
+  const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
+  if (!componentElement) return;
+
+  // Find the ready badge
+  const readyBadge = componentElement.querySelector('.ready-badge');
+  if (!readyBadge) return;
+
+  // Update badge text and classes
+  readyBadge.className = 'component-badge ready-badge'; // Reset classes
+  if (ready) {
+    readyBadge.textContent = 'Ready';
+    readyBadge.classList.add('ready');
+  } else {
+    readyBadge.textContent = 'Not Ready';
+    readyBadge.classList.add('not-ready');
+  }
+}
+
 // ===== COMPONENT HANDLERS =====
 const componentHandlers = {
   // Handle component action (enable/disable)
@@ -1538,6 +1558,8 @@ const connectionManager = {
           ui.updateStateButtons(cuss2.state);
           // Update the status badge to reflect the new component status
           updateComponentStatusBadge(component.id, component.status);
+          // Update the ready badge to reflect the new component ready state
+          updateComponentReadyBadge(component.id, component.ready);
         },
       },
       {

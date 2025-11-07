@@ -533,7 +533,11 @@ export class Cuss2 extends EventEmitter {
       this.state === AppState.ACTIVE;
 
     if (okToChange && this.state === AppState.ACTIVE) {
-      await this._disableAllComponents();
+      try {
+        await this._disableAllComponents();
+      } catch (error) {
+        log("error", "Error disabling components before requesting UNAVAILABLE state", error);
+      }
     }
 
     return okToChange ? this.api.staterequest(AppState.UNAVAILABLE) : Promise.resolve(undefined);
@@ -544,7 +548,11 @@ export class Cuss2 extends EventEmitter {
     const okToChange = this.state === AppState.UNAVAILABLE || this.state === AppState.ACTIVE;
 
     if (okToChange && this.state === AppState.ACTIVE) {
-      await this._disableAllComponents();
+      try {
+        await this._disableAllComponents();
+      } catch (error) {
+        log("error", "Error disabling components before requesting AVAILABLE state", error);
+      }
     }
 
     return okToChange ? this.api.staterequest(AppState.AVAILABLE) : Promise.resolve(undefined);

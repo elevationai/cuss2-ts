@@ -185,7 +185,7 @@ export abstract class BaseComponent extends EventEmitter {
     }
   }
 
-  pollUntilReady(requireOK?: boolean, pollingInterval?: number): void {
+  pollUntilReady(requireOK: boolean = false, pollingInterval: number = this.pollingInterval): void {
     // Polling for printers, feeders, and dispensers needs to consider MEDIA_ABSENT, MEDIA_LOW, MEDIA_FULL, and MEDIA_PRESENT
     // as READY states as well as the usual OK for other components.
     if (this._poller) return;

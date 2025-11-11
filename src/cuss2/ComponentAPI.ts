@@ -80,6 +80,12 @@ export interface ComponentAPI {
   ) => Promise<PlatformData | undefined>;
 
   /**
+   * Acknowledge that the application has received and processed the accessible mode activation.
+   * Per CUSS2 spec, this should be sent after receiving an accessible mode activation from the platform.
+   */
+  acknowledgeAccessible: () => Promise<PlatformData>;
+
+  /**
    * Announcement-specific operations
    */
   announcement: {

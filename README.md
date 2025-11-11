@@ -220,11 +220,21 @@ cuss2.on("stateChange", (stateChange) => {
 console.log("Current state:", cuss2.state);
 
 // Special state transitions
-cuss2.on("activated", (activationData) => {
+cuss2.on("activated", async (activationData) => {
   console.log("Application activated", activationData);
   console.log("Multi-tenant mode:", cuss2.multiTenant);
   console.log("Accessible mode:", cuss2.accessibleMode);
   console.log("Language:", cuss2.language);
+
+  // Acknowledge accessible mode if active
+  if (cuss2.accessibleMode) {
+    // Configure UI for accessibility (larger fonts, screen reader support, etc.)
+    await configureAccessibleUI();
+
+    // Acknowledge to platform that application is ready for accessible operation
+    await cuss2.acknowledgeAccessibleMode();
+    console.log("Accessible mode acknowledged");
+  }
 });
 
 cuss2.on("deactivated", (newState) => {
@@ -232,6 +242,38 @@ cuss2.on("deactivated", (newState) => {
 });
 ```
 
+#### Accessible Mode
+
+When the platform requests the application to operate in accessible mode, the `activated` event will fire with `accessibleMode` set to `true`. The application should:
+
+1. Configure the UI for accessibility (larger fonts, high contrast, screen reader support, etc.)
+2. Acknowledge receipt of the accessible mode request using `acknowledgeAccessibleMode()`
+
+```typescript
+cuss2.on("activated", async (activationData) => {
+  if (cuss2.accessibleMode) {
+    console.log("Application activated in accessible mode");
+
+    // Configure UI for accessibility
+    enableHighContrastMode();
+    enableScreenReader();
+    increaseFontSizes();
+
+    // Acknowledge to platform that we're ready
+    await cuss2.acknowledgeAccessibleMode();
+  }
+});
+```
+
+The library provides two ways to acknowledge accessible mode:
+
+- **`cuss2.acknowledgeAccessibleMode()`** - Convenience method with validation (recommended)
+  - Only sends acknowledgment when in ACTIVE state and accessibleMode is true
+  - Returns `undefined` if conditions aren't met
+- **`cuss2.api.acknowledgeAccessible()`** - Raw API method
+  - Sends the directive regardless of state (for advanced use cases)
+
+````
 ### Component Types
 
 The SDK supports all CUSS2 peripheral types:
@@ -295,7 +337,7 @@ Object.entries(components).forEach(([id, component]) => {
     required: component.required,
   });
 });
-```
+````
 
 ### Component Usage
 

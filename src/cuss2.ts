@@ -442,6 +442,15 @@ export class Cuss2 extends EventEmitter {
       }
     },
 
+    acknowledgeAccessible: async (): Promise<PlatformData> => {
+      this._ensureConnected();
+      const ad = Build.applicationData(
+        PlatformDirectives.PLATFORM_APPLICATIONS_ACKNOWLEDGE_ACCESSIBLE,
+        {},
+      );
+      return await this.connection.sendAndGetResponse(ad);
+    },
+
     announcement: {
       play: async (
         componentID: number,
@@ -579,6 +588,46 @@ export class Cuss2 extends EventEmitter {
     // directly close the socket so reconnect will still happen
     this.connection._socket?.close(1001, "Reloading");
     return true;
+  }
+
+  /**
+   * Acknowledge accessible mode activation.
+   * Should be called after receiving the 'activated' event when accessibleMode is true.
+   * Per CUSS2 spec, this confirms the application has processed the accessible mode request
+   * and is ready to operate in accessible mode.
+   *
+   * @returns Promise<PlatformData | undefined> - Platform response, or undefined if conditions not met
+   *
+   * @example
+   * ```typescript
+   * cuss2.on("activated", async (activationData) => {
+   *   if (cuss2.accessibleMode) {
+   *     // Configure UI for accessibility
+   *     await setupAccessibleUI();
+   *
+   *     // Acknowledge to platform
+   *     await cuss2.acknowledgeAccessibleMode();
+   *   }
+   * });
+   * ```
+   */
+  async acknowledgeAccessibleMode(): Promise<PlatformData | undefined> {
+    this._ensureConnected();
+
+    // Only acknowledge if we're actually in accessible mode
+    if (!this.accessibleMode) {
+      log("warn", "acknowledgeAccessibleMode called but accessibleMode is false");
+      return Promise.resolve(undefined);
+    }
+
+    // Only acknowledge if we're in ACTIVE state
+    if (this.state !== AppState.ACTIVE) {
+      log("warn", `acknowledgeAccessibleMode called in wrong state: ${this.state}`);
+      return Promise.resolve(undefined);
+    }
+
+    log("info", "Acknowledging accessible mode");
+    return await this.api.acknowledgeAccessible();
   }
 
   async queryComponents(): Promise<boolean> {

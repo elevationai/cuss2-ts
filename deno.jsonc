@@ -6,7 +6,8 @@
   "tasks": {
     "build": "deno run --allow-read --allow-write --allow-env --allow-run --allow-net scripts/build-js.ts",
     "test": "deno test --allow-net --allow-read --allow-env",
-    "example": "deno run --allow-net --allow-env docs/examples/basic-connection.ts"
+    "example": "deno run --allow-net --allow-env docs/examples/basic-connection.ts",
+    "serve": "deno run --allow-read --allow-net scripts/serve-dev.ts"
   },
   "compilerOptions": {
     "strict": true,

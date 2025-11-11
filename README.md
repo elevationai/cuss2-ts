@@ -500,8 +500,33 @@ deno task build
 
 This creates:
 
-- `dist/cuss2.js` - Full browser bundle
+- `dist/cuss2.js` - Full browser bundle (IIFE)
 - `dist/cuss2.min.js` - Minified bundle with source map
+- `dist/cuss2.esm.js` - ESM module bundle
+- `dist/cuss2.esm.min.js` - Minified ESM bundle
+
+### Local Development Server
+
+Run the examples and documentation locally:
+
+```bash
+# Build the bundles first
+deno task build
+
+# Copy dist files to docs folder (required for local testing)
+cp -r dist docs/
+
+# Start the development server
+deno task serve
+```
+
+The dev server runs at `http://localhost:8000` and mimics the GitHub Pages URL structure:
+- Landing page: `http://localhost:8000/`
+- Interactive tester: `http://localhost:8000/examples/tester.html`
+- Examples index: `http://localhost:8000/examples/`
+- API docs: `http://localhost:8000/api/`
+
+**Note**: The dev server maps URLs to match the production GitHub Pages structure, so examples work identically in both local development and production deployment without any code changes.
 
 ### Using the Browser Bundle
 

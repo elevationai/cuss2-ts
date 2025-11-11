@@ -446,7 +446,13 @@ export class Cuss2 extends EventEmitter {
       this._ensureConnected();
       const ad = Build.applicationData(
         PlatformDirectives.PLATFORM_APPLICATIONS_ACKNOWLEDGE_ACCESSIBLE,
-        {},
+        {
+          dataObj: {
+            applicationStateCode: this.state,
+            accessibleMode: this.accessibleMode,
+            applicationStateChangeReasonCode: ChangeReason.NOT_APPLICABLE,
+          },
+        },
       );
       return await this.connection.sendAndGetResponse(ad);
     },

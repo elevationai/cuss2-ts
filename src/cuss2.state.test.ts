@@ -260,14 +260,17 @@ Deno.test("2.6 - State transitions should proceed even when individual component
 
 // Test Category 2.7: Accessible Mode Acknowledgment Tests
 
-Deno.test("2.7.1 - acknowledgeAccessibleMode should send correct directive when in accessible mode and ACTIVE state", async () => {
+Deno.test("2.7.1 - acknowledgeAccessibleMode should send correct directive and payload when in accessible mode and ACTIVE state", async () => {
   const { cuss2, mockConnection } = createMockCuss2();
 
-  // Track the platform directive sent
+  // Track the platform directive and payload sent
   let sentDirective: string | undefined;
+  let sentPayload: unknown;
   mockConnection.sendAndGetResponse = (data: unknown) => {
-    // @ts-ignore - accessing meta for testing
+    // @ts-ignore - accessing meta and payload for testing
     sentDirective = data?.meta?.directive;
+    // @ts-ignore - accessing payload for testing
+    sentPayload = data?.payload;
     return Promise.resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData);
   };
 
@@ -282,6 +285,14 @@ Deno.test("2.7.1 - acknowledgeAccessibleMode should send correct directive when 
   // Verify correct directive was sent
   assertEquals(sentDirective, "platform_applications_acknowledge_accessible");
   assertEquals(result?.meta?.messageCode, "OK");
+
+  // Verify correct payload was sent with ApplicationState
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateCode, AppState.ACTIVE);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.accessibleMode, true);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateChangeReasonCode, "NOT_APPLICABLE");
 });
 
 Deno.test("2.7.2 - acknowledgeAccessibleMode should return undefined when accessibleMode is false", async () => {
@@ -330,14 +341,17 @@ Deno.test("2.7.3 - acknowledgeAccessibleMode should return undefined when not in
   assertEquals(result, undefined);
 });
 
-Deno.test("2.7.4 - api.acknowledgeAccessible should send directive regardless of state", async () => {
+Deno.test("2.7.4 - api.acknowledgeAccessible should send directive and payload regardless of state", async () => {
   const { cuss2, mockConnection } = createMockCuss2();
 
-  // Track the platform directive sent
+  // Track the platform directive and payload sent
   let sentDirective: string | undefined;
+  let sentPayload: unknown;
   mockConnection.sendAndGetResponse = (data: unknown) => {
-    // @ts-ignore - accessing meta for testing
+    // @ts-ignore - accessing meta and payload for testing
     sentDirective = data?.meta?.directive;
+    // @ts-ignore - accessing payload for testing
+    sentPayload = data?.payload;
     return Promise.resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData);
   };
 
@@ -352,6 +366,14 @@ Deno.test("2.7.4 - api.acknowledgeAccessible should send directive regardless of
   // Verify directive was sent (no validation in raw API)
   assertEquals(sentDirective, "platform_applications_acknowledge_accessible");
   assertEquals(result?.meta?.messageCode, "OK");
+
+  // Verify payload contains ApplicationState with current state values
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateCode, AppState.AVAILABLE);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.accessibleMode, false);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateChangeReasonCode, "NOT_APPLICABLE");
 });
 
 Deno.test("2.7.5 - acknowledgeAccessibleMode should work in typical activation flow", async () => {

@@ -270,8 +270,10 @@ The library provides two ways to acknowledge accessible mode:
 - **`cuss2.acknowledgeAccessibleMode()`** - Convenience method with validation (recommended)
   - Only sends acknowledgment when in ACTIVE state and accessibleMode is true
   - Returns `undefined` if conditions aren't met
+  - Automatically sends the current application state with the acknowledgment
 - **`cuss2.api.acknowledgeAccessible()`** - Raw API method
   - Sends the directive regardless of state (for advanced use cases)
+  - Includes current `applicationStateCode`, `accessibleMode`, and reason code in the payload
 
 ````
 ### Component Types

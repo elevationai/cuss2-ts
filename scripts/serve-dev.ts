@@ -81,7 +81,8 @@ async function serveFile(pathname: string): Promise<Response> {
         "cache-control": "no-cache", // Disable caching for dev
       },
     });
-  } catch (error) {
+  }
+  catch (error) {
     if (error instanceof Deno.errors.NotFound) {
       console.log(`❌ 404: ${pathname}`);
       return new Response("404 Not Found", {

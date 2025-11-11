@@ -521,6 +521,7 @@ deno task serve
 ```
 
 The dev server runs at `http://localhost:8000` and mimics the GitHub Pages URL structure:
+
 - Landing page: `http://localhost:8000/`
 - Interactive tester: `http://localhost:8000/examples/tester.html`
 - Examples index: `http://localhost:8000/examples/`

@@ -34,10 +34,10 @@ const entryFile = path.join(tempDir, "bundle-entry.js");
 // Create a wrapper entrypoint that properly handles imports
 const entryCode = `
 // Temporary bundle entry point
-import { Cuss2 } from "../mod.ts";
+import { Cuss2, ComponentInterrogation } from "../mod.ts";
 
-// Re-export Cuss2 as the primary export
-export { Cuss2 };
+// Re-export Cuss2 and ComponentInterrogation as primary exports
+export { Cuss2, ComponentInterrogation };
 
 // Also create named exports for everything from cuss2-typescript-models
 import * as Models from "cuss2-typescript-models";

@@ -1,5 +1,5 @@
 // ===== IMPORTS =====
-import { Cuss2, Models } from "../../dist/cuss2.esm.js";
+import { Cuss2, Models, ComponentInterrogation } from "../../dist/cuss2.esm.js";
 const { ApplicationStateCodes, ComponentState, MessageCodes } = Models;
 
 let cuss2 = null;
@@ -53,143 +53,88 @@ const aeaCommands = {
 };
 
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
-// Based on the CUSS Virtual Component Concept and our new hierarchy
+// Uses ComponentInterrogation from the library for characteristic-based detection
 const componentCapabilities = {
-  // Get capabilities for a component based on its type
-  getCapabilities(component) {
-    const deviceType = component.deviceType?.toLowerCase() || '';
+  // Get capabilities for a component based on CUSS characteristics
+  getCapabilities(rawComponent) {
     const capabilities = [];
 
     // All components have query (from BaseComponent)
     capabilities.push('query');
 
-    // Most components have cancel and setup (from BaseComponent)
-    if (!this.isFeederComponent(deviceType)) {
-      capabilities.push('cancel', 'setup');
-    } else {
-      // Feeder only has query and offer
+    // Check if it's a feeder first (special case - only query and offer)
+    if (ComponentInterrogation.isFeeder(rawComponent)) {
       capabilities.push('offer');
       return capabilities;
     }
 
-    // Interactive components (enable/disable)
-    if (this.isInteractiveComponent(deviceType)) {
+    // Most components have cancel and setup (from BaseComponent)
+    capabilities.push('cancel', 'setup');
+
+    // Interactive components (enable/disable) - uses characteristic-based detection
+    const isInteractive =
+      ComponentInterrogation.isBarcodeReader(rawComponent) ||
+      ComponentInterrogation.isDocumentReader(rawComponent) ||
+      ComponentInterrogation.isCardReader(rawComponent) ||
+      ComponentInterrogation.isCamera(rawComponent) ||
+      ComponentInterrogation.isRFIDReader(rawComponent) ||
+      ComponentInterrogation.isKeypad(rawComponent) ||
+      ComponentInterrogation.isBiometric(rawComponent) ||
+      ComponentInterrogation.isScale(rawComponent) ||
+      ComponentInterrogation.isDispenser(rawComponent) ||
+      ComponentInterrogation.isAnnouncement(rawComponent) ||
+      ComponentInterrogation.isBagTagPrinter(rawComponent) ||
+      ComponentInterrogation.isBoardingPassPrinter(rawComponent) ||
+      ComponentInterrogation.isAEASBD(rawComponent) ||
+      ComponentInterrogation.isHeadset(rawComponent);
+
+    if (isInteractive) {
       capabilities.push('enable', 'disable');
     }
 
-    // Output components (send)
-    if (this.isOutputComponent(deviceType)) {
+    // Output components (send) - check for output types
+    const isOutput =
+      ComponentInterrogation.isIllumination(rawComponent) ||
+      ComponentInterrogation.isHeadset(rawComponent) ||
+      ComponentInterrogation.isBiometric(rawComponent) ||
+      ComponentInterrogation.isBagTagPrinter(rawComponent) ||
+      ComponentInterrogation.isBoardingPassPrinter(rawComponent) ||
+      ComponentInterrogation.isAEASBD(rawComponent);
+
+    if (isOutput) {
       capabilities.push('send');
     }
 
-    // Media components with offer capability
-    if (this.isMediaOfferCapable(deviceType)) {
+    // Dispenser has offer capability
+    if (ComponentInterrogation.isDispenser(rawComponent)) {
       capabilities.push('offer');
     }
 
-    // Announcement components
-    if (this.isAnnouncementComponent(deviceType)) {
+    // Announcement components have special playback controls
+    if (ComponentInterrogation.isAnnouncement(rawComponent)) {
       capabilities.push('play', 'pause', 'resume', 'stop');
     }
 
     // Input components with read capability
-    if (this.isDataReadCapable(deviceType)) {
-      capabilities.push('read');
-    }
+    const isReadCapable =
+      ComponentInterrogation.isBarcodeReader(rawComponent) ||
+      ComponentInterrogation.isDocumentReader(rawComponent) ||
+      ComponentInterrogation.isCardReader(rawComponent) ||
+      ComponentInterrogation.isCamera(rawComponent) ||
+      ComponentInterrogation.isRFIDReader(rawComponent) ||
+      ComponentInterrogation.isScale(rawComponent) ||
+      ComponentInterrogation.isBHS(rawComponent);
 
-    // Conveyor components
-    if (this.isConveyorComponent(deviceType)) {
-      capabilities.push('forward', 'backward', 'process');
+    if (isReadCapable) {
+      capabilities.push('read');
     }
 
     return capabilities;
   },
 
-  // Component type checkers based on CUSS Virtual Component Concept
-  isInteractiveComponent(type) {
-    // Components that can be enabled/disabled (all classes extending InteractiveComponent)
-    // Convert to lowercase and handle both underscore and non-underscore versions
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      // MediaInputComponent subclasses
-      'barcodereader', 'documentreader', 'cardreader', 'camera', 'rfid', 'passportreader',
-      // UserInputComponent subclasses
-      'keypad', 'keyboard',
-      // UserOutputComponent subclasses
-      'headset', 'biometric',
-      // MediaOutputComponent subclasses
-      'boardingpassprinter', 'bagtagprinter', 'printer', 'aeasbd',
-      // BaggageScaleComponent
-      'scale',
-      // DispenserComponent
-      'dispenser',
-      // InsertionBeltComponent
-      'insertionbelt',
-      // AnnouncementComponent - THIS WAS MISSING!
-      'announcement'
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isOutputComponent(type) {
-    // Components that can send data (OutputCapable interface)
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      // DataOutputComponent (extends BaseComponent)
-      'illumination',
-      // MediaOutputComponent (extends InteractiveComponent)
-      'boardingpassprinter', 'bagtagprinter', 'printer', 'aeasbd',
-      // UserOutputComponent (extends InteractiveComponent)
-      'headset', 'biometric',
-      // ConveyorComponent and subclasses
-      'insertionbelt', 'verificationbelt', 'parkingbelt',
-      // Note: Announcement does NOT have send, it has play/pause/resume/stop
-      // Note: BHS is DataInputComponent, does NOT have send
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isMediaOfferCapable(type) {
-    // DISPENSER type
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return normalizedType.includes('dispenser');
-  },
-
-  isAnnouncementComponent(type) {
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return normalizedType.includes('announcement');
-  },
-
-  isDataReadCapable(type) {
-    // Components with DataReadCapable interface
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      // MediaInputComponent subclasses
-      'barcodereader', 'documentreader', 'cardreader', 'passportreader',
-      'camera', 'rfid',
-      // BaggageScaleComponent
-      'scale',
-      // DataInputComponent
-      'bhs'
-      // Note: Biometric is UserOutputComponent, does NOT have read
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isConveyorComponent(type) {
-    // Belt components
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      'insertionbelt', 'verificationbelt', 'parkingbelt'
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isFeederComponent(type) {
-    // Feeder has offer but no enable/disable per spec
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return normalizedType.includes('feeder');
-  },
-
   // Check if a specific capability is allowed for this component
-  hasCapability(component, capability) {
-    const capabilities = this.getCapabilities(component);
+  hasCapability(rawComponent, capability) {
+    const capabilities = this.getCapabilities(rawComponent);
     return capabilities.includes(capability);
   }
 };
@@ -514,7 +459,7 @@ const templates = {
 
     // Setup Enabled toggle (only if component supports it)
     const enabledToggleContainer = clone.querySelector('.enabled-toggle-container');
-    if (componentCapabilities.hasCapability(component, 'enable')) {
+    if (componentCapabilities.hasCapability(component.rawComponent, 'enable')) {
       enabledToggleContainer.style.display = '';
       const enabledToggle = clone.querySelector('.enabled-toggle-container .toggle-switch');
       enabledToggle.dataset.componentId = id;
@@ -529,7 +474,8 @@ const templates = {
     }
 
     // Get capabilities and populate action columns
-    const capabilities = componentCapabilities.getCapabilities(component);
+    // Use rawComponent for ComponentInterrogation (needs EnvironmentComponent structure)
+    const capabilities = componentCapabilities.getCapabilities(component.rawComponent);
     const leftColumn = clone.querySelector('.left-column');
     const rightColumn = clone.querySelector('.right-column');
 
@@ -554,9 +500,9 @@ const templates = {
 
       // Check if this is a printer component and populate dropdown
       let commandSet = null;
-      if (component.deviceType === 'BOARDING_PASS_PRINTER') {
+      if (ComponentInterrogation.isBoardingPassPrinter(component.rawComponent)) {
         commandSet = aeaCommands.boardingPassPrinter;
-      } else if (component.deviceType === 'BAG_TAG_PRINTER') {
+      } else if (ComponentInterrogation.isBagTagPrinter(component.rawComponent)) {
         commandSet = aeaCommands.bagTagPrinter;
       }
 
@@ -594,9 +540,9 @@ const templates = {
 
       // Check if this is a printer component and populate dropdown
       let commandSet = null;
-      if (component.deviceType === 'BOARDING_PASS_PRINTER') {
+      if (ComponentInterrogation.isBoardingPassPrinter(component.rawComponent)) {
         commandSet = aeaCommands.boardingPassPrinter;
-      } else if (component.deviceType === 'BAG_TAG_PRINTER') {
+      } else if (ComponentInterrogation.isBagTagPrinter(component.rawComponent)) {
         commandSet = aeaCommands.bagTagPrinter;
       }
 
@@ -660,8 +606,8 @@ const templates = {
       input.id = `read-input-${id}`;
 
       // Check if this is a barcode reader or document reader and populate dropdown with test data
-      const isBarcodeReader = component.deviceType === 'BARCODE_READER';
-      const isDocumentReader = component.deviceType === 'PASSPORT_READER';
+      const isBarcodeReader = ComponentInterrogation.isBarcodeReader(component.rawComponent);
+      const isDocumentReader = ComponentInterrogation.isDocumentReader(component.rawComponent);
 
       if (isBarcodeReader && dropdown && aeaCommands.barcodeReader) {
         // Populate dropdown with example barcode data for testing/reference

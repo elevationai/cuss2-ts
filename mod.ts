@@ -5,3 +5,4 @@ export * from "./src/models/index.ts";
 export * from "./src/models/stateChange.ts";
 export * from "./src/helper.ts";
 export * from "./src/connection.ts";
+export * from "./src/componentInterrogation.ts";

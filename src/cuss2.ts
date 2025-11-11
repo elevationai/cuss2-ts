@@ -617,19 +617,16 @@ export class Cuss2 extends EventEmitter {
    * });
    * ```
    */
-  async acknowledgeAccessibleMode(): Promise<PlatformData | undefined> {
+  async acknowledgeAccessibleMode(): Promise<PlatformData> {
     this._ensureConnected();
 
-    // Only acknowledge if we're actually in accessible mode
-    if (!this.accessibleMode) {
-      log("warn", "acknowledgeAccessibleMode called but accessibleMode is false");
-      return Promise.resolve(undefined);
-    }
-
-    // Only acknowledge if we're in ACTIVE state
-    if (this.state !== AppState.ACTIVE) {
-      log("warn", `acknowledgeAccessibleMode called in wrong state: ${this.state}`);
-      return Promise.resolve(undefined);
+    // Only acknowledge if we're actually in accessible mode and in ACTIVE state
+    if (!this.accessibleMode || this.state !== AppState.ACTIVE) {
+      throw new Error(
+        !this.accessibleMode
+          ? "acknowledgeAccessibleMode called but accessibleMode is false"
+          : `acknowledgeAccessibleMode called in wrong state: ${this.state}`
+      );
     }
 
     log("info", "Acknowledging accessible mode");

@@ -625,7 +625,7 @@ export class Cuss2 extends EventEmitter {
       throw new Error(
         !this.accessibleMode
           ? "acknowledgeAccessibleMode called but accessibleMode is false"
-          : `acknowledgeAccessibleMode called in wrong state: ${this.state}`
+          : `acknowledgeAccessibleMode called in wrong state: ${this.state}`,
       );
     }
 

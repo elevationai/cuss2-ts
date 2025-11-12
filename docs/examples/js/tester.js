@@ -4,6 +4,16 @@ const { ApplicationStateCodes, ComponentState, MessageCodes } = Models;
 
 let cuss2 = null;
 
+// ===== UTILITY FUNCTIONS =====
+// Debounce function to limit how often a function can be called
+function debounce(func, delay) {
+  let timeoutId;
+  return function debounced(...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
 // ===== TEST DATA DEFINITIONS =====
 // Company logo ITPS command (used in SETUP for printers)
 const companyLogo = 'LT0146940A020101000000001D01630064006400000000000000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001240001001E016400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C4FF9FDEFFC1FCC3FFC1FE7FDEFFC1FCC3FFC1F9C2FF03DCFFC1FCC3FFC1E7C1FF81C1FE07DBFFC1FCC3FF9FC1FC7FC1FFC1F87FDAFFC1FCC2FFC1FE7FC1E3C3FF9FDAFFC1FCC2FFC1FDC1FF3FC3FFC1F3DAFFC1FCC2FFC1F3C1FCC4FFC1FCDAFFC1FCC2FFC1E7C1F3C5FF7FD9FFC1FCC2FFC1DFC1E7C1FFC1F0003FC2FFC1F7D8FFC1FCC2FFBF9FC1FFC20003C2FFC1F9D8FFC1FCC2FFC27FC1F80FC1FFC1C07FC1FFC1FCD8FFC1FCC1FFC1FEC1FCC1FFC1C0C2FFC1FC0FC1FFC1FE7FD7FFC1FCC1FFC1FDC1FBC1FF07C3FF83C2FFBFD7FFC1FCC1FFC1FBC1F7C1FE1FC3FFC1E1C2FFC1DFD7FFC1FCC1FFC1F7C1EFC1F87FC3FFC1F87FC1FFC1EFD7FFC1FCC1FFC1EFC1DFC1F1C4FFC1FE3FC1FFC1E7D7FFC1FCC1FFC1DFBFC1C3C5FF8FC2F7D7FFC1FCC1FFC1DF7F8FC5FFC1C7C2FBD7FFC1FCC1FFBE7F1FC5FFC1E3C2FDD7FFC1FCC1FF7EC1FE3FC5FFC1F1C2FCD7FFC1FCC1FF7DC1FC7FC5FFC1F8C2FED7FFC1FCC1FEC1FBC1F8C6FFC1FCC37FD6FFC1FCC1FCC1F3C1F1C6FFC1FE3FBF7FD6FFC1FCC1FDC1F7C1F3C7FF1FC2BFD6FFC1FCC1FBC1EFC1E7C7FF9FC2DFD6FFC1FCC1FBC1EFC1CFC7FFC1CFC1FFC1DFD6FFC1FCC1F3C1DFC1CFC7FFC1C7C2EFD6FFC1FCC1F7C1DF9FC7FFC2E7C1EFD6FFC1FCC1F7BF3FC7FFC1F3C1F7C1EFD6FFC1FCC1EFBF3FC7FFC1F3C2F7D6FFC1FCC1EF7E3FC7FFC1F9C1FBC1F7D6FFC1FCC1CF7E7FC7FFC1F9C2FBD6FFC1FCC1DF7C7FC7FFC1FCC1FDC1FBD6FFC1FCC1DEC1FCC8FFC1FCC1FDC1FBD6FFC1FCC1DEC1FCC8FFC1FCC2FDD6FFC1FCBEC1F9C1FFC1E00003C1FFC1EFC2FFC1FE7FC1FDC1FFC1C00007C1FFC1DFC1FFC1F7C2FFBFC1FFC1C00007C1FFC1C00007C1FFC1C00FC1FCBDC1F9C1FFC1C00001C1FFC1C3C2FFC1FE7EC1FDC1FF800003C1FF8FC1FFC1E3C2FF1FC1FF800003C1FF800003C1FF8001C1FCBDC1F9C1FFC1C00001C1FFC1C3C2FFC1FE7EC1FDC1FF800003C1FF87C1FFC1C3C1FFC1FE0FC1FF800003C1FF800003C1FF80007CBDC1F9C1FFC1E00003C1FFC1C3C3FF3EC2FFC1C00003C1FF87C1FFC1C3C1FFC1FE0FC1FFC1C00003C1FFC1C00007C1FFC1C0003CBDC1F3C5FFC1C3C3FF3EC1FEC5FFC1C3C1FF87C1FFC1FE0FCAFFC1F81C7DC1F3C5FFC1C3C3FF3F7EC5FFC1C3C1FF87C1FFC1FC07CAFFC1FE0C7FC1F3C5FFC1C3C3FF3F7EC5FFC1E1C1FF8FC1FFC1FC07CBFF0C7BC1F3C5FFC1C3C3FF3FC1FEC5FFC1E1C1FF0FC1FFC1F843C2FFC1E7C6FFC1DFC1FF847BC1F3C5FFC1C3C3FF3FC1FEC5FFC1F1C1FF1FC1FFC1F843C2FFC1C3C6FF8FC1FF847BC1F3C5FFC1C3C3FFBFC1FEC5FFC1F0C1FE1FC1FFC1F0C1E1C2FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF9FC1FEC5FFC1F0C1FE1FC1FFC1F0C1E1C2FFC1C3C6FF8FC1FFC1C07BC1F3C1FFC1E00001C1FFC1C3C3FF9FC1FEC1FFC1C00003C1FFC1F87E3FC1FFC2F1C2FFC1C3C2FFC1C00003C1FF8FC1FFC1C07BC1F3C1FFC1C00001C1FFC1C3C3FF9FC1FEC1FF800003C1FFC1F87C3FC1FFC1E1C1F0C2FFC1C3C2FF800003C1FF8FC1FFC1C07BC1F3C1FFC1E00001C1FFC1C3C3FF9FC1FEC1FFC1C00003C1FFC1FC7C7FC1FFC1E1C1F0C2FFC1C3C2FF800003C1FF8FC1FFC1C07BC1F3C5FFC1C3C3FF9FC1FEC5FFC1FC387FC1FFC1C3C1F87FC1FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE387FC1FFC1C3C1F87FC1FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE10C2FFC1C7C1FC7FC1FFC1C3C6FF8FC1FF847BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE10C2FF87C1FC3FC1FFC1C3C6FF8FC1FF847FC1F3C5FFC1C3C3FF3FC1FEC6FF01C2FF87C1FE3FC1FFC1C3C6FF8FC1FF0CBDC1F3C5FFC1C3C3FF3FC1FEC6FF01C2FF0FC1FE1FC1FFC1C3C6FF8FC1FE0CBDC1F3C5FFC1C3C3FF3FC1FEC6FF81C2FF0FC1FE1FC1FFC1C3C6FF8FC1F81CBDC1F9C1FFC1E00003C1FFC1C00003C1FE7FC1FEC1FFC1C00007C2FF83C1FFC1FE1FC1FF1FC1FFC1C3C2FFC1C00007C1FF80003CBDC1F9C1FFC1C00001C1FFC1C00001C1FE7FC2FF800003C2FF83C1FFC1FE1FC1FF0FC1FFC1C3C2FF800003C1FF80007CBDC1F9C1FFC1C00001C1FFC1C00001C1FE7FC1FDC1FF800003C2FFC1C7C1FFC1FE1FC1FF8FC1FFC1C3C2FF800003C1FF8001C1FCC1FEC1FCC1FFC1E00003C1FFC1E00003C1FE7FC1FDC1FFC1C00003C2FFC1E7C2FF3FC1FF9FC1FFC1E7C2FFC1C00007C1FFC1C00FC1FCC1DEC1FCC8FFC1FCC1FFC1FDD6FFC1FCC1DEC1FCC8FFC1FCC1FFC1FDD6FFC1FCC1DF7E7FC7FFC1F9C1FFC1FBD6FFC1FCC1EF7E7FC7FFC1F9C1FFC1FBD6FFC1FCC1EFBF3FC7FFC1F1C1FFC1FBD6FFC1FCC1EFBF3FC7FFC1F3C1FFC1F7D6FFC1FCC1F7BF9FC7FFC1E7C1FFC1F7D6FFC1FCC1F7C1DF9FC7FFC1E7C1FFC1EFD6FFC1FCC1FBC1DFC1CFC7FFC1CFC1FFC1EFD6FFC1FCC1FBC1EFC1C7C7FF8FC1FFC1EFD6FFC1FCC1FDC1E7C1E3C7FF1FC1FFC1DFD6FFC1FCC1FDC1F7C1F3C7FF3FC1FFC1DFD6FFC1FCC1FEC1FBC1F9C6FFC1FE7FC1FFBFD6FFC1FCC1FEC1FBC1FCC6FFC1FCC2FF3FD6FFC1FCC1FF7DC1FE7FC5FFC1F9C2FF7FD6FFC1FCC1FFBEC1FF3FC5FFC1F1C1FFC1FED7FFC1FCC1FFBF7F8FC5FFC1E7C1FFC1FED7FFC1FCC2FF3FC1C7C5FF8FC1FFC1FDD7FFC1FCC2FFC1DFC1E3C5FF1FC1FFC1FBD7FFC1FCC2FFC1CFC1F0C4FFC1FC3FC1FFC1F7D7FFC1FCC2FFC1E7C1FC3FC3FFC1F0C1FFBFC1E7D7FFC1FCC2FFC1F3C1FF0FC3FFC1C3C1FF3FC1EFD7FFC1FCC2FFC1FDC1FFC1C3C3FF0FC1FEC1FFC1DFD7FFC1FCC2FFC1FEC1FFC1F03FC1FFC1F83FC1FDC1FFBFD7FFC1FCC3FF3FC1FC01C1FE00C1FFC1F3C1FF7FD7FFC1FCC3FFC1DFC1FFC1C00007C1FFC1E7C1FED8FFC1FCC3FFC1E7C2FF87C2FF9FC1F9D8FFC1FCC3FFC1F9C4FFC1FE7FC1F3D8FFC1FCC3FFC1FE7FC3FFC1F9C1FFC1EFD8FFC1FCC4FF8FC3FFC1C7C1FF9FD8FFC1FCC4FFC1F1C2FFC1E3FC1FF7FD8FFC1FCC4FFC1FE1FC1FFC1E1C1FFC1FCD9FFC1FCC5FFC1E0001FC1FFC1F3D9FFC1FCC9FFC1CFD9FFC1FCC9FF3FD9FFC1FCC8FFC1F8DAFFC1FCC8FFC1C7DAFFC1FCC7FFC1F07FDAFFC1FCC6FFC1FC0FDBFFC1FC';
@@ -398,6 +408,18 @@ const dom = {
     errorElements.forEach(el => el.remove());
     inputElements.forEach(el => el.classList.remove('error'));
   },
+
+  // Create safe DOM element with text content (prevents XSS)
+  createSafeElement(tag, textContent = '', className = '') {
+    const element = document.createElement(tag);
+    if (textContent) {
+      element.textContent = textContent;
+    }
+    if (className) {
+      element.className = className;
+    }
+    return element;
+  },
 };
 
 // ===== LOGGING UTILITY =====
@@ -414,6 +436,7 @@ const logger = {
   log(message, type = "info") {
     const entry = document.createElement("div");
     entry.className = `log-entry ${type}`;
+    // Use textContent to prevent XSS - already safe
     entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
     dom.elements.logContainer.appendChild(entry);
     dom.elements.logContainer.scrollTop = dom.elements.logContainer.scrollHeight;
@@ -436,7 +459,7 @@ const logger = {
 
 // ===== HTML TEMPLATES =====
 const templates = {
-  // Environment details template
+  // Environment details template - returns DocumentFragment to prevent XSS
   environmentDetails(env) {
     // Helper to format values
     const formatValue = (value) => {
@@ -446,33 +469,63 @@ const templates = {
       return String(value);
     };
 
-    // Build HTML for all environment properties
-    let html = '';
+    // Helper to create environment item
+    const createEnvItem = (label, value) => {
+      const item = document.createElement('div');
+      item.className = 'env-item';
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'env-label';
+      labelSpan.textContent = label + ':';
+
+      const valueSpan = document.createElement('span');
+      valueSpan.className = 'env-value';
+      valueSpan.textContent = formatValue(value);
+
+      item.appendChild(labelSpan);
+      item.appendChild(document.createTextNode(' '));
+      item.appendChild(valueSpan);
+
+      return item;
+    };
+
+    // Helper to create group header
+    const createGroupHeader = (title) => {
+      const group = document.createElement('div');
+      group.className = 'env-group';
+      const strong = document.createElement('strong');
+      strong.textContent = title;
+      group.appendChild(strong);
+      return group;
+    };
+
+    // Build DOM fragment
+    const fragment = document.createDocumentFragment();
 
     // Device Info
-    html += `<div class="env-group"><strong>Device Information</strong></div>`;
-    html += `<div class="env-item"><span class="env-label">Device ID:</span> <span class="env-value">${formatValue(env.deviceID)}</span></div>`;
-    html += `<div class="env-item"><span class="env-label">Device Name:</span> <span class="env-value">${formatValue(env.deviceModelName)}</span></div>`;
+    fragment.appendChild(createGroupHeader('Device Information'));
+    fragment.appendChild(createEnvItem('Device ID', env.deviceID));
+    fragment.appendChild(createEnvItem('Device Name', env.deviceModelName));
     if (env.deviceLocation) {
-      html += `<div class="env-item"><span class="env-label">Airport Code:</span> <span class="env-value">${formatValue(env.deviceLocation.airportCode)}</span></div>`;
-      html += `<div class="env-item"><span class="env-label">Terminal:</span> <span class="env-value">${formatValue(env.deviceLocation.terminalID)}</span></div>`;
-      html += `<div class="env-item"><span class="env-label">Gate:</span> <span class="env-value">${formatValue(env.deviceLocation.gateID)}</span></div>`;
+      fragment.appendChild(createEnvItem('Airport Code', env.deviceLocation.airportCode));
+      fragment.appendChild(createEnvItem('Terminal', env.deviceLocation.terminalID));
+      fragment.appendChild(createEnvItem('Gate', env.deviceLocation.gateID));
     }
 
     // CUSS Version Info
-    html += `<div class="env-group"><strong>CUSS Platform</strong></div>`;
-    html += `<div class="env-item"><span class="env-label">CUSS Versions:</span> <span class="env-value">${env.cussVersions?.join(', ') || '-'}</span></div>`;
-    html += `<div class="env-item"><span class="env-label">OS Name:</span> <span class="env-value">${formatValue(env.osName)}</span></div>`;
-    html += `<div class="env-item"><span class="env-label">OS Version:</span> <span class="env-value">${formatValue(env.osVersion)}</span></div>`;
+    fragment.appendChild(createGroupHeader('CUSS Platform'));
+    fragment.appendChild(createEnvItem('CUSS Versions', env.cussVersions?.join(', ') || '-'));
+    fragment.appendChild(createEnvItem('OS Name', env.osName));
+    fragment.appendChild(createEnvItem('OS Version', env.osVersion));
 
     // Session Timeouts
-    html += `<div class="env-group"><strong>Session Timeouts</strong></div>`;
-    html += `<div class="env-item"><span class="env-label">Session Timeout:</span> <span class="env-value">${formatValue(env.sessionTimeout)}s</span></div>`;
-    html += `<div class="env-item"><span class="env-label">Kill Timeout:</span> <span class="env-value">${formatValue(env.killTimeout)}s</span></div>`;
-    html += `<div class="env-item"><span class="env-label">Expected ACK Time:</span> <span class="env-value">${formatValue(env.expectedAckTime)}ms</span></div>`;
-    html += `<div class="env-item"><span class="env-label">Max Cache Time:</span> <span class="env-value">${formatValue(env.maxCacheTime)}s</span></div>`;
+    fragment.appendChild(createGroupHeader('Session Timeouts'));
+    fragment.appendChild(createEnvItem('Session Timeout', env.sessionTimeout + 's'));
+    fragment.appendChild(createEnvItem('Kill Timeout', env.killTimeout + 's'));
+    fragment.appendChild(createEnvItem('Expected ACK Time', env.expectedAckTime + 'ms'));
+    fragment.appendChild(createEnvItem('Max Cache Time', env.maxCacheTime + 's'));
 
-    return html;
+    return fragment;
   },
 
   // Component item template - creates DOM elements from HTML template
@@ -741,37 +794,100 @@ const templates = {
     container.appendChild(button);
   },
 
-  // Timeout warning banner template
+  // Timeout warning banner template - returns DOM element to prevent XSS
   timeoutWarning(seconds) {
-    return `
-      <div id="timeoutBanner" class="timeout-banner">
-        <div class="timeout-header">
-          <strong>⚠️ Session Timeout Warning</strong>
-          <button id="dismissTimeout" class="dismiss-btn">×</button>
-        </div>
-        <p>Application will be terminated in <span id="timeoutCounter">${seconds}</span> seconds</p>
-      </div>
-    `;
+    const banner = document.createElement('div');
+    banner.id = 'timeoutBanner';
+    banner.className = 'timeout-banner';
+
+    const header = document.createElement('div');
+    header.className = 'timeout-header';
+
+    const strong = document.createElement('strong');
+    strong.textContent = 'Session Timeout Warning';
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.id = 'dismissTimeout';
+    dismissBtn.className = 'dismiss-btn';
+    dismissBtn.textContent = '×';
+
+    header.appendChild(strong);
+    header.appendChild(dismissBtn);
+
+    const message = document.createElement('p');
+    message.textContent = 'Application will be terminated in ';
+    const counter = document.createElement('span');
+    counter.id = 'timeoutCounter';
+    counter.textContent = seconds;
+    message.appendChild(counter);
+    message.appendChild(document.createTextNode(' seconds'));
+
+    banner.appendChild(header);
+    banner.appendChild(message);
+
+    return banner;
   },
 
-  // Mixed content warning banner template
+  // Mixed content warning banner template - returns DOM element to prevent XSS
   mixedContentWarning(currentProtocol, targetProtocol, suggestedUrl) {
-    return `
-      <div id="mixedContentBanner" class="mixed-content-banner">
-        <div class="mixed-content-header">
-          <strong>🔒 Mixed Content Security Warning</strong>
-          <button id="dismissMixedContent" class="dismiss-btn">×</button>
-        </div>
-        <p>This page is served over <strong>${currentProtocol.replace(':', '').toUpperCase()}</strong> but trying to connect to <strong>${targetProtocol.replace(':', '').toUpperCase()}</strong>.</p>
-        <p>Modern browsers block this for security reasons.</p>
-        <div class="mixed-content-actions">
-          <button id="useSuggestedUrl" class="suggested-url-btn" data-url="${suggestedUrl}">
-            Use Secure URL: ${suggestedUrl}
-          </button>
-          <button id="continueAnyway" class="continue-anyway-btn">Continue Anyway</button>
-        </div>
-      </div>
-    `;
+    const banner = document.createElement('div');
+    banner.id = 'mixedContentBanner';
+    banner.className = 'mixed-content-banner';
+
+    const header = document.createElement('div');
+    header.className = 'mixed-content-header';
+
+    const strong = document.createElement('strong');
+    strong.textContent = 'Mixed Content Security Warning';
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.id = 'dismissMixedContent';
+    dismissBtn.className = 'dismiss-btn';
+    dismissBtn.textContent = '×';
+
+    header.appendChild(strong);
+    header.appendChild(dismissBtn);
+
+    // First paragraph
+    const p1 = document.createElement('p');
+    p1.textContent = 'This page is served over ';
+    const currentProtoStrong = document.createElement('strong');
+    currentProtoStrong.textContent = currentProtocol.replace(':', '').toUpperCase();
+    p1.appendChild(currentProtoStrong);
+    p1.appendChild(document.createTextNode(' but trying to connect to '));
+    const targetProtoStrong = document.createElement('strong');
+    targetProtoStrong.textContent = targetProtocol.replace(':', '').toUpperCase();
+    p1.appendChild(targetProtoStrong);
+    p1.appendChild(document.createTextNode('.'));
+
+    // Second paragraph
+    const p2 = document.createElement('p');
+    p2.textContent = 'Modern browsers block this for security reasons.';
+
+    // Actions container
+    const actions = document.createElement('div');
+    actions.className = 'mixed-content-actions';
+
+    const suggestedBtn = document.createElement('button');
+    suggestedBtn.id = 'useSuggestedUrl';
+    suggestedBtn.className = 'suggested-url-btn';
+    suggestedBtn.dataset.url = suggestedUrl;
+    suggestedBtn.textContent = 'Use Secure URL: ' + suggestedUrl;
+
+    const continueBtn = document.createElement('button');
+    continueBtn.id = 'continueAnyway';
+    continueBtn.className = 'continue-anyway-btn';
+    continueBtn.textContent = 'Continue Anyway';
+
+    actions.appendChild(suggestedBtn);
+    actions.appendChild(continueBtn);
+
+    banner.appendChild(header);
+    banner.appendChild(p1);
+    banner.appendChild(p2);
+    banner.appendChild(actions);
+
+    return banner;
   }
 };
 
@@ -904,26 +1020,46 @@ const ui = {
 
   // Display environment info
   displayEnvironment(env) {
-    dom.elements.envDetails.innerHTML = templates.environmentDetails(env);
+    // Clear existing content
+    dom.elements.envDetails.innerHTML = '';
+    // Append DocumentFragment (XSS-safe)
+    dom.elements.envDetails.appendChild(templates.environmentDetails(env));
   },
 
   // Display components
   displayComponents() {
     if (!cuss2 || !cuss2.components) {
+      // Cleanup all component event listeners before clearing
+      componentHandlers.cleanupAllComponents();
       dom.elements.componentList.innerHTML = '<p style="color: #666;">No components available</p>';
       return;
     }
 
+    // Cleanup all existing component event listeners before re-rendering
+    componentHandlers.cleanupAllComponents();
     dom.elements.componentList.innerHTML = "";
+
+    // Use DocumentFragment for efficient batched DOM operations
+    const fragment = document.createDocumentFragment();
 
     Object.entries(cuss2.components).forEach(([id, component]) => {
       const item = this.createComponentItem(id, component);
-      dom.elements.componentList.appendChild(item);
+      fragment.appendChild(item);
     });
+
+    // Single DOM append operation instead of per-component appends
+    dom.elements.componentList.appendChild(fragment);
   },
 
   // Create a component item element
   createComponentItem(id, component) {
+    // Cleanup any existing event listeners for this component
+    componentHandlers.cleanupComponent(id);
+
+    // Create new AbortController for this component's event listeners
+    const controller = new AbortController();
+    componentHandlers._componentControllers.set(id, controller);
+
     // Use the new template-based approach
     const fragment = templates.componentItem(id, component);
 
@@ -967,7 +1103,7 @@ const ui = {
           // Always remove pending state
           toggleElement.classList.remove('pending');
         }
-      });
+      }, { signal: controller.signal });
     }
 
     // Add required toggle event listener
@@ -1035,7 +1171,7 @@ const ui = {
           // Always remove pending state
           requiredToggleElement.classList.remove('pending');
         }
-      });
+      }, { signal: controller.signal });
     }
 
     // Add action button event listeners
@@ -1067,7 +1203,7 @@ const ui = {
         } finally {
           button.disabled = false;
         }
-      });
+      }, { signal: controller.signal });
     });
 
     return item;
@@ -1090,8 +1226,8 @@ const ui = {
       existingBanner.remove();
     }
 
-    // Add banner to body
-    document.body.insertAdjacentHTML('afterbegin', templates.timeoutWarning(seconds));
+    // Add banner to body (XSS-safe DOM element)
+    document.body.insertBefore(templates.timeoutWarning(seconds), document.body.firstChild);
 
     // Add dismiss button handler
     const dismissBtn = document.getElementById('dismissTimeout');
@@ -1141,13 +1277,14 @@ const ui = {
       existingBanner.remove();
     }
 
-    // Add banner to body
-    document.body.insertAdjacentHTML('afterbegin',
+    // Add banner to body (XSS-safe DOM element)
+    document.body.insertBefore(
       templates.mixedContentWarning(
         mixedContentInfo.currentProtocol,
         mixedContentInfo.targetProtocol,
         mixedContentInfo.suggestedUrl
-      )
+      ),
+      document.body.firstChild
     );
 
     // Set up event listeners
@@ -1276,6 +1413,24 @@ function updateComponentReadyBadge(componentId, ready) {
 
 // ===== COMPONENT HANDLERS =====
 const componentHandlers = {
+  // Track AbortControllers for component event listeners to prevent memory leaks
+  _componentControllers: new Map(),
+
+  // Cleanup component event listeners
+  cleanupComponent(componentId) {
+    const controller = this._componentControllers.get(componentId);
+    if (controller) {
+      controller.abort();
+      this._componentControllers.delete(componentId);
+    }
+  },
+
+  // Cleanup all component event listeners
+  cleanupAllComponents() {
+    this._componentControllers.forEach((controller) => controller.abort());
+    this._componentControllers.clear();
+  },
+
   // Handle component action (enable/disable)
   async handleComponentAction(component, action, componentId) {
     const name = component.deviceType;
@@ -1706,6 +1861,8 @@ const connectionManager = {
   // Disconnect
   disconnect() {
     if (cuss2) {
+      // Cleanup all component event listeners to prevent memory leaks
+      componentHandlers.cleanupAllComponents();
       cuss2.connection.close();
       cuss2 = null;
       ui.resetUI();
@@ -1958,7 +2115,7 @@ function init() {
     await connectionManager.connect(formData);
   });
 
-  // Setup real-time URL validation
+  // Setup real-time URL validation with debouncing
   if (wssInput) {
     wssInput.addEventListener("blur", () => {
       const value = wssInput.value.trim();
@@ -1972,9 +2129,26 @@ function init() {
       }
     });
 
+    // Debounced input validation (300ms delay to avoid excessive validation)
+    const debouncedWssValidation = debounce(() => {
+      const value = wssInput.value.trim();
+      if (value) {
+        const validation = urlUtils.validateURL(value, 'WebSocket URL');
+        if (!validation.isValid) {
+          dom.showFieldError('wss', validation.error);
+        } else {
+          dom.clearFieldError('wss');
+        }
+      } else {
+        dom.clearFieldError('wss');
+      }
+    }, 300);
+
     wssInput.addEventListener("input", () => {
-      // Clear error on input to give immediate feedback
+      // Clear error immediately for better UX
       dom.clearFieldError('wss');
+      // Run debounced validation
+      debouncedWssValidation();
     });
   }
 
@@ -1992,9 +2166,26 @@ function init() {
       }
     });
 
+    // Debounced input validation (300ms delay to avoid excessive validation)
+    const debouncedTokenValidation = debounce(() => {
+      const value = tokenUrlInput.value.trim();
+      if (value) {
+        const validation = urlUtils.validateURL(value, 'Token URL');
+        if (!validation.isValid) {
+          dom.showFieldError('tokenUrl', validation.error);
+        } else {
+          dom.clearFieldError('tokenUrl');
+        }
+      } else {
+        dom.clearFieldError('tokenUrl');
+      }
+    }, 300);
+
     tokenUrlInput.addEventListener("input", () => {
-      // Clear error on input to give immediate feedback
+      // Clear error immediately for better UX
       dom.clearFieldError('tokenUrl');
+      // Run debounced validation
+      debouncedTokenValidation();
     });
   }
 

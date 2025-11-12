@@ -21,7 +21,7 @@ export abstract class BaseComponent extends EventEmitter {
   protected _componentState: ComponentState = ComponentState.UNAVAILABLE;
   deviceType: DeviceType;
   pendingCalls: number = 0;
-  pollingInterval = 10000;
+  pollingInterval: number = 0;
   protected _poller: ReturnType<typeof setTimeout> | undefined;
   parent: BaseComponent | null;
   subcomponents: BaseComponent[] = [];

@@ -8,7 +8,14 @@
 
 import { EventEmitter } from "events";
 import type { Cuss2 } from "../../cuss2.ts";
-import { ComponentState, type DataRecordList, type EnvironmentComponent, MessageCodes, type PlatformData, PlatformDirectives } from "cuss2-typescript-models";
+import {
+  ComponentState,
+  type DataRecordList,
+  type EnvironmentComponent,
+  MessageCodes,
+  type PlatformData,
+  PlatformDirectives,
+} from "cuss2-typescript-models";
 import { DeviceType } from "../deviceType.ts";
 import type { ComponentAPI } from "../../cuss2/ComponentAPI.ts";
 
@@ -113,7 +120,7 @@ export abstract class BaseComponent extends EventEmitter {
     return this.status !== msg.meta.messageCode || this._componentState !== msg.meta.componentState;
   }
 
-    updateState(msg: PlatformData): void {
+  updateState(msg: PlatformData): void {
     const { meta } = msg;
     if (
       meta.platformDirective === PlatformDirectives.PERIPHERALS_USERPRESENT_ENABLE ||

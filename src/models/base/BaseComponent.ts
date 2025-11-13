@@ -122,13 +122,6 @@ export abstract class BaseComponent extends EventEmitter {
 
   updateState(msg: PlatformData): void {
     const { meta } = msg;
-    if (
-      meta.platformDirective === PlatformDirectives.PERIPHERALS_USERPRESENT_ENABLE ||
-      meta.platformDirective === PlatformDirectives.PERIPHERALS_USERPRESENT_DISABLE
-    ) {
-      return; // Ignore enable/disable directives for state updates
-    }
-
     // Handle component state changes
     if (meta?.componentState !== undefined && meta.componentState !== this._componentState) {
       this._componentState = meta.componentState ?? ComponentState.UNAVAILABLE;
@@ -148,10 +141,16 @@ export abstract class BaseComponent extends EventEmitter {
       this.pollUntilReady();
     }
 
-    // Handle message code (status) changes
-    if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
-      this._status = meta.messageCode as MessageCodes;
-      this.emit("statusChange", this._status);
+    // If message contains no platformDirective (UNSOLICITED) or is a response to a query, handle status updates
+    if (
+      !meta.platformDirective ||
+      meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY
+    ) {
+      // Handle message code (status) changes
+      if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
+        this._status = meta.messageCode as MessageCodes;
+        this.emit("statusChange", this._status);
+      }
     }
   }
 

@@ -381,6 +381,54 @@ const logger = {
 
 // ===== HTML TEMPLATES =====
 const templates = {
+  // Get a friendly display name for a component
+  getComponentDisplayName(component) {
+    // Debug logging to understand what the library provides
+    console.log(`Component ${component.id} (${component.rawComponent?.componentDescription}):`, {
+      libraryDeviceType: component.deviceType,
+      rawComponentType: component.rawComponent?.componentType,
+      characteristics: component.rawComponent?.componentCharacteristics,
+      detections: {
+        isCardReader: ComponentInterrogation.isCardReader(component.rawComponent),
+        isHeadset: ComponentInterrogation.isHeadset(component.rawComponent),
+        isBarcodeReader: ComponentInterrogation.isBarcodeReader(component.rawComponent)
+      }
+    });
+
+    // If the library already set a deviceType, use it (unless it's generic)
+    if (component.deviceType &&
+        component.deviceType !== 'UNKNOWN' &&
+        component.deviceType !== 'Unknown Device') {
+      return component.deviceType;
+    }
+
+    // Use ComponentInterrogation to determine type from characteristics
+    const raw = component.rawComponent;
+    if (!raw) return 'Unknown Device';
+
+    // Check each component type
+    if (ComponentInterrogation.isHeadset(raw)) return 'Headset';
+    if (ComponentInterrogation.isBarcodeReader(raw)) return 'Barcode Reader';
+    if (ComponentInterrogation.isDocumentReader(raw)) return 'Document Reader';
+    if (ComponentInterrogation.isCardReader(raw)) return 'Card Reader';
+    if (ComponentInterrogation.isCamera(raw)) return 'Camera';
+    if (ComponentInterrogation.isRFIDReader(raw)) return 'RFID Reader';
+    if (ComponentInterrogation.isKeypad(raw)) return 'Keypad';
+    if (ComponentInterrogation.isBiometric(raw)) return 'Biometric';
+    if (ComponentInterrogation.isScale(raw)) return 'Scale';
+    if (ComponentInterrogation.isDispenser(raw)) return 'Dispenser';
+    if (ComponentInterrogation.isFeeder(raw)) return 'Feeder';
+    if (ComponentInterrogation.isAnnouncement(raw)) return 'Announcement';
+    if (ComponentInterrogation.isBagTagPrinter(raw)) return 'Bag Tag Printer';
+    if (ComponentInterrogation.isBoardingPassPrinter(raw)) return 'Boarding Pass Printer';
+    if (ComponentInterrogation.isAEASBD(raw)) return 'AEA SBD';
+    if (ComponentInterrogation.isIllumination(raw)) return 'Illumination';
+    if (ComponentInterrogation.isBHS(raw)) return 'BHS';
+
+    // Fallback to description or componentType from raw data
+    return raw.componentDescription || raw.componentType || 'Unknown Device';
+  },
+
   // Environment details template
   environmentDetails(env) {
     // Helper to format values
@@ -433,7 +481,10 @@ const templates = {
 
     // Populate title row
     const componentName = clone.querySelector('.component-name');
-    componentName.textContent = `${component.deviceType} (ID: ${id})`;
+
+    // Get a friendly display name for the component
+    const displayName = this.getComponentDisplayName(component);
+    componentName.textContent = `${displayName} (ID: ${id})`;
 
     // Set ready badge
     const readyBadge = clone.querySelector('.ready-badge');

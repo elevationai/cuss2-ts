@@ -618,12 +618,10 @@ const templates = {
       // Add Send button
       this.addButton(buttonsContainer, 'Send', 'send', id);
 
-      // Add additional buttons for specific types
-      if (componentCapabilities.isConveyorComponent(component.deviceType)) {
-        if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
-        if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
-        if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
-      }
+      // Add additional capability-based buttons
+      if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
+      if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
+      if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
       if (capabilities.includes('cancel')) {
         this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
       }

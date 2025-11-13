@@ -384,6 +384,7 @@ const templates = {
   // Get a friendly display name for a component
   getComponentDisplayName(component) {
     // Debug logging to understand what the library provides
+    console.log({
       libraryDeviceType: component.deviceType,
       rawComponentType: component.rawComponent?.componentType,
       characteristics: component.rawComponent?.componentCharacteristics,

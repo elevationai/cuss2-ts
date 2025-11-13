@@ -5,7 +5,7 @@ import * as esbuild from "esbuild";
 import { denoPlugins } from "@luca/esbuild-deno-loader";
 import { parse } from "@std/jsonc";
 
-const outDir = "./dist";
+const outDir = "./docs/dist";
 const tempDir = "./.temp";
 
 interface DenoConfig {

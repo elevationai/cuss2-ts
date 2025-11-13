@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { spy, stub } from "@std/testing/mock";
 import { ApplicationStateCodes as AppState, MessageCodes, type PlatformData, PlatformDirectives } from "cuss2-typescript-models";
 import { createMockCuss2, setCurrentState, simulateStateChange } from "./test-helpers.ts";
@@ -67,7 +67,7 @@ Deno.test("Section 4.2: Session timeout handling - should emit sessionTimeout ev
   assertEquals(sessionTimeoutSpy.calls[0].args[0], MessageCodes.SESSION_TIMEOUT);
 });
 
-Deno.test("Section 4.3: Invalid state handling - should close connection on invalid platform state", async () => {
+Deno.test("Section 4.3: Invalid state handling - should close connection on invalid platform state", () => {
   const { cuss2, mockConnection } = createMockCuss2();
 
   // Create spy for socket close
@@ -82,8 +82,8 @@ Deno.test("Section 4.3: Invalid state handling - should close connection on inva
     payload: {},
   } as unknown as PlatformData;
 
-  // Should throw error
-  await assertRejects(
+  // Should throw error synchronously
+  assertThrows(
     // @ts-ignore - accessing private method for testing
     () => cuss2._handleWebSocketMessage(platformData),
     Error,
@@ -252,7 +252,7 @@ Deno.test("Section 4.1: Platform data message - deactivated event when leaving A
   assertEquals(deactivatedSpy.calls[0].args[0], AppState.AVAILABLE);
 });
 
-Deno.test("Section 4.1: Platform data message - query components on UNAVAILABLE state", async () => {
+Deno.test("Section 4.1: Platform data message - query components NOT called on UNAVAILABLE state", async () => {
   const { cuss2 } = createMockCuss2();
   setCurrentState(cuss2, AppState.AVAILABLE);
 
@@ -267,8 +267,8 @@ Deno.test("Section 4.1: Platform data message - query components on UNAVAILABLE 
 
   await simulateStateChange(cuss2, AppState.UNAVAILABLE);
 
-  // Verify queryComponents was called
-  assertEquals(queryComponentsStub.calls.length, 1);
+  // Verify queryComponents was NOT called (disabled on UNAVAILABLE)
+  assertEquals(queryComponentsStub.calls.length, 0);
 
   // Verify checkRequiredComponentsAndSyncState was called (may be called multiple times)
   assertEquals(checkSyncSpy.calls.length >= 1, true);
@@ -277,7 +277,7 @@ Deno.test("Section 4.1: Platform data message - query components on UNAVAILABLE 
   checkSyncSpy.restore();
 });
 
-Deno.test("Section 4.1: Platform data message - emit queryError on component query failure", async () => {
+Deno.test("Section 4.1: Platform data message - queryError NOT emitted on UNAVAILABLE (queryComponents disabled)", async () => {
   const { cuss2 } = createMockCuss2();
   setCurrentState(cuss2, AppState.AVAILABLE);
 
@@ -290,9 +290,8 @@ Deno.test("Section 4.1: Platform data message - emit queryError on component que
 
   await simulateStateChange(cuss2, AppState.UNAVAILABLE);
 
-  // Verify queryError event was emitted
-  assertEquals(queryErrorSpy.calls.length, 1);
-  assertEquals(queryErrorSpy.calls[0].args[0], testError);
+  // Verify queryError event was NOT emitted (queryComponents not called on UNAVAILABLE)
+  assertEquals(queryErrorSpy.calls.length, 0);
 
   queryComponentsStub.restore();
 });

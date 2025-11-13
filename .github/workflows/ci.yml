@@ -43,12 +43,11 @@ jobs:
       - name: Run type checking
         run: deno check mod.ts
 
+      - name: Run tests
+        run: deno task test
+
       - name: Build dist files
         run: deno task build
-
-      - name: Copy dist to docs
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        run: cp -r dist docs/
 
       - name: Setup Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'

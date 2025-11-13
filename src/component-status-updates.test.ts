@@ -287,4 +287,3 @@ Deno.test("Component status updates - multiple unsolicited messages should updat
   assertEquals(statusChangeSpy.calls[2].args[0], MessageCodes.OK);
   assertEquals(component.status, MessageCodes.OK);
 });
-

@@ -383,18 +383,6 @@ const logger = {
 const templates = {
   // Get a friendly display name for a component
   getComponentDisplayName(component) {
-    // Debug logging to understand what the library provides
-    console.log({
-      libraryDeviceType: component.deviceType,
-      rawComponentType: component.rawComponent?.componentType,
-      characteristics: component.rawComponent?.componentCharacteristics,
-      detections: {
-        isCardReader: ComponentInterrogation.isCardReader(component.rawComponent),
-        isHeadset: ComponentInterrogation.isHeadset(component.rawComponent),
-        isBarcodeReader: ComponentInterrogation.isBarcodeReader(component.rawComponent)
-      }
-    });
-
     // If the library already set a deviceType, use it (unless it's generic)
     if (component.deviceType &&
         component.deviceType !== 'UNKNOWN' &&

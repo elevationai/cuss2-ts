@@ -190,6 +190,9 @@ export abstract class BaseComponent extends EventEmitter {
     // as READY states as well as the usual OK for other components.
     if (this._poller) return;
     const poll = () => {
+      if (!pollingInterval || pollingInterval <= 0) {
+        return this._poller = undefined;
+      }
       if (
         this.ready &&
         (!requireOK ||
@@ -198,10 +201,9 @@ export abstract class BaseComponent extends EventEmitter {
       ) {
         return this._poller = undefined;
       }
-
       this._poller = setTimeout(() => {
         this.query().catch(Object).finally(poll);
-      }, pollingInterval);
+      }, Math.max(pollingInterval, 1000)); // Minimum 1 second interval - we don't allow hammering the API
     };
     poll();
   }

@@ -28,7 +28,7 @@ export abstract class BaseComponent extends EventEmitter {
   protected _componentState: ComponentState = ComponentState.UNAVAILABLE;
   deviceType: DeviceType;
   pendingCalls: number = 0;
-  pollingInterval = 10000;
+  pollingInterval: number = 0;
   protected _poller: ReturnType<typeof setTimeout> | undefined;
   parent: BaseComponent | null;
   subcomponents: BaseComponent[] = [];
@@ -197,16 +197,25 @@ export abstract class BaseComponent extends EventEmitter {
     }
   }
 
-  pollUntilReady(requireOK = false, pollingInterval = this.pollingInterval): void {
+  pollUntilReady(requireOK: boolean = false, pollingInterval: number = this.pollingInterval): void {
+    // Polling for printers, feeders, and dispensers needs to consider MEDIA_ABSENT, MEDIA_LOW, MEDIA_FULL, and MEDIA_PRESENT
+    // as READY states as well as the usual OK for other components.
     if (this._poller) return;
     const poll = () => {
-      if (this.ready && (!requireOK || this.status === MessageCodes.OK)) {
-        this._poller = undefined;
-        return;
+      if (!pollingInterval || pollingInterval <= 0) {
+        return this._poller = undefined;
+      }
+      if (
+        this.ready &&
+        (!requireOK ||
+          (this.status === MessageCodes.OK || this.status === MessageCodes.MEDIA_ABSENT || this.status === MessageCodes.MEDIA_LOW ||
+            this.status === MessageCodes.MEDIA_FULL || this.status === MessageCodes.MEDIA_PRESENT))
+      ) {
+        return this._poller = undefined;
       }
       this._poller = setTimeout(() => {
         this.query().catch(Object).finally(poll);
-      }, pollingInterval);
+      }, Math.max(pollingInterval, 1000)); // Minimum 1 second interval - we don't allow hammering the API
     };
     poll();
   }

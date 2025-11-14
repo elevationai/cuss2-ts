@@ -257,3 +257,158 @@ Deno.test("2.6 - State transitions should proceed even when individual component
   assertEquals(stateRequestMade, true);
   assertEquals(result2?.meta?.messageCode, "OK");
 });
+
+// Test Category 2.7: Accessible Mode Acknowledgment Tests
+
+Deno.test("2.7.1 - acknowledgeAccessibleMode should send correct directive and payload when in accessible mode and ACTIVE state", async () => {
+  const { cuss2, mockConnection } = createMockCuss2();
+
+  // Track the platform directive and payload sent
+  let sentDirective: string | undefined;
+  let sentPayload: unknown;
+  mockConnection.sendAndGetResponse = (data: unknown) => {
+    // @ts-ignore - accessing meta and payload for testing
+    sentDirective = data?.meta?.directive;
+    // @ts-ignore - accessing payload for testing
+    sentPayload = data?.payload;
+    return Promise.resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData);
+  };
+
+  // Set state to ACTIVE with accessible mode
+  setCurrentState(cuss2, AppState.ACTIVE);
+  // @ts-ignore - accessing private property for testing
+  cuss2.accessibleMode = true;
+
+  // Call acknowledgeAccessibleMode
+  const result = await cuss2.acknowledgeAccessibleMode();
+
+  // Verify correct directive was sent
+  assertEquals(sentDirective, "platform_applications_acknowledge_accessible");
+  assertEquals(result?.meta?.messageCode, "OK");
+
+  // Verify correct payload was sent with ApplicationState
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateCode, AppState.ACTIVE);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.accessibleMode, true);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateChangeReasonCode, "NOT_APPLICABLE");
+});
+
+Deno.test("2.7.2 - acknowledgeAccessibleMode should return undefined when accessibleMode is false", async () => {
+  const { cuss2, mockConnection } = createMockCuss2();
+
+  // Track if sendAndGetResponse was called
+  let sendCalled = false;
+  mockConnection.sendAndGetResponse = () => {
+    sendCalled = true;
+    return Promise.resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData);
+  };
+
+  // Set state to ACTIVE but without accessible mode
+  setCurrentState(cuss2, AppState.ACTIVE);
+  // @ts-ignore - accessing private property for testing
+  cuss2.accessibleMode = false;
+
+  // Call acknowledgeAccessibleMode
+  const result = await cuss2.acknowledgeAccessibleMode();
+
+  // Verify no message was sent and undefined was returned
+  assertEquals(sendCalled, false);
+  assertEquals(result, undefined);
+});
+
+Deno.test("2.7.3 - acknowledgeAccessibleMode should return undefined when not in ACTIVE state", async () => {
+  const { cuss2, mockConnection } = createMockCuss2();
+
+  // Track if sendAndGetResponse was called
+  let sendCalled = false;
+  mockConnection.sendAndGetResponse = () => {
+    sendCalled = true;
+    return Promise.resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData);
+  };
+
+  // Set state to AVAILABLE (not ACTIVE) with accessible mode
+  setCurrentState(cuss2, AppState.AVAILABLE);
+  // @ts-ignore - accessing private property for testing
+  cuss2.accessibleMode = true;
+
+  // Call acknowledgeAccessibleMode
+  const result = await cuss2.acknowledgeAccessibleMode();
+
+  // Verify no message was sent and undefined was returned
+  assertEquals(sendCalled, false);
+  assertEquals(result, undefined);
+});
+
+Deno.test("2.7.4 - api.acknowledgeAccessible should send directive and payload regardless of state", async () => {
+  const { cuss2, mockConnection } = createMockCuss2();
+
+  // Track the platform directive and payload sent
+  let sentDirective: string | undefined;
+  let sentPayload: unknown;
+  mockConnection.sendAndGetResponse = (data: unknown) => {
+    // @ts-ignore - accessing meta and payload for testing
+    sentDirective = data?.meta?.directive;
+    // @ts-ignore - accessing payload for testing
+    sentPayload = data?.payload;
+    return Promise.resolve({ meta: { messageCode: "OK" }, payload: {} } as PlatformData);
+  };
+
+  // Test raw API call without state validation
+  setCurrentState(cuss2, AppState.AVAILABLE); // Not ACTIVE
+  // @ts-ignore - accessing private property for testing
+  cuss2.accessibleMode = false; // Not in accessible mode
+
+  // Call raw API directly
+  const result = await cuss2.api.acknowledgeAccessible();
+
+  // Verify directive was sent (no validation in raw API)
+  assertEquals(sentDirective, "platform_applications_acknowledge_accessible");
+  assertEquals(result?.meta?.messageCode, "OK");
+
+  // Verify payload contains ApplicationState with current state values
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateCode, AppState.AVAILABLE);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.accessibleMode, false);
+  // @ts-ignore - accessing applicationState for testing
+  assertEquals(sentPayload?.applicationState?.applicationStateChangeReasonCode, "NOT_APPLICABLE");
+});
+
+Deno.test("2.7.5 - acknowledgeAccessibleMode should work in typical activation flow", async () => {
+  const { cuss2 } = createMockCuss2();
+
+  // Create a promise to wait for acknowledgment
+  const acknowledgmentPromise = new Promise<PlatformData | undefined>((resolve) => {
+    cuss2.on("activated", async (_activationData: unknown) => {
+      if (cuss2.accessibleMode) {
+        // Acknowledge accessible mode
+        const result = await cuss2.acknowledgeAccessibleMode();
+        resolve(result);
+      }
+    });
+  });
+
+  // Set state to AVAILABLE (required for ACTIVE transition)
+  setCurrentState(cuss2, AppState.AVAILABLE);
+
+  const activationPayload = {
+    applicationActivation: {
+      executionMode: "SAM",
+      accessibleMode: true,
+      languageID: "en-US",
+    },
+  };
+
+  // Simulate transition to ACTIVE with accessible mode
+  await simulateStateChange(cuss2, AppState.ACTIVE, activationPayload);
+
+  // Verify properties were set
+  assertEquals(cuss2.accessibleMode, true);
+  assertEquals(cuss2.state, AppState.ACTIVE);
+
+  // Wait for acknowledgment and verify it was sent
+  const acknowledgeResult = await acknowledgmentPromise;
+  assertEquals(acknowledgeResult?.meta?.messageCode, "OK");
+});

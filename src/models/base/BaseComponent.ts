@@ -8,7 +8,14 @@
 
 import { EventEmitter } from "events";
 import type { Cuss2 } from "../../cuss2.ts";
-import { ComponentState, type DataRecordList, type EnvironmentComponent, MessageCodes, type PlatformData } from "cuss2-typescript-models";
+import {
+  ComponentState,
+  type DataRecordList,
+  type EnvironmentComponent,
+  MessageCodes,
+  type PlatformData,
+  PlatformDirectives,
+} from "cuss2-typescript-models";
 import { DeviceType } from "../deviceType.ts";
 import type { ComponentAPI } from "../../cuss2/ComponentAPI.ts";
 
@@ -115,7 +122,6 @@ export abstract class BaseComponent extends EventEmitter {
 
   updateState(msg: PlatformData): void {
     const { meta } = msg;
-
     // Handle component state changes
     if (meta?.componentState !== undefined && meta.componentState !== this._componentState) {
       this._componentState = meta.componentState ?? ComponentState.UNAVAILABLE;
@@ -135,10 +141,16 @@ export abstract class BaseComponent extends EventEmitter {
       this.pollUntilReady();
     }
 
-    // Handle message code (status) changes
-    if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
-      this._status = meta.messageCode as MessageCodes;
-      this.emit("statusChange", this._status);
+    // If message contains no platformDirective (UNSOLICITED) or is a response to a query, handle status updates
+    if (
+      !meta.platformDirective ||
+      meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY
+    ) {
+      // Handle message code (status) changes
+      if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
+        this._status = meta.messageCode as MessageCodes;
+        this.emit("statusChange", this._status);
+      }
     }
   }
 

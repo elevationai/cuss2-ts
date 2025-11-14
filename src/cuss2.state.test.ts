@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { Cuss2 } from "./cuss2.ts";
 import { StateChange } from "./models/stateChange.ts";
 import { ApplicationStateCodes as AppState, type PlatformData } from "cuss2-typescript-models";
@@ -295,7 +295,7 @@ Deno.test("2.7.1 - acknowledgeAccessibleMode should send correct directive and p
   assertEquals(sentPayload?.applicationState?.applicationStateChangeReasonCode, "NOT_APPLICABLE");
 });
 
-Deno.test("2.7.2 - acknowledgeAccessibleMode should return undefined when accessibleMode is false", async () => {
+Deno.test("2.7.2 - acknowledgeAccessibleMode should throw error when accessibleMode is false", async () => {
   const { cuss2, mockConnection } = createMockCuss2();
 
   // Track if sendAndGetResponse was called
@@ -310,15 +310,18 @@ Deno.test("2.7.2 - acknowledgeAccessibleMode should return undefined when access
   // @ts-ignore - accessing private property for testing
   cuss2.accessibleMode = false;
 
-  // Call acknowledgeAccessibleMode
-  const result = await cuss2.acknowledgeAccessibleMode();
+  // Call acknowledgeAccessibleMode and expect it to throw
+  await assertRejects(
+    () => cuss2.acknowledgeAccessibleMode(),
+    Error,
+    "acknowledgeAccessibleMode called but accessibleMode is false",
+  );
 
-  // Verify no message was sent and undefined was returned
+  // Verify no message was sent
   assertEquals(sendCalled, false);
-  assertEquals(result, undefined);
 });
 
-Deno.test("2.7.3 - acknowledgeAccessibleMode should return undefined when not in ACTIVE state", async () => {
+Deno.test("2.7.3 - acknowledgeAccessibleMode should throw error when not in ACTIVE state", async () => {
   const { cuss2, mockConnection } = createMockCuss2();
 
   // Track if sendAndGetResponse was called
@@ -333,12 +336,15 @@ Deno.test("2.7.3 - acknowledgeAccessibleMode should return undefined when not in
   // @ts-ignore - accessing private property for testing
   cuss2.accessibleMode = true;
 
-  // Call acknowledgeAccessibleMode
-  const result = await cuss2.acknowledgeAccessibleMode();
+  // Call acknowledgeAccessibleMode and expect it to throw
+  await assertRejects(
+    () => cuss2.acknowledgeAccessibleMode(),
+    Error,
+    "acknowledgeAccessibleMode called in wrong state: AVAILABLE",
+  );
 
-  // Verify no message was sent and undefined was returned
+  // Verify no message was sent
   assertEquals(sendCalled, false);
-  assertEquals(result, undefined);
 });
 
 Deno.test("2.7.4 - api.acknowledgeAccessible should send directive and payload regardless of state", async () => {

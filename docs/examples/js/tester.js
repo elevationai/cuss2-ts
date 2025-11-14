@@ -1646,6 +1646,7 @@ const connectionManager = {
       config.deviceId || undefined,
       tokenUrl,
     );
+    window.cuss2 = cuss2;
 
     // Setup all listeners
     this.setupConnectionListeners();

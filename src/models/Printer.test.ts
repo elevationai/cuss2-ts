@@ -135,6 +135,13 @@ class MockComponentAPI implements ComponentAPI {
     return Promise.resolve({} as PlatformData);
   }
 
+  acknowledgeAccessible(): Promise<PlatformData> {
+    this.calls.push({ method: "acknowledgeAccessible", componentID: -1 });
+    return Promise.resolve({
+      meta: { messageCode: "OK" },
+    } as PlatformData);
+  }
+
   announcement = {
     play: (componentID: number, rawData: string): Promise<PlatformData> => {
       this.calls.push({ method: "announcement.play", componentID, args: rawData });

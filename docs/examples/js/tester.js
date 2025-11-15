@@ -1155,9 +1155,9 @@ const ui = {
     const clone = template.content.cloneNode(true);
 
     // Set initial countdown value
-    const counter = clone.getElementById('accessibleModeCounter');
-    if (counter) {
-      counter.textContent = seconds;
+    const counterElement = clone.getElementById('accessibleModeCounter');
+    if (counterElement) {
+      counterElement.textContent = seconds;
     }
 
     document.body.insertBefore(clone, document.body.firstChild);

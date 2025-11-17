@@ -1116,6 +1116,82 @@ const ui = {
     }
   },
 
+  // Store the accessible mode countdown interval
+  _accessibleModeCountdown: null,
+
+  // Show accessible mode acknowledgement toast with countdown
+  showAccessibleModeToast(seconds) {
+    // Clear any existing countdown
+    if (this._accessibleModeCountdown) {
+      clearInterval(this._accessibleModeCountdown);
+      this._accessibleModeCountdown = null;
+    }
+
+    // Remove any existing banner
+    const existingBanner = document.getElementById('accessibleModeBanner');
+    if (existingBanner) {
+      existingBanner.remove();
+    }
+
+    // Clone template and add to body
+    const template = document.getElementById('accessible-mode-toast-template');
+    const clone = template.content.cloneNode(true);
+
+    // Set initial countdown value
+    const counterElement = clone.getElementById('accessibleModeCounter');
+    if (counterElement) {
+      counterElement.textContent = seconds;
+    }
+
+    document.body.insertBefore(clone, document.body.firstChild);
+
+    // Add acknowledge button handler
+    const acknowledgeBtn = document.getElementById('acknowledgeAccessibleMode');
+    if (acknowledgeBtn) {
+      acknowledgeBtn.addEventListener('click', async () => {
+        try {
+          logger.info('Acknowledging accessible mode...');
+          await cuss2.acknowledgeAccessibleMode();
+          logger.success('Accessible mode acknowledged');
+          this.dismissAccessibleModeToast();
+        } catch (error) {
+          logger.error(`Failed to acknowledge accessible mode: ${error.message}`);
+        }
+      });
+    }
+
+    // Start countdown timer
+    let remainingSeconds = seconds;
+    const counter = document.getElementById('accessibleModeCounter');
+
+    this._accessibleModeCountdown = setInterval(() => {
+      remainingSeconds--;
+      if (counter) {
+        counter.textContent = remainingSeconds;
+      }
+
+      if (remainingSeconds <= 0) {
+        clearInterval(this._accessibleModeCountdown);
+        this._accessibleModeCountdown = null;
+      }
+    }, 1000);
+  },
+
+  // Dismiss accessible mode toast
+  dismissAccessibleModeToast() {
+    // Clear countdown interval
+    if (this._accessibleModeCountdown) {
+      clearInterval(this._accessibleModeCountdown);
+      this._accessibleModeCountdown = null;
+    }
+
+    // Remove banner
+    const banner = document.getElementById('accessibleModeBanner');
+    if (banner) {
+      banner.remove();
+    }
+  },
+
   // Show mixed content warning banner
   showMixedContentWarning(mixedContentInfo) {
     // Remove any existing banner
@@ -1176,6 +1252,9 @@ const ui = {
   resetUI() {
     // Dismiss timeout banner (clears countdown and removes banner)
     this.dismissTimeoutWarning();
+
+    // Dismiss accessible mode toast (clears countdown and removes banner)
+    this.dismissAccessibleModeToast();
 
     // Remove mixed content banner if present
     const mixedContentBanner = document.getElementById('mixedContentBanner');
@@ -1517,6 +1596,13 @@ const connectionManager = {
           ui.updateApplicationInfo(true);
           // Dismiss timeout warning when successfully reactivated
           ui.dismissTimeoutWarning();
+
+          // Show accessible mode toast if activated in accessible mode
+          if (cuss2.accessibleMode) {
+            const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
+            logger.info(`Accessible mode activated - showing acknowledgement prompt (${killTimeoutSeconds}s timeout)`);
+            ui.showAccessibleModeToast(killTimeoutSeconds);
+          }
         },
       },
       {
@@ -1528,6 +1614,8 @@ const connectionManager = {
           ui.updateStateDisplay(newState);
           // Dismiss timeout warning when leaving ACTIVE state
           ui.dismissTimeoutWarning();
+          // Dismiss accessible mode toast when leaving ACTIVE state
+          ui.dismissAccessibleModeToast();
         },
       },
       {
@@ -1549,9 +1637,9 @@ const connectionManager = {
         event: "sessionTimeout",
         handler: async () => {
           // Get killTimeout from the environment data (fetched during initialization)
-          const killTimeout = cuss2?.environment?.killTimeout || 30; // Default to 30 seconds if not provided
-          logger.error(`Session timeout warning - Application will be terminated in ${killTimeout} seconds`);
-          ui.showTimeoutWarning(killTimeout);
+          const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
+          logger.error(`Session timeout warning - Application will be terminated in ${killTimeoutSeconds} seconds`);
+          ui.showTimeoutWarning(killTimeoutSeconds);
 
           // Per CUSS2 spec, application should transition to AVAILABLE state on session timeout
           if (cuss2 && cuss2.state === ApplicationStateCodes.ACTIVE) {

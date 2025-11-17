@@ -189,6 +189,17 @@
       <div class="component-action-buttons right-buttons"></div>
     </template>
 
+    <!-- Accessible Mode Toast Template -->
+    <template id="accessible-mode-toast-template">
+      <div id="accessibleModeBanner" class="accessible-mode-banner">
+        <div class="accessible-mode-header">
+          <strong>Accessible Mode Activated</strong>
+        </div>
+        <p>Please acknowledge accessible mode within <span id="accessibleModeCounter"></span> seconds</p>
+        <button id="acknowledgeAccessibleMode" class="acknowledge-btn">Acknowledge</button>
+      </div>
+    </template>
+
     <!-- Include the CUSS2 library and application JavaScript -->
     <script type="module" src="js/tester.js"></script>
   </body>

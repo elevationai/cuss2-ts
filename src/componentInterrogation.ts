@@ -34,61 +34,61 @@ export class ComponentInterrogation {
     return component.componentType === ComponentTypes.DISPENSER;
   };
 
-  static isBagTagPrinter = (component: EnvironmentComponent): boolean | undefined => {
+  static isBagTagPrinter = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
     return !!deviceTypesHas(charac0.deviceTypesList, DeviceTypes.PRINT) &&
       !!mediaTypesHas(mediaTypes, MediaTypes.BAGGAGETAG);
   };
 
-  static isBoardingPassPrinter = (component: EnvironmentComponent): boolean | undefined => {
+  static isBoardingPassPrinter = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
     return !!deviceTypesHas(charac0.deviceTypesList, DeviceTypes.PRINT) &&
       !!mediaTypesHas(mediaTypes, MediaTypes.BOARDINGPASS);
   };
 
-  static isDocumentReader = (component: EnvironmentComponent): boolean | undefined => {
+  static isDocumentReader = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
     return !!mediaTypesHas(mediaTypes, MediaTypes.PASSPORT);
   };
 
-  static isBarcodeReader = (component: EnvironmentComponent): boolean | undefined => {
+  static isBarcodeReader = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     return !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_BARCODE);
   };
 
-  static isCardReader = (component: EnvironmentComponent): boolean | undefined => {
+  static isCardReader = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
     return !!mediaTypesHas(mediaTypes, "MAGCARD");
   };
 
-  static isKeypad = (component: EnvironmentComponent): boolean | undefined => {
+  static isKeypad = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     return !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY) ||
       !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY_UP) ||
       !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY_DOWN);
   };
 
-  static isIllumination = (component: EnvironmentComponent): boolean | undefined => {
+  static isIllumination = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     return !!deviceTypesHas(charac0.deviceTypesList, DeviceTypes.ILLUMINATION);
   };
 
-  static isHeadset = (component: EnvironmentComponent): boolean | undefined => {
+  static isHeadset = (component: EnvironmentComponent): boolean => {
     // Headset can be MEDIA_INPUT, USER_OUTPUT, or DATA_OUTPUT (platform variance)
     // Identify by characteristics: ASSISTIVE device type + AUDIO media type
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
 
     // Must have both ASSISTIVE device type and AUDIO media type
@@ -103,22 +103,21 @@ export class ComponentInterrogation {
     return true;
   };
 
-  static isScale = (component: EnvironmentComponent): boolean | undefined => {
-    if (component.componentType !== ComponentTypes.DATA_INPUT) return;
+  static isScale = (component: EnvironmentComponent): boolean => {
+    if (component.componentType !== ComponentTypes.DATA_INPUT) return false;
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     return !!deviceTypesHas(charac0.deviceTypesList, DeviceTypes.SCALE);
   };
-  static isBiometric = (component: EnvironmentComponent): boolean | undefined => {
-    //return component.componentDescription === 'Face Reader';
+  static isBiometric = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     return !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_BIOMETRIC);
   };
-  static isCamera = (component: EnvironmentComponent): boolean | undefined => {
-    if (component.componentType !== ComponentTypes.DATA_INPUT) return;
+  static isCamera = (component: EnvironmentComponent): boolean => {
+    if (component.componentType !== ComponentTypes.DATA_INPUT) return false;
     const charac0 = component.componentCharacteristics?.[0];
-    if (!charac0) return;
+    if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
     return !!deviceTypesHas(charac0.deviceTypesList, DeviceTypes.CAMERA) &&
       !!mediaTypesHas(mediaTypes, MediaTypes.IMAGE);

@@ -1597,12 +1597,21 @@ const connectionManager = {
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
 
           // Set applicationOnline flag to enable required component monitoring
-          // Online when in AVAILABLE or ACTIVE (user is present)
+          // Once online (reached AVAILABLE or ACTIVE), stay online until STOPPED/RELOAD
+          // This allows automatic transitions between UNAVAILABLE/AVAILABLE based on component health
           if (cuss2) {
-            cuss2.applicationOnline =
-              stateChange.current === ApplicationStateCodes.AVAILABLE ||
-              stateChange.current === ApplicationStateCodes.ACTIVE;
-            logger.info(`Application online: ${cuss2.applicationOnline}`);
+            // Set to true when reaching AVAILABLE or ACTIVE (never set back to false)
+            if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
+                stateChange.current === ApplicationStateCodes.ACTIVE) {
+              cuss2.applicationOnline = true;
+              logger.info(`Application online: true (reached ${stateChange.current})`);
+            }
+            // Reset to false on STOPPED or RELOAD state
+            else if (stateChange.current === ApplicationStateCodes.STOPPED ||
+                     stateChange.current === ApplicationStateCodes.RELOAD) {
+              cuss2.applicationOnline = false;
+              logger.info(`Application online: false (${stateChange.current})`);
+            }
           }
         },
       },

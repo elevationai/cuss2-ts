@@ -445,6 +445,11 @@ export class Cuss2 extends EventEmitter {
       }
       finally {
         this.pendingStateChange = undefined;
+        // After state change completes, check if we need to transition again
+        // This handles the case where a component state changed while we were
+        // transitioning (e.g., required device came back online while transitioning to UNAVAILABLE)
+        console.log(`[CUSS2 DEBUG] State change completed, re-checking required components...`);
+        this.checkRequiredComponentsAndSyncState();
       }
     },
 

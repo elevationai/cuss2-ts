@@ -1647,13 +1647,6 @@ const connectionManager = {
         event: "componentStateChange",
         handler: (component) => {
           logger.event(`Component ${component.deviceType} state changed`);
-          // DEBUG: Log detailed state information
-          logger.info(`[DEBUG] Component: ${component.deviceType}, Ready: ${component.ready}, Required: ${component.required}`);
-          logger.info(`[DEBUG] App State: ${cuss2.state}, Online: ${cuss2.applicationOnline}`);
-          logger.info(`[DEBUG] Unavailable Required Components: ${cuss2.unavailableRequiredComponents?.length || 0}`);
-          if (cuss2.unavailableRequiredComponents?.length > 0) {
-            logger.info(`[DEBUG] Unavailable: ${cuss2.unavailableRequiredComponents.map(c => c.deviceType).join(', ')}`);
-          }
           // Don't redisplay all components on every state change - too aggressive
           // Just update the toggle states to reflect current component state
           componentHandlers.updateAllToggleStates();

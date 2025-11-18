@@ -226,17 +226,11 @@ export class Cuss2 extends EventEmitter {
 
         super.emit("componentStateChange", component);
 
-        // DEBUG: Log component state change details
-        console.log(`[CUSS2 DEBUG] Component ${meta.componentID} state changed`);
-        console.log(`[CUSS2 DEBUG] _online: ${this._online}, unsolicited: ${unsolicited}, platformDirective: ${meta.platformDirective}`);
-        console.log(`[CUSS2 DEBUG] Will call checkRequiredComponentsAndSyncState: ${this._online && (unsolicited || meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY)}`);
-
         if (
           this._online &&
           (unsolicited ||
             meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY)
         ) {
-          console.log(`[CUSS2 DEBUG] Calling checkRequiredComponentsAndSyncState...`);
           this.checkRequiredComponentsAndSyncState();
         }
       }
@@ -663,29 +657,20 @@ export class Cuss2 extends EventEmitter {
   }
 
   checkRequiredComponentsAndSyncState(): void {
-    console.log(`[CUSS2 DEBUG] checkRequiredComponentsAndSyncState called`);
-    console.log(`[CUSS2 DEBUG] pendingStateChange: ${this.pendingStateChange}, _online: ${this._online}, state: ${this.state}`);
-
     if (this.pendingStateChange) {
-      console.log(`[CUSS2 DEBUG] Early return: pendingStateChange is true`);
       return;
     }
 
     if (this._online) {
       const inactiveRequiredComponents = this.unavailableRequiredComponents;
-      console.log(`[CUSS2 DEBUG] Online mode: ${inactiveRequiredComponents.length} unavailable required components`);
 
       if (!inactiveRequiredComponents.length) {
-        console.log(`[CUSS2 DEBUG] All required components OK, current state: ${this.state}`);
         if (this.state === AppState.UNAVAILABLE) {
           log(
             "verbose",
             "[checkRequiredComponentsAndSyncState] All required components OK ✅. Auto-transitioning to AVAILABLE.",
           );
-          console.log(`[CUSS2 DEBUG] Auto-requesting AVAILABLE state...`);
           this.requestAvailableState();
-        } else {
-          console.log(`[CUSS2 DEBUG] Not requesting AVAILABLE - already in state: ${this.state}`);
         }
       }
       else {
@@ -694,12 +679,10 @@ export class Cuss2 extends EventEmitter {
           "[checkRequiredComponentsAndSyncState] Required components UNAVAILABLE:",
           inactiveRequiredComponents.map((c: BaseComponent) => c.constructor.name),
         );
-        console.log(`[CUSS2 DEBUG] Auto-requesting UNAVAILABLE state...`);
         this.requestUnavailableState();
       }
     }
     else if (this.components) {
-      console.log(`[CUSS2 DEBUG] Offline mode: requesting UNAVAILABLE state`);
       this.requestUnavailableState();
     }
   }

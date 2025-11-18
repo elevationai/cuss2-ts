@@ -445,11 +445,6 @@ export class Cuss2 extends EventEmitter {
       }
       finally {
         this.pendingStateChange = undefined;
-        // After state change completes, check if we need to transition again
-        // This handles the case where a component state changed while we were
-        // transitioning (e.g., required device came back online while transitioning to UNAVAILABLE)
-        console.log(`[CUSS2 DEBUG] State change completed, re-checking required components...`);
-        this.checkRequiredComponentsAndSyncState();
       }
     },
 
@@ -685,9 +680,9 @@ export class Cuss2 extends EventEmitter {
         if (this.state === AppState.UNAVAILABLE) {
           log(
             "verbose",
-            "[checkRequiredComponentsAndSyncState] All required components OK ✅. Ready for AVAILABLE state.",
+            "[checkRequiredComponentsAndSyncState] All required components OK ✅. Auto-transitioning to AVAILABLE.",
           );
-          console.log(`[CUSS2 DEBUG] Requesting AVAILABLE state...`);
+          console.log(`[CUSS2 DEBUG] Auto-requesting AVAILABLE state...`);
           this.requestAvailableState();
         } else {
           console.log(`[CUSS2 DEBUG] Not requesting AVAILABLE - already in state: ${this.state}`);
@@ -699,7 +694,7 @@ export class Cuss2 extends EventEmitter {
           "[checkRequiredComponentsAndSyncState] Required components UNAVAILABLE:",
           inactiveRequiredComponents.map((c: BaseComponent) => c.constructor.name),
         );
-        console.log(`[CUSS2 DEBUG] Requesting UNAVAILABLE state...`);
+        console.log(`[CUSS2 DEBUG] Auto-requesting UNAVAILABLE state...`);
         this.requestUnavailableState();
       }
     }
@@ -710,6 +705,7 @@ export class Cuss2 extends EventEmitter {
   }
 
   private _online: boolean = false;
+
   get applicationOnline(): boolean {
     return this._online;
   }

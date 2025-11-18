@@ -1596,11 +1596,10 @@ const connectionManager = {
           ui.updateStateDisplay(stateChange.current);
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
 
-          // Set applicationOnline flag to enable required component monitoring
-          // Once online (reached AVAILABLE or ACTIVE), stay online until STOPPED/RELOAD
-          // This allows automatic transitions between UNAVAILABLE/AVAILABLE based on component health
+          // Set applicationOnline flag to enable automatic state transitions
+          // When true, the library will automatically transition between UNAVAILABLE/AVAILABLE
+          // based on required component health
           if (cuss2) {
-            // Set to true when reaching AVAILABLE or ACTIVE (never set back to false)
             if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
                 stateChange.current === ApplicationStateCodes.ACTIVE) {
               cuss2.applicationOnline = true;
@@ -1847,6 +1846,22 @@ const stateManager = {
     }
 
     try {
+      // When user manually requests UNAVAILABLE, enter manual mode (set applicationOnline = false)
+      // This prevents auto-transitions back to AVAILABLE when components become healthy
+      if (action === "unavailable") {
+        cuss2.applicationOnline = false;
+        logger.info("User manually requested UNAVAILABLE - entering manual mode (applicationOnline = false)");
+      }
+      // When user manually requests AVAILABLE, resume automatic mode (set applicationOnline = true)
+      // This re-enables auto-transitions based on component health
+      else if (action === "available") {
+        await cuss2[request.method]();
+        cuss2.applicationOnline = true;
+        logger.info("User manually requested AVAILABLE - resuming automatic mode (applicationOnline = true)");
+        logger.success(`Requested ${request.state} state`);
+        return;
+      }
+
       const result = await cuss2[request.method]();
       logger.success(`Requested ${request.state} state`);
     }

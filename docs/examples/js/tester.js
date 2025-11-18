@@ -1637,8 +1637,15 @@ const connectionManager = {
       },
       {
         event: "componentStateChange",
-        handler: async (component) => {
+        handler: (component) => {
           logger.event(`Component ${component.deviceType} state changed`);
+          // DEBUG: Log detailed state information
+          logger.info(`[DEBUG] Component: ${component.deviceType}, Ready: ${component.ready}, Required: ${component.required}`);
+          logger.info(`[DEBUG] App State: ${cuss2.state}, Online: ${cuss2.applicationOnline}`);
+          logger.info(`[DEBUG] Unavailable Required Components: ${cuss2.unavailableRequiredComponents?.length || 0}`);
+          if (cuss2.unavailableRequiredComponents?.length > 0) {
+            logger.info(`[DEBUG] Unavailable: ${cuss2.unavailableRequiredComponents.map(c => c.deviceType).join(', ')}`);
+          }
           // Don't redisplay all components on every state change - too aggressive
           // Just update the toggle states to reflect current component state
           componentHandlers.updateAllToggleStates();
@@ -1648,25 +1655,6 @@ const connectionManager = {
           updateComponentStatusBadge(component.id, component.status);
           // Update the ready badge to reflect the new component ready state
           updateComponentReadyBadge(component.id, component.ready);
-
-          // Automatic transition back to AVAILABLE when all required devices become healthy
-          // Only attempt this if:
-          // 1. Currently in UNAVAILABLE state
-          // 2. Application was online (meaning it's been through AVAILABLE/ACTIVE before)
-          // 3. All required components are now healthy
-          if (
-            cuss2.state === ApplicationStateCodes.UNAVAILABLE &&
-            cuss2.applicationOnline &&
-            (!cuss2.unavailableRequiredComponents || cuss2.unavailableRequiredComponents.length === 0)
-          ) {
-            logger.info('All required components are now healthy - automatically transitioning to AVAILABLE');
-            try {
-              await cuss2.requestAvailableState();
-              logger.success('Successfully transitioned to AVAILABLE state');
-            } catch (error) {
-              logger.error(`Failed to automatically transition to AVAILABLE: ${error.message}`);
-            }
-          }
         },
       },
       {

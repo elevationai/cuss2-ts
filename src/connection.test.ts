@@ -310,7 +310,7 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
   );
 });
 
-/* Deno.test("Connection constructor should set URLs correctly", () => {
+Deno.test("Connection constructor should set URLs correctly", () => {
   const connection = new Connection(
     "https://example.com/api/?param=value",
     testClientId,
@@ -319,13 +319,13 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
     testTokenUrl,
   );
 
-  // Check that internal state is set correctly - now extracts origin only
+  // Check that internal state is set correctly - preserves path, strips query
   // @ts-ignore - Accessing private property for testing
-  assertEquals(connection._baseURL, "https://example.com");
+  assertEquals(connection._baseURL, "https://example.com/api");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(connection._socketURL, "wss://example.com/platform/subscribe");
+  assertEquals(connection._socketURL, "wss://example.com/api/platform/subscribe");
 
-  // Test with WebSocket URL - base URL extracts origin only
+  // Test with WebSocket URL - base URL preserves path
   const wsConnection = new Connection(
     "ws://example.com/api/",
     testClientId,
@@ -335,13 +335,13 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
   );
 
   // @ts-ignore - Accessing private property for testing
-  // Base URL should extract origin only
-  assertEquals(wsConnection._baseURL, "ws://example.com");
+  // Base URL should preserve path
+  assertEquals(wsConnection._baseURL, "ws://example.com/api");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wsConnection._socketURL, "ws://example.com/platform/subscribe");
+  assertEquals(wsConnection._socketURL, "ws://example.com/api/platform/subscribe");
   // Note: testTokenUrl is provided, so OAuth URL uses the provided token URL
 
-  // Test with secure WebSocket URL - base URL extracts origin only
+  // Test with secure WebSocket URL - base URL preserves path
   const wssConnection = new Connection(
     "wss://example.com/api/",
     testClientId,
@@ -351,14 +351,14 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
   );
 
   // @ts-ignore - Accessing private property for testing
-  // Base URL should extract origin only
-  assertEquals(wssConnection._baseURL, "wss://example.com");
+  // Base URL should preserve path
+  assertEquals(wssConnection._baseURL, "wss://example.com/api");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wssConnection._socketURL, "wss://example.com/platform/subscribe");
-}); */
+  assertEquals(wssConnection._socketURL, "wss://example.com/api/platform/subscribe");
+});
 
-/* Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
-  // Test with ws:// base URL and no explicit token URL - extracts origin only
+Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
+  // Test with ws:// base URL and no explicit token URL - preserves path
   const wsConnectionNoToken = new Connection(
     "ws://example.com/api",
     testClientId,
@@ -367,9 +367,9 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
     undefined, // No token URL provided
   );
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wsConnectionNoToken._auth.url, "http://example.com/oauth/token");
+  assertEquals(wsConnectionNoToken._auth.url, "http://example.com/api/oauth/token");
 
-  // Test with wss:// base URL and no explicit token URL - extracts origin only
+  // Test with wss:// base URL and no explicit token URL - preserves path
   const wssConnectionNoToken = new Connection(
     "wss://example.com/api",
     testClientId,
@@ -378,7 +378,7 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
     undefined, // No token URL provided
   );
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wssConnectionNoToken._auth.url, "https://example.com/oauth/token");
+  assertEquals(wssConnectionNoToken._auth.url, "https://example.com/api/oauth/token");
 
   // Test with ws:// token URL explicitly provided
   const wsConnectionWithWsToken = new Connection(
@@ -386,10 +386,11 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
     testClientId,
     testClientSecret,
     testDeviceId,
-    "ws://auth.example.com/token", // Explicitly provided ws:// token URL
+    "ws://auth.example.com/token", // Explicitly provided ws:// token URL with incorrect endpoint
   );
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wsConnectionWithWsToken._auth.url, "http://auth.example.com/token");
+  // Per CUSS 2 spec, token endpoint MUST be /oauth/token
+  assertEquals(wsConnectionWithWsToken._auth.url, "http://auth.example.com/oauth/token");
 
   // Test with wss:// token URL explicitly provided
   const wssConnectionWithWssToken = new Connection(
@@ -397,11 +398,32 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
     testClientId,
     testClientSecret,
     testDeviceId,
-    "wss://auth.example.com/token", // Explicitly provided wss:// token URL
+    "wss://auth.example.com/token", // Explicitly provided wss:// token URL with incorrect endpoint
   );
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wssConnectionWithWssToken._auth.url, "https://auth.example.com/token");
-}); */
+  // Per CUSS 2 spec, token endpoint MUST be /oauth/token
+  assertEquals(wssConnectionWithWssToken._auth.url, "https://auth.example.com/oauth/token");
+
+  // Test URL that already has /oauth/token endpoint
+  const connectionWithOAuthEndpoint = new Connection(
+    "https://example.com/custom/path/oauth/token",
+    testClientId,
+    testClientSecret,
+    testDeviceId,
+  );
+  // @ts-ignore - Accessing private property for testing
+  assertEquals(connectionWithOAuthEndpoint._auth.url, "https://example.com/custom/path/oauth/token");
+
+  // Test URL that already has /platform/subscribe endpoint
+  const connectionWithPlatformEndpoint = new Connection(
+    "https://example.com/custom/path/platform/subscribe",
+    testClientId,
+    testClientSecret,
+    testDeviceId,
+  );
+  // @ts-ignore - Accessing private property for testing
+  assertEquals(connectionWithPlatformEndpoint._socketURL, "wss://example.com/custom/path/platform/subscribe");
+});
 
 Deno.test(
   "_authenticateAndQueueTokenRefresh should fetch token and set access_token",
@@ -570,7 +592,7 @@ Deno.test(
 );
 
 // Tests for Connection.connect method with new authentication flow
-/* Deno.test(
+Deno.test(
   "Connection.connect should authenticate asynchronously and create websocket after authentication",
   mockGlobal(async () => {
     // Track if authenticate was called
@@ -616,7 +638,6 @@ Deno.test(
     assertEquals(mockWs.url, `wss://example.com/platform/subscribe`);
   }),
 );
-*/
 
 // Test WebSocket error handling
 Deno.test(

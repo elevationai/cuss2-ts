@@ -81,13 +81,63 @@ export class Connection extends EventEmitter {
       this._validateURL(tokenURL, "Token URL");
     }
 
-    // Store just the origin (protocol + hostname + port), stripping any path/query/hash
-    this._baseURL = new URL(baseURL).toString();
+    // Parse base URL and preserve protocol + hostname + port + pathname, but strip query/hash
+    const parsedBaseURL = new URL(baseURL);
+    let baseURLPath = parsedBaseURL.origin + parsedBaseURL.pathname;
+
+    // Remove trailing slash if present
+    if (baseURLPath.endsWith("/")) {
+      baseURLPath = baseURLPath.slice(0, -1);
+    }
+
+    // Fix accidental double slashes after protocol (e.g., https:///example.com)
+    baseURLPath = baseURLPath.replace(/(:\/\/)\/+/g, "$1");
+
+    // Normalize multiple slashes in pathname to single slashes
+    this._baseURL = baseURLPath.replace(/([^:]\/)\/+/g, "$1");
 
     // Set up token URL - always ensure OAuth uses HTTP/HTTPS protocol
-    const oauthUrl = tokenURL
-      ? this._convertToHttpProtocol(tokenURL) // Convert custom token URL to HTTP/HTTPS
-      : `${this._convertToHttpProtocol(this._baseURL)}/oauth/token`;
+    let oauthUrl: string;
+    if (tokenURL) {
+      // Parse and normalize the custom token URL
+      const parsedTokenURL = new URL(tokenURL);
+      let tokenURLPath = parsedTokenURL.origin + parsedTokenURL.pathname;
+
+      // Remove trailing slash if present
+      if (tokenURLPath.endsWith("/")) {
+        tokenURLPath = tokenURLPath.slice(0, -1);
+      }
+
+      // Per CUSS 2 spec, token endpoint MUST be at /oauth/token
+      // If it doesn't already end with /oauth/token, replace or append it
+      if (!tokenURLPath.endsWith("/oauth/token")) {
+        const urlObj = new URL(tokenURLPath);
+        // If pathname is empty or just "/", append /oauth/token
+        if (urlObj.pathname === "" || urlObj.pathname === "/") {
+          tokenURLPath += "/oauth/token";
+        }
+        else {
+          // Replace the existing path with /oauth/token
+          tokenURLPath = parsedTokenURL.origin + "/oauth/token";
+        }
+      }
+
+      // Convert to HTTP/HTTPS protocol
+      oauthUrl = this._convertToHttpProtocol(tokenURLPath);
+    }
+    else if (this._baseURL.endsWith("/oauth/token")) {
+      // Base URL already includes the endpoint, just convert protocol
+      oauthUrl = this._convertToHttpProtocol(this._baseURL);
+    }
+    else {
+      // Strip /platform/subscribe endpoint if present before adding /oauth/token
+      let baseForOAuth = this._baseURL;
+      if (this._baseURL.endsWith("/platform/subscribe")) {
+        baseForOAuth = this._baseURL.slice(0, -"/platform/subscribe".length);
+      }
+      // Append /oauth/token to base URL and convert to HTTP/HTTPS
+      oauthUrl = `${this._convertToHttpProtocol(baseForOAuth)}/oauth/token`;
+    }
 
     this._auth = {
       url: oauthUrl,
@@ -95,7 +145,7 @@ export class Connection extends EventEmitter {
       client_secret,
     };
 
-    // Set up WebSocket URL from the original base URL
+    // Set up WebSocket URL from the base URL
     this._socketURL = this._buildWebSocketURL(this._baseURL);
 
     this._retryOptions = {
@@ -232,19 +282,34 @@ export class Connection extends EventEmitter {
   }
 
   private _buildWebSocketURL(baseURL: string): string {
-    // If URL already has WebSocket protocol, return as is
-    if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
-      return `${baseURL}/platform/subscribe`;
+    // Strip /oauth/token endpoint if present, since we need to add /platform/subscribe instead
+    let urlToUse = baseURL;
+    if (baseURL.endsWith("/oauth/token")) {
+      urlToUse = baseURL.slice(0, -"/oauth/token".length);
     }
 
-    // For HTTP/HTTPS URLs, convert to WebSocket protocol
-    if (baseURL.startsWith("https://")) {
-      const wsBase = baseURL.replace(/^https:\/\//, "");
-      return `wss://${wsBase}/platform/subscribe`;
+    // Check if URL already ends with /platform/subscribe - if so, just convert protocol
+    if (urlToUse.endsWith("/platform/subscribe")) {
+      // Convert HTTP(S) to WS(S) if needed
+      if (urlToUse.startsWith("https://")) {
+        return urlToUse.replace(/^https:/, "wss:");
+      }
+      else if (urlToUse.startsWith("http://")) {
+        return urlToUse.replace(/^http:/, "ws:");
+      }
+      // Already has ws:// or wss://
+      return urlToUse;
     }
-    else if (baseURL.startsWith("http://")) {
-      const wsBase = baseURL.replace(/^http:\/\//, "");
-      return `ws://${wsBase}/platform/subscribe`;
+
+    // Add /platform/subscribe endpoint and convert protocol if needed
+    if (urlToUse.startsWith("https://")) {
+      return urlToUse.replace(/^https:/, "wss:") + "/platform/subscribe";
+    }
+    else if (urlToUse.startsWith("http://")) {
+      return urlToUse.replace(/^http:/, "ws:") + "/platform/subscribe";
+    }
+    else if (urlToUse.startsWith("wss://") || urlToUse.startsWith("ws://")) {
+      return `${urlToUse}/platform/subscribe`;
     }
 
     // This should never happen after validation, but provide a safety net

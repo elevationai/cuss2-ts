@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { Connection } from "./connection.ts";
 
-Deno.test("Connection URL handling - extracts base URL correctly", () => {
+Deno.test("Connection URL handling - preserves base URL paths correctly", () => {
   const testCases = [
     {
       input: "https://localhost:22222",
@@ -14,34 +14,34 @@ Deno.test("Connection URL handling - extracts base URL correctly", () => {
       description: "Base URL with trailing slash",
     },
     {
-      input: "https://localhost:22222/platform/subscribe",
-      expectedTokenUrl: "https://localhost:22222/oauth/token",
-      description: "URL with path should extract base",
+      input: "https://localhost:22222/api",
+      expectedTokenUrl: "https://localhost:22222/api/oauth/token",
+      description: "URL with path should preserve path",
     },
     {
-      input: "wss://localhost:22222/platform/subscribe",
-      expectedTokenUrl: "https://localhost:22222/oauth/token",
-      description: "WSS URL with path should extract base and convert to HTTPS",
+      input: "wss://localhost:22222/api",
+      expectedTokenUrl: "https://localhost:22222/api/oauth/token",
+      description: "WSS URL with path should preserve path and convert to HTTPS",
     },
     {
-      input: "ws://localhost:22222/platform/subscribe",
-      expectedTokenUrl: "http://localhost:22222/oauth/token",
-      description: "WS URL with path should extract base and convert to HTTP",
+      input: "ws://localhost:22222/api",
+      expectedTokenUrl: "http://localhost:22222/api/oauth/token",
+      description: "WS URL with path should preserve path and convert to HTTP",
     },
     {
-      input: "https://localhost:22222/some/deep/path/here",
-      expectedTokenUrl: "https://localhost:22222/oauth/token",
-      description: "URL with deep path should extract base",
+      input: "https://localhost:22222/some/deep/path",
+      expectedTokenUrl: "https://localhost:22222/some/deep/path/oauth/token",
+      description: "URL with deep path should preserve entire path",
     },
     {
       input: "https://localhost:22222/path?query=params&foo=bar",
-      expectedTokenUrl: "https://localhost:22222/oauth/token",
-      description: "URL with path and query params should extract base",
+      expectedTokenUrl: "https://localhost:22222/path/oauth/token",
+      description: "URL with path and query params should preserve path but strip query",
     },
     {
       input: "https://localhost:22222/path#fragment",
-      expectedTokenUrl: "https://localhost:22222/oauth/token",
-      description: "URL with path and fragment should extract base",
+      expectedTokenUrl: "https://localhost:22222/path/oauth/token",
+      description: "URL with path and fragment should preserve path but strip fragment",
     },
     {
       input: "https://api.example.com:8080",
@@ -49,9 +49,9 @@ Deno.test("Connection URL handling - extracts base URL correctly", () => {
       description: "Different host and port",
     },
     {
-      input: "https://api.example.com:8080/v1/platform/subscribe",
-      expectedTokenUrl: "https://api.example.com:8080/oauth/token",
-      description: "Different host with versioned API path",
+      input: "https://api.example.com:8080/v1",
+      expectedTokenUrl: "https://api.example.com:8080/v1/oauth/token",
+      description: "Different host with versioned API path should preserve path",
     },
   ];
 
@@ -109,9 +109,9 @@ Deno.test("Connection URL handling - WebSocket URL construction", () => {
       description: "HTTP should convert to WS",
     },
     {
-      input: "https://localhost:22222/some/path",
-      expectedWsUrl: "wss://localhost:22222/platform/subscribe",
-      description: "Should strip path and use base URL",
+      input: "https://localhost:22222/api",
+      expectedWsUrl: "wss://localhost:22222/api/platform/subscribe",
+      description: "Should preserve path when constructing WebSocket URL",
     },
     {
       input: "wss://localhost:22222",
@@ -119,9 +119,9 @@ Deno.test("Connection URL handling - WebSocket URL construction", () => {
       description: "WSS URL should stay WSS",
     },
     {
-      input: "ws://localhost:22222/ignored/path",
-      expectedWsUrl: "ws://localhost:22222/platform/subscribe",
-      description: "WS URL should strip path and stay WS",
+      input: "ws://localhost:22222/api",
+      expectedWsUrl: "ws://localhost:22222/api/platform/subscribe",
+      description: "WS URL should preserve path and stay WS",
     },
   ];
 

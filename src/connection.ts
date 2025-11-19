@@ -81,8 +81,10 @@ export class Connection extends EventEmitter {
       this._validateURL(tokenURL, "Token URL");
     }
 
-    // Store just the origin (protocol + hostname + port), stripping any path/query/hash
-    this._baseURL = new URL(baseURL).origin;
+    // Store the URL, removing any trailing slash to avoid double slashes when concatenating paths
+    // Also remove query parameters and fragments, but preserve the path
+    const parsedUrl = new URL(baseURL);
+    this._baseURL = `${parsedUrl.origin}${parsedUrl.pathname}`.replace(/\/$/, '');
 
     // Set up token URL - always ensure OAuth uses HTTP/HTTPS protocol
     const oauthUrl = tokenURL

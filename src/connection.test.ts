@@ -319,13 +319,13 @@ Deno.test("Connection constructor should set URLs correctly", () => {
     testTokenUrl,
   );
 
-  // Check that internal state is set correctly - now extracts origin only
+  // Check that internal state is set correctly - preserves path but strips query/hash
   // @ts-ignore - Accessing private property for testing
-  assertEquals(connection._baseURL, "https://example.com");
+  assertEquals(connection._baseURL, "https://example.com/api");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(connection._socketURL, "wss://example.com/platform/subscribe");
+  assertEquals(connection._socketURL, "wss://example.com/api/platform/subscribe");
 
-  // Test with WebSocket URL - base URL extracts origin only
+  // Test with WebSocket URL - base URL preserves path
   const wsConnection = new Connection(
     "ws://example.com/api/",
     testClientId,
@@ -335,13 +335,13 @@ Deno.test("Connection constructor should set URLs correctly", () => {
   );
 
   // @ts-ignore - Accessing private property for testing
-  // Base URL should extract origin only
-  assertEquals(wsConnection._baseURL, "ws://example.com");
+  // Base URL should preserve path but remove trailing slash
+  assertEquals(wsConnection._baseURL, "ws://example.com/api");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wsConnection._socketURL, "ws://example.com/platform/subscribe");
+  assertEquals(wsConnection._socketURL, "ws://example.com/api/platform/subscribe");
   // Note: testTokenUrl is provided, so OAuth URL uses the provided token URL
 
-  // Test with secure WebSocket URL - base URL extracts origin only
+  // Test with secure WebSocket URL - base URL preserves path
   const wssConnection = new Connection(
     "wss://example.com/api/",
     testClientId,
@@ -351,14 +351,14 @@ Deno.test("Connection constructor should set URLs correctly", () => {
   );
 
   // @ts-ignore - Accessing private property for testing
-  // Base URL should extract origin only
-  assertEquals(wssConnection._baseURL, "wss://example.com");
+  // Base URL should preserve path but remove trailing slash
+  assertEquals(wssConnection._baseURL, "wss://example.com/api");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wssConnection._socketURL, "wss://example.com/platform/subscribe");
+  assertEquals(wssConnection._socketURL, "wss://example.com/api/platform/subscribe");
 });
 
 Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
-  // Test with ws:// base URL and no explicit token URL - extracts origin only
+  // Test with ws:// base URL and no explicit token URL - preserves path
   const wsConnectionNoToken = new Connection(
     "ws://example.com/api",
     testClientId,
@@ -367,9 +367,9 @@ Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
     undefined, // No token URL provided
   );
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wsConnectionNoToken._auth.url, "http://example.com/oauth/token");
+  assertEquals(wsConnectionNoToken._auth.url, "http://example.com/api/oauth/token");
 
-  // Test with wss:// base URL and no explicit token URL - extracts origin only
+  // Test with wss:// base URL and no explicit token URL - preserves path
   const wssConnectionNoToken = new Connection(
     "wss://example.com/api",
     testClientId,
@@ -378,7 +378,7 @@ Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
     undefined, // No token URL provided
   );
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wssConnectionNoToken._auth.url, "https://example.com/oauth/token");
+  assertEquals(wssConnectionNoToken._auth.url, "https://example.com/api/oauth/token");
 
   // Test with ws:// token URL explicitly provided
   const wsConnectionWithWsToken = new Connection(

@@ -109,8 +109,8 @@ Deno.test("Connection URL handling - WebSocket URL construction", () => {
       description: "HTTP should convert to WS",
     },
     {
-      input: "https://localhost:22222/api",
-      expectedWsUrl: "wss://localhost:22222/api/platform/subscribe",
+      input: "https://localhost:22222/some/path",
+      expectedWsUrl: "wss://localhost:22222/some/path/platform/subscribe",
       description: "Should preserve path when constructing WebSocket URL",
     },
     {

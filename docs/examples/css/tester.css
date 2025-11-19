@@ -903,6 +903,63 @@ button:disabled {
   }
 }
 
+/* Accessible mode toast */
+.accessible-mode-banner {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #1e88e5, #1565c0);
+  color: white;
+  padding: 20px 25px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(30, 136, 229, 0.4);
+  z-index: 1000;
+  text-align: center;
+  min-width: 350px;
+  animation: slideDown 0.5s ease-out;
+}
+
+.accessible-mode-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.accessible-mode-header strong {
+  font-size: 16px;
+}
+
+.accessible-mode-banner p {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+}
+
+.acknowledge-btn {
+  background: white;
+  color: #1e88e5;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.acknowledge-btn:hover {
+  background: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.acknowledge-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .mixed-content-banner {
   position: fixed;
   top: 20px;

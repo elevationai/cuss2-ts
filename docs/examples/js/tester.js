@@ -206,6 +206,8 @@ const dom = {
     connectButtonContainer: null,
     connectionStatusContainer: null,
     cancelConnectionBtn: null,
+    // isOnline checkbox
+    isOnlineToggle: null,
   },
 
   // Initialize DOM element cache
@@ -231,6 +233,9 @@ const dom = {
     this.elements.connectButtonContainer = document.getElementById("connectButtonContainer");
     this.elements.connectionStatusContainer = document.getElementById("connectionStatusContainer");
     this.elements.cancelConnectionBtn = document.getElementById("cancelConnectionBtn");
+
+    // isOnline checkbox
+    this.elements.isOnlineToggle = document.getElementById("isOnlineToggle");
 
     // State buttons
     this.elements.stateButtons = {
@@ -1535,6 +1540,11 @@ const connectionManager = {
               cuss2.applicationOnline = false;
               logger.info(`Application online: false (${stateChange.current})`);
             }
+
+            // Sync checkbox with applicationOnline property
+            if (dom.elements.isOnlineToggle) {
+              dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
+            }
           }
         },
       },
@@ -1702,6 +1712,11 @@ const connectionManager = {
     ui.displayComponents();
     ui.updateStateDisplay(cuss2.state);
 
+    // Sync isOnline checkbox with current applicationOnline state
+    if (dom.elements.isOnlineToggle) {
+      dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
+    }
+
     // Setup component listeners
     componentHandlers.setupComponentListeners();
 
@@ -1768,6 +1783,10 @@ const stateManager = {
       if (action === "unavailable") {
         cuss2.applicationOnline = false;
         logger.info("User manually requested UNAVAILABLE - entering manual mode (applicationOnline = false)");
+        // Sync checkbox immediately
+        if (dom.elements.isOnlineToggle) {
+          dom.elements.isOnlineToggle.checked = false;
+        }
       }
       // When user manually requests AVAILABLE, resume automatic mode (set applicationOnline = true)
       // This re-enables auto-transitions based on component health
@@ -1775,6 +1794,10 @@ const stateManager = {
         await cuss2[request.method]();
         cuss2.applicationOnline = true;
         logger.info("User manually requested AVAILABLE - resuming automatic mode (applicationOnline = true)");
+        // Sync checkbox immediately
+        if (dom.elements.isOnlineToggle) {
+          dom.elements.isOnlineToggle.checked = true;
+        }
         logger.success(`Requested ${request.state} state`);
         return;
       }
@@ -2040,6 +2063,14 @@ function init() {
 
   // Setup cancel connection button
   dom.elements.cancelConnectionBtn.addEventListener("click", () => connectionManager.cancelConnection());
+
+  // Setup isOnline checkbox
+  dom.elements.isOnlineToggle.addEventListener("change", (e) => {
+    if (cuss2) {
+      cuss2.applicationOnline = e.target.checked;
+      logger.info(`Application online: ${e.target.checked}`);
+    }
+  });
 
   // Setup state buttons
   stateManager.setupStateButtons();

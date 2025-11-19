@@ -234,19 +234,22 @@ export class Connection extends EventEmitter {
   }
 
   private _buildWebSocketURL(baseURL: string): string {
-    // If URL already has WebSocket protocol, return as is
+    // Check if URL already ends with /platform/subscribe
+    const alreadyHasPath = baseURL.endsWith("/platform/subscribe");
+
+    // If URL already has WebSocket protocol
     if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
-      return `${baseURL}/platform/subscribe`;
+      return alreadyHasPath ? baseURL : `${baseURL}/platform/subscribe`;
     }
 
     // For HTTP/HTTPS URLs, convert to WebSocket protocol
     if (baseURL.startsWith("https://")) {
       const wsBase = baseURL.replace(/^https:\/\//, "");
-      return `wss://${wsBase}/platform/subscribe`;
+      return alreadyHasPath ? `wss://${wsBase}` : `wss://${wsBase}/platform/subscribe`;
     }
     else if (baseURL.startsWith("http://")) {
       const wsBase = baseURL.replace(/^http:\/\//, "");
-      return `ws://${wsBase}/platform/subscribe`;
+      return alreadyHasPath ? `ws://${wsBase}` : `ws://${wsBase}/platform/subscribe`;
     }
 
     // This should never happen after validation, but provide a safety net

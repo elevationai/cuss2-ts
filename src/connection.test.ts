@@ -308,6 +308,11 @@ Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
     buildWebSocketURL("wss://example.com/api"),
     "wss://example.com/api/platform/subscribe",
   );
+
+  assertEquals(
+    buildWebSocketURL("wss://example.com/api/platform/subscribe"),
+    "wss://example.com/api/platform/subscribe",
+  );
 });
 
 Deno.test("Connection constructor should set URLs correctly", () => {

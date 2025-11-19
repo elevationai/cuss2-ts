@@ -62,7 +62,7 @@ export class Connection extends EventEmitter {
   }
 
   constructor(
-    baseURL: string,
+    wssURL: string,
     client_id: string,
     client_secret: string,
     deviceID: UniqueId,
@@ -74,7 +74,7 @@ export class Connection extends EventEmitter {
     (this as EventEmitter).setMaxListeners(0); // Allow unlimited listeners
 
     // Validate base URL protocol
-    this._validateURL(baseURL, "Base URL");
+    this._validateURL(wssURL, "Base URL");
 
     // Validate token URL protocol if provided
     if (tokenURL) {
@@ -82,7 +82,7 @@ export class Connection extends EventEmitter {
     }
 
     // Store just the origin (protocol + hostname + port), stripping any path/query/hash
-    this._baseURL = new URL(baseURL).origin;
+    this._baseURL = new URL(wssURL).origin;
 
     // Set up token URL - always ensure OAuth uses HTTP/HTTPS protocol
     const oauthUrl = tokenURL
@@ -95,8 +95,16 @@ export class Connection extends EventEmitter {
       client_secret,
     };
 
+    // For HTTP/HTTPS URLs, convert to WebSocket protocol
+    if (wssURL.startsWith("https://")) {
+      wssURL = wssURL.replace(/^https:\/\//, "wss://");
+    }
+    else if (wssURL.startsWith("http://")) {
+      wssURL = wssURL.replace(/^http:\/\//, "ws://");
+    }
+
     // Set up WebSocket URL from the original base URL
-    this._socketURL = this._buildWebSocketURL(this._baseURL);
+    this._socketURL = wssURL;
 
     this._retryOptions = {
       maxAttempts: 99,
@@ -229,26 +237,6 @@ export class Connection extends EventEmitter {
       return url.replace(/^wss:/, "https:");
     }
     return url;
-  }
-
-  private _buildWebSocketURL(baseURL: string): string {
-    // If URL already has WebSocket protocol, return as is
-    if (baseURL.startsWith("ws://") || baseURL.startsWith("wss://")) {
-      return `${baseURL}/platform/subscribe`;
-    }
-
-    // For HTTP/HTTPS URLs, convert to WebSocket protocol
-    if (baseURL.startsWith("https://")) {
-      const wsBase = baseURL.replace(/^https:\/\//, "");
-      return `wss://${wsBase}/platform/subscribe`;
-    }
-    else if (baseURL.startsWith("http://")) {
-      const wsBase = baseURL.replace(/^http:\/\//, "");
-      return `ws://${wsBase}/platform/subscribe`;
-    }
-
-    // This should never happen after validation, but provide a safety net
-    throw new Error(`Unable to build WebSocket URL from base URL: ${baseURL}`);
   }
 
   private async _authenticateAndQueueTokenRefresh(): Promise<void> {

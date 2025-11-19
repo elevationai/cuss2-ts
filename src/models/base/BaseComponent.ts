@@ -52,10 +52,6 @@ export abstract class BaseComponent extends EventEmitter {
     return this._componentState;
   }
 
-  get rawComponent(): EnvironmentComponent {
-    return this._component;
-  }
-
   constructor(
     component: EnvironmentComponent,
     cuss2: Cuss2,

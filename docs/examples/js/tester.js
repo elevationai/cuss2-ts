@@ -1,5 +1,5 @@
 // ===== IMPORTS =====
-import { Cuss2, Models, ComponentInterrogation } from "../../dist/cuss2.esm.js";
+import { Cuss2, Models } from "../../dist/cuss2.esm.js";
 const { ApplicationStateCodes, ComponentState, MessageCodes } = Models;
 
 let cuss2 = null;
@@ -361,42 +361,6 @@ const logger = {
 
 // ===== HTML TEMPLATES =====
 const templates = {
-  // Get a friendly display name for a component
-  getComponentDisplayName(component) {
-    // If the library already set a deviceType, use it (unless it's generic)
-    if (component.deviceType &&
-        component.deviceType !== 'UNKNOWN' &&
-        component.deviceType !== 'Unknown Device') {
-      return component.deviceType;
-    }
-
-    // Use ComponentInterrogation to determine type from characteristics
-    const raw = component.rawComponent;
-    if (!raw) return 'Unknown Device';
-
-    // Check each component type
-    if (ComponentInterrogation.isHeadset(raw)) return 'Headset';
-    if (ComponentInterrogation.isBarcodeReader(raw)) return 'Barcode Reader';
-    if (ComponentInterrogation.isDocumentReader(raw)) return 'Document Reader';
-    if (ComponentInterrogation.isCardReader(raw)) return 'Card Reader';
-    if (ComponentInterrogation.isCamera(raw)) return 'Camera';
-    if (ComponentInterrogation.isRFIDReader(raw)) return 'RFID Reader';
-    if (ComponentInterrogation.isKeypad(raw)) return 'Keypad';
-    if (ComponentInterrogation.isBiometric(raw)) return 'Biometric';
-    if (ComponentInterrogation.isScale(raw)) return 'Scale';
-    if (ComponentInterrogation.isDispenser(raw)) return 'Dispenser';
-    if (ComponentInterrogation.isFeeder(raw)) return 'Feeder';
-    if (ComponentInterrogation.isAnnouncement(raw)) return 'Announcement';
-    if (ComponentInterrogation.isBagTagPrinter(raw)) return 'Bag Tag Printer';
-    if (ComponentInterrogation.isBoardingPassPrinter(raw)) return 'Boarding Pass Printer';
-    if (ComponentInterrogation.isAEASBD(raw)) return 'AEA SBD';
-    if (ComponentInterrogation.isIllumination(raw)) return 'Illumination';
-    if (ComponentInterrogation.isBHS(raw)) return 'BHS';
-
-    // Fallback to description or componentType from raw data
-    return raw.componentDescription || raw.componentType || 'Unknown Device';
-  },
-
   // Environment details template
   environmentDetails(env) {
     // Helper to format values
@@ -449,10 +413,7 @@ const templates = {
 
     // Populate title row
     const componentName = clone.querySelector('.component-name');
-
-    // Get a friendly display name for the component
-    const displayName = this.getComponentDisplayName(component);
-    componentName.textContent = `${displayName} (ID: ${id})`;
+    componentName.textContent = `${component.deviceType} (ID: ${id})`;
 
     // Set ready badge
     const readyBadge = clone.querySelector('.ready-badge');
@@ -519,9 +480,9 @@ const templates = {
 
       // Check if this is a printer component and populate dropdown
       let commandSet = null;
-      if (ComponentInterrogation.isBoardingPassPrinter(component.rawComponent)) {
+      if (component.deviceType === 'BOARDING_PASS_PRINTER') {
         commandSet = aeaCommands.boardingPassPrinter;
-      } else if (ComponentInterrogation.isBagTagPrinter(component.rawComponent)) {
+      } else if (component.deviceType === 'BAG_TAG_PRINTER') {
         commandSet = aeaCommands.bagTagPrinter;
       }
 
@@ -559,9 +520,9 @@ const templates = {
 
       // Check if this is a printer component and populate dropdown
       let commandSet = null;
-      if (ComponentInterrogation.isBoardingPassPrinter(component.rawComponent)) {
+      if (component.deviceType === 'BOARDING_PASS_PRINTER') {
         commandSet = aeaCommands.boardingPassPrinter;
-      } else if (ComponentInterrogation.isBagTagPrinter(component.rawComponent)) {
+      } else if (component.deviceType === 'BAG_TAG_PRINTER') {
         commandSet = aeaCommands.bagTagPrinter;
       }
 
@@ -623,8 +584,8 @@ const templates = {
       input.id = `read-input-${id}`;
 
       // Check if this is a barcode reader or document reader and populate dropdown with test data
-      const isBarcodeReader = ComponentInterrogation.isBarcodeReader(component.rawComponent);
-      const isDocumentReader = ComponentInterrogation.isDocumentReader(component.rawComponent);
+      const isBarcodeReader = component.deviceType === 'BARCODE_READER';
+      const isDocumentReader = component.deviceType === 'PASSPORT_READER';
 
       if (isBarcodeReader && dropdown && aeaCommands.barcodeReader) {
         // Populate dropdown with example barcode data for testing/reference

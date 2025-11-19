@@ -62,7 +62,7 @@ export class Connection extends EventEmitter {
   }
 
   constructor(
-    baseURL: string,
+    wssURL: string,
     client_id: string,
     client_secret: string,
     deviceID: UniqueId,
@@ -74,7 +74,7 @@ export class Connection extends EventEmitter {
     (this as EventEmitter).setMaxListeners(0); // Allow unlimited listeners
 
     // Validate base URL protocol
-    this._validateURL(baseURL, "Base URL");
+    this._validateURL(wssURL, "Base URL");
 
     // Validate token URL protocol if provided
     if (tokenURL) {
@@ -82,7 +82,7 @@ export class Connection extends EventEmitter {
     }
 
     // Parse base URL and preserve protocol + hostname + port + pathname, but strip query/hash
-    const parsedBaseURL = new URL(baseURL);
+    const parsedBaseURL = new URL(wssURL);
     let baseURLPath = parsedBaseURL.origin + parsedBaseURL.pathname;
 
     // Remove trailing slash if present
@@ -144,6 +144,14 @@ export class Connection extends EventEmitter {
       client_id,
       client_secret,
     };
+
+    // For HTTP/HTTPS URLs, convert to WebSocket protocol
+    if (wssURL.startsWith("https://")) {
+      wssURL = wssURL.replace(/^https:\/\//, "wss://");
+    }
+    else if (wssURL.startsWith("http://")) {
+      wssURL = wssURL.replace(/^http:\/\//, "ws://");
+    }
 
     // Set up WebSocket URL from the base URL
     this._socketURL = this._buildWebSocketURL(this._baseURL);

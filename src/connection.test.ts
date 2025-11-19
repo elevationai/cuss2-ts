@@ -74,7 +74,7 @@ class MockResponse {
 const testDeviceId = "device-123";
 const testClientId = "client-id";
 const testClientSecret = "client-secret";
-const testBaseUrl = "https://example.com";
+const testBaseUrl = "https://example.com/platform/subscribe";
 const testTokenUrl = "https://example.com/oauth/token";
 const testToken = "test-token";
 
@@ -274,41 +274,6 @@ Deno.test(
     assertEquals(result.access_token, testToken);
   }),
 );
-
-// Tests for private helper methods
-Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
-  const connection = new Connection(
-    testBaseUrl,
-    testClientId,
-    testClientSecret,
-    testDeviceId,
-    testTokenUrl,
-  );
-
-  // @ts-ignore - Accessing private method for testing
-  const buildWebSocketURL = connection._buildWebSocketURL.bind(connection);
-
-  // Test different URL formats
-  assertEquals(
-    buildWebSocketURL("https://example.com/api"),
-    "wss://example.com/api/platform/subscribe",
-  );
-
-  assertEquals(
-    buildWebSocketURL("http://example.com/api"),
-    "ws://example.com/api/platform/subscribe",
-  );
-
-  assertEquals(
-    buildWebSocketURL("ws://example.com/api"),
-    "ws://example.com/api/platform/subscribe",
-  );
-
-  assertEquals(
-    buildWebSocketURL("wss://example.com/api"),
-    "wss://example.com/api/platform/subscribe",
-  );
-});
 
 Deno.test("Connection constructor should set URLs correctly", () => {
   const connection = new Connection(

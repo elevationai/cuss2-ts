@@ -84,7 +84,7 @@ export class Connection extends EventEmitter {
     // Store the URL, removing any trailing slash to avoid double slashes when concatenating paths
     // Also remove query parameters and fragments, but preserve the path
     const parsedUrl = new URL(baseURL);
-    this._baseURL = `${parsedUrl.origin}${parsedUrl.pathname}`.replace(/\/$/, '');
+    this._baseURL = `${parsedUrl.origin}${parsedUrl.pathname}`.replace(/\/$/, "");
 
     // Set up token URL - always ensure OAuth uses HTTP/HTTPS protocol
     const oauthUrl = tokenURL

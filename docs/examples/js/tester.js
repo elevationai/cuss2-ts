@@ -53,88 +53,68 @@ const aeaCommands = {
 };
 
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
-// Uses ComponentInterrogation from the library for characteristic-based detection
+// Truly characteristic-based detection: inspect what operations the component actually supports
 const componentCapabilities = {
-  // Get capabilities for a component based on CUSS characteristics
-  getCapabilities(rawComponent) {
+  // Get capabilities for a component by checking which methods it has
+  getCapabilities(component) {
     const capabilities = [];
 
-    // All components have query (from BaseComponent)
-    capabilities.push('query');
-
-    // Check if it's a feeder first (special case - only query and offer)
-    if (ComponentInterrogation.isFeeder(rawComponent)) {
-      capabilities.push('offer');
-      return capabilities;
+    // Check for each possible capability by inspecting the component's methods
+    if (typeof component.query === 'function') {
+      capabilities.push('query');
     }
 
-    // Most components have cancel and setup (from BaseComponent)
-    capabilities.push('cancel', 'setup');
-
-    // Interactive components (enable/disable) - uses characteristic-based detection
-    const isInteractive =
-      ComponentInterrogation.isBarcodeReader(rawComponent) ||
-      ComponentInterrogation.isDocumentReader(rawComponent) ||
-      ComponentInterrogation.isCardReader(rawComponent) ||
-      ComponentInterrogation.isCamera(rawComponent) ||
-      ComponentInterrogation.isRFIDReader(rawComponent) ||
-      ComponentInterrogation.isKeypad(rawComponent) ||
-      ComponentInterrogation.isBiometric(rawComponent) ||
-      ComponentInterrogation.isScale(rawComponent) ||
-      ComponentInterrogation.isDispenser(rawComponent) ||
-      ComponentInterrogation.isAnnouncement(rawComponent) ||
-      ComponentInterrogation.isBagTagPrinter(rawComponent) ||
-      ComponentInterrogation.isBoardingPassPrinter(rawComponent) ||
-      ComponentInterrogation.isAEASBD(rawComponent) ||
-      ComponentInterrogation.isHeadset(rawComponent);
-
-    if (isInteractive) {
-      capabilities.push('enable', 'disable');
+    if (typeof component.cancel === 'function') {
+      capabilities.push('cancel');
     }
 
-    // Output components (send) - check for output types
-    const isOutput =
-      ComponentInterrogation.isIllumination(rawComponent) ||
-      ComponentInterrogation.isHeadset(rawComponent) ||
-      ComponentInterrogation.isBiometric(rawComponent) ||
-      ComponentInterrogation.isBagTagPrinter(rawComponent) ||
-      ComponentInterrogation.isBoardingPassPrinter(rawComponent) ||
-      ComponentInterrogation.isAEASBD(rawComponent);
+    if (typeof component.setup === 'function') {
+      capabilities.push('setup');
+    }
 
-    if (isOutput) {
+    if (typeof component.enable === 'function') {
+      capabilities.push('enable');
+    }
+
+    if (typeof component.disable === 'function') {
+      capabilities.push('disable');
+    }
+
+    if (typeof component.send === 'function') {
       capabilities.push('send');
     }
 
-    // Dispenser has offer capability
-    if (ComponentInterrogation.isDispenser(rawComponent)) {
+    if (typeof component.read === 'function') {
+      capabilities.push('read');
+    }
+
+    if (typeof component.offer === 'function') {
       capabilities.push('offer');
     }
 
-    // Announcement components have special playback controls
-    if (ComponentInterrogation.isAnnouncement(rawComponent)) {
-      capabilities.push('play', 'pause', 'resume', 'stop');
+    // Announcement-specific playback controls
+    if (typeof component.play === 'function') {
+      capabilities.push('play');
     }
 
-    // Input components with read capability
-    const isReadCapable =
-      ComponentInterrogation.isBarcodeReader(rawComponent) ||
-      ComponentInterrogation.isDocumentReader(rawComponent) ||
-      ComponentInterrogation.isCardReader(rawComponent) ||
-      ComponentInterrogation.isCamera(rawComponent) ||
-      ComponentInterrogation.isRFIDReader(rawComponent) ||
-      ComponentInterrogation.isScale(rawComponent) ||
-      ComponentInterrogation.isBHS(rawComponent);
+    if (typeof component.pause === 'function') {
+      capabilities.push('pause');
+    }
 
-    if (isReadCapable) {
-      capabilities.push('read');
+    if (typeof component.resume === 'function') {
+      capabilities.push('resume');
+    }
+
+    if (typeof component.stop === 'function') {
+      capabilities.push('stop');
     }
 
     return capabilities;
   },
 
   // Check if a specific capability is allowed for this component
-  hasCapability(rawComponent, capability) {
-    const capabilities = this.getCapabilities(rawComponent);
+  hasCapability(component, capability) {
+    const capabilities = this.getCapabilities(component);
     return capabilities.includes(capability);
   }
 };
@@ -498,7 +478,7 @@ const templates = {
 
     // Setup Enabled toggle (only if component supports it)
     const enabledToggleContainer = clone.querySelector('.enabled-toggle-container');
-    if (componentCapabilities.hasCapability(component.rawComponent, 'enable')) {
+    if (componentCapabilities.hasCapability(component, 'enable')) {
       enabledToggleContainer.style.display = '';
       const enabledToggle = clone.querySelector('.enabled-toggle-container .toggle-switch');
       enabledToggle.dataset.componentId = id;
@@ -513,8 +493,8 @@ const templates = {
     }
 
     // Get capabilities and populate action columns
-    // Use rawComponent for ComponentInterrogation (needs EnvironmentComponent structure)
-    const capabilities = componentCapabilities.getCapabilities(component.rawComponent);
+    // Inspect the component's actual methods to determine what it can do
+    const capabilities = componentCapabilities.getCapabilities(component);
     const leftColumn = clone.querySelector('.left-column');
     const rightColumn = clone.querySelector('.right-column');
 

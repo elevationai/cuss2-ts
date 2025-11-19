@@ -96,6 +96,66 @@ Deno.test("Connection URL handling - respects explicit token URL", () => {
   );
 });
 
+Deno.test("Connection URL handling - OAuth and WebSocket on different origins", () => {
+  const testCases = [
+    {
+      baseUrl: "wss://ws.platform.com/api",
+      tokenUrl: "https://auth.platform.com/v1/oauth/token",
+      expectedOAuthUrl: "https://auth.platform.com/v1/oauth/token",
+      expectedWsUrl: "wss://ws.platform.com/api/platform/subscribe",
+      description: "WebSocket on ws.platform.com, OAuth on auth.platform.com",
+    },
+    {
+      baseUrl: "https://api.example.com/v2",
+      tokenUrl: "https://oauth.different-domain.com/token",
+      expectedOAuthUrl: "https://oauth.different-domain.com/token",
+      expectedWsUrl: "wss://api.example.com/v2/platform/subscribe",
+      description: "Completely different domains for OAuth and WebSocket",
+    },
+    {
+      baseUrl: "wss://platform.internal:8443/cuss",
+      tokenUrl: "http://auth.internal:9000/api/v1/auth/token",
+      expectedOAuthUrl: "http://auth.internal:9000/api/v1/auth/token",
+      expectedWsUrl: "wss://platform.internal:8443/cuss/platform/subscribe",
+      description: "Different hosts and ports with paths",
+    },
+    {
+      baseUrl: "ws://localhost:3000/platform/subscribe",
+      tokenUrl: "http://localhost:8080/auth/oauth/token",
+      expectedOAuthUrl: "http://localhost:8080/auth/oauth/token",
+      expectedWsUrl: "ws://localhost:3000/platform/subscribe",
+      description: "Same host different ports, WS URL already has /platform/subscribe",
+    },
+  ];
+
+  for (const testCase of testCases) {
+    const connection = new Connection(
+      testCase.baseUrl,
+      "test-client",
+      "test-secret",
+      "device-123",
+      testCase.tokenUrl,
+    );
+
+    // @ts-ignore: Accessing private properties for testing
+    const actualOAuthUrl = connection._auth.url;
+    // @ts-ignore: Accessing private properties for testing
+    const actualWsUrl = connection._socketURL;
+
+    assertEquals(
+      actualOAuthUrl,
+      testCase.expectedOAuthUrl,
+      `OAuth URL failed for: ${testCase.description}`,
+    );
+
+    assertEquals(
+      actualWsUrl,
+      testCase.expectedWsUrl,
+      `WebSocket URL failed for: ${testCase.description}`,
+    );
+  }
+});
+
 Deno.test("Connection URL handling - WebSocket URL construction", () => {
   const testCases = [
     {

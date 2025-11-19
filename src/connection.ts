@@ -82,7 +82,7 @@ export class Connection extends EventEmitter {
     }
 
     // Store just the origin (protocol + hostname + port), stripping any path/query/hash
-    this._baseURL = new URL(baseURL).origin;
+    this._baseURL = new URL(baseURL).toString();
 
     // Set up token URL - always ensure OAuth uses HTTP/HTTPS protocol
     const oauthUrl = tokenURL

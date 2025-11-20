@@ -253,6 +253,35 @@ const urlUtils = {
     } catch (error) {
       return { hasMixedContent: false, error: error.message };
     }
+  },
+
+  // Update URL with connection parameters
+  updateUrlWithConnectionParams(formData) {
+    const params = new URLSearchParams();
+
+    // Required parameters
+    params.set('CLIENT-ID', formData.clientId);
+    params.set('CLIENT-SECRET', formData.clientSecret);
+    params.set('CUSS-WSS', formData.wss);
+
+    // Optional parameters - only add if they have values
+    if (formData.tokenUrl && formData.tokenUrl.trim()) {
+      params.set('OAUTH-URL', formData.tokenUrl);
+    }
+    if (formData.deviceId && formData.deviceId.trim()) {
+      params.set('DEVICE-ID', formData.deviceId);
+    }
+
+    // Preserve 'go' parameter if it was in the original URL
+    if (queryConfig.go) {
+      params.set('go', queryConfig.go);
+    }
+
+    // Update URL without triggering a page reload
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+
+    logger.info('URL updated with connection parameters');
   }
 };
 
@@ -1761,6 +1790,10 @@ const connectionManager = {
     await cuss2.connected;
 
     logger.success("Connected successfully!");
+
+    // Update URL with connection parameters for easy refresh/reconnection
+    urlUtils.updateUrlWithConnectionParams(config);
+
     ui.updateConnectionStatus("CONNECTED");
     dom.setButtonState(dom.elements.connectBtn, true);
     dom.setButtonState(dom.elements.disconnectBtn, false);

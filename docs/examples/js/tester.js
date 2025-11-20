@@ -775,6 +775,183 @@ const templates = {
   }
 };
 
+// ===== CONNECTION STAGE MANAGEMENT =====
+const connectionStages = {
+  // Stage state tracking
+  authStage: {
+    state: 'pending', // pending, progress, success, error
+    attempts: 0,
+    lastError: null
+  },
+  websocketStage: {
+    state: 'pending',
+    attempts: 0,
+    lastError: null
+  },
+
+  // Reset all stages to pending
+  reset() {
+    this.authStage = { state: 'pending', attempts: 0, lastError: null };
+    this.websocketStage = { state: 'pending', attempts: 0, lastError: null };
+    this.updateUI();
+    this.hideErrorMessage();
+    this.clearFieldHighlights();
+  },
+
+  // Update a specific stage
+  updateStage(stage, state, message, attempts = null) {
+    const stageData = stage === 'auth' ? this.authStage : this.websocketStage;
+    stageData.state = state;
+    if (attempts !== null) {
+      stageData.attempts = attempts;
+    }
+    if (state === 'error' && message) {
+      stageData.lastError = message;
+    }
+    this.updateUI();
+
+    // Check if we should show error message
+    if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
+      this.showErrorMessage();
+      this.highlightProblematicField();
+    }
+  },
+
+  // Update the UI based on current stage states
+  updateUI() {
+    // Update auth stage
+    this.updateStageUI('auth', this.authStage);
+
+    // Update websocket stage
+    this.updateStageUI('websocket', this.websocketStage);
+
+    // Update progress title
+    this.updateProgressTitle();
+  },
+
+  // Update a single stage in the UI
+  updateStageUI(stageName, stageData) {
+    const prefix = stageName === 'auth' ? 'auth' : 'websocket';
+    const stageElement = document.getElementById(`${prefix}Stage`);
+    const iconElement = document.getElementById(`${prefix}StageIcon`);
+    const statusElement = document.getElementById(`${prefix}StageStatus`);
+    const attemptsElement = document.getElementById(`${prefix}StageAttempts`);
+
+    if (!stageElement || !iconElement || !statusElement) return;
+
+    // Remove all state classes
+    stageElement.classList.remove('stage-pending', 'stage-progress', 'stage-success', 'stage-error');
+
+    // Add current state class
+    stageElement.classList.add(`stage-${stageData.state}`);
+
+    // Update icon
+    const icons = {
+      pending: '⏳',
+      progress: '🔄',
+      success: '✅',
+      error: '❌'
+    };
+    iconElement.textContent = icons[stageData.state] || '⏳';
+
+    // Update status text
+    const statusTexts = {
+      pending: 'Pending...',
+      progress: stageName === 'auth' ? 'Authenticating...' : 'Connecting...',
+      success: stageName === 'auth' ? 'Authenticated ✓' : 'Connected ✓',
+      error: stageData.lastError || 'Failed'
+    };
+    statusElement.textContent = statusTexts[stageData.state] || statusTexts.pending;
+
+    // Update attempts counter
+    if (attemptsElement) {
+      if (stageData.state === 'progress' && stageData.attempts > 0) {
+        attemptsElement.textContent = `Attempt ${stageData.attempts}`;
+      } else {
+        attemptsElement.textContent = '';
+      }
+    }
+  },
+
+  // Update progress title based on overall state
+  updateProgressTitle() {
+    const titleElement = document.getElementById('connectionProgressTitle');
+    if (!titleElement) return;
+
+    if (this.websocketStage.state === 'success') {
+      titleElement.textContent = '✅ Connected Successfully';
+    } else if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
+      titleElement.textContent = '⚠️ Connection Failed';
+    } else if (this.authStage.state === 'progress' || this.websocketStage.state === 'progress') {
+      titleElement.textContent = 'Connecting to Platform...';
+    } else {
+      titleElement.textContent = 'Connecting to Platform...';
+    }
+  },
+
+  // Show error message with guidance
+  showErrorMessage() {
+    const messageElement = document.getElementById('connectionErrorMessage');
+    if (!messageElement) return;
+
+    let message = '';
+
+    if (this.authStage.state === 'error' && this.websocketStage.state === 'pending') {
+      message = '<strong>Authentication Failed</strong>Authentication could not complete. Please verify your Client ID, Client Secret, and Token URL are correct.';
+    } else if (this.authStage.state === 'success' && this.websocketStage.state === 'error') {
+      message = '<strong>WebSocket Connection Failed</strong>Authentication successful, but could not connect to WebSocket. Please verify your WebSocket URL is correct.';
+    } else if (this.authStage.state === 'error' && this.websocketStage.state === 'error') {
+      message = '<strong>Connection Failed</strong>Both authentication and WebSocket connection failed. Please verify all connection settings.';
+    }
+
+    if (message) {
+      messageElement.innerHTML = message;
+      messageElement.style.display = 'block';
+    }
+  },
+
+  // Hide error message
+  hideErrorMessage() {
+    const messageElement = document.getElementById('connectionErrorMessage');
+    if (messageElement) {
+      messageElement.style.display = 'none';
+    }
+  },
+
+  // Highlight the problematic URL field
+  highlightProblematicField() {
+    this.clearFieldHighlights();
+
+    const wssInput = document.getElementById('wss');
+    const tokenUrlInput = document.getElementById('tokenUrl');
+
+    if (this.authStage.state === 'error') {
+      // Auth failed - highlight token URL (or client credentials, but we'll highlight token URL)
+      if (tokenUrlInput && tokenUrlInput.value.trim()) {
+        tokenUrlInput.classList.add('field-problem');
+        // Remove after animation
+        setTimeout(() => tokenUrlInput.classList.remove('field-problem'), 3000);
+      }
+    } else if (this.authStage.state === 'success' && this.websocketStage.state === 'error') {
+      // WebSocket failed - highlight WebSocket URL
+      if (wssInput) {
+        wssInput.classList.add('field-problem');
+        // Remove after animation
+        setTimeout(() => wssInput.classList.remove('field-problem'), 3000);
+      }
+    }
+  },
+
+  // Clear field highlights
+  clearFieldHighlights() {
+    const wssInput = document.getElementById('wss');
+    const tokenUrlInput = document.getElementById('tokenUrl');
+
+    if (wssInput) wssInput.classList.remove('field-problem');
+    if (tokenUrlInput) tokenUrlInput.classList.remove('field-problem');
+  }
+};
+
 // ===== UI UPDATE UTILITIES =====
 const ui = {
   // Connection status states
@@ -800,15 +977,16 @@ const ui = {
       dom.setClass(dom.elements.connectionStatusConnected, status.class);
       dom.setText(dom.elements.connectionStatusConnected, status.text);
 
-      // Reset connection form UI
+      // Reset connection form UI - hide the progress indicator
       dom.setVisible(dom.elements.connectButtonContainer, true);
       dom.setVisible(dom.elements.connectionStatusContainer, false);
     } else if (state === "CONNECTING") {
-      // Show status bar with cancel button instead of connect button
+      // Show status bar with progress indicator instead of connect button
       dom.setVisible(dom.elements.connectButtonContainer, false);
       dom.setVisible(dom.elements.connectionStatusContainer, true);
-      dom.setClass(dom.elements.connectionStatus, status.class);
-      dom.setText(dom.elements.connectionStatus, status.text);
+
+      // Reset connection stages to initial state
+      connectionStages.reset();
     } else {
       // Switch to Connection view (disconnected/failed)
       dom.setVisible(dom.elements.connectionPanel, true);
@@ -820,12 +998,6 @@ const ui = {
       // Show connect button, hide status
       dom.setVisible(dom.elements.connectButtonContainer, true);
       dom.setVisible(dom.elements.connectionStatusContainer, false);
-
-      // Update status text for any error messages
-      if (state === "FAILED" || state === "DISCONNECTED") {
-        dom.setClass(dom.elements.connectionStatus, status.class);
-        dom.setText(dom.elements.connectionStatus, status.text);
-      }
     }
   },
 
@@ -1560,16 +1732,64 @@ const connectionManager = {
     const connectionEvents = [
       {
         event: "connecting",
-        handler: (attempt) => logger.info(`WebSocket connection attempt ${attempt}`),
+        handler: (attempt) => {
+          logger.info(`WebSocket connection attempt ${attempt}`);
+          connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
+        },
       },
       {
         event: "authenticating",
-        handler: (attempt) => logger.info(`Authentication attempt ${attempt}`),
+        handler: (attempt) => {
+          logger.info(`Authentication attempt ${attempt}`);
+          connectionStages.updateStage('auth', 'progress', 'Authenticating...', attempt);
+        },
       },
-      { event: "authenticated", handler: () => logger.success("Authentication successful") },
-      { event: "open", handler: () => logger.success("WebSocket connection opened") },
-      { event: "close", handler: () => this.handleConnectionClose() },
-      { event: "error", handler: (error) => logger.error(`Connection error: ${error.message}`) },
+      {
+        event: "authenticated",
+        handler: () => {
+          logger.success("Authentication successful");
+          connectionStages.updateStage('auth', 'success', 'Authenticated');
+        }
+      },
+      {
+        event: "open",
+        handler: () => {
+          logger.success("WebSocket connection opened");
+          connectionStages.updateStage('websocket', 'success', 'Connected');
+        }
+      },
+      {
+        event: "close",
+        handler: (event) => {
+          // Only mark as error if it's not a normal close
+          if (event && event.code !== 1000 && connectionStages.websocketStage.state !== 'success') {
+            connectionStages.updateStage('websocket', 'error', 'Connection closed');
+          }
+          this.handleConnectionClose();
+        }
+      },
+      {
+        event: "error",
+        handler: (error) => {
+          logger.error(`Connection error: ${error.message}`);
+        }
+      },
+      {
+        event: "socketError",
+        handler: (error) => {
+          logger.error(`Socket error: ${error}`);
+          if (connectionStages.websocketStage.state !== 'success') {
+            connectionStages.updateStage('websocket', 'error', 'Connection failed');
+          }
+        }
+      },
+      {
+        event: "authenticationError",
+        handler: (error) => {
+          logger.error(`Authentication error: ${error.message}`);
+          connectionStages.updateStage('auth', 'error', error.message || 'Authentication failed');
+        }
+      },
     ];
 
     connectionEvents.forEach(({ event, handler }) => {

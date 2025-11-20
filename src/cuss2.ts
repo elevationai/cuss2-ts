@@ -657,14 +657,18 @@ export class Cuss2 extends EventEmitter {
   }
 
   checkRequiredComponentsAndSyncState(): void {
-    if (this.pendingStateChange) return;
+    if (this.pendingStateChange) {
+      return;
+    }
+
     if (this._online) {
       const inactiveRequiredComponents = this.unavailableRequiredComponents;
+
       if (!inactiveRequiredComponents.length) {
         if (this.state === AppState.UNAVAILABLE) {
           log(
             "verbose",
-            "[checkRequiredComponentsAndSyncState] All required components OK ✅. Ready for AVAILABLE state.",
+            "[checkRequiredComponentsAndSyncState] All required components OK ✅. Auto-transitioning to AVAILABLE.",
           );
           this.requestAvailableState();
         }
@@ -684,6 +688,7 @@ export class Cuss2 extends EventEmitter {
   }
 
   private _online: boolean = false;
+
   get applicationOnline(): boolean {
     return this._online;
   }

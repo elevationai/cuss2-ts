@@ -74,7 +74,7 @@ class MockResponse {
 const testDeviceId = "device-123";
 const testClientId = "client-id";
 const testClientSecret = "client-secret";
-const testBaseUrl = "https://example.com";
+const testBaseUrl = "https://example.com/platform/subscribe";
 const testTokenUrl = "https://example.com/oauth/token";
 const testToken = "test-token";
 
@@ -275,41 +275,6 @@ Deno.test(
   }),
 );
 
-// Tests for private helper methods
-Deno.test("_buildWebSocketURL should create correct WebSocket URL", () => {
-  const connection = new Connection(
-    testBaseUrl,
-    testClientId,
-    testClientSecret,
-    testDeviceId,
-    testTokenUrl,
-  );
-
-  // @ts-ignore - Accessing private method for testing
-  const buildWebSocketURL = connection._buildWebSocketURL.bind(connection);
-
-  // Test different URL formats
-  assertEquals(
-    buildWebSocketURL("https://example.com/api"),
-    "wss://example.com/api/platform/subscribe",
-  );
-
-  assertEquals(
-    buildWebSocketURL("http://example.com/api"),
-    "ws://example.com/api/platform/subscribe",
-  );
-
-  assertEquals(
-    buildWebSocketURL("ws://example.com/api"),
-    "ws://example.com/api/platform/subscribe",
-  );
-
-  assertEquals(
-    buildWebSocketURL("wss://example.com/api"),
-    "wss://example.com/api/platform/subscribe",
-  );
-});
-
 Deno.test("Connection constructor should set URLs correctly", () => {
   const connection = new Connection(
     "https://example.com/api/?param=value",
@@ -323,7 +288,7 @@ Deno.test("Connection constructor should set URLs correctly", () => {
   // @ts-ignore - Accessing private property for testing
   assertEquals(connection._baseURL, "https://example.com");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(connection._socketURL, "wss://example.com/platform/subscribe");
+  assertEquals(connection._socketURL, "wss://example.com/api/?param=value");
 
   // Test with WebSocket URL - base URL extracts origin only
   const wsConnection = new Connection(
@@ -338,10 +303,10 @@ Deno.test("Connection constructor should set URLs correctly", () => {
   // Base URL should extract origin only
   assertEquals(wsConnection._baseURL, "ws://example.com");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wsConnection._socketURL, "ws://example.com/platform/subscribe");
+  assertEquals(wsConnection._socketURL, "ws://example.com/api/");
   // Note: testTokenUrl is provided, so OAuth URL uses the provided token URL
 
-  // Test with secure WebSocket URL - base URL extracts origin only
+  // Test with secure WebSocket URL
   const wssConnection = new Connection(
     "wss://example.com/api/",
     testClientId,
@@ -354,7 +319,7 @@ Deno.test("Connection constructor should set URLs correctly", () => {
   // Base URL should extract origin only
   assertEquals(wssConnection._baseURL, "wss://example.com");
   // @ts-ignore - Accessing private property for testing
-  assertEquals(wssConnection._socketURL, "wss://example.com/platform/subscribe");
+  assertEquals(wssConnection._socketURL, "wss://example.com/api/");
 });
 
 Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {

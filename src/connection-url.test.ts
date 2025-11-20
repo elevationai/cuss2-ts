@@ -100,27 +100,22 @@ Deno.test("Connection URL handling - WebSocket URL construction", () => {
   const testCases = [
     {
       input: "https://localhost:22222",
-      expectedWsUrl: "wss://localhost:22222/platform/subscribe",
+      expectedWsUrl: "wss://localhost:22222",
       description: "HTTPS should convert to WSS",
     },
     {
       input: "http://localhost:22222",
-      expectedWsUrl: "ws://localhost:22222/platform/subscribe",
+      expectedWsUrl: "ws://localhost:22222",
       description: "HTTP should convert to WS",
     },
     {
-      input: "https://localhost:22222/some/path",
-      expectedWsUrl: "wss://localhost:22222/platform/subscribe",
+      input: "https://localhost:22222/not_ignored/path",
+      expectedWsUrl: "wss://localhost:22222/not_ignored/path",
       description: "Should strip path and use base URL",
     },
     {
-      input: "wss://localhost:22222",
-      expectedWsUrl: "wss://localhost:22222/platform/subscribe",
-      description: "WSS URL should stay WSS",
-    },
-    {
-      input: "ws://localhost:22222/ignored/path",
-      expectedWsUrl: "ws://localhost:22222/platform/subscribe",
+      input: "ws://localhost:22222/not_ignored/path",
+      expectedWsUrl: "ws://localhost:22222/not_ignored/path",
       description: "WS URL should strip path and stay WS",
     },
   ];

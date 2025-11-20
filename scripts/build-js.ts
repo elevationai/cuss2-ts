@@ -36,7 +36,7 @@ const entryCode = `
 // Temporary bundle entry point
 import { Cuss2 } from "../mod.ts";
 
-// Re-export Cuss2 as the primary export
+// Re-export Cuss2 as primary export
 export { Cuss2 };
 
 // Also create named exports for everything from cuss2-typescript-models

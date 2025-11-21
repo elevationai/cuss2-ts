@@ -2077,9 +2077,14 @@ const connectionManager = {
     }
     catch (error) {
       logger.error(`Connection failed: ${error.message}`);
-      ui.updateConnectionStatus("FAILED");
-      dom.setButtonState(dom.elements.connectBtn, false);
-      dom.setButtonState(dom.elements.disconnectBtn, true);
+
+      // Don't call updateConnectionStatus("FAILED") here!
+      // The two-stage indicator is already showing detailed error information
+      // from the connection event handlers (authenticated, connecting, close, etc.)
+      // Let that detailed error state persist so the user can see what went wrong
+
+      // The connection status container will remain visible with error details
+      // User can click Cancel to dismiss it and try again
     }
   },
 

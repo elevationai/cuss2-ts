@@ -1926,17 +1926,10 @@ const connectionManager = {
     // Check if this was a normal close (user disconnected) or abnormal
     const isNormalClose = event && event.code === 1000;
 
-    if (!this.wasEverConnected) {
-      // Initial connection failed - DON'T hide the status container yet!
-      // Keep it visible so user can see the two-stage error details
-      // Just enable the cancel button so they can dismiss it
-      logger.info("Initial connection failed - showing error details");
-
-      // Note: The connection status container will stay visible with error details
-      // User can see which stage failed (auth vs websocket)
-      // The cancel button allows them to dismiss and try again
-    } else if (isNormalClose) {
+    // Check close code FIRST - normal close always means user disconnected
+    if (isNormalClose) {
       // User manually disconnected - return to connection panel
+      logger.info("User manually disconnected");
       ui.updateConnectionStatus("DISCONNECTED");
       dom.setButtonState(dom.elements.connectBtn, false);
       dom.setButtonState(dom.elements.disconnectBtn, true);
@@ -1944,6 +1937,14 @@ const connectionManager = {
 
       // Hide reconnection banner if showing
       this.hideReconnectionBanner();
+    } else if (!this.wasEverConnected) {
+      // Initial connection failed (abnormal close before ever connecting)
+      // DON'T hide the status container - keep error details visible
+      logger.info("Initial connection failed - showing error details");
+
+      // Note: The connection status container will stay visible with error details
+      // User can see which stage failed (auth vs websocket)
+      // The cancel button allows them to dismiss and try again
     } else {
       // Connection dropped unexpectedly - user was connected before
       // DON'T switch panels - the library will auto-reconnect
@@ -2164,16 +2165,20 @@ const connectionManager = {
   // Disconnect
   disconnect() {
     if (cuss2) {
-      cuss2.connection.close();
-      cuss2 = null;
-      ui.resetUI();
-
-      // Reset connection tracking flags
+      // Reset connection tracking flags BEFORE closing
+      // This ensures the close handler recognizes it as a manual disconnect
       this.wasEverConnected = false;
       this.isReconnecting = false;
 
+      // Close with code 1000 (normal close)
+      cuss2.connection.close(1000, "User disconnected");
+      cuss2 = null;
+
       // Hide reconnection banner if showing
       this.hideReconnectionBanner();
+
+      // Reset UI
+      ui.resetUI();
 
       logger.info("Disconnected and reset connection state");
     }

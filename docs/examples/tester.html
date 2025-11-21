@@ -221,6 +221,31 @@
       </div>
     </template>
 
+    <!-- Reconnection Banner Template -->
+    <template id="reconnection-banner-template">
+      <div id="reconnectionBanner" class="reconnection-banner">
+        <div class="reconnection-content">
+          <span class="reconnection-icon">⚠️</span>
+          <div class="reconnection-text">
+            <span class="reconnection-message">Connection Lost - Reconnecting...</span>
+            <span id="reconnectionAttempts" class="reconnection-attempts"></span>
+          </div>
+        </div>
+        <div class="reconnection-actions">
+          <button id="retryConnectionBtn" class="reconnection-btn retry-btn">Retry Now</button>
+          <button id="cancelReconnectionBtn" class="reconnection-btn cancel-btn">Disconnect</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Reconnection Success Toast Template -->
+    <template id="reconnection-success-template">
+      <div id="reconnectionSuccessToast" class="reconnection-success-toast">
+        <span class="success-icon">✅</span>
+        <span class="success-message">Reconnected Successfully</span>
+      </div>
+    </template>
+
     <!-- Include the CUSS2 library and application JavaScript -->
     <script type="module" src="js/tester.js"></script>
   </body>

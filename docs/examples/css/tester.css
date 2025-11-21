@@ -381,6 +381,157 @@ input.field-problem {
   75% { transform: translateX(5px); }
 }
 
+/* ===== RECONNECTION BANNER ===== */
+.reconnection-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, rgba(255, 200, 100, 0.98), rgba(255, 170, 50, 0.98));
+  border-bottom: 3px solid #ffc864;
+  padding: 15px 20px;
+  z-index: 10000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.reconnection-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.reconnection-icon {
+  font-size: 24px;
+  animation: pulse-icon 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.reconnection-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reconnection-message {
+  font-weight: 600;
+  font-size: 15px;
+  color: #0f0f1e;
+}
+
+.reconnection-attempts {
+  font-size: 13px;
+  color: rgba(15, 15, 30, 0.8);
+  font-weight: 500;
+}
+
+.reconnection-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.reconnection-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.reconnection-btn.retry-btn {
+  background: linear-gradient(135deg, #64ffda, #48cae4);
+  color: #0f0f1e;
+}
+
+.reconnection-btn.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 255, 218, 0.4);
+}
+
+.reconnection-btn.cancel-btn {
+  background: rgba(15, 15, 30, 0.3);
+  color: #0f0f1e;
+  border: 1px solid rgba(15, 15, 30, 0.5);
+}
+
+.reconnection-btn.cancel-btn:hover {
+  background: rgba(15, 15, 30, 0.5);
+}
+
+/* ===== RECONNECTION SUCCESS TOAST ===== */
+.reconnection-success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(100, 255, 218, 0.98), rgba(72, 202, 228, 0.98));
+  border: 2px solid #64ffda;
+  border-radius: 8px;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 30px rgba(100, 255, 218, 0.4);
+  z-index: 10000;
+  animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.reconnection-success-toast .success-icon {
+  font-size: 24px;
+}
+
+.reconnection-success-toast .success-message {
+  font-weight: 600;
+  font-size: 15px;
+  color: #0f0f1e;
+}
+
 /* ===== STATE BADGES ===== */
 .state-badge {
   display: inline-block;

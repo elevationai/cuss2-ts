@@ -1727,6 +1727,105 @@ const componentHandlers = {
 
 // ===== CONNECTION MANAGEMENT =====
 const connectionManager = {
+  // Track if user ever successfully connected
+  wasEverConnected: false,
+  isReconnecting: false,
+
+  // Show reconnection banner
+  showReconnectionBanner() {
+    // Remove any existing banner
+    const existingBanner = document.getElementById('reconnectionBanner');
+    if (existingBanner) {
+      return; // Already showing
+    }
+
+    // Clone and add banner
+    const template = document.getElementById('reconnection-banner-template');
+    const clone = template.content.cloneNode(true);
+    document.body.insertBefore(clone, document.body.firstChild);
+
+    // Set reconnecting flag
+    this.isReconnecting = true;
+
+    // Add event listeners
+    const retryBtn = document.getElementById('retryConnectionBtn');
+    const cancelBtn = document.getElementById('cancelReconnectionBtn');
+
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => this.handleRetryNow());
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.handleCancelReconnection());
+    }
+
+    logger.info('Reconnection banner displayed');
+  },
+
+  // Hide reconnection banner
+  hideReconnectionBanner() {
+    const banner = document.getElementById('reconnectionBanner');
+    if (banner) {
+      banner.remove();
+      this.isReconnecting = false;
+      logger.info('Reconnection banner hidden');
+    }
+  },
+
+  // Update reconnection attempts counter
+  updateReconnectionAttempts(attempt) {
+    const attemptsElement = document.getElementById('reconnectionAttempts');
+    if (attemptsElement) {
+      attemptsElement.textContent = `Attempt ${attempt}`;
+    }
+  },
+
+  // Handle Retry Now button
+  handleRetryNow() {
+    logger.info('User requested immediate retry');
+    // Hide banner temporarily
+    this.hideReconnectionBanner();
+
+    // The library will continue retrying automatically
+    // Just show the banner again to indicate we're still trying
+    setTimeout(() => {
+      if (this.isReconnecting && !cuss2.connection.isOpen) {
+        this.showReconnectionBanner();
+      }
+    }, 100);
+  },
+
+  // Handle Cancel/Disconnect button
+  handleCancelReconnection() {
+    logger.info('User cancelled reconnection');
+    this.hideReconnectionBanner();
+    this.disconnect();
+  },
+
+  // Show success toast
+  showReconnectionSuccess() {
+    // Remove any existing toast
+    const existingToast = document.getElementById('reconnectionSuccessToast');
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    // Clone and add toast
+    const template = document.getElementById('reconnection-success-template');
+    const clone = template.content.cloneNode(true);
+    document.body.appendChild(clone);
+
+    // Auto-remove after animation
+    setTimeout(() => {
+      const toast = document.getElementById('reconnectionSuccessToast');
+      if (toast) {
+        toast.remove();
+      }
+    }, 3000);
+
+    logger.success('Reconnection successful!');
+  },
+
   // Setup connection event listeners
   setupConnectionListeners() {
     const connectionEvents = [
@@ -1734,7 +1833,16 @@ const connectionManager = {
         event: "connecting",
         handler: (attempt) => {
           logger.info(`WebSocket connection attempt ${attempt}`);
-          connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
+
+          // Check if this is a reconnection attempt
+          if (this.wasEverConnected) {
+            // This is a reconnection - show banner
+            this.showReconnectionBanner();
+            this.updateReconnectionAttempts(attempt);
+          } else {
+            // Initial connection - update progress indicator
+            connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
+          }
         },
       },
       {
@@ -1755,17 +1863,31 @@ const connectionManager = {
         event: "open",
         handler: () => {
           logger.success("WebSocket connection opened");
-          connectionStages.updateStage('websocket', 'success', 'Connected');
+
+          // Check if this was a reconnection
+          const wasReconnecting = this.isReconnecting;
+
+          // Mark as successfully connected
+          this.wasEverConnected = true;
+
+          if (wasReconnecting) {
+            // Reconnection successful - hide banner and show success toast
+            this.hideReconnectionBanner();
+            this.showReconnectionSuccess();
+          } else {
+            // Initial connection - update progress indicator
+            connectionStages.updateStage('websocket', 'success', 'Connected');
+          }
         }
       },
       {
         event: "close",
         handler: (event) => {
-          // Only mark as error if it's not a normal close
-          if (event && event.code !== 1000 && connectionStages.websocketStage.state !== 'success') {
+          // Only mark as error if it's not a normal close AND not during initial connection
+          if (event && event.code !== 1000 && connectionStages.websocketStage.state !== 'success' && !this.wasEverConnected) {
             connectionStages.updateStage('websocket', 'error', 'Connection closed');
           }
-          this.handleConnectionClose();
+          this.handleConnectionClose(event);
         }
       },
       {
@@ -1798,12 +1920,31 @@ const connectionManager = {
   },
 
   // Handle connection close
-  handleConnectionClose() {
+  handleConnectionClose(event) {
     logger.error("WebSocket connection closed");
-    ui.updateConnectionStatus("DISCONNECTED");
-    dom.setButtonState(dom.elements.connectBtn, false);
-    dom.setButtonState(dom.elements.disconnectBtn, true);
-    Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+
+    // Check if this was a normal close (user disconnected) or abnormal
+    const isNormalClose = event && event.code === 1000;
+
+    if (!this.wasEverConnected || isNormalClose) {
+      // Initial connection failed OR user manually disconnected
+      // Switch to Connection panel
+      ui.updateConnectionStatus("DISCONNECTED");
+      dom.setButtonState(dom.elements.connectBtn, false);
+      dom.setButtonState(dom.elements.disconnectBtn, true);
+      Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+
+      // Hide reconnection banner if showing
+      this.hideReconnectionBanner();
+    } else {
+      // Connection dropped unexpectedly - user was connected before
+      // DON'T switch panels - the library will auto-reconnect
+      // The "connecting" event handler will show the reconnection banner
+      logger.info("Connection dropped - auto-reconnection will start");
+
+      // Disable state buttons during reconnection
+      Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+    }
   },
 
   // Setup platform event listeners
@@ -2018,6 +2159,15 @@ const connectionManager = {
       cuss2.connection.close();
       cuss2 = null;
       ui.resetUI();
+
+      // Reset connection tracking flags
+      this.wasEverConnected = false;
+      this.isReconnecting = false;
+
+      // Hide reconnection banner if showing
+      this.hideReconnectionBanner();
+
+      logger.info("Disconnected and reset connection state");
     }
   },
 };

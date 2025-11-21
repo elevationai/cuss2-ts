@@ -434,6 +434,354 @@ const logger = {
   },
 };
 
+// ===== UI FEEDBACK UTILITY =====
+const feedback = {
+  // Toast notification counter for unique IDs
+  _toastCounter: 0,
+
+  // ARIA live region for accessibility
+  _ariaRegion: null,
+
+  // Initialize feedback system
+  init() {
+    this._ariaRegion = document.getElementById('ariaLiveRegion');
+
+    // Add keyboard support for dismissing toasts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.dismissAllToasts();
+      }
+    });
+  },
+
+  // ===== TOAST NOTIFICATIONS =====
+
+  /**
+   * Show a toast notification
+   * @param {string} type - 'success', 'error', 'info', 'warning'
+   * @param {string} title - Toast title
+   * @param {string} message - Toast message
+   * @param {number} duration - Auto-dismiss duration in ms (0 = no auto-dismiss)
+   */
+  showToast(type, title, message, duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toastId = `toast-${++this._toastCounter}`;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.id = toastId;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+      <div class="toast-icon">${this._getToastIcon(type)}</div>
+      <div class="toast-content">
+        <div class="toast-title">${this._escapeHtml(title)}</div>
+        <div class="toast-message">${this._escapeHtml(message)}</div>
+      </div>
+      <button class="toast-dismiss" aria-label="Dismiss notification">×</button>
+    `;
+
+    // Add dismiss handler
+    const dismissBtn = toast.querySelector('.toast-dismiss');
+    dismissBtn.addEventListener('click', () => this.dismissToast(toastId));
+
+    container.appendChild(toast);
+
+    // Announce to screen readers
+    this._announceToScreenReader(`${title}. ${message}`);
+
+    // Auto-dismiss if duration is set
+    if (duration > 0) {
+      setTimeout(() => this.dismissToast(toastId), duration);
+    }
+
+    return toastId;
+  },
+
+  /**
+   * Dismiss a specific toast
+   */
+  dismissToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (!toast) return;
+
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  },
+
+  /**
+   * Dismiss all toasts
+   */
+  dismissAllToasts() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toasts = container.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 300);
+    });
+  },
+
+  /**
+   * Get icon for toast type
+   */
+  _getToastIcon(type) {
+    const icons = {
+      success: '✓',
+      error: '✗',
+      info: 'ⓘ',
+      warning: '⚠'
+    };
+    return icons[type] || icons.info;
+  },
+
+  // ===== BUTTON STATE MANAGEMENT =====
+
+  /**
+   * Set button to loading state
+   * @param {HTMLButtonElement} button
+   * @param {string} loadingText - Optional text to show (default: keeps original text)
+   */
+  setButtonLoading(button, loadingText = null) {
+    if (!button) return;
+
+    // Store original state
+    button.dataset.originalText = button.textContent;
+    button.dataset.originalDisabled = button.disabled;
+
+    // Apply loading state
+    button.classList.remove('success', 'error');
+    button.classList.add('loading');
+    button.disabled = true;
+
+    if (loadingText) {
+      button.textContent = loadingText;
+    }
+  },
+
+  /**
+   * Set button to success state
+   * @param {HTMLButtonElement} button
+   * @param {number} duration - How long to show success state (ms)
+   */
+  setButtonSuccess(button, duration = 2000) {
+    if (!button) return;
+
+    button.classList.remove('loading', 'error');
+    button.classList.add('success');
+
+    const originalText = button.dataset.originalText;
+    button.textContent = 'Success';
+
+    setTimeout(() => {
+      this.resetButton(button);
+    }, duration);
+  },
+
+  /**
+   * Set button to error state
+   * @param {HTMLButtonElement} button
+   * @param {number} duration - How long to show error state (ms)
+   */
+  setButtonError(button, duration = 3000) {
+    if (!button) return;
+
+    button.classList.remove('loading', 'success');
+    button.classList.add('error');
+
+    const originalText = button.dataset.originalText;
+    button.textContent = 'Failed';
+
+    setTimeout(() => {
+      this.resetButton(button);
+    }, duration);
+  },
+
+  /**
+   * Reset button to original state
+   */
+  resetButton(button) {
+    if (!button) return;
+
+    button.classList.remove('loading', 'success', 'error');
+    button.textContent = button.dataset.originalText || button.textContent;
+    button.disabled = button.dataset.originalDisabled === 'true';
+
+    delete button.dataset.originalText;
+    delete button.dataset.originalDisabled;
+  },
+
+  // ===== STATUS BADGE MANAGEMENT =====
+
+  /**
+   * Show operation status badge on component
+   * @param {string} componentId - Component ID
+   * @param {string} operation - Operation name ('setup', 'send', etc.)
+   * @param {string} state - 'in-progress', 'success', 'error'
+   */
+  showOperationBadge(componentId, operation, state = 'in-progress') {
+    const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
+    if (!componentElement) return;
+
+    const componentName = componentElement.querySelector('.component-name');
+    if (!componentName) return;
+
+    // Remove any existing operation badge
+    this.removeOperationBadge(componentId);
+
+    // Create badge
+    const badge = document.createElement('span');
+    badge.className = `component-operation-badge ${state}`;
+    badge.dataset.componentId = componentId;
+    badge.dataset.operation = operation;
+
+    // Add spinner for in-progress state
+    if (state === 'in-progress') {
+      badge.innerHTML = `
+        <span class="spinner"></span>
+        <span>${this._getOperationText(operation, state)}</span>
+      `;
+    } else {
+      badge.textContent = this._getOperationText(operation, state);
+    }
+
+    componentName.appendChild(badge);
+
+    // Auto-remove success badges after animation
+    if (state === 'success') {
+      setTimeout(() => {
+        if (badge.parentElement) {
+          badge.remove();
+        }
+      }, 3000);
+    }
+
+    return badge;
+  },
+
+  /**
+   * Update existing operation badge state
+   */
+  updateOperationBadge(componentId, state) {
+    const badge = document.querySelector(`[data-component-id="${componentId}"].component-operation-badge`);
+    if (!badge) return;
+
+    const operation = badge.dataset.operation;
+    badge.className = `component-operation-badge ${state}`;
+
+    if (state === 'in-progress') {
+      badge.innerHTML = `
+        <span class="spinner"></span>
+        <span>${this._getOperationText(operation, state)}</span>
+      `;
+    } else {
+      badge.textContent = this._getOperationText(operation, state);
+    }
+
+    // Auto-remove success badges
+    if (state === 'success') {
+      setTimeout(() => {
+        if (badge.parentElement) {
+          badge.remove();
+        }
+      }, 3000);
+    }
+  },
+
+  /**
+   * Remove operation badge from component
+   */
+  removeOperationBadge(componentId) {
+    const badge = document.querySelector(`[data-component-id="${componentId}"].component-operation-badge`);
+    if (badge) {
+      badge.remove();
+    }
+  },
+
+  /**
+   * Get operation text based on operation and state
+   */
+  _getOperationText(operation, state) {
+    const texts = {
+      setup: {
+        'in-progress': 'Setting up...',
+        'success': 'Setup complete',
+        'error': 'Setup failed'
+      },
+      send: {
+        'in-progress': 'Sending...',
+        'success': 'Sent',
+        'error': 'Send failed'
+      },
+      query: {
+        'in-progress': 'Querying...',
+        'success': 'Query complete',
+        'error': 'Query failed'
+      },
+      read: {
+        'in-progress': 'Reading...',
+        'success': 'Read complete',
+        'error': 'Read failed'
+      },
+      enable: {
+        'in-progress': 'Enabling...',
+        'success': 'Enabled',
+        'error': 'Enable failed'
+      },
+      disable: {
+        'in-progress': 'Disabling...',
+        'success': 'Disabled',
+        'error': 'Disable failed'
+      },
+      cancel: {
+        'in-progress': 'Cancelling...',
+        'success': 'Cancelled',
+        'error': 'Cancel failed'
+      },
+      play: {
+        'in-progress': 'Playing...',
+        'success': 'Playing',
+        'error': 'Play failed'
+      },
+      offer: {
+        'in-progress': 'Offering...',
+        'success': 'Offered',
+        'error': 'Offer failed'
+      }
+    };
+
+    return texts[operation]?.[state] || `${operation} ${state}`;
+  },
+
+  // ===== ACCESSIBILITY HELPERS =====
+
+  /**
+   * Announce message to screen readers
+   */
+  _announceToScreenReader(message) {
+    if (!this._ariaRegion) return;
+
+    this._ariaRegion.textContent = message;
+
+    // Clear after announcement to allow repeat announcements
+    setTimeout(() => {
+      if (this._ariaRegion) {
+        this._ariaRegion.textContent = '';
+      }
+    }, 1000);
+  },
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  _escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+};
+
 // ===== HTML TEMPLATES =====
 const templates = {
   // Environment details template
@@ -1046,8 +1394,14 @@ const ui = {
         const action = button.dataset.action;
         const componentId = button.dataset.componentId;
 
-        // Disable button during operation
-        button.disabled = true;
+        // Set button to loading state
+        feedback.setButtonLoading(button);
+
+        // Show operation badge for longer operations
+        const showBadge = ['setup', 'send', 'read', 'enable', 'disable'].includes(action);
+        if (showBadge) {
+          feedback.showOperationBadge(componentId, action, 'in-progress');
+        }
 
         try {
           // Check if this action requires input
@@ -1062,10 +1416,26 @@ const ui = {
             // Actions without input (query, cancel, offer, pause, resume, stop, forward, backward, process)
             await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
+
+          // Success feedback
+          feedback.setButtonSuccess(button);
+          if (showBadge) {
+            feedback.updateOperationBadge(componentId, 'success');
+          }
         } catch (error) {
-          // Error is already logged in handler
-        } finally {
-          button.disabled = false;
+          // Error feedback
+          feedback.setButtonError(button);
+          if (showBadge) {
+            feedback.updateOperationBadge(componentId, 'error');
+          }
+
+          // Show error toast for better visibility
+          feedback.showToast(
+            'error',
+            `${action.charAt(0).toUpperCase() + action.slice(1)} Failed`,
+            error.message || 'An unknown error occurred',
+            5000
+          );
         }
       });
     });
@@ -1969,6 +2339,9 @@ function generateTokenUrl() {
 function init() {
   // Initialize DOM
   dom.init();
+
+  // Initialize feedback system
+  feedback.init();
 
   // Apply query parameters to form if provided
   if (queryConfig.clientId) document.getElementById("clientId").value = queryConfig.clientId;

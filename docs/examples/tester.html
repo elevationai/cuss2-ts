@@ -48,9 +48,30 @@
               <button type="submit" id="connectBtn">Connect</button>
             </div>
             <div id="connectionStatusContainer" class="connection-status-container" style="display: none;">
-              <div class="token-url-container">
-                <div id="connectionStatus" class="status connecting">Connecting...</div>
-                <button type="button" id="cancelConnectionBtn" class="cancel-connection-btn">Cancel</button>
+              <div class="connection-progress-indicator">
+                <div class="connection-progress-header">
+                  <span id="connectionProgressTitle">Connecting to Platform...</span>
+                  <button type="button" id="cancelConnectionBtn" class="cancel-connection-btn">Cancel</button>
+                </div>
+                <div class="connection-stages">
+                  <div class="connection-stage" id="authStage">
+                    <div class="stage-icon" id="authStageIcon">⏳</div>
+                    <div class="stage-content">
+                      <div class="stage-label">Authentication</div>
+                      <div class="stage-status" id="authStageStatus">Pending...</div>
+                    </div>
+                    <div class="stage-attempts" id="authStageAttempts"></div>
+                  </div>
+                  <div class="connection-stage" id="websocketStage">
+                    <div class="stage-icon" id="websocketStageIcon">⏳</div>
+                    <div class="stage-content">
+                      <div class="stage-label">WebSocket Connection</div>
+                      <div class="stage-status" id="websocketStageStatus">Pending...</div>
+                    </div>
+                    <div class="stage-attempts" id="websocketStageAttempts"></div>
+                  </div>
+                </div>
+                <div class="connection-error-message" id="connectionErrorMessage" style="display: none;"></div>
               </div>
             </div>
           </form>
@@ -197,6 +218,31 @@
         </div>
         <p>Please acknowledge accessible mode within <span id="accessibleModeCounter"></span> seconds</p>
         <button id="acknowledgeAccessibleMode" class="acknowledge-btn">Acknowledge</button>
+      </div>
+    </template>
+
+    <!-- Reconnection Banner Template -->
+    <template id="reconnection-banner-template">
+      <div id="reconnectionBanner" class="reconnection-banner">
+        <div class="reconnection-content">
+          <span class="reconnection-icon">⚠️</span>
+          <div class="reconnection-text">
+            <span class="reconnection-message">Connection Lost - Reconnecting...</span>
+            <span id="reconnectionAttempts" class="reconnection-attempts"></span>
+          </div>
+        </div>
+        <div class="reconnection-actions">
+          <button id="retryConnectionBtn" class="reconnection-btn retry-btn">Retry Now</button>
+          <button id="cancelReconnectionBtn" class="reconnection-btn cancel-btn">Disconnect</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Reconnection Success Toast Template -->
+    <template id="reconnection-success-template">
+      <div id="reconnectionSuccessToast" class="reconnection-success-toast">
+        <span class="success-icon">✅</span>
+        <span class="success-message">Reconnected Successfully</span>
       </div>
     </template>
 

@@ -1775,14 +1775,14 @@ const connectionManager = {
     console.log('[DEBUG] Calling bannerManager.show()');
     bannerManager.show({
       id: 'reconnectionBanner',
-      templateId: 'reconnection-banner-template'
+      templateId: 'reconnection-banner-template',
+      autoRemove: 5000 // Auto-dismiss after 5 seconds
     });
 
     // Set reconnecting flag
     this.isReconnecting = true;
 
-    // Add event listeners
-    document.getElementById('retryConnectionBtn')?.addEventListener('click', () => this.handleRetryNow());
+    // Add event listener for dismiss button only
     document.getElementById('cancelReconnectionBtn')?.addEventListener('click', () => this.handleCancelReconnection());
 
     logger.info('Reconnection banner displayed');
@@ -1805,22 +1805,7 @@ const connectionManager = {
     }
   },
 
-  // Handle Retry Now button
-  handleRetryNow() {
-    logger.info('User requested immediate retry');
-    // Hide banner temporarily
-    this.hideReconnectionBanner();
-
-    // The library will continue retrying automatically
-    // Just show the banner again to indicate we're still trying
-    setTimeout(() => {
-      if (this.isReconnecting && !cuss2.connection.isOpen) {
-        this.showReconnectionBanner();
-      }
-    }, 100);
-  },
-
-  // Handle Cancel/Disconnect button
+  // Handle dismiss button - stop reconnection attempts
   handleCancelReconnection() {
     logger.info('User cancelled reconnection');
     this.hideReconnectionBanner();

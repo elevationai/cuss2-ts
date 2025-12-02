@@ -868,9 +868,9 @@ const connectionStages = {
       if (stageData.state === 'progress' && stageData.attempts > 0) {
         // Show current attempt during progress
         attemptsElement.textContent = `Attempt ${stageData.attempts}`;
-      } else if (stageData.state === 'error' && stageData.attempts > 1) {
-        // Show total attempts made on error (only if more than 1)
-        attemptsElement.textContent = `${stageData.attempts} attempts`;
+      } else if (stageData.state === 'error' && stageData.attempts > 0) {
+        // Show attempt number on error
+        attemptsElement.textContent = `Attempt ${stageData.attempts}`;
       } else {
         attemptsElement.textContent = '';
       }

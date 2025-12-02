@@ -1760,6 +1760,7 @@ const connectionManager = {
   // Track if user ever successfully connected
   wasEverConnected: false,
   isReconnecting: false,
+  lastConnectionConfig: null, // Store config for auto-reconnect
 
   // Show reconnection banner
   showReconnectionBanner() {
@@ -1965,9 +1966,8 @@ const connectionManager = {
       // The cancel button allows them to dismiss and try again
     } else {
       // Connection dropped unexpectedly - user was connected before
-      // DON'T switch panels - the library will auto-reconnect
-      // The "connecting" event handler will show the reconnection banner
-      logger.info("Connection dropped - auto-reconnection will start");
+      // Need to explicitly reconnect (SDK doesn't auto-reconnect after successful connection drops)
+      logger.info("Connection dropped - starting reconnection...");
 
       // Set reconnecting flag so "connecting" handler shows banner
       this.isReconnecting = true;
@@ -1975,6 +1975,17 @@ const connectionManager = {
 
       // Disable state buttons during reconnection
       Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+
+      // Explicitly reconnect using the saved config
+      if (this.lastConnectionConfig) {
+        console.log('[DEBUG] Calling performConnection() to reconnect');
+        // Use performConnection directly to skip mixed content check on reconnect
+        this.performConnection(this.lastConnectionConfig).catch(err => {
+          logger.error(`Reconnection failed: ${err.message}`);
+        });
+      } else {
+        logger.error('Cannot reconnect: no saved connection config');
+      }
     }
   },
 
@@ -2071,6 +2082,9 @@ const connectionManager = {
 
   // Connect to CUSS2
   async connect(config) {
+    // Save config for potential reconnection
+    this.lastConnectionConfig = config;
+
     try {
       // Check for mixed content issues before connecting
       const mixedContentCheck = urlUtils.checkMixedContent(config.wss);

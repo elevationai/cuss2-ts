@@ -73,9 +73,8 @@ export class ComponentInterrogation {
   static isKeypad = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0) return false;
-    return !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY) ||
-      !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY_UP) ||
-      !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY_DOWN);
+    const dsTypes = charac0.dsTypesList;
+		return !!dsTypes?.find((q) => /DS_TYPES_KEY/gi.test(q));
   };
 
   static isIllumination = (component: EnvironmentComponent): boolean => {

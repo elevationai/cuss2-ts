@@ -1842,8 +1842,8 @@ const connectionManager = {
         handler: (attempt) => {
           logger.info(`WebSocket connection attempt ${attempt}`);
 
-          // Check if this is a reconnection attempt
-          if (this.wasEverConnected) {
+          // Check if this is an automatic reconnection attempt
+          if (this.isReconnecting) {
             // This is a reconnection - show banner
             this.showReconnectionBanner();
             this.updateReconnectionAttempts(attempt);
@@ -1958,6 +1958,9 @@ const connectionManager = {
       // DON'T switch panels - the library will auto-reconnect
       // The "connecting" event handler will show the reconnection banner
       logger.info("Connection dropped - auto-reconnection will start");
+
+      // Set reconnecting flag so "connecting" handler shows banner
+      this.isReconnecting = true;
 
       // Disable state buttons during reconnection
       Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));

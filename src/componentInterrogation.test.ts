@@ -100,7 +100,7 @@ Deno.test("ComponentInterrogation - isBagTagPrinter", () => {
   assertEquals(!!ComponentInterrogation.isBagTagPrinter(bagTagPrinter), true);
   assertEquals(!!ComponentInterrogation.isBagTagPrinter(boardingPassPrinter), false);
   assertEquals(!!ComponentInterrogation.isBagTagPrinter(nonPrinter), false);
-  assertEquals(ComponentInterrogation.isBagTagPrinter(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isBagTagPrinter(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isBoardingPassPrinter", () => {
@@ -136,7 +136,7 @@ Deno.test("ComponentInterrogation - isBoardingPassPrinter", () => {
   assertEquals(!!ComponentInterrogation.isBoardingPassPrinter(boardingPassPrinter), true);
   assertEquals(!!ComponentInterrogation.isBoardingPassPrinter(bagTagPrinter), false);
   assertEquals(!!ComponentInterrogation.isBoardingPassPrinter(nonPrinter), false);
-  assertEquals(ComponentInterrogation.isBoardingPassPrinter(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isBoardingPassPrinter(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isDocumentReader", () => {
@@ -160,7 +160,7 @@ Deno.test("ComponentInterrogation - isDocumentReader", () => {
 
   assertEquals(!!ComponentInterrogation.isDocumentReader(documentReader), true);
   assertEquals(!!ComponentInterrogation.isDocumentReader(nonDocumentReader), false);
-  assertEquals(ComponentInterrogation.isDocumentReader(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isDocumentReader(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isBarcodeReader", () => {
@@ -184,7 +184,7 @@ Deno.test("ComponentInterrogation - isBarcodeReader", () => {
 
   assertEquals(!!ComponentInterrogation.isBarcodeReader(barcodeReader), true);
   assertEquals(!!ComponentInterrogation.isBarcodeReader(nonBarcodeReader), false);
-  assertEquals(ComponentInterrogation.isBarcodeReader(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isBarcodeReader(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isCardReader", () => {
@@ -208,7 +208,7 @@ Deno.test("ComponentInterrogation - isCardReader", () => {
 
   assertEquals(!!ComponentInterrogation.isCardReader(cardReader), true);
   assertEquals(!!ComponentInterrogation.isCardReader(nonCardReader), false);
-  assertEquals(ComponentInterrogation.isCardReader(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isCardReader(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isKeypad", () => {
@@ -259,7 +259,7 @@ Deno.test("ComponentInterrogation - isKeypad", () => {
   assertEquals(!!ComponentInterrogation.isKeypad(keypadWithKeyDown), true);
   assertEquals(!!ComponentInterrogation.isKeypad(keypadWithMultiple), true);
   assertEquals(!!ComponentInterrogation.isKeypad(nonKeypad), false);
-  assertEquals(ComponentInterrogation.isKeypad(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isKeypad(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isIllumination", () => {
@@ -283,7 +283,7 @@ Deno.test("ComponentInterrogation - isIllumination", () => {
 
   assertEquals(!!ComponentInterrogation.isIllumination(illumination), true);
   assertEquals(!!ComponentInterrogation.isIllumination(nonIllumination), false);
-  assertEquals(ComponentInterrogation.isIllumination(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isIllumination(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isHeadset", () => {
@@ -297,8 +297,18 @@ Deno.test("ComponentInterrogation - isHeadset", () => {
     ],
   });
 
-  const wrongComponentType = createMockComponent({
-    componentType: ComponentTypes.DATA_INPUT,
+  const headsetDataOutput = createMockComponent({
+    componentType: ComponentTypes.DATA_OUTPUT,
+    componentCharacteristics: [
+      createMockCharacteristics({
+        deviceTypesList: [DeviceTypes.ASSISTIVE],
+        mediaTypesList: [MediaTypes.AUDIO],
+      }),
+    ],
+  });
+
+  const announcement = createMockComponent({
+    componentType: ComponentTypes.ANNOUNCEMENT,
     componentCharacteristics: [
       createMockCharacteristics({
         deviceTypesList: [DeviceTypes.ASSISTIVE],
@@ -332,10 +342,11 @@ Deno.test("ComponentInterrogation - isHeadset", () => {
   });
 
   assertEquals(!!ComponentInterrogation.isHeadset(headset), true);
-  assertEquals(ComponentInterrogation.isHeadset(wrongComponentType), undefined);
+  assertEquals(!!ComponentInterrogation.isHeadset(headsetDataOutput), true);
+  assertEquals(!!ComponentInterrogation.isHeadset(announcement), false);
   assertEquals(!!ComponentInterrogation.isHeadset(missingAssistive), false);
   assertEquals(!!ComponentInterrogation.isHeadset(missingAudio), false);
-  assertEquals(ComponentInterrogation.isHeadset(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isHeadset(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isScale", () => {
@@ -371,9 +382,9 @@ Deno.test("ComponentInterrogation - isScale", () => {
   });
 
   assertEquals(!!ComponentInterrogation.isScale(scale), true);
-  assertEquals(ComponentInterrogation.isScale(wrongComponentType), undefined);
+  assertEquals(ComponentInterrogation.isScale(wrongComponentType), false);
   assertEquals(!!ComponentInterrogation.isScale(nonScale), false);
-  assertEquals(ComponentInterrogation.isScale(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isScale(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isBiometric", () => {
@@ -397,7 +408,7 @@ Deno.test("ComponentInterrogation - isBiometric", () => {
 
   assertEquals(!!ComponentInterrogation.isBiometric(biometric), true);
   assertEquals(!!ComponentInterrogation.isBiometric(nonBiometric), false);
-  assertEquals(ComponentInterrogation.isBiometric(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isBiometric(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isCamera", () => {
@@ -446,10 +457,10 @@ Deno.test("ComponentInterrogation - isCamera", () => {
   });
 
   assertEquals(!!ComponentInterrogation.isCamera(camera), true);
-  assertEquals(ComponentInterrogation.isCamera(wrongComponentType), undefined);
+  assertEquals(ComponentInterrogation.isCamera(wrongComponentType), false);
   assertEquals(!!ComponentInterrogation.isCamera(missingCamera), false);
   assertEquals(!!ComponentInterrogation.isCamera(missingImage), false);
-  assertEquals(ComponentInterrogation.isCamera(noCharacteristics), undefined);
+  assertEquals(ComponentInterrogation.isCamera(noCharacteristics), false);
 });
 
 Deno.test("ComponentInterrogation - isRFIDReader", () => {

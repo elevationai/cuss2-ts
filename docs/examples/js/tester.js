@@ -2193,9 +2193,8 @@ const connectionManager = {
   // Disconnect
   disconnect() {
     if (cuss2) {
-      // Reset connection tracking flags BEFORE closing
-      // This ensures the close handler recognizes it as a manual disconnect
-      this.wasEverConnected = false;
+      // Reset reconnecting flag (but keep wasEverConnected for session tracking)
+      // Close code 1000 tells the close handler this is a manual disconnect
       this.isReconnecting = false;
 
       // Close with code 1000 (normal close)

@@ -74,7 +74,7 @@ export class ComponentInterrogation {
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0) return false;
     const dsTypes = charac0.dsTypesList;
-		return !!dsTypes?.find((q) => /DS_TYPES_KEY/gi.test(q));
+    return !!dsTypes?.find((q) => /DS_TYPES_KEY/gi.test(q));
   };
 
   static isIllumination = (component: EnvironmentComponent): boolean => {

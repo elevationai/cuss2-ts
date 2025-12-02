@@ -135,6 +135,32 @@ const urlUtils = {
   // Allowed protocols for CUSS2 connections
   ALLOWED_PROTOCOLS: ['http:', 'https:', 'ws:', 'wss:'],
 
+  // Convert ws/wss protocols to http/https
+  toHttpProtocol(url) {
+    if (!url) return '';
+    if (url.startsWith('ws://')) return url.replace(/^ws:/, 'http:');
+    if (url.startsWith('wss://')) return url.replace(/^wss:/, 'https:');
+    return url;
+  },
+
+  // Generate OAuth URL from WebSocket URL
+  generateOAuthUrl(wsUrl) {
+    if (!wsUrl) return '';
+
+    try {
+      // Handle URLs that might not have protocol
+      const hasProtocol = /^(ws|wss|http|https):\/\//.test(wsUrl);
+      const normalizedUrl = hasProtocol ? wsUrl : `http://${wsUrl}`;
+
+      const url = new URL(normalizedUrl);
+      const httpUrl = this.toHttpProtocol(`${url.protocol}//${url.host}`);
+
+      return `${httpUrl}/oauth/token`;
+    } catch (error) {
+      return '';
+    }
+  },
+
   // Validate URL format and protocol
   validateURL(url, urlType = 'URL') {
     if (!url || typeof url !== 'string' || url.trim() === '') {
@@ -207,6 +233,67 @@ const urlUtils = {
     window.history.replaceState({}, '', newUrl);
 
     logger.info('URL updated with connection parameters');
+  }
+};
+
+// ===== TOKEN URL UI MANAGEMENT =====
+const tokenUrlUI = {
+  // Get current WebSocket URL (with fallback)
+  _getWsUrl() {
+    const wssInput = document.getElementById('wss');
+    return wssInput?.value.trim() || 'http://localhost:22222';
+  },
+
+  // Check if Token URL matches what would be generated from WebSocket URL
+  isInSync() {
+    const tokenUrlInput = document.getElementById('tokenUrl');
+    if (!tokenUrlInput) return true;
+
+    const currentTokenUrl = tokenUrlInput.value.trim();
+    const expectedTokenUrl = urlUtils.generateOAuthUrl(this._getWsUrl());
+
+    return currentTokenUrl === expectedTokenUrl;
+  },
+
+  // Update the Token URL placeholder text based on WebSocket URL
+  updatePlaceholder() {
+    const tokenUrlInput = document.getElementById('tokenUrl');
+    if (!tokenUrlInput) return;
+
+    const placeholderUrl = urlUtils.generateOAuthUrl(this._getWsUrl());
+    tokenUrlInput.placeholder = placeholderUrl;
+  },
+
+  // Update Generate/Regenerate button text and enabled state
+  updateButton() {
+    const tokenUrlInput = document.getElementById('tokenUrl');
+    const generateBtn = document.getElementById('generateTokenBtn');
+    if (!tokenUrlInput || !generateBtn) return;
+
+    const hasValue = tokenUrlInput.value.trim() !== '';
+
+    if (!hasValue) {
+      generateBtn.textContent = 'Generate';
+      generateBtn.disabled = false;
+    } else {
+      generateBtn.textContent = 'Regenerate';
+      generateBtn.disabled = this.isInSync();
+    }
+  },
+
+  // Generate and fill the Token URL field
+  generate() {
+    const tokenUrlInput = document.getElementById('tokenUrl');
+    if (!tokenUrlInput) return;
+
+    tokenUrlInput.value = urlUtils.generateOAuthUrl(this._getWsUrl());
+    this.updateButton();
+  },
+
+  // Update both placeholder and button (convenience method for event handlers)
+  refresh() {
+    this.updatePlaceholder();
+    this.updateButton();
   }
 };
 
@@ -2225,96 +2312,6 @@ const stateManager = {
 
 // ===== INITIALIZATION =====
 
-// Function to generate OAuth URL from WebSocket URL (for placeholder/UI only)
-function generateOAuthUrl(wsUrl) {
-  if (!wsUrl) return '';
-
-  try {
-    // Handle URLs that might not have protocol
-    const hasProtocol = wsUrl.startsWith('ws://') || wsUrl.startsWith('wss://') || wsUrl.startsWith('http://') || wsUrl.startsWith('https://');
-    const normalizedUrl = hasProtocol ? wsUrl : `http://${wsUrl}`;
-
-    const url = new URL(normalizedUrl);
-
-    // Map protocols for UI display only: ws/wss/http/https → http/https
-    let httpScheme;
-    if (url.protocol === 'wss:') {
-      httpScheme = 'https:';
-    } else if (url.protocol === 'ws:') {
-      httpScheme = 'http:';
-    } else {
-      httpScheme = url.protocol; // Already http: or https:
-    }
-
-    // Construct OAuth URL for placeholder text
-    return `${httpScheme}//${url.host}/oauth/token`;
-  } catch (error) {
-    return '';
-  }
-}
-
-// Function to update Token URL placeholder text
-function updateTokenUrlPlaceholder() {
-  const wssInput = document.getElementById("wss");
-  const tokenUrlInput = document.getElementById("tokenUrl");
-
-  if (wssInput && tokenUrlInput) {
-    const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
-    const placeholderUrl = generateOAuthUrl(wsUrl);
-    tokenUrlInput.placeholder = placeholderUrl;
-  }
-}
-
-// Function to check if WebSocket URL and Token URL are in sync
-function areUrlsInSync() {
-  const wssInput = document.getElementById("wss");
-  const tokenUrlInput = document.getElementById("tokenUrl");
-
-  if (!wssInput || !tokenUrlInput) return true;
-
-  const currentTokenUrl = tokenUrlInput.value.trim();
-  const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
-  const expectedTokenUrl = generateOAuthUrl(wsUrl);
-
-  return currentTokenUrl === expectedTokenUrl;
-}
-
-// Function to update Generate/Regenerate button text and state
-function updateGenerateButton() {
-  const tokenUrlInput = document.getElementById("tokenUrl");
-  const generateBtn = document.getElementById("generateTokenBtn");
-
-  if (tokenUrlInput && generateBtn) {
-    const hasValue = tokenUrlInput.value.trim() !== '';
-
-    if (!hasValue) {
-      // No value - show "Generate" and enable
-      generateBtn.textContent = 'Generate';
-      generateBtn.disabled = false;
-    } else {
-      // Has value - show "Regenerate"
-      generateBtn.textContent = 'Regenerate';
-
-      // Check if in sync
-      const inSync = areUrlsInSync();
-      generateBtn.disabled = inSync; // Disable when in sync, enable when out of sync
-    }
-  }
-}
-
-// Function to generate/fill Token URL
-function generateTokenUrl() {
-  const wssInput = document.getElementById("wss");
-  const tokenUrlInput = document.getElementById("tokenUrl");
-
-  if (wssInput && tokenUrlInput) {
-    const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
-    const generatedUrl = generateOAuthUrl(wsUrl);
-    tokenUrlInput.value = generatedUrl;
-    updateGenerateButton();
-  }
-}
-
 function init() {
   // Initialize DOM
   dom.init();
@@ -2328,37 +2325,28 @@ function init() {
   if (queryConfig.tokenUrl) document.getElementById("tokenUrl").value = queryConfig.tokenUrl;
   if (queryConfig.deviceId) document.getElementById("deviceId").value = queryConfig.deviceId;
 
-  // Update Token URL placeholder based on WebSocket URL
-  updateTokenUrlPlaceholder();
-
-  // Initialize Generate/Regenerate button state
-  updateGenerateButton();
+  // Initialize Token URL UI (placeholder and Generate button)
+  tokenUrlUI.refresh();
 
   // Add event listeners for WebSocket URL changes
   const wssInput = document.getElementById("wss");
   if (wssInput) {
     // Update placeholder and button when WebSocket URL changes
-    wssInput.addEventListener("input", () => {
-      updateTokenUrlPlaceholder();
-      updateGenerateButton(); // Check sync status
-    });
-    wssInput.addEventListener("change", () => {
-      updateTokenUrlPlaceholder();
-      updateGenerateButton(); // Check sync status
-    });
+    wssInput.addEventListener("input", () => tokenUrlUI.refresh());
+    wssInput.addEventListener("change", () => tokenUrlUI.refresh());
   }
 
   // Add event listener for Token URL changes (to update button)
   const tokenUrlInput = document.getElementById("tokenUrl");
   if (tokenUrlInput) {
-    tokenUrlInput.addEventListener("input", updateGenerateButton);
-    tokenUrlInput.addEventListener("change", updateGenerateButton);
+    tokenUrlInput.addEventListener("input", () => tokenUrlUI.updateButton());
+    tokenUrlInput.addEventListener("change", () => tokenUrlUI.updateButton());
   }
 
   // Add event listener for Generate/Regenerate button
   const generateBtn = document.getElementById("generateTokenBtn");
   if (generateBtn) {
-    generateBtn.addEventListener("click", generateTokenUrl);
+    generateBtn.addEventListener("click", () => tokenUrlUI.generate());
   }
 
   // Setup form submission

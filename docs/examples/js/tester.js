@@ -1763,15 +1763,15 @@ const connectionManager = {
 
   // Show reconnection banner
   showReconnectionBanner() {
-    logger.info('[DEBUG] showReconnectionBanner() called');
+    console.log('[DEBUG] showReconnectionBanner() called');
 
     // Don't show if already showing
     if (bannerManager.isShown('reconnectionBanner')) {
-      logger.info('[DEBUG] Banner already shown, returning early');
+      console.log('[DEBUG] Banner already shown, returning early');
       return;
     }
 
-    logger.info('[DEBUG] Calling bannerManager.show()');
+    console.log('[DEBUG] Calling bannerManager.show()');
     bannerManager.show({
       id: 'reconnectionBanner',
       templateId: 'reconnection-banner-template'
@@ -1845,17 +1845,17 @@ const connectionManager = {
         event: "connecting",
         handler: (attempt) => {
           logger.info(`WebSocket connection attempt ${attempt}`);
-          logger.info(`[DEBUG] connecting event: isReconnecting=${this.isReconnecting}, wasEverConnected=${this.wasEverConnected}`);
+          console.log(`[DEBUG] connecting event: isReconnecting=${this.isReconnecting}, wasEverConnected=${this.wasEverConnected}`);
 
           // Check if this is an automatic reconnection attempt
           if (this.isReconnecting) {
             // This is a reconnection - show banner
-            logger.info('[DEBUG] Calling showReconnectionBanner()');
+            console.log('[DEBUG] Calling showReconnectionBanner()');
             this.showReconnectionBanner();
             this.updateReconnectionAttempts(attempt);
           } else {
             // Initial connection - update progress indicator
-            logger.info('[DEBUG] Showing progress indicator (not reconnection)');
+            console.log('[DEBUG] Showing progress indicator (not reconnection)');
             connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
           }
         },
@@ -1968,7 +1968,7 @@ const connectionManager = {
 
       // Set reconnecting flag so "connecting" handler shows banner
       this.isReconnecting = true;
-      logger.info(`[DEBUG] Set isReconnecting = ${this.isReconnecting}`);
+      console.log(`[DEBUG] Set isReconnecting = ${this.isReconnecting}`);
 
       // Disable state buttons during reconnection
       Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));

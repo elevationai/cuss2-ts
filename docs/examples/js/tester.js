@@ -1889,7 +1889,13 @@ const connectionManager = {
           console.log(`[DEBUG] open event: wasEverConnected = ${this.wasEverConnected}, isReconnecting = ${this.isReconnecting}`);
 
           if (wasReconnecting) {
-            // Reconnection successful - hide banner and show success toast
+            // Reconnection successful - restore CONNECTED state
+            ui.updateConnectionStatus("CONNECTED");
+            dom.setButtonState(dom.elements.connectBtn, true);
+            dom.setButtonState(dom.elements.disconnectBtn, false);
+            Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, false));
+
+            // Hide banner and show success toast
             this.hideReconnectionBanner();
             this.showReconnectionSuccess();
           } else {
@@ -1969,12 +1975,20 @@ const connectionManager = {
       // Need to explicitly reconnect (SDK doesn't auto-reconnect after successful connection drops)
       logger.info("Connection dropped - starting reconnection...");
 
-      // Set reconnecting flag so "connecting" handler shows banner
+      // Force UI to DISCONNECTED state (user needs to see connection is lost)
+      ui.updateConnectionStatus("DISCONNECTED");
+      dom.setButtonState(dom.elements.connectBtn, false);
+      dom.setButtonState(dom.elements.disconnectBtn, true);
+
+      // Set reconnecting flag
       this.isReconnecting = true;
       console.log(`[DEBUG] Set isReconnecting = ${this.isReconnecting}`);
 
-      // Disable state buttons during reconnection
+      // Disable state buttons during reconnection (they need an active connection)
       Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+
+      // Show reconnection banner IMMEDIATELY (don't wait for "connecting" event)
+      this.showReconnectionBanner();
 
       // Explicitly reconnect using the saved config
       if (this.lastConnectionConfig) {

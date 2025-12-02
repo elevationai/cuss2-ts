@@ -1493,67 +1493,77 @@ const ui = {
   },
 };
 
-// Helper function to show or remove status badge for a component
-function updateComponentStatusBadge(componentId, status) {
-  // Find the component element
-  const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-  if (!componentElement) return;
+// ===== COMPONENT BADGE MANAGEMENT =====
+const componentBadges = {
+  // Update status badge for a component
+  updateStatus(componentId, status) {
+    // Find the component element
+    const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
+    if (!componentElement) return;
 
-  // Find the badges container
-  const badgesContainer = componentElement.querySelector('.component-badges');
-  if (!badgesContainer) return;
+    // Find the badges container
+    const badgesContainer = componentElement.querySelector('.component-badges');
+    if (!badgesContainer) return;
 
-  // Remove any existing status badge
-  const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
-  if (existingStatusBadge) {
-    existingStatusBadge.remove();
+    // Remove any existing status badge
+    const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
+    if (existingStatusBadge) {
+      existingStatusBadge.remove();
+    }
+
+    // If status is OK, just remove the badge and return (no badge needed)
+    if (!status || status === 'OK') {
+      return;
+    }
+
+    // Create new status badge for non-OK status
+    const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
+    const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+    const isTemporary = temporaryStatuses.includes(status);
+    const fadeClass = isTemporary ? 'fade-out' : '';
+
+    const badge = document.createElement('span');
+    badge.className = `component-badge status-badge ${statusClass} ${fadeClass}`;
+    badge.textContent = status.replace(/_/g, ' ');
+
+    // Add to container
+    badgesContainer.appendChild(badge);
+
+    // If temporary, remove after animation completes
+    if (isTemporary) {
+      badge.addEventListener('animationend', () => {
+        badge.remove();
+      }, { once: true });
+    }
+  },
+
+  // Update ready badge for a component
+  updateReady(componentId, ready) {
+    // Find the component element
+    const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
+    if (!componentElement) return;
+
+    // Find the ready badge
+    const readyBadge = componentElement.querySelector('.ready-badge');
+    if (!readyBadge) return;
+
+    // Update badge text and classes
+    readyBadge.className = 'component-badge ready-badge'; // Reset classes
+    if (ready) {
+      readyBadge.textContent = 'Ready';
+      readyBadge.classList.add('ready');
+    } else {
+      readyBadge.textContent = 'Not Ready';
+      readyBadge.classList.add('not-ready');
+    }
+  },
+
+  // Update both badges from a component object (convenience method)
+  updateFromComponent(component) {
+    this.updateStatus(component.id, component.status);
+    this.updateReady(component.id, component.ready);
   }
-
-  // If status is OK, just remove the badge and return (no badge needed)
-  if (!status || status === 'OK') {
-    return;
-  }
-
-  // Create new status badge for non-OK status
-  const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
-  const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
-  const isTemporary = temporaryStatuses.includes(status);
-  const fadeClass = isTemporary ? 'fade-out' : '';
-
-  const badge = document.createElement('span');
-  badge.className = `component-badge status-badge ${statusClass} ${fadeClass}`;
-  badge.textContent = status.replace(/_/g, ' ');
-
-  // Add to container
-  badgesContainer.appendChild(badge);
-
-  // If temporary, remove after animation completes
-  if (isTemporary) {
-    badge.addEventListener('animationend', () => {
-      badge.remove();
-    }, { once: true });
-  }
-}
-
-function updateComponentReadyBadge(componentId, ready) {
-  // Find the component element
-  const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-  if (!componentElement) return;
-
-  // Find the ready badge
-  const readyBadge = componentElement.querySelector('.ready-badge');
-  if (!readyBadge) return;
-
-  // Update badge text and classes
-  readyBadge.className = 'component-badge ready-badge'; // Reset classes
-  if (ready) {
-    readyBadge.textContent = 'Ready';
-    readyBadge.classList.add('ready');
-  } else {
-    readyBadge.textContent = 'Not Ready';
-    readyBadge.classList.add('not-ready');
-  }
-}
+};
 
 // ===== COMPONENT HANDLERS =====
 const componentHandlers = {
@@ -1573,7 +1583,7 @@ const componentHandlers = {
     }
     finally {
       // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
+      componentBadges.updateStatus(componentId, component.status);
     }
   },
 
@@ -1602,7 +1612,7 @@ const componentHandlers = {
     }
     finally {
       // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
+      componentBadges.updateStatus(componentId, component.status);
     }
   },
 
@@ -1663,7 +1673,7 @@ const componentHandlers = {
     }
     finally {
       // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
+      componentBadges.updateStatus(componentId, component.status);
     }
   },
 
@@ -2046,10 +2056,8 @@ const connectionManager = {
           componentHandlers.updateAllToggleStates();
           // Update state buttons to reflect required component availability
           ui.updateStateButtons(cuss2.state);
-          // Update the status badge to reflect the new component status
-          updateComponentStatusBadge(component.id, component.status);
-          // Update the ready badge to reflect the new component ready state
-          updateComponentReadyBadge(component.id, component.ready);
+          // Update component badges to reflect new status and ready state
+          componentBadges.updateFromComponent(component);
         },
       },
       {

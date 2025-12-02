@@ -1497,13 +1497,21 @@ const ui = {
 const componentBadges = {
   // Update status badge for a component
   updateStatus(componentId, status) {
+    console.log(`[BADGE DEBUG] updateStatus called: componentId=${componentId}, status=${status}`);
+
     // Find the component element
     const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-    if (!componentElement) return;
+    if (!componentElement) {
+      console.log(`[BADGE DEBUG] Component element not found for componentId=${componentId}`);
+      return;
+    }
 
     // Find the badges container
     const badgesContainer = componentElement.querySelector('.component-badges');
-    if (!badgesContainer) return;
+    if (!badgesContainer) {
+      console.log(`[BADGE DEBUG] Badges container not found for componentId=${componentId}`);
+      return;
+    }
 
     // Remove any existing status badge
     const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
@@ -1513,8 +1521,11 @@ const componentBadges = {
 
     // If status is OK, just remove the badge and return (no badge needed)
     if (!status || status === 'OK') {
+      console.log(`[BADGE DEBUG] Status is OK or empty, removing badge`);
       return;
     }
+
+    console.log(`[BADGE DEBUG] Creating status badge for status=${status}`);
 
     // Create new status badge for non-OK status
     const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
@@ -2051,6 +2062,8 @@ const connectionManager = {
         event: "componentStateChange",
         handler: (component) => {
           logger.event(`Component ${component.deviceType} state changed`);
+          console.log(`[BADGE DEBUG] componentStateChange: id=${component.id}, status=${component.status}, ready=${component.ready}`);
+
           // Don't redisplay all components on every state change - too aggressive
           // Just update the toggle states to reflect current component state
           componentHandlers.updateAllToggleStates();

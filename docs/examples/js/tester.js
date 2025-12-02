@@ -297,6 +297,99 @@ const tokenUrlUI = {
   }
 };
 
+// ===== BANNER/TOAST MANAGEMENT =====
+const bannerManager = {
+  // Track active countdowns by banner ID
+  _countdowns: {},
+
+  // Show a banner or toast
+  // Options:
+  //   id: string - DOM ID of the banner element
+  //   html: string - HTML string to insert (mutually exclusive with templateId)
+  //   templateId: string - ID of <template> element to clone (mutually exclusive with html)
+  //   position: 'start' | 'end' - where to insert in body (default: 'start')
+  //   countdown: { counterId, seconds } - optional countdown timer config
+  //   autoRemove: number - optional auto-dismiss after N milliseconds
+  // Returns the inserted element
+  show({ id, html, templateId, position = 'start', countdown, autoRemove }) {
+    // Dismiss any existing banner with this ID (including countdown cleanup)
+    this.dismiss(id);
+
+    // Insert content based on source type
+    if (html) {
+      const insertPosition = position === 'start' ? 'afterbegin' : 'beforeend';
+      document.body.insertAdjacentHTML(insertPosition, html);
+    } else if (templateId) {
+      const template = document.getElementById(templateId);
+      const clone = template.content.cloneNode(true);
+      if (position === 'start') {
+        document.body.insertBefore(clone, document.body.firstChild);
+      } else {
+        document.body.appendChild(clone);
+      }
+    }
+
+    const element = document.getElementById(id);
+
+    // Setup countdown if requested
+    if (countdown) {
+      this._startCountdown(id, countdown);
+    }
+
+    // Setup auto-remove if requested
+    if (autoRemove) {
+      setTimeout(() => this.dismiss(id), autoRemove);
+    }
+
+    return element;
+  },
+
+  // Dismiss a banner by ID
+  dismiss(id) {
+    this._stopCountdown(id);
+    document.getElementById(id)?.remove();
+  },
+
+  // Check if a banner is currently shown
+  isShown(id) {
+    return !!document.getElementById(id);
+  },
+
+  // Internal: start a countdown timer
+  _startCountdown(bannerId, { counterId, seconds }) {
+    let remaining = seconds;
+
+    // Set initial value immediately
+    const counter = document.getElementById(counterId);
+    if (counter) {
+      counter.textContent = remaining;
+    }
+
+    const intervalId = setInterval(() => {
+      remaining--;
+      const counter = document.getElementById(counterId);
+      if (counter) {
+        counter.textContent = remaining;
+      }
+
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        delete this._countdowns[bannerId];
+      }
+    }, 1000);
+
+    this._countdowns[bannerId] = intervalId;
+  },
+
+  // Internal: stop a countdown timer
+  _stopCountdown(bannerId) {
+    if (this._countdowns[bannerId]) {
+      clearInterval(this._countdowns[bannerId]);
+      delete this._countdowns[bannerId];
+    }
+  }
+};
+
 // ===== DOM HELPERS =====
 const dom = {
   // Cache DOM elements
@@ -1289,158 +1382,61 @@ const ui = {
     return item;
   },
 
-  // Store the timeout countdown interval so we can clear it
-  _timeoutCountdown: null,
-
   // Show timeout warning banner with countdown
   showTimeoutWarning(seconds) {
-    // Clear any existing countdown
-    if (this._timeoutCountdown) {
-      clearInterval(this._timeoutCountdown);
-      this._timeoutCountdown = null;
-    }
-
-    // Remove any existing banner
-    const existingBanner = document.getElementById('timeoutBanner');
-    if (existingBanner) {
-      existingBanner.remove();
-    }
-
-    // Add banner to body
-    document.body.insertAdjacentHTML('afterbegin', templates.timeoutWarning(seconds));
+    bannerManager.show({
+      id: 'timeoutBanner',
+      html: templates.timeoutWarning(seconds),
+      countdown: { counterId: 'timeoutCounter', seconds }
+    });
 
     // Add dismiss button handler
-    const dismissBtn = document.getElementById('dismissTimeout');
-    if (dismissBtn) {
-      dismissBtn.addEventListener('click', () => {
-        this.dismissTimeoutWarning();
-      });
-    }
-
-    // Start countdown timer
-    let remainingSeconds = seconds;
-    const counter = document.getElementById('timeoutCounter');
-
-    this._timeoutCountdown = setInterval(() => {
-      remainingSeconds--;
-      if (counter) {
-        counter.textContent = remainingSeconds;
-      }
-
-      if (remainingSeconds <= 0) {
-        clearInterval(this._timeoutCountdown);
-        this._timeoutCountdown = null;
-      }
-    }, 1000);
+    document.getElementById('dismissTimeout')?.addEventListener('click', () => {
+      this.dismissTimeoutWarning();
+    });
   },
 
   // Dismiss timeout warning banner
   dismissTimeoutWarning() {
-    // Clear countdown interval
-    if (this._timeoutCountdown) {
-      clearInterval(this._timeoutCountdown);
-      this._timeoutCountdown = null;
-    }
-
-    // Remove banner
-    const banner = document.getElementById('timeoutBanner');
-    if (banner) {
-      banner.remove();
-    }
+    bannerManager.dismiss('timeoutBanner');
   },
-
-  // Store the accessible mode countdown interval
-  _accessibleModeCountdown: null,
 
   // Show accessible mode acknowledgement toast with countdown
   showAccessibleModeToast(seconds) {
-    // Clear any existing countdown
-    if (this._accessibleModeCountdown) {
-      clearInterval(this._accessibleModeCountdown);
-      this._accessibleModeCountdown = null;
-    }
-
-    // Remove any existing banner
-    const existingBanner = document.getElementById('accessibleModeBanner');
-    if (existingBanner) {
-      existingBanner.remove();
-    }
-
-    // Clone template and add to body
-    const template = document.getElementById('accessible-mode-toast-template');
-    const clone = template.content.cloneNode(true);
-
-    // Set initial countdown value
-    const counterElement = clone.getElementById('accessibleModeCounter');
-    if (counterElement) {
-      counterElement.textContent = seconds;
-    }
-
-    document.body.insertBefore(clone, document.body.firstChild);
+    bannerManager.show({
+      id: 'accessibleModeBanner',
+      templateId: 'accessible-mode-toast-template',
+      countdown: { counterId: 'accessibleModeCounter', seconds }
+    });
 
     // Add acknowledge button handler
-    const acknowledgeBtn = document.getElementById('acknowledgeAccessibleMode');
-    if (acknowledgeBtn) {
-      acknowledgeBtn.addEventListener('click', async () => {
-        try {
-          logger.info('Acknowledging accessible mode...');
-          await cuss2.acknowledgeAccessibleMode();
-          logger.success('Accessible mode acknowledged');
-          this.dismissAccessibleModeToast();
-        } catch (error) {
-          logger.error(`Failed to acknowledge accessible mode: ${error.message}`);
-        }
-      });
-    }
-
-    // Start countdown timer
-    let remainingSeconds = seconds;
-    const counter = document.getElementById('accessibleModeCounter');
-
-    this._accessibleModeCountdown = setInterval(() => {
-      remainingSeconds--;
-      if (counter) {
-        counter.textContent = remainingSeconds;
+    document.getElementById('acknowledgeAccessibleMode')?.addEventListener('click', async () => {
+      try {
+        logger.info('Acknowledging accessible mode...');
+        await cuss2.acknowledgeAccessibleMode();
+        logger.success('Accessible mode acknowledged');
+        this.dismissAccessibleModeToast();
+      } catch (error) {
+        logger.error(`Failed to acknowledge accessible mode: ${error.message}`);
       }
-
-      if (remainingSeconds <= 0) {
-        clearInterval(this._accessibleModeCountdown);
-        this._accessibleModeCountdown = null;
-      }
-    }, 1000);
+    });
   },
 
   // Dismiss accessible mode toast
   dismissAccessibleModeToast() {
-    // Clear countdown interval
-    if (this._accessibleModeCountdown) {
-      clearInterval(this._accessibleModeCountdown);
-      this._accessibleModeCountdown = null;
-    }
-
-    // Remove banner
-    const banner = document.getElementById('accessibleModeBanner');
-    if (banner) {
-      banner.remove();
-    }
+    bannerManager.dismiss('accessibleModeBanner');
   },
 
   // Show mixed content warning banner
   showMixedContentWarning(mixedContentInfo) {
-    // Remove any existing banner
-    const existingBanner = document.getElementById('mixedContentBanner');
-    if (existingBanner) {
-      existingBanner.remove();
-    }
-
-    // Add banner to body
-    document.body.insertAdjacentHTML('afterbegin',
-      templates.mixedContentWarning(
+    bannerManager.show({
+      id: 'mixedContentBanner',
+      html: templates.mixedContentWarning(
         mixedContentInfo.currentProtocol,
         mixedContentInfo.targetProtocol,
         mixedContentInfo.suggestedUrl
       )
-    );
+    });
 
     // Set up event listeners
     const dismissBtn = document.getElementById('dismissMixedContent');
@@ -1448,7 +1444,7 @@ const ui = {
     const continueBtn = document.getElementById('continueAnyway');
 
     dismissBtn?.addEventListener('click', () => {
-      document.getElementById('mixedContentBanner')?.remove();
+      bannerManager.dismiss('mixedContentBanner');
     });
 
     suggestedBtn?.addEventListener('click', () => {
@@ -1462,15 +1458,12 @@ const ui = {
         wssInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
 
-      // Remove banner
-      document.getElementById('mixedContentBanner')?.remove();
-
-      // Log the change
+      bannerManager.dismiss('mixedContentBanner');
       logger.info(`Switched to secure URL: ${suggestedUrl}`);
     });
 
     continueBtn?.addEventListener('click', () => {
-      document.getElementById('mixedContentBanner')?.remove();
+      bannerManager.dismiss('mixedContentBanner');
     });
 
     return new Promise((resolve, reject) => {
@@ -1483,17 +1476,10 @@ const ui = {
 
   // Reset UI to disconnected state
   resetUI() {
-    // Dismiss timeout banner (clears countdown and removes banner)
+    // Dismiss all banners (clears countdowns and removes elements)
     this.dismissTimeoutWarning();
-
-    // Dismiss accessible mode toast (clears countdown and removes banner)
     this.dismissAccessibleModeToast();
-
-    // Remove mixed content banner if present
-    const mixedContentBanner = document.getElementById('mixedContentBanner');
-    if (mixedContentBanner) {
-      mixedContentBanner.remove();
-    }
+    bannerManager.dismiss('mixedContentBanner');
 
     // Switch back to Connection panel
     dom.setVisible(dom.elements.connectionPanel, true);
@@ -1777,40 +1763,30 @@ const connectionManager = {
 
   // Show reconnection banner
   showReconnectionBanner() {
-    // Remove any existing banner
-    const existingBanner = document.getElementById('reconnectionBanner');
-    if (existingBanner) {
-      return; // Already showing
+    // Don't show if already showing
+    if (bannerManager.isShown('reconnectionBanner')) {
+      return;
     }
 
-    // Clone and add banner
-    const template = document.getElementById('reconnection-banner-template');
-    const clone = template.content.cloneNode(true);
-    document.body.insertBefore(clone, document.body.firstChild);
+    bannerManager.show({
+      id: 'reconnectionBanner',
+      templateId: 'reconnection-banner-template'
+    });
 
     // Set reconnecting flag
     this.isReconnecting = true;
 
     // Add event listeners
-    const retryBtn = document.getElementById('retryConnectionBtn');
-    const cancelBtn = document.getElementById('cancelReconnectionBtn');
-
-    if (retryBtn) {
-      retryBtn.addEventListener('click', () => this.handleRetryNow());
-    }
-
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.handleCancelReconnection());
-    }
+    document.getElementById('retryConnectionBtn')?.addEventListener('click', () => this.handleRetryNow());
+    document.getElementById('cancelReconnectionBtn')?.addEventListener('click', () => this.handleCancelReconnection());
 
     logger.info('Reconnection banner displayed');
   },
 
   // Hide reconnection banner
   hideReconnectionBanner() {
-    const banner = document.getElementById('reconnectionBanner');
-    if (banner) {
-      banner.remove();
+    if (bannerManager.isShown('reconnectionBanner')) {
+      bannerManager.dismiss('reconnectionBanner');
       this.isReconnecting = false;
       logger.info('Reconnection banner hidden');
     }
@@ -1848,24 +1824,12 @@ const connectionManager = {
 
   // Show success toast
   showReconnectionSuccess() {
-    // Remove any existing toast
-    const existingToast = document.getElementById('reconnectionSuccessToast');
-    if (existingToast) {
-      existingToast.remove();
-    }
-
-    // Clone and add toast
-    const template = document.getElementById('reconnection-success-template');
-    const clone = template.content.cloneNode(true);
-    document.body.appendChild(clone);
-
-    // Auto-remove after animation
-    setTimeout(() => {
-      const toast = document.getElementById('reconnectionSuccessToast');
-      if (toast) {
-        toast.remove();
-      }
-    }, 3000);
+    bannerManager.show({
+      id: 'reconnectionSuccessToast',
+      templateId: 'reconnection-success-template',
+      position: 'end',
+      autoRemove: 3000
+    });
 
     logger.success('Reconnection successful!');
   },

@@ -1878,12 +1878,14 @@ const connectionManager = {
         event: "open",
         handler: () => {
           logger.success("WebSocket connection opened");
+          console.log(`[DEBUG] open event: setting wasEverConnected = true`);
 
           // Check if this was a reconnection
           const wasReconnecting = this.isReconnecting;
 
           // Mark as successfully connected
           this.wasEverConnected = true;
+          console.log(`[DEBUG] open event: wasEverConnected = ${this.wasEverConnected}, isReconnecting = ${this.isReconnecting}`);
 
           if (wasReconnecting) {
             // Reconnection successful - hide banner and show success toast
@@ -1937,6 +1939,7 @@ const connectionManager = {
   // Handle connection close
   handleConnectionClose(event) {
     logger.error("WebSocket connection closed");
+    console.log(`[DEBUG] handleConnectionClose: wasEverConnected=${this.wasEverConnected}, isReconnecting=${this.isReconnecting}, code=${event?.code}`);
 
     // Check if this was a normal close (user disconnected) or abnormal
     const isNormalClose = event && event.code === 1000;

@@ -1513,13 +1513,21 @@ const componentBadges = {
       return;
     }
 
-    // Remove any existing status badge
+    // Remove any existing status badge (but preserve temporary/fading badges)
     const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
     if (existingStatusBadge) {
-      existingStatusBadge.remove();
+      // Don't remove temporary badges - they'll remove themselves after fading
+      const isTemporaryBadge = existingStatusBadge.classList.contains('fade-out') ||
+                               existingStatusBadge.classList.contains('status-wrong-application-state') ||
+                               existingStatusBadge.classList.contains('status-media-present') ||
+                               existingStatusBadge.classList.contains('status-media-absent');
+
+      if (!isTemporaryBadge) {
+        existingStatusBadge.remove();
+      }
     }
 
-    // If status is OK, just remove the badge and return (no badge needed)
+    // If status is OK, don't add a new badge (but don't remove temporary ones)
     if (!status || status === 'OK') {
       return;
     }
@@ -1528,8 +1536,7 @@ const componentBadges = {
     const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
     const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
     const isTemporary = temporaryStatuses.includes(status);
-    // TEMPORARILY DISABLE FADE-OUT TO TEST VISIBILITY
-    const fadeClass = ''; // isTemporary ? 'fade-out' : '';
+    const fadeClass = isTemporary ? 'fade-out' : '';
 
     const badge = document.createElement('span');
     badge.className = `component-badge status-badge ${statusClass} ${fadeClass}`;

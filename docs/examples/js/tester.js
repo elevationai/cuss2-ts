@@ -1539,6 +1539,9 @@ const componentBadges = {
     console.log(`[BADGE UPDATE] Badge created and added: status=${status}, isTemporary=${isTemporary}, className=${badge.className}`);
     console.log(`[BADGE UPDATE] Badge element:`, badge);
     console.log(`[BADGE UPDATE] Badges container HTML:`, badgesContainer.innerHTML);
+    console.log(`[BADGE UPDATE] Badges container display:`, window.getComputedStyle(badgesContainer).display);
+    console.log(`[BADGE UPDATE] Badges container visibility:`, window.getComputedStyle(badgesContainer).visibility);
+    console.log(`[BADGE UPDATE] Badges container classes:`, badgesContainer.className);
     console.log(`[BADGE UPDATE] Component element:`, componentElement);
 
     // If temporary, remove after animation completes

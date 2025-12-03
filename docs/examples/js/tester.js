@@ -1745,6 +1745,19 @@ const componentHandlers = {
         });
       }
     });
+
+    // Setup statusChange listeners for all components to catch temporary status updates
+    console.log('[BADGE DEBUG] Setting up statusChange listeners for', Object.keys(cuss2.components).length, 'components');
+    Object.values(cuss2.components).forEach((component) => {
+      console.log(`[BADGE DEBUG] Registering statusChange listener for component ${component.id} (${component.deviceType})`);
+
+      component.on('statusChange', (status) => {
+        console.log(`[BADGE DEBUG] *** statusChange EVENT FIRED *** component ${component.id}: status=${status}`);
+
+        // Update badge when component status changes (including temporary statuses)
+        componentBadges.updateStatus(component.id, status);
+      });
+    });
   },
 
   // Update data display box for a component

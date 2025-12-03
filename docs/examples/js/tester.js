@@ -1497,21 +1497,13 @@ const ui = {
 const componentBadges = {
   // Update status badge for a component
   updateStatus(componentId, status) {
-    console.log(`[BADGE DEBUG] updateStatus called: componentId=${componentId}, status=${status}`);
-
     // Find the component element
     const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-    if (!componentElement) {
-      console.log(`[BADGE DEBUG] Component element not found for componentId=${componentId}`);
-      return;
-    }
+    if (!componentElement) return;
 
     // Find the badges container
     const badgesContainer = componentElement.querySelector('.component-badges');
-    if (!badgesContainer) {
-      console.log(`[BADGE DEBUG] Badges container not found for componentId=${componentId}`);
-      return;
-    }
+    if (!badgesContainer) return;
 
     // Remove any existing status badge
     const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
@@ -1521,11 +1513,8 @@ const componentBadges = {
 
     // If status is OK, just remove the badge and return (no badge needed)
     if (!status || status === 'OK') {
-      console.log(`[BADGE DEBUG] Status is OK or empty, removing badge`);
       return;
     }
-
-    console.log(`[BADGE DEBUG] Creating status badge for status=${status}`);
 
     // Create new status badge for non-OK status
     const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
@@ -1744,19 +1733,6 @@ const componentHandlers = {
           componentHandlers.updateDataDisplay(cuss2[component].id, dataRecords);
         });
       }
-    });
-
-    // Setup statusChange listeners for all components to catch temporary status updates
-    console.log('[BADGE DEBUG] Setting up statusChange listeners for', Object.keys(cuss2.components).length, 'components');
-    Object.values(cuss2.components).forEach((component) => {
-      console.log(`[BADGE DEBUG] Registering statusChange listener for component ${component.id} (${component.deviceType})`);
-
-      component.on('statusChange', (status) => {
-        console.log(`[BADGE DEBUG] *** statusChange EVENT FIRED *** component ${component.id}: status=${status}`);
-
-        // Update badge when component status changes (including temporary statuses)
-        componentBadges.updateStatus(component.id, status);
-      });
     });
   },
 
@@ -2075,8 +2051,6 @@ const connectionManager = {
         event: "componentStateChange",
         handler: (component) => {
           logger.event(`Component ${component.deviceType} state changed`);
-          console.log(`[BADGE DEBUG] componentStateChange: id=${component.id}, status=${component.status}, ready=${component.ready}`);
-
           // Don't redisplay all components on every state change - too aggressive
           // Just update the toggle states to reflect current component state
           componentHandlers.updateAllToggleStates();
@@ -2084,19 +2058,6 @@ const connectionManager = {
           ui.updateStateButtons(cuss2.state);
           // Update component badges to reflect new status and ready state
           componentBadges.updateFromComponent(component);
-        },
-      },
-      {
-        event: "eventNotification",
-        handler: (notification) => {
-          const messageCode = notification?.meta?.messageCode;
-          const componentId = notification?.meta?.applicationComponentID;
-          console.log(`[BADGE DEBUG] eventNotification: componentId=${componentId}, messageCode=${messageCode}`);
-
-          // Show badge for informational/temporary message codes
-          if (messageCode && componentId !== undefined) {
-            componentBadges.updateStatus(componentId, messageCode);
-          }
         },
       },
       {

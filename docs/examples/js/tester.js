@@ -1241,109 +1241,19 @@ const ui = {
 
     // Add toggle switch event listener (only if toggle exists)
     const toggleElement = item.querySelector('.toggle-switch:not(.toggle-required)');
-
     if (toggleElement) {
-      toggleElement.addEventListener('click', async (e) => {
+      toggleElement.addEventListener('click', (e) => {
         e.stopPropagation();
-
-        // Don't allow toggle if component is not ready or already pending
-        if (!component.ready || toggleElement.classList.contains('pending')) {
-          return;
-        }
-
-        const originalState = toggleElement.dataset.currentState === 'true';
-        const action = originalState ? 'disable' : 'enable';
-
-        // Set pending state immediately
-        toggleElement.classList.add('pending');
-        toggleElement.classList.remove('enabled');
-
-        try {
-          await componentHandlers.handleComponentAction(component, action, id);
-
-          // Success: Get fresh component reference and update based on actual component state
-          const freshComponent = cuss2.components[id];
-          componentHandlers.syncToggleState(toggleElement, freshComponent || component);
-        } catch (error) {
-          // Error: Revert to original state
-          if (originalState) {
-            toggleElement.classList.add('enabled');
-          } else {
-            toggleElement.classList.remove('enabled');
-          }
-          toggleElement.dataset.currentState = originalState;
-        } finally {
-          // Always remove pending state
-          toggleElement.classList.remove('pending');
-        }
+        toggleHelper.handleAction(toggleElement, component, id);
       });
     }
 
     // Add required toggle event listener
     const requiredToggleElement = item.querySelector('.toggle-required');
     if (requiredToggleElement) {
-      requiredToggleElement.addEventListener('click', async (e) => {
+      requiredToggleElement.addEventListener('click', (e) => {
         e.stopPropagation();
-
-        // Don't allow toggle if already pending
-        if (requiredToggleElement.classList.contains('pending')) {
-          return;
-        }
-
-        const currentRequired = requiredToggleElement.dataset.currentRequired === 'true';
-        const newRequired = !currentRequired;
-
-        // Set pending state immediately
-        requiredToggleElement.classList.add('pending');
-
-        try {
-          // Update the component's required property
-          component.required = newRequired;
-
-          // Update toggle visual state
-          if (newRequired) {
-            requiredToggleElement.classList.add('required');
-          } else {
-            requiredToggleElement.classList.remove('required');
-          }
-          requiredToggleElement.dataset.currentRequired = newRequired;
-
-          // Log the change
-          logger.info(`Component ${component.deviceType} marked as ${newRequired ? 'REQUIRED' : 'NOT REQUIRED'}`);
-
-          // Enforce CUSS2 required device rules based on the change
-          if (cuss2) {
-            // Only trigger state changes if the logic makes sense
-            if (newRequired && !component.ready) {
-              // Marking an unavailable component as required → force UNAVAILABLE
-              logger.info(`Required component ${component.deviceType} is not ready - requesting UNAVAILABLE state`);
-              cuss2.requestUnavailableState();
-            } else if (!newRequired) {
-              // Unmarking a component as required → check if we can leave UNAVAILABLE
-              // Only call sync if we're in UNAVAILABLE and might be able to transition to AVAILABLE
-              if (cuss2.state === ApplicationStateCodes.UNAVAILABLE) {
-                cuss2.checkRequiredComponentsAndSyncState();
-              }
-            }
-            // If marking a READY component as required while in ACTIVE/AVAILABLE → do nothing
-          }
-
-          // Update state buttons to reflect new required component status
-          ui.updateStateButtons(cuss2.state);
-        } catch (error) {
-          logger.error(`Failed to toggle required state: ${error.message}`);
-          // Revert on error
-          component.required = currentRequired;
-          if (currentRequired) {
-            requiredToggleElement.classList.add('required');
-          } else {
-            requiredToggleElement.classList.remove('required');
-          }
-          requiredToggleElement.dataset.currentRequired = currentRequired;
-        } finally {
-          // Always remove pending state
-          requiredToggleElement.classList.remove('pending');
-        }
+        toggleHelper.handleRequiredToggle(requiredToggleElement, component);
       });
     }
 
@@ -1497,21 +1407,13 @@ const ui = {
 const componentBadges = {
   // Update status badge for a component
   updateStatus(componentId, status) {
-    console.log(`[BADGE UPDATE] updateStatus called: componentId=${componentId}, status=${status}`);
-
     // Find the component element
     const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-    if (!componentElement) {
-      console.log(`[BADGE UPDATE] Component element not found for componentId=${componentId}`);
-      return;
-    }
+    if (!componentElement) return;
 
     // Find the badges container
     const badgesContainer = componentElement.querySelector('.component-badges');
-    if (!badgesContainer) {
-      console.log(`[BADGE UPDATE] Badges container not found for componentId=${componentId}`);
-      return;
-    }
+    if (!badgesContainer) return;
 
     // Remove any existing status badge (but preserve temporary/fading badges)
     const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
@@ -1545,28 +1447,12 @@ const componentBadges = {
 
     // Add to container
     badgesContainer.appendChild(badge);
-    console.log(`[BADGE UPDATE] Badge created and added: status=${status}, isTemporary=${isTemporary}, className=${badge.className}`);
-    console.log(`[BADGE UPDATE] Badge element:`, badge);
-    console.log(`[BADGE UPDATE] Badges container HTML:`, badgesContainer.innerHTML);
-    console.log(`[BADGE UPDATE] Badges container display:`, window.getComputedStyle(badgesContainer).display);
-    console.log(`[BADGE UPDATE] Badges container visibility:`, window.getComputedStyle(badgesContainer).visibility);
-    console.log(`[BADGE UPDATE] Badges container classes:`, badgesContainer.className);
-    console.log(`[BADGE UPDATE] Component element:`, componentElement);
 
     // If temporary, remove after animation completes
     if (isTemporary) {
-      console.log(`[BADGE UPDATE] Badge is temporary, setting up animationend listener`);
       badge.addEventListener('animationend', () => {
-        console.log(`[BADGE UPDATE] Badge animation ended, removing badge for status=${status}`);
         badge.remove();
       }, { once: true });
-
-      // Also check if badge still exists after 5 seconds (in case animation doesn't fire)
-      setTimeout(() => {
-        console.log(`[BADGE UPDATE] 5 seconds later - badge still in DOM:`, badge.parentElement !== null);
-        console.log(`[BADGE UPDATE] Badge computed style display:`, window.getComputedStyle(badge).display);
-        console.log(`[BADGE UPDATE] Badge computed style opacity:`, window.getComputedStyle(badge).opacity);
-      }, 5000);
     }
   },
 
@@ -1595,6 +1481,133 @@ const componentBadges = {
   updateFromComponent(component) {
     this.updateStatus(component.id, component.status);
     this.updateReady(component.id, component.ready);
+  }
+};
+
+// ===== TOGGLE ACTION HELPER =====
+const toggleHelper = {
+  // Generic wrapper: set pending, run async, handle success/error, clear pending
+  async withPendingState(element, asyncFn, onSuccess, onError) {
+    // Bail early if already pending
+    if (element.classList.contains('pending')) {
+      return;
+    }
+
+    // Add pending state
+    element.classList.add('pending');
+
+    try {
+      // Run the async operation
+      await asyncFn();
+
+      // Call success handler if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      // Call error handler if provided
+      if (onError) {
+        onError(error);
+      }
+    } finally {
+      // Always remove pending state
+      element.classList.remove('pending');
+    }
+  },
+
+  // Handle enabled/disabled toggle action
+  async handleAction(toggleElement, component, componentId) {
+    // Don't allow toggle if component is not ready
+    if (!component.ready) {
+      return;
+    }
+
+    const originalState = toggleElement.dataset.currentState === 'true';
+    const action = originalState ? 'disable' : 'enable';
+
+    // Remove enabled class immediately for visual feedback
+    toggleElement.classList.remove('enabled');
+
+    await this.withPendingState(
+      toggleElement,
+      // Async operation
+      () => componentHandlers.handleComponentAction(component, action, componentId),
+      // Success: Get fresh component reference and update based on actual component state
+      () => {
+        const freshComponent = cuss2.components[componentId];
+        componentHandlers.syncToggleState(toggleElement, freshComponent || component);
+      },
+      // Error: Revert to original state
+      () => {
+        if (originalState) {
+          toggleElement.classList.add('enabled');
+        } else {
+          toggleElement.classList.remove('enabled');
+        }
+        toggleElement.dataset.currentState = originalState;
+      }
+    );
+  },
+
+  // Handle required toggle action
+  async handleRequiredToggle(requiredToggleElement, component) {
+    const currentRequired = requiredToggleElement.dataset.currentRequired === 'true';
+    const newRequired = !currentRequired;
+
+    await this.withPendingState(
+      requiredToggleElement,
+      // Async operation
+      async () => {
+        // Update the component's required property
+        component.required = newRequired;
+
+        // Update toggle visual state
+        if (newRequired) {
+          requiredToggleElement.classList.add('required');
+        } else {
+          requiredToggleElement.classList.remove('required');
+        }
+        requiredToggleElement.dataset.currentRequired = newRequired;
+
+        // Log the change
+        logger.info(`Component ${component.deviceType} marked as ${newRequired ? 'REQUIRED' : 'NOT REQUIRED'}`);
+
+        // Enforce CUSS2 required device rules based on the change
+        if (cuss2) {
+          // Only trigger state changes if the logic makes sense
+          if (newRequired && !component.ready) {
+            // Marking an unavailable component as required → force UNAVAILABLE
+            logger.info(`Required component ${component.deviceType} is not ready - requesting UNAVAILABLE state`);
+            await cuss2.requestUnavailableState();
+          } else if (!newRequired) {
+            // Unmarking a component as required → check if we can leave UNAVAILABLE
+            // Only call sync if we're in UNAVAILABLE and might be able to transition to AVAILABLE
+            if (cuss2.state === ApplicationStateCodes.UNAVAILABLE) {
+              await cuss2.checkRequiredComponentsAndSyncState();
+            }
+          }
+          // If marking a READY component as required while in ACTIVE/AVAILABLE → do nothing
+        }
+
+        // Update state buttons to reflect new required component status
+        ui.updateStateButtons(cuss2.state);
+      },
+      // Success: no additional action needed
+      null,
+      // Error: Revert on error
+      (error) => {
+        logger.error(`Failed to toggle required state: ${error.message}`);
+        // Revert component state
+        component.required = currentRequired;
+        // Revert visual state
+        if (currentRequired) {
+          requiredToggleElement.classList.add('required');
+        } else {
+          requiredToggleElement.classList.remove('required');
+        }
+        requiredToggleElement.dataset.currentRequired = currentRequired;
+      }
+    );
   }
 };
 
@@ -2099,15 +2112,11 @@ const connectionManager = {
           const messageCode = platformData?.meta?.messageCode;
           const componentId = platformData?.meta?.componentID;
 
-          console.log(`[MESSAGE EVENT] Received message: messageCode=${messageCode}, componentId=${componentId}`);
-
           // Show badge for temporary/informational message codes
           const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT', 'SOFTWARE_ERROR'];
           const isTemporary = temporaryStatuses.includes(messageCode);
-          console.log(`[MESSAGE EVENT] isTemporary=${isTemporary}, componentId !== undefined: ${componentId !== undefined}`);
 
           if (messageCode && isTemporary && componentId !== undefined) {
-            console.log(`[MESSAGE EVENT] Calling componentBadges.updateStatus(${componentId}, ${messageCode})`);
             componentBadges.updateStatus(componentId, messageCode);
           }
         },

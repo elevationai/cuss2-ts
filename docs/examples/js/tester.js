@@ -1537,13 +1537,24 @@ const componentBadges = {
     // Add to container
     badgesContainer.appendChild(badge);
     console.log(`[BADGE UPDATE] Badge created and added: status=${status}, isTemporary=${isTemporary}, className=${badge.className}`);
+    console.log(`[BADGE UPDATE] Badge element:`, badge);
+    console.log(`[BADGE UPDATE] Badges container HTML:`, badgesContainer.innerHTML);
+    console.log(`[BADGE UPDATE] Component element:`, componentElement);
 
     // If temporary, remove after animation completes
     if (isTemporary) {
+      console.log(`[BADGE UPDATE] Badge is temporary, setting up animationend listener`);
       badge.addEventListener('animationend', () => {
         console.log(`[BADGE UPDATE] Badge animation ended, removing badge for status=${status}`);
         badge.remove();
       }, { once: true });
+
+      // Also check if badge still exists after 5 seconds (in case animation doesn't fire)
+      setTimeout(() => {
+        console.log(`[BADGE UPDATE] 5 seconds later - badge still in DOM:`, badge.parentElement !== null);
+        console.log(`[BADGE UPDATE] Badge computed style display:`, window.getComputedStyle(badge).display);
+        console.log(`[BADGE UPDATE] Badge computed style opacity:`, window.getComputedStyle(badge).opacity);
+      }, 5000);
     }
   },
 

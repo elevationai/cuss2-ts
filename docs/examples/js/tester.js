@@ -1825,15 +1825,11 @@ const connectionManager = {
 
   // Show reconnection banner
   showReconnectionBanner() {
-    console.log('[DEBUG] showReconnectionBanner() called');
-
     // Don't show if already showing
     if (bannerManager.isShown('reconnectionBanner')) {
-      console.log('[DEBUG] Banner already shown, returning early');
       return;
     }
 
-    console.log('[DEBUG] Calling bannerManager.show()');
     bannerManager.show({
       id: 'reconnectionBanner',
       templateId: 'reconnection-banner-template',
@@ -1892,17 +1888,14 @@ const connectionManager = {
         event: "connecting",
         handler: (attempt) => {
           logger.info(`WebSocket connection attempt ${attempt}`);
-          console.log(`[DEBUG] connecting event: isReconnecting=${this.isReconnecting}, wasEverConnected=${this.wasEverConnected}`);
 
           // Check if this is an automatic reconnection attempt
           if (this.isReconnecting) {
             // This is a reconnection - show banner
-            console.log('[DEBUG] Calling showReconnectionBanner()');
             this.showReconnectionBanner();
             this.updateReconnectionAttempts(attempt);
           } else {
             // Initial connection - update progress indicator
-            console.log('[DEBUG] Showing progress indicator (not reconnection)');
             connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
           }
         },
@@ -1925,14 +1918,12 @@ const connectionManager = {
         event: "open",
         handler: () => {
           logger.success("WebSocket connection opened");
-          console.log(`[DEBUG] open event: setting wasEverConnected = true`);
 
           // Check if this was a reconnection
           const wasReconnecting = this.isReconnecting;
 
           // Mark as successfully connected
           this.wasEverConnected = true;
-          console.log(`[DEBUG] open event: wasEverConnected = ${this.wasEverConnected}, isReconnecting = ${this.isReconnecting}`);
 
           if (wasReconnecting) {
             // Reconnection successful - restore CONNECTED state
@@ -1990,7 +1981,6 @@ const connectionManager = {
   // Handle connection close
   handleConnectionClose(event) {
     logger.error("WebSocket connection closed");
-    console.log(`[DEBUG] handleConnectionClose: wasEverConnected=${this.wasEverConnected}, isReconnecting=${this.isReconnecting}, code=${event?.code}`);
 
     // Check if this was a normal close (user disconnected) or abnormal
     const isNormalClose = event && event.code === 1000;
@@ -2026,7 +2016,6 @@ const connectionManager = {
 
       // Set reconnecting flag
       this.isReconnecting = true;
-      console.log(`[DEBUG] Set isReconnecting = ${this.isReconnecting}`);
 
       // Disable state buttons during reconnection (they need an active connection)
       Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
@@ -2036,7 +2025,6 @@ const connectionManager = {
 
       // Explicitly reconnect using the saved config
       if (this.lastConnectionConfig) {
-        console.log('[DEBUG] Calling performConnection() to reconnect');
         // Use performConnection directly to skip mixed content check on reconnect
         this.performConnection(this.lastConnectionConfig).catch(err => {
           logger.error(`Reconnection failed: ${err.message}`);

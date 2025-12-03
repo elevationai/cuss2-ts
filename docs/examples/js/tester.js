@@ -2074,7 +2074,7 @@ const connectionManager = {
         event: "message",
         handler: (platformData) => {
           const messageCode = platformData?.meta?.messageCode;
-          const componentId = platformData?.meta?.applicationComponentID;
+          const componentId = platformData?.meta?.componentID;
 
           console.log(`[MESSAGE EVENT] Received message: messageCode=${messageCode}, componentId=${componentId}`);
 

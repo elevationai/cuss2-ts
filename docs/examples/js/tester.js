@@ -426,60 +426,69 @@ const feedback = {
   // ===== BUTTON STATE MANAGEMENT =====
 
   /**
-   * Set button to loading state
+   * Set button to loading state with fixed dimensions
    * @param {HTMLButtonElement} button
-   * @param {string} loadingText - Optional text to show (default: keeps original text)
+   * @param {string} _loadingText - Ignored (kept for API compatibility)
    */
-  setButtonLoading(button, loadingText = null) {
+  setButtonLoading(button, _loadingText = null) {
     if (!button) return;
 
-    // Store original state
-    button.dataset.originalText = button.textContent;
-    button.dataset.originalDisabled = button.disabled;
+    // Only store original state once (avoid re-storing if already loading)
+    if (!button.dataset.originalDisabled) {
+      button.dataset.originalDisabled = button.disabled;
+    }
+
+    // Freeze dimensions to prevent layout shift (only if not already frozen)
+    if (!button.dataset.originalWidth) {
+      button.dataset.originalWidth = button.offsetWidth + 'px';
+      button.dataset.originalHeight = button.offsetHeight + 'px';
+      button.style.width = button.dataset.originalWidth;
+      button.style.height = button.dataset.originalHeight;
+    }
+
+    // Set up internal structure for spinner (only once)
+    if (!button.querySelector('.btn-label')) {
+      const labelText = button.textContent;
+      button.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span class="btn-label">${this._escapeHtml(labelText)}</span>`;
+    }
 
     // Apply loading state
     button.classList.remove('success', 'error');
     button.classList.add('loading');
     button.disabled = true;
-
-    if (loadingText) {
-      button.textContent = loadingText;
-    }
   },
 
   /**
-   * Set button to success state
+   * Set button to success state (keeps original label)
    * @param {HTMLButtonElement} button
    * @param {number} duration - How long to show success state (ms)
    */
   setButtonSuccess(button, duration = 2000) {
     if (!button) return;
 
+    // Remove loading state but keep fixed dimensions
     button.classList.remove('loading', 'error');
     button.classList.add('success');
 
-    const originalText = button.dataset.originalText;
-    button.textContent = 'Success';
-
+    // Keep the label text, just change visual state
     setTimeout(() => {
       this.resetButton(button);
     }, duration);
   },
 
   /**
-   * Set button to error state
+   * Set button to error state (keeps original label)
    * @param {HTMLButtonElement} button
    * @param {number} duration - How long to show error state (ms)
    */
   setButtonError(button, duration = 3000) {
     if (!button) return;
 
+    // Remove loading state but keep fixed dimensions
     button.classList.remove('loading', 'success');
     button.classList.add('error');
 
-    const originalText = button.dataset.originalText;
-    button.textContent = 'Failed';
-
+    // Keep the label text, just change visual state
     setTimeout(() => {
       this.resetButton(button);
     }, duration);
@@ -491,12 +500,26 @@ const feedback = {
   resetButton(button) {
     if (!button) return;
 
+    // Remove state classes
     button.classList.remove('loading', 'success', 'error');
-    button.textContent = button.dataset.originalText || button.textContent;
+
+    // Restore original label (remove spinner structure)
+    const labelEl = button.querySelector('.btn-label');
+    if (labelEl) {
+      button.textContent = labelEl.textContent;
+    }
+
+    // Clear fixed dimensions
+    button.style.width = '';
+    button.style.height = '';
+
+    // Restore original disabled state
     button.disabled = button.dataset.originalDisabled === 'true';
 
-    delete button.dataset.originalText;
+    // Clean up datasets
     delete button.dataset.originalDisabled;
+    delete button.dataset.originalWidth;
+    delete button.dataset.originalHeight;
   },
 
   // ===== ACCESSIBILITY HELPERS =====
@@ -1314,24 +1337,8 @@ const ui = {
         const action = button.dataset.action;
         const componentId = button.dataset.componentId;
 
-        // Action-specific loading text for buttons
-        const actionLoadingText = {
-          setup: 'Setting up...',
-          send: 'Sending...',
-          read: 'Reading...',
-          play: 'Playing...',
-          enable: 'Enabling...',
-          disable: 'Disabling...',
-          cancel: 'Cancelling...',
-          query: 'Querying...',
-          offer: 'Offering...',
-          pause: 'Pausing...',
-          resume: 'Resuming...',
-          stop: 'Stopping...'
-        };
-
-        // Set button to loading state with action-specific text
-        feedback.setButtonLoading(button, actionLoadingText[action] || 'Working...');
+        // Disable button and show spinner (keeps original label)
+        feedback.setButtonLoading(button);
 
         try {
           // Check if this action requires input
@@ -1347,10 +1354,10 @@ const ui = {
             await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
 
-          // Success feedback - button shows "Success" then reverts
+          // Success: green background briefly, then reset
           feedback.setButtonSuccess(button);
         } catch (error) {
-          // Error feedback - button turns red and shows "Failed"
+          // Error: red background briefly, then reset
           // Note: CUSS status badge is already updated by the handler's catch block
           feedback.setButtonError(button);
         }

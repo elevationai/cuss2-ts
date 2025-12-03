@@ -1020,6 +1020,10 @@ input.field-problem {
 }
 
 .component-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 8px 16px;
   background: linear-gradient(135deg, #64ffda, #48cae4);
   color: #0f0f1e;
@@ -1028,10 +1032,31 @@ input.field-problem {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   white-space: nowrap;
   align-self: flex-start;
   min-width: 100px;
+  box-sizing: border-box;
+}
+
+/* Internal button structure for spinner support */
+.component-action-btn .btn-label {
+  white-space: nowrap;
+}
+
+.component-action-btn .btn-spinner {
+  display: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: btn-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
 }
 
 .component-action-btn.component-query-btn {
@@ -1411,56 +1436,29 @@ input.field-problem {
 
 /* ===== BUTTON STATE FEEDBACK ===== */
 
-/* Loading State */
+/* Loading State - shows spinner, no text change */
 .component-action-btn.loading {
-  background: linear-gradient(135deg, #ffc107, #ff9f00);
-  color: #0f0f1e;
   cursor: wait;
   pointer-events: none;
-  position: relative;
+  opacity: 0.85;
 }
 
-.component-action-btn.loading::before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  margin-right: 8px;
-  border: 2px solid #0f0f1e;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-  vertical-align: middle;
+.component-action-btn.loading .btn-spinner {
+  display: block;
 }
 
-/* Success State */
+/* Success State - green background only, no text change */
 .component-action-btn.success {
   background: linear-gradient(135deg, #4caf50, #2e7d32);
   color: white;
   pointer-events: none;
 }
 
-.component-action-btn.success::before {
-  content: '✓';
-  margin-right: 6px;
-  font-weight: bold;
-}
-
-/* Error State */
+/* Error State - red background only, no text change */
 .component-action-btn.error {
   background: linear-gradient(135deg, #ff6464, #ee5a24);
   color: white;
   pointer-events: none;
-}
-
-.component-action-btn.error::before {
-  content: '✗';
-  margin-right: 6px;
-  font-weight: bold;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 /* ===== ACCESSIBILITY ===== */
@@ -1481,15 +1479,13 @@ input.field-problem {
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .component-action-btn,
-  .component-action-btn.loading::before {
+  .component-action-btn .btn-spinner {
     animation: none !important;
     transition: none !important;
   }
 
-  /* Still show states, just without animation */
-  .component-action-btn.loading::before {
-    border: 2px solid #0f0f1e;
-    border-top-color: #0f0f1e;
+  /* Still show spinner visible but static */
+  .component-action-btn.loading .btn-spinner {
     border-right-color: transparent;
   }
 }

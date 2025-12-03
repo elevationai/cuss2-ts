@@ -335,7 +335,7 @@ export class Connection extends EventEmitter {
           this.emit("close", e);
 
           // normal close (probably from calling the close() method)
-          if (e.code === 1000) return;
+          if (e.code === 1000 || (e.code >= 4000 && e.code < 5000)) return;
 
           if (attempts > 0) {
             reject(e); // cause retry to try again

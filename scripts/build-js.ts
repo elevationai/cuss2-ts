@@ -48,6 +48,9 @@ export { Models };
 // Export helpers and state change
 export * from "../src/helper.ts";
 export * from "../src/models/stateChange.ts";
+
+// Export Connection for direct access
+export * from "../src/connection.ts";
 `;
 
 await Deno.writeTextFile(entryFile, entryCode);

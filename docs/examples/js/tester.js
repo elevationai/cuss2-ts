@@ -566,148 +566,6 @@ const feedback = {
     delete button.dataset.originalDisabled;
   },
 
-  // ===== STATUS BADGE MANAGEMENT =====
-
-  /**
-   * Show operation status badge on component
-   * @param {string} componentId - Component ID
-   * @param {string} operation - Operation name ('setup', 'send', etc.)
-   * @param {string} state - 'in-progress', 'success', 'error'
-   */
-  showOperationBadge(componentId, operation, state = 'in-progress') {
-    const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-    if (!componentElement) return;
-
-    const componentName = componentElement.querySelector('.component-name');
-    if (!componentName) return;
-
-    // Remove any existing operation badge
-    this.removeOperationBadge(componentId);
-
-    // Create badge
-    const badge = document.createElement('span');
-    badge.className = `component-operation-badge ${state}`;
-    badge.dataset.componentId = componentId;
-    badge.dataset.operation = operation;
-
-    // Add spinner for in-progress state
-    if (state === 'in-progress') {
-      badge.innerHTML = `
-        <span class="spinner"></span>
-        <span>${this._getOperationText(operation, state)}</span>
-      `;
-    } else {
-      badge.textContent = this._getOperationText(operation, state);
-    }
-
-    componentName.appendChild(badge);
-
-    // Auto-remove success badges after animation
-    if (state === 'success') {
-      setTimeout(() => {
-        if (badge.parentElement) {
-          badge.remove();
-        }
-      }, 3000);
-    }
-
-    return badge;
-  },
-
-  /**
-   * Update existing operation badge state
-   */
-  updateOperationBadge(componentId, state) {
-    const badge = document.querySelector(`[data-component-id="${componentId}"].component-operation-badge`);
-    if (!badge) return;
-
-    const operation = badge.dataset.operation;
-    badge.className = `component-operation-badge ${state}`;
-
-    if (state === 'in-progress') {
-      badge.innerHTML = `
-        <span class="spinner"></span>
-        <span>${this._getOperationText(operation, state)}</span>
-      `;
-    } else {
-      badge.textContent = this._getOperationText(operation, state);
-    }
-
-    // Auto-remove success badges
-    if (state === 'success') {
-      setTimeout(() => {
-        if (badge.parentElement) {
-          badge.remove();
-        }
-      }, 3000);
-    }
-  },
-
-  /**
-   * Remove operation badge from component
-   */
-  removeOperationBadge(componentId) {
-    const badge = document.querySelector(`[data-component-id="${componentId}"].component-operation-badge`);
-    if (badge) {
-      badge.remove();
-    }
-  },
-
-  /**
-   * Get operation text based on operation and state
-   */
-  _getOperationText(operation, state) {
-    const texts = {
-      setup: {
-        'in-progress': 'Setting up...',
-        'success': 'Setup complete',
-        'error': 'Setup failed'
-      },
-      send: {
-        'in-progress': 'Sending...',
-        'success': 'Sent',
-        'error': 'Send failed'
-      },
-      query: {
-        'in-progress': 'Querying...',
-        'success': 'Query complete',
-        'error': 'Query failed'
-      },
-      read: {
-        'in-progress': 'Reading...',
-        'success': 'Read complete',
-        'error': 'Read failed'
-      },
-      enable: {
-        'in-progress': 'Enabling...',
-        'success': 'Enabled',
-        'error': 'Enable failed'
-      },
-      disable: {
-        'in-progress': 'Disabling...',
-        'success': 'Disabled',
-        'error': 'Disable failed'
-      },
-      cancel: {
-        'in-progress': 'Cancelling...',
-        'success': 'Cancelled',
-        'error': 'Cancel failed'
-      },
-      play: {
-        'in-progress': 'Playing...',
-        'success': 'Playing',
-        'error': 'Play failed'
-      },
-      offer: {
-        'in-progress': 'Offering...',
-        'success': 'Offered',
-        'error': 'Offer failed'
-      }
-    };
-
-    return texts[operation]?.[state] || `${operation} ${state}`;
-  },
-
   // ===== ACCESSIBILITY HELPERS =====
 
   /**
@@ -1523,14 +1381,24 @@ const ui = {
         const action = button.dataset.action;
         const componentId = button.dataset.componentId;
 
-        // Set button to loading state
-        feedback.setButtonLoading(button);
+        // Action-specific loading text for buttons
+        const actionLoadingText = {
+          setup: 'Setting up...',
+          send: 'Sending...',
+          read: 'Reading...',
+          play: 'Playing...',
+          enable: 'Enabling...',
+          disable: 'Disabling...',
+          cancel: 'Cancelling...',
+          query: 'Querying...',
+          offer: 'Offering...',
+          pause: 'Pausing...',
+          resume: 'Resuming...',
+          stop: 'Stopping...'
+        };
 
-        // Show operation badge for longer operations
-        const showBadge = ['setup', 'send', 'read', 'enable', 'disable'].includes(action);
-        if (showBadge) {
-          feedback.showOperationBadge(componentId, action, 'in-progress');
-        }
+        // Set button to loading state with action-specific text
+        feedback.setButtonLoading(button, actionLoadingText[action] || 'Working...');
 
         try {
           // Check if this action requires input
@@ -1546,23 +1414,19 @@ const ui = {
             await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
 
-          // Success feedback
+          // Success feedback - button shows "Success" then reverts
           feedback.setButtonSuccess(button);
-          if (showBadge) {
-            feedback.updateOperationBadge(componentId, 'success');
-          }
         } catch (error) {
           // Error feedback - button turns red and shows "Failed"
           feedback.setButtonError(button);
 
-          // Remove in-progress badge (the transient status badge will be shown
-          // by updateComponentStatusBadge in the component handler's finally block)
-          if (showBadge) {
-            feedback.removeOperationBadge(componentId);
-          }
-
-          // Log the error (no toast or inline error - transient status badge handles visibility)
-          logger.error(`${action.charAt(0).toUpperCase() + action.slice(1)} failed: ${error.message || 'Unknown error'}`);
+          // Show error toast for visibility
+          feedback.showToast(
+            'error',
+            `${action.charAt(0).toUpperCase() + action.slice(1)} Failed`,
+            error.message || 'An unknown error occurred',
+            5000
+          );
         }
       });
     });

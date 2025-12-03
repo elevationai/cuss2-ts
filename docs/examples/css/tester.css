@@ -1463,73 +1463,6 @@ input.field-problem {
   to { transform: rotate(360deg); }
 }
 
-/* ===== STATUS BADGE SYSTEM ===== */
-
-.component-operation-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  animation: slideInFromLeft 0.3s ease-out;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-.component-operation-badge.in-progress {
-  background: var(--color-loading-bg);
-  color: var(--color-loading);
-  border: 1px solid var(--color-loading);
-}
-
-.component-operation-badge.success {
-  background: var(--color-success-bg);
-  color: var(--color-success);
-  border: 1px solid var(--color-success);
-  animation: slideInFromLeft 0.3s ease-out, fadeOutAndRemove 2s 1s forwards;
-}
-
-.component-operation-badge.error {
-  background: var(--color-error-bg);
-  color: var(--color-error);
-  border: 1px solid var(--color-error);
-}
-
-.component-operation-badge .spinner {
-  width: 10px;
-  height: 10px;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes slideInFromLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeOutAndRemove {
-  0% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-}
-
 /* ===== TOAST NOTIFICATION SYSTEM ===== */
 
 .toast-container {
@@ -1667,9 +1600,7 @@ input.field-problem {
 @media (prefers-reduced-motion: reduce) {
   .component-action-btn,
   .toast,
-  .component-operation-badge,
-  .component-action-btn.loading::before,
-  .component-operation-badge .spinner {
+  .component-action-btn.loading::before {
     animation: none !important;
     transition: none !important;
   }
@@ -1708,10 +1639,5 @@ input.field-problem {
   /* Simplify button text during loading on mobile */
   .component-action-btn.loading {
     min-width: 44px; /* Ensure touch target size */
-  }
-
-  .component-operation-badge {
-    font-size: 10px;
-    padding: 3px 8px;
   }
 }

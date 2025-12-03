@@ -734,6 +734,12 @@ input.field-problem {
   border: 1px solid #ff6464;
 }
 
+.component-badge.status-software-error {
+  background: rgba(255, 150, 50, 0.2);
+  color: #ff9632;
+  border: 1px solid #ff9632;
+}
+
 /* Fade out animation for temporary status badges */
 .component-badge.fade-out {
   animation: fadeOut 3s forwards;

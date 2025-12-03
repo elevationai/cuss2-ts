@@ -708,6 +708,54 @@ const feedback = {
     return texts[operation]?.[state] || `${operation} ${state}`;
   },
 
+  // ===== INLINE ACTION ERROR PANELS =====
+
+  /**
+   * Show an inline error panel within an action section
+   * @param {HTMLElement} button - The action button that was clicked
+   * @param {string} message - Error message to display
+   */
+  showActionError(button, message) {
+    if (!button) return;
+
+    // Find the action column (parent container for the action)
+    const actionColumn = button.closest('.component-action-column');
+    if (!actionColumn) return;
+
+    // Find the error panel within this action section
+    const errorPanel = actionColumn.querySelector('.action-error-panel');
+    if (!errorPanel) return;
+
+    // Clear any existing error first
+    this.clearActionError(button);
+
+    // Set error content with warning icon
+    errorPanel.innerHTML = `<span class="action-error-icon">⚠</span> ${this._escapeHtml(message)}`;
+    errorPanel.style.display = 'block';
+
+    // Announce to screen readers
+    this._announceToScreenReader(`Error: ${message}`);
+  },
+
+  /**
+   * Clear inline error panel within an action section
+   * @param {HTMLElement} button - The action button that was clicked
+   */
+  clearActionError(button) {
+    if (!button) return;
+
+    // Find the action column (parent container for the action)
+    const actionColumn = button.closest('.component-action-column');
+    if (!actionColumn) return;
+
+    // Find and hide the error panel
+    const errorPanel = actionColumn.querySelector('.action-error-panel');
+    if (errorPanel) {
+      errorPanel.style.display = 'none';
+      errorPanel.innerHTML = '';
+    }
+  },
+
   // ===== ACCESSIBILITY HELPERS =====
 
   /**
@@ -1546,7 +1594,8 @@ const ui = {
             await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
 
-          // Success feedback
+          // Success feedback - clear any previous inline error
+          feedback.clearActionError(button);
           feedback.setButtonSuccess(button);
           if (showBadge) {
             feedback.updateOperationBadge(componentId, 'success');
@@ -1554,9 +1603,12 @@ const ui = {
         } catch (error) {
           // Error feedback
           feedback.setButtonError(button);
+
+          // Show inline error panel (not badge - badges are reserved for CUSS2 device states)
           if (showBadge) {
-            feedback.updateOperationBadge(componentId, 'error');
+            feedback.removeOperationBadge(componentId);
           }
+          feedback.showActionError(button, error.message || 'An unknown error occurred');
 
           // Show error toast for better visibility
           feedback.showToast(

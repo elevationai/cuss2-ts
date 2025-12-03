@@ -111,6 +111,19 @@ const componentCapabilities = {
   }
 };
 
+// ===== EVENT REGISTRATION UTILITIES =====
+// Centralized event handler registration
+const eventUtils = {
+  // Register multiple event handlers on a target
+  registerHandlers(target, handlers) {
+    if (!target || typeof target.on !== 'function') return;
+    handlers.forEach(({ event, handler }) => {
+      if (!event || typeof handler !== 'function') return;
+      target.on(event, handler);
+    });
+  }
+};
+
 // ===== QUERY PARAMETER PARSING =====
 const urlParams = new URLSearchParams(window.location.search);
 const queryConfig = {
@@ -1971,9 +1984,7 @@ const connectionManager = {
       },
     ];
 
-    connectionEvents.forEach(({ event, handler }) => {
-      cuss2.connection.on(event, handler);
-    });
+    eventUtils.registerHandlers(cuss2.connection, connectionEvents);
   },
 
   // Handle connection close
@@ -2135,9 +2146,7 @@ const connectionManager = {
       },
     ];
 
-    platformEvents.forEach(({ event, handler }) => {
-      cuss2.on(event, handler);
-    });
+    eventUtils.registerHandlers(cuss2, platformEvents);
   },
 
   // Connect to CUSS2

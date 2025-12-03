@@ -2061,6 +2061,19 @@ const connectionManager = {
         },
       },
       {
+        event: "message",
+        handler: (platformData) => {
+          const messageCode = platformData?.meta?.messageCode;
+          const componentId = platformData?.meta?.applicationComponentID;
+
+          // Show badge for temporary/informational message codes
+          const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+          if (messageCode && temporaryStatuses.includes(messageCode) && componentId !== undefined) {
+            componentBadges.updateStatus(componentId, messageCode);
+          }
+        },
+      },
+      {
         event: "sessionTimeout",
         handler: async () => {
           // Get killTimeout from the environment data (fetched during initialization)

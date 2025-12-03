@@ -415,104 +415,12 @@ const logger = {
 
 // ===== UI FEEDBACK UTILITY =====
 const feedback = {
-  // Toast notification counter for unique IDs
-  _toastCounter: 0,
-
   // ARIA live region for accessibility
   _ariaRegion: null,
 
   // Initialize feedback system
   init() {
     this._ariaRegion = document.getElementById('ariaLiveRegion');
-
-    // Add keyboard support for dismissing toasts
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        this.dismissAllToasts();
-      }
-    });
-  },
-
-  // ===== TOAST NOTIFICATIONS =====
-
-  /**
-   * Show a toast notification
-   * @param {string} type - 'success', 'error', 'info', 'warning'
-   * @param {string} title - Toast title
-   * @param {string} message - Toast message
-   * @param {number} duration - Auto-dismiss duration in ms (0 = no auto-dismiss)
-   */
-  showToast(type, title, message, duration = 4000) {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const toastId = `toast-${++this._toastCounter}`;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.id = toastId;
-    toast.setAttribute('role', 'alert');
-    toast.innerHTML = `
-      <div class="toast-icon">${this._getToastIcon(type)}</div>
-      <div class="toast-content">
-        <div class="toast-title">${this._escapeHtml(title)}</div>
-        <div class="toast-message">${this._escapeHtml(message)}</div>
-      </div>
-      <button class="toast-dismiss" aria-label="Dismiss notification">×</button>
-    `;
-
-    // Add dismiss handler
-    const dismissBtn = toast.querySelector('.toast-dismiss');
-    dismissBtn.addEventListener('click', () => this.dismissToast(toastId));
-
-    container.appendChild(toast);
-
-    // Announce to screen readers
-    this._announceToScreenReader(`${title}. ${message}`);
-
-    // Auto-dismiss if duration is set
-    if (duration > 0) {
-      setTimeout(() => this.dismissToast(toastId), duration);
-    }
-
-    return toastId;
-  },
-
-  /**
-   * Dismiss a specific toast
-   */
-  dismissToast(toastId) {
-    const toast = document.getElementById(toastId);
-    if (!toast) return;
-
-    toast.classList.add('removing');
-    setTimeout(() => toast.remove(), 300);
-  },
-
-  /**
-   * Dismiss all toasts
-   */
-  dismissAllToasts() {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const toasts = container.querySelectorAll('.toast');
-    toasts.forEach(toast => {
-      toast.classList.add('removing');
-      setTimeout(() => toast.remove(), 300);
-    });
-  },
-
-  /**
-   * Get icon for toast type
-   */
-  _getToastIcon(type) {
-    const icons = {
-      success: '✓',
-      error: '✗',
-      info: 'ⓘ',
-      warning: '⚠'
-    };
-    return icons[type] || icons.info;
   },
 
   // ===== BUTTON STATE MANAGEMENT =====

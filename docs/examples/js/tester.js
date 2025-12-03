@@ -1745,19 +1745,6 @@ const componentHandlers = {
         });
       }
     });
-
-    // Setup eventNotification listeners for all components to show temporary status badges
-    Object.values(cuss2.components).forEach((component) => {
-      component.on('eventNotification', (notification) => {
-        const messageCode = notification?.meta?.messageCode;
-        console.log(`[BADGE DEBUG] eventNotification for component ${component.id}: messageCode=${messageCode}`);
-
-        // Show badge for informational/temporary message codes
-        if (messageCode) {
-          componentBadges.updateStatus(component.id, messageCode);
-        }
-      });
-    });
   },
 
   // Update data display box for a component
@@ -2084,6 +2071,19 @@ const connectionManager = {
           ui.updateStateButtons(cuss2.state);
           // Update component badges to reflect new status and ready state
           componentBadges.updateFromComponent(component);
+        },
+      },
+      {
+        event: "eventNotification",
+        handler: (notification) => {
+          const messageCode = notification?.meta?.messageCode;
+          const componentId = notification?.meta?.applicationComponentID;
+          console.log(`[BADGE DEBUG] eventNotification: componentId=${componentId}, messageCode=${messageCode}`);
+
+          // Show badge for informational/temporary message codes
+          if (messageCode && componentId !== undefined) {
+            componentBadges.updateStatus(componentId, messageCode);
+          }
         },
       },
       {

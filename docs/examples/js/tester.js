@@ -1528,7 +1528,8 @@ const componentBadges = {
     const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
     const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
     const isTemporary = temporaryStatuses.includes(status);
-    const fadeClass = isTemporary ? 'fade-out' : '';
+    // TEMPORARILY DISABLE FADE-OUT TO TEST VISIBILITY
+    const fadeClass = ''; // isTemporary ? 'fade-out' : '';
 
     const badge = document.createElement('span');
     badge.className = `component-badge status-badge ${statusClass} ${fadeClass}`;

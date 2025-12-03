@@ -1497,13 +1497,21 @@ const ui = {
 const componentBadges = {
   // Update status badge for a component
   updateStatus(componentId, status) {
+    console.log(`[BADGE UPDATE] updateStatus called: componentId=${componentId}, status=${status}`);
+
     // Find the component element
     const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-    if (!componentElement) return;
+    if (!componentElement) {
+      console.log(`[BADGE UPDATE] Component element not found for componentId=${componentId}`);
+      return;
+    }
 
     // Find the badges container
     const badgesContainer = componentElement.querySelector('.component-badges');
-    if (!badgesContainer) return;
+    if (!badgesContainer) {
+      console.log(`[BADGE UPDATE] Badges container not found for componentId=${componentId}`);
+      return;
+    }
 
     // Remove any existing status badge
     const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
@@ -1528,10 +1536,12 @@ const componentBadges = {
 
     // Add to container
     badgesContainer.appendChild(badge);
+    console.log(`[BADGE UPDATE] Badge created and added: status=${status}, isTemporary=${isTemporary}, className=${badge.className}`);
 
     // If temporary, remove after animation completes
     if (isTemporary) {
       badge.addEventListener('animationend', () => {
+        console.log(`[BADGE UPDATE] Badge animation ended, removing badge for status=${status}`);
         badge.remove();
       }, { once: true });
     }
@@ -2066,9 +2076,15 @@ const connectionManager = {
           const messageCode = platformData?.meta?.messageCode;
           const componentId = platformData?.meta?.applicationComponentID;
 
+          console.log(`[MESSAGE EVENT] Received message: messageCode=${messageCode}, componentId=${componentId}`);
+
           // Show badge for temporary/informational message codes
           const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
-          if (messageCode && temporaryStatuses.includes(messageCode) && componentId !== undefined) {
+          const isTemporary = temporaryStatuses.includes(messageCode);
+          console.log(`[MESSAGE EVENT] isTemporary=${isTemporary}, componentId !== undefined: ${componentId !== undefined}`);
+
+          if (messageCode && isTemporary && componentId !== undefined) {
+            console.log(`[MESSAGE EVENT] Calling componentBadges.updateStatus(${componentId}, ${messageCode})`);
             componentBadges.updateStatus(componentId, messageCode);
           }
         },

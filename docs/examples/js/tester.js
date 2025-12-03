@@ -708,54 +708,6 @@ const feedback = {
     return texts[operation]?.[state] || `${operation} ${state}`;
   },
 
-  // ===== INLINE ACTION ERROR PANELS =====
-
-  /**
-   * Show an inline error panel within an action section
-   * @param {HTMLElement} button - The action button that was clicked
-   * @param {string} message - Error message to display
-   */
-  showActionError(button, message) {
-    if (!button) return;
-
-    // Find the action column (parent container for the action)
-    const actionColumn = button.closest('.component-action-column');
-    if (!actionColumn) return;
-
-    // Find the error panel within this action section
-    const errorPanel = actionColumn.querySelector('.action-error-panel');
-    if (!errorPanel) return;
-
-    // Clear any existing error first
-    this.clearActionError(button);
-
-    // Set error content with warning icon
-    errorPanel.innerHTML = `<span class="action-error-icon">⚠</span> ${this._escapeHtml(message)}`;
-    errorPanel.style.display = 'block';
-
-    // Announce to screen readers
-    this._announceToScreenReader(`Error: ${message}`);
-  },
-
-  /**
-   * Clear inline error panel within an action section
-   * @param {HTMLElement} button - The action button that was clicked
-   */
-  clearActionError(button) {
-    if (!button) return;
-
-    // Find the action column (parent container for the action)
-    const actionColumn = button.closest('.component-action-column');
-    if (!actionColumn) return;
-
-    // Find and hide the error panel
-    const errorPanel = actionColumn.querySelector('.action-error-panel');
-    if (errorPanel) {
-      errorPanel.style.display = 'none';
-      errorPanel.innerHTML = '';
-    }
-  },
-
   // ===== ACCESSIBILITY HELPERS =====
 
   /**
@@ -1594,29 +1546,23 @@ const ui = {
             await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
 
-          // Success feedback - clear any previous inline error
-          feedback.clearActionError(button);
+          // Success feedback
           feedback.setButtonSuccess(button);
           if (showBadge) {
             feedback.updateOperationBadge(componentId, 'success');
           }
         } catch (error) {
-          // Error feedback
+          // Error feedback - button turns red and shows "Failed"
           feedback.setButtonError(button);
 
-          // Show inline error panel (not badge - badges are reserved for CUSS2 device states)
+          // Remove in-progress badge (the transient status badge will be shown
+          // by updateComponentStatusBadge in the component handler's finally block)
           if (showBadge) {
             feedback.removeOperationBadge(componentId);
           }
-          feedback.showActionError(button, error.message || 'An unknown error occurred');
 
-          // Show error toast for better visibility
-          feedback.showToast(
-            'error',
-            `${action.charAt(0).toUpperCase() + action.slice(1)} Failed`,
-            error.message || 'An unknown error occurred',
-            5000
-          );
+          // Log the error (no toast or inline error - transient status badge handles visibility)
+          logger.error(`${action.charAt(0).toUpperCase() + action.slice(1)} failed: ${error.message || 'Unknown error'}`);
         }
       });
     });
@@ -1865,7 +1811,18 @@ function updateComponentStatusBadge(componentId, status) {
 
   // Create new status badge for non-OK status
   const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
-  const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+  // Transient statuses: these show briefly then fade out
+  // Includes CUSS2 component statuses that are temporary conditions from SETUP/SEND failures
+  const temporaryStatuses = [
+    'WRONG_APPLICATION_STATE',
+    'MEDIA_PRESENT',
+    'MEDIA_ABSENT',
+    'SOFTWARE_ERROR',
+    'DATA_MISSING',
+    'HARDWARE_ERROR',
+    'CANCELLED',
+    'TIMED_OUT'
+  ];
   const isTemporary = temporaryStatuses.includes(status);
   const fadeClass = isTemporary ? 'fade-out' : '';
 

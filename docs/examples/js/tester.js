@@ -1520,7 +1520,8 @@ const componentBadges = {
       const isTemporaryBadge = existingStatusBadge.classList.contains('fade-out') ||
                                existingStatusBadge.classList.contains('status-wrong-application-state') ||
                                existingStatusBadge.classList.contains('status-media-present') ||
-                               existingStatusBadge.classList.contains('status-media-absent');
+                               existingStatusBadge.classList.contains('status-media-absent') ||
+                               existingStatusBadge.classList.contains('status-software-error');
 
       if (!isTemporaryBadge) {
         existingStatusBadge.remove();
@@ -1534,7 +1535,7 @@ const componentBadges = {
 
     // Create new status badge for non-OK status
     const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
-    const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+    const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT', 'SOFTWARE_ERROR'];
     const isTemporary = temporaryStatuses.includes(status);
     const fadeClass = isTemporary ? 'fade-out' : '';
 
@@ -2101,7 +2102,7 @@ const connectionManager = {
           console.log(`[MESSAGE EVENT] Received message: messageCode=${messageCode}, componentId=${componentId}`);
 
           // Show badge for temporary/informational message codes
-          const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+          const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT', 'SOFTWARE_ERROR'];
           const isTemporary = temporaryStatuses.includes(messageCode);
           console.log(`[MESSAGE EVENT] isTemporary=${isTemporary}, componentId !== undefined: ${componentId !== undefined}`);
 

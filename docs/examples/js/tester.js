@@ -53,69 +53,61 @@ const aeaCommands = {
 };
 
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
-// Truly characteristic-based detection: inspect what operations the component actually supports
+// ===== COMPONENT CAPABILITY DETECTION =====
+// Centralized capability detection: inspect what operations the component actually supports
 const componentCapabilities = {
-  // Get capabilities for a component by checking which methods it has
-  getCapabilities(component) {
-    const capabilities = [];
-
-    // Check for each possible capability by inspecting the component's methods
-    if (typeof component.query === 'function') {
-      capabilities.push('query');
+  // Get capabilities as an object (memoized per component)
+  get(component) {
+    // Return cached capabilities if available
+    if (component._capabilities) {
+      return component._capabilities;
     }
 
-    if (typeof component.cancel === 'function') {
-      capabilities.push('cancel');
-    }
+    // Detect capabilities by inspecting component methods
+    const caps = {
+      // Core actions
+      query: typeof component.query === 'function',
+      cancel: typeof component.cancel === 'function',
+      setup: typeof component.setup === 'function',
+      enable: typeof component.enable === 'function',
+      disable: typeof component.disable === 'function',
 
-    if (typeof component.setup === 'function') {
-      capabilities.push('setup');
-    }
+      // I/O operations
+      send: typeof component.send === 'function',
+      read: typeof component.read === 'function',
+      offer: typeof component.offer === 'function',
 
-    if (typeof component.enable === 'function') {
-      capabilities.push('enable');
-    }
+      // Playback controls (Announcement components)
+      play: typeof component.play === 'function',
+      pause: typeof component.pause === 'function',
+      resume: typeof component.resume === 'function',
+      stop: typeof component.stop === 'function',
 
-    if (typeof component.disable === 'function') {
-      capabilities.push('disable');
-    }
+      // Additional actions
+      forward: typeof component.forward === 'function',
+      backward: typeof component.backward === 'function',
+      process: typeof component.process === 'function'
+    };
 
-    if (typeof component.send === 'function') {
-      capabilities.push('send');
-    }
-
-    if (typeof component.read === 'function') {
-      capabilities.push('read');
-    }
-
-    if (typeof component.offer === 'function') {
-      capabilities.push('offer');
-    }
-
-    // Announcement-specific playback controls
-    if (typeof component.play === 'function') {
-      capabilities.push('play');
-    }
-
-    if (typeof component.pause === 'function') {
-      capabilities.push('pause');
-    }
-
-    if (typeof component.resume === 'function') {
-      capabilities.push('resume');
-    }
-
-    if (typeof component.stop === 'function') {
-      capabilities.push('stop');
-    }
-
-    return capabilities;
+    // Cache capabilities on component for performance
+    component._capabilities = caps;
+    return caps;
   },
 
-  // Check if a specific capability is allowed for this component
+  // Check if component has a specific capability
+  has(component, capability) {
+    return this.get(component)[capability] === true;
+  },
+
+  // Legacy method for backward compatibility (returns array)
+  getCapabilities(component) {
+    const caps = this.get(component);
+    return Object.keys(caps).filter(key => caps[key]);
+  },
+
+  // Legacy method for backward compatibility
   hasCapability(component, capability) {
-    const capabilities = this.getCapabilities(component);
-    return capabilities.includes(capability);
+    return this.has(component, capability);
   }
 };
 
@@ -648,7 +640,7 @@ const templates = {
 
     // Setup Enabled toggle (only if component supports it)
     const enabledToggleContainer = clone.querySelector('.enabled-toggle-container');
-    if (componentCapabilities.hasCapability(component, 'enable')) {
+    if (componentCapabilities.has(component, 'enable')) {
       enabledToggleContainer.style.display = '';
       const enabledToggle = clone.querySelector('.enabled-toggle-container .toggle-switch');
       enabledToggle.dataset.componentId = id;
@@ -664,11 +656,11 @@ const templates = {
 
     // Get capabilities and populate action columns
     // Inspect the component's actual methods to determine what it can do
-    const capabilities = componentCapabilities.getCapabilities(component);
+    const capabilities = componentCapabilities.get(component);
     const leftColumn = clone.querySelector('.left-column');
     const rightColumn = clone.querySelector('.right-column');
 
-      // Populate columns based on component type
+    // Populate columns based on component type
     this.populateActionColumns(leftColumn, rightColumn, id, component, capabilities);
 
     return clone;
@@ -677,7 +669,7 @@ const templates = {
   // Populate action columns based on component capabilities
   populateActionColumns(leftColumn, rightColumn, id, component, capabilities) {
     // Left column - Setup (most components)
-    if (capabilities.includes('setup')) {
+    if (capabilities.setup) {
       const setupTemplate = document.getElementById('setup-action-template');
       const setupClone = setupTemplate.content.cloneNode(true);
       const textarea = setupClone.querySelector('.setup-textarea');
@@ -717,7 +709,7 @@ const templates = {
     }
 
     // Right column - varies by component type
-    if (capabilities.includes('send')) {
+    if (capabilities.send) {
       // Output components (HEADSET, BOARDING_PASS_PRINTER, CONVEYOR)
       const sendTemplate = document.getElementById('send-action-template');
       const sendClone = sendTemplate.content.cloneNode(true);
@@ -757,15 +749,15 @@ const templates = {
       this.addButton(buttonsContainer, 'Send', 'send', id);
 
       // Add additional capability-based buttons
-      if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
-      if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
-      if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
-      if (capabilities.includes('cancel')) {
+      if (capabilities.forward) this.addButton(buttonsContainer, 'Forward', 'forward', id);
+      if (capabilities.backward) this.addButton(buttonsContainer, 'Backward', 'backward', id);
+      if (capabilities.process) this.addButton(buttonsContainer, 'Process', 'process', id);
+      if (capabilities.cancel) {
         this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
       }
 
       rightColumn.appendChild(sendClone);
-    } else if (capabilities.includes('play')) {
+    } else if (capabilities.play) {
       // Announcement components
       const playTemplate = document.getElementById('play-action-template');
       const playClone = playTemplate.content.cloneNode(true);
@@ -776,13 +768,13 @@ const templates = {
 
       // Add playback control buttons
       this.addButton(buttonsContainer, 'Play', 'play', id);
-      if (capabilities.includes('pause')) this.addButton(buttonsContainer, 'Pause', 'pause', id);
-      if (capabilities.includes('resume')) this.addButton(buttonsContainer, 'Resume', 'resume', id);
-      if (capabilities.includes('stop')) this.addButton(buttonsContainer, 'Stop', 'stop', id);
-      if (capabilities.includes('cancel')) this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
+      if (capabilities.pause) this.addButton(buttonsContainer, 'Pause', 'pause', id);
+      if (capabilities.resume) this.addButton(buttonsContainer, 'Resume', 'resume', id);
+      if (capabilities.stop) this.addButton(buttonsContainer, 'Stop', 'stop', id);
+      if (capabilities.cancel) this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
 
       rightColumn.appendChild(playClone);
-    } else if (capabilities.includes('read')) {
+    } else if (capabilities.read) {
       // Media input components
       const readTemplate = document.getElementById('read-action-template');
       const readClone = readTemplate.content.cloneNode(true);
@@ -840,7 +832,7 @@ const templates = {
 
       // Add Read and Cancel buttons
       this.addButton(buttonsContainer, 'Read', 'read', id);
-      if (capabilities.includes('cancel')) {
+      if (capabilities.cancel) {
         this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
       }
 
@@ -851,10 +843,10 @@ const templates = {
       const rightButtonsClone = rightButtonsTemplate.content.cloneNode(true);
       const buttonsContainer = rightButtonsClone.querySelector('.right-buttons');
 
-      if (capabilities.includes('offer')) {
+      if (capabilities.offer) {
         this.addButton(buttonsContainer, 'Offer', 'offer', id);
       }
-      if (capabilities.includes('cancel')) {
+      if (capabilities.cancel) {
         this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
       }
 

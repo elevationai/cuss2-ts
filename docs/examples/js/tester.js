@@ -53,138 +53,63 @@ const aeaCommands = {
 };
 
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
-// Based on the CUSS Virtual Component Concept and our new hierarchy
+// Truly characteristic-based detection: inspect what operations the component actually supports
 const componentCapabilities = {
-  // Get capabilities for a component based on its type
+  // Get capabilities for a component by checking which methods it has
   getCapabilities(component) {
-    const deviceType = component.deviceType?.toLowerCase() || '';
     const capabilities = [];
 
-    // All components have query (from BaseComponent)
-    capabilities.push('query');
-
-    // Most components have cancel and setup (from BaseComponent)
-    if (!this.isFeederComponent(deviceType)) {
-      capabilities.push('cancel', 'setup');
-    } else {
-      // Feeder only has query and offer
-      capabilities.push('offer');
-      return capabilities;
+    // Check for each possible capability by inspecting the component's methods
+    if (typeof component.query === 'function') {
+      capabilities.push('query');
     }
 
-    // Interactive components (enable/disable)
-    if (this.isInteractiveComponent(deviceType)) {
-      capabilities.push('enable', 'disable');
+    if (typeof component.cancel === 'function') {
+      capabilities.push('cancel');
     }
 
-    // Output components (send)
-    if (this.isOutputComponent(deviceType)) {
+    if (typeof component.setup === 'function') {
+      capabilities.push('setup');
+    }
+
+    if (typeof component.enable === 'function') {
+      capabilities.push('enable');
+    }
+
+    if (typeof component.disable === 'function') {
+      capabilities.push('disable');
+    }
+
+    if (typeof component.send === 'function') {
       capabilities.push('send');
     }
 
-    // Media components with offer capability
-    if (this.isMediaOfferCapable(deviceType)) {
-      capabilities.push('offer');
-    }
-
-    // Announcement components
-    if (this.isAnnouncementComponent(deviceType)) {
-      capabilities.push('play', 'pause', 'resume', 'stop');
-    }
-
-    // Input components with read capability
-    if (this.isDataReadCapable(deviceType)) {
+    if (typeof component.read === 'function') {
       capabilities.push('read');
     }
 
-    // Conveyor components
-    if (this.isConveyorComponent(deviceType)) {
-      capabilities.push('forward', 'backward', 'process');
+    if (typeof component.offer === 'function') {
+      capabilities.push('offer');
+    }
+
+    // Announcement-specific playback controls
+    if (typeof component.play === 'function') {
+      capabilities.push('play');
+    }
+
+    if (typeof component.pause === 'function') {
+      capabilities.push('pause');
+    }
+
+    if (typeof component.resume === 'function') {
+      capabilities.push('resume');
+    }
+
+    if (typeof component.stop === 'function') {
+      capabilities.push('stop');
     }
 
     return capabilities;
-  },
-
-  // Component type checkers based on CUSS Virtual Component Concept
-  isInteractiveComponent(type) {
-    // Components that can be enabled/disabled (all classes extending InteractiveComponent)
-    // Convert to lowercase and handle both underscore and non-underscore versions
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      // MediaInputComponent subclasses
-      'barcodereader', 'documentreader', 'cardreader', 'camera', 'rfid', 'passportreader',
-      // UserInputComponent subclasses
-      'keypad', 'keyboard',
-      // UserOutputComponent subclasses
-      'headset', 'biometric',
-      // MediaOutputComponent subclasses
-      'boardingpassprinter', 'bagtagprinter', 'printer', 'aeasbd',
-      // BaggageScaleComponent
-      'scale',
-      // DispenserComponent
-      'dispenser',
-      // InsertionBeltComponent
-      'insertionbelt',
-      // AnnouncementComponent - THIS WAS MISSING!
-      'announcement'
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isOutputComponent(type) {
-    // Components that can send data (OutputCapable interface)
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      // DataOutputComponent (extends BaseComponent)
-      'illumination',
-      // MediaOutputComponent (extends InteractiveComponent)
-      'boardingpassprinter', 'bagtagprinter', 'printer', 'aeasbd',
-      // UserOutputComponent (extends InteractiveComponent)
-      'headset', 'biometric',
-      // ConveyorComponent and subclasses
-      'insertionbelt', 'verificationbelt', 'parkingbelt',
-      // Note: Announcement does NOT have send, it has play/pause/resume/stop
-      // Note: BHS is DataInputComponent, does NOT have send
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isMediaOfferCapable(type) {
-    // DISPENSER type
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return normalizedType.includes('dispenser');
-  },
-
-  isAnnouncementComponent(type) {
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return normalizedType.includes('announcement');
-  },
-
-  isDataReadCapable(type) {
-    // Components with DataReadCapable interface
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      // MediaInputComponent subclasses
-      'barcodereader', 'documentreader', 'cardreader', 'passportreader',
-      'camera', 'rfid',
-      // BaggageScaleComponent
-      'scale',
-      // DataInputComponent
-      'bhs'
-      // Note: Biometric is UserOutputComponent, does NOT have read
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isConveyorComponent(type) {
-    // Belt components
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return [
-      'insertionbelt', 'verificationbelt', 'parkingbelt'
-    ].some(t => normalizedType.includes(t));
-  },
-
-  isFeederComponent(type) {
-    // Feeder has offer but no enable/disable per spec
-    const normalizedType = type.toLowerCase().replace(/_/g, '');
-    return normalizedType.includes('feeder');
   },
 
   // Check if a specific capability is allowed for this component
@@ -253,6 +178,35 @@ const urlUtils = {
     } catch (error) {
       return { hasMixedContent: false, error: error.message };
     }
+  },
+
+  // Update URL with connection parameters
+  updateUrlWithConnectionParams(formData) {
+    const params = new URLSearchParams();
+
+    // Required parameters
+    params.set('CLIENT-ID', formData.clientId);
+    params.set('CLIENT-SECRET', formData.clientSecret);
+    params.set('CUSS-WSS', formData.wss);
+
+    // Optional parameters - only add if they have values
+    if (formData.tokenUrl && formData.tokenUrl.trim()) {
+      params.set('OAUTH-URL', formData.tokenUrl);
+    }
+    if (formData.deviceId && formData.deviceId.trim()) {
+      params.set('DEVICE-ID', formData.deviceId);
+    }
+
+    // Preserve 'go' parameter if it was in the original URL
+    if (queryConfig.go) {
+      params.set('go', queryConfig.go);
+    }
+
+    // Update URL without triggering a page reload
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+
+    logger.info('URL updated with connection parameters');
   }
 };
 
@@ -877,6 +831,7 @@ const templates = {
     }
 
     // Get capabilities and populate action columns
+    // Inspect the component's actual methods to determine what it can do
     const capabilities = componentCapabilities.getCapabilities(component);
     const leftColumn = clone.querySelector('.left-column');
     const rightColumn = clone.querySelector('.right-column');
@@ -969,12 +924,10 @@ const templates = {
       // Add Send button
       this.addButton(buttonsContainer, 'Send', 'send', id);
 
-      // Add additional buttons for specific types
-      if (componentCapabilities.isConveyorComponent(component.deviceType)) {
-        if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
-        if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
-        if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
-      }
+      // Add additional capability-based buttons
+      if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
+      if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
+      if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
       if (capabilities.includes('cancel')) {
         this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
       }
@@ -2131,6 +2084,10 @@ const connectionManager = {
     await cuss2.connected;
 
     logger.success("Connected successfully!");
+
+    // Update URL with connection parameters for easy refresh/reconnection
+    urlUtils.updateUrlWithConnectionParams(config);
+
     ui.updateConnectionStatus("CONNECTED");
     dom.setButtonState(dom.elements.connectBtn, true);
     dom.setButtonState(dom.elements.disconnectBtn, false);

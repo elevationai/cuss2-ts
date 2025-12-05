@@ -225,6 +225,7 @@ const dom = {
     envDetails: null,
     stateButtons: {},
     appInfo: {},
+    availabilityReasons: null,
     // Panels
     connectionPanel: null,
     stateManagementPanel: null,
@@ -277,6 +278,9 @@ const dom = {
       accessibleMode: document.getElementById("accessibleMode"),
       language: document.getElementById("language"),
     };
+
+    // Availability requirements section
+    this.elements.availabilityReasons = document.getElementById("availabilityReasons");
   },
 
   // Get form values
@@ -977,6 +981,86 @@ const ui = {
     }
   },
 
+  // Update availability requirements section - shows why app is forced to UNAVAILABLE
+  updateAvailabilityReasons() {
+    const container = dom.elements.availabilityReasons;
+    if (!container) return;
+
+    // Guard: if not connected, clear and return
+    if (!cuss2) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const currentState = cuss2.state;
+    const blockers = cuss2.unavailableRequiredComponents || [];
+
+    // If no blockers OR not in UNAVAILABLE state, show healthy message
+    if (blockers.length === 0 || currentState !== ApplicationStateCodes.UNAVAILABLE) {
+      container.innerHTML = '<div class="availability-reasons-empty availability-reasons-healthy">All required devices are healthy. Application can transition to AVAILABLE when allowed by the current state.</div>';
+      return;
+    }
+
+    // Build the blocking components list
+    let html = '<div class="availability-reasons-header">Application forced to UNAVAILABLE by required devices:</div>';
+    html += '<div class="availability-reason-list">';
+
+    blockers.forEach(componentId => {
+      const component = cuss2.components?.[componentId];
+      const displayName = component?.deviceType || componentId;
+      const tags = [];
+
+      if (!component) {
+        // Component not found - offline or not reported
+        tags.push({ text: 'Required', className: 'required' });
+        tags.push({ text: 'Offline or not reported', className: 'error' });
+      } else {
+        // Always add Required tag
+        tags.push({ text: 'Required', className: 'required' });
+
+        let hasSpecificReason = false;
+
+        // Check ready state
+        if (component.ready === false) {
+          tags.push({ text: 'Not ready', className: 'error' });
+          hasSpecificReason = true;
+        }
+
+        // Check status
+        if (component.status && component.status !== 'OK') {
+          tags.push({ text: `Status: ${component.status}`, className: 'error' });
+          hasSpecificReason = true;
+        }
+
+        // Check if disabled but required
+        if (component.required && componentCapabilities.hasCapability(component, 'enable') && component.enabled === false) {
+          tags.push({ text: 'Disabled but required', className: 'error' });
+          hasSpecificReason = true;
+        }
+
+        // Generic fallback if no specific reason found
+        if (!hasSpecificReason) {
+          tags.push({ text: 'Unavailable (required component)', className: 'error' });
+        }
+      }
+
+      // Build tags HTML
+      const tagsHtml = tags.map(tag =>
+        `<span class="availability-reason-tag ${tag.className}">${tag.text}</span>`
+      ).join('');
+
+      html += `
+        <div class="availability-reason-item">
+          <div class="availability-reason-title">${displayName}</div>
+          <div class="availability-reason-tags">${tagsHtml}</div>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+  },
+
   // Update state transition buttons
   updateStateButtons(currentState) {
     // Disable all buttons first
@@ -1150,6 +1234,8 @@ const ui = {
 
           // Update state buttons to reflect new required component status
           ui.updateStateButtons(cuss2.state);
+          // Update availability reasons to reflect required component change
+          ui.updateAvailabilityReasons();
         } catch (error) {
           logger.error(`Failed to toggle required state: ${error.message}`);
           // Revert on error
@@ -1922,6 +2008,7 @@ const connectionManager = {
           logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
           ui.updateStateDisplay(stateChange.current);
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
+          ui.updateAvailabilityReasons();
 
           // Set applicationOnline flag to enable required component monitoring
           // Online when in AVAILABLE or ACTIVE (user is present)
@@ -1956,6 +2043,7 @@ const connectionManager = {
           ui.updateApplicationInfo(false);
           // Update the state display and buttons to reflect new state
           ui.updateStateDisplay(newState);
+          ui.updateAvailabilityReasons();
           // Dismiss timeout warning when leaving ACTIVE state
           ui.dismissTimeoutWarning();
           // Dismiss accessible mode toast when leaving ACTIVE state
@@ -1971,6 +2059,8 @@ const connectionManager = {
           componentHandlers.updateAllToggleStates();
           // Update state buttons to reflect required component availability
           ui.updateStateButtons(cuss2.state);
+          // Update availability reasons to reflect component health
+          ui.updateAvailabilityReasons();
           // Update the status badge to reflect the new component status
           updateComponentStatusBadge(component.id, component.status);
           // Update the ready badge to reflect the new component ready state
@@ -2105,6 +2195,7 @@ const connectionManager = {
     ui.displayEnvironment(cuss2.environment);
     ui.displayComponents();
     ui.updateStateDisplay(cuss2.state);
+    ui.updateAvailabilityReasons();
 
     // Setup component listeners
     componentHandlers.setupComponentListeners();

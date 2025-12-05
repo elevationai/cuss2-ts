@@ -1387,3 +1387,76 @@ input.field-problem {
   cursor: not-allowed;
   transform: none;
 }
+
+/* ===== AVAILABILITY REQUIREMENTS ===== */
+.availability-reasons {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(100, 255, 218, 0.1);
+  font-size: 13px;
+}
+
+.availability-reasons-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #ffc107;
+}
+
+.availability-reason-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.availability-reason-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(100, 255, 218, 0.15);
+}
+
+.availability-reason-title {
+  font-weight: 500;
+  color: #64ffda;
+}
+
+.availability-reason-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.availability-reason-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  color: #94a3b8;
+}
+
+.availability-reason-tag.required {
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+.availability-reason-tag.error {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.availability-reasons-empty {
+  font-style: italic;
+  color: #9ca3af;
+}
+
+.availability-reasons-healthy {
+  color: #64ffda;
+  font-style: normal;
+}

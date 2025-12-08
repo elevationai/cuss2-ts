@@ -52,6 +52,24 @@ const aeaCommands = {
   }
 };
 
+// ===== COMPONENT HELPERS =====
+// Shared utilities for working with CUSS2 components
+
+/**
+ * Get a display-friendly label for a component.
+ * Prefers deviceType, falls back to stringified ID.
+ * @param {string|object} id - Component ID (may be string or object)
+ * @param {object} component - Component object (may be null/undefined)
+ * @returns {string} Display label
+ */
+const getComponentDisplayName = (id, component) => {
+  const idStr = (typeof id === 'string') ? id : String(id);
+  if (component && typeof component.deviceType === 'string' && component.deviceType) {
+    return component.deviceType;
+  }
+  return idStr;
+};
+
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
 // Truly characteristic-based detection: inspect what operations the component actually supports
 const componentCapabilities = {
@@ -1018,15 +1036,6 @@ const ui = {
       return;
     }
 
-    // Helper to safely get device label - fixes [object Object] bug
-    const getDeviceLabel = (id, component) => {
-      const idStr = (typeof id === 'string') ? id : String(id);
-      if (component && typeof component.deviceType === 'string' && component.deviceType) {
-        return component.deviceType;
-      }
-      return idStr;
-    };
-
     // Helper to determine if a component ID is in the blockers list
     const isBlocking = (id) => {
       return blockers.some(blockerId => {
@@ -1056,7 +1065,7 @@ const ui = {
 
     // Build each device item using templates
     requiredDevices.forEach(({ id, component }) => {
-      const displayName = getDeviceLabel(id, component);
+      const displayName = getComponentDisplayName(id, component);
       const tags = [];
       const deviceIsBlocking = isBlocking(id);
 

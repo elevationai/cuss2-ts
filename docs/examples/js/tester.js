@@ -1059,7 +1059,9 @@ const ui = {
       // Always add Required tag
       tags.push({ text: 'Required', className: 'required' });
 
-      // Determine health status
+      // Determine health status based on ready state and status only
+      // Note: "Disabled" is intentionally NOT shown in this summary panel -
+      // the per-device detail section has toggles for that
       let isHealthy = true;
 
       if (!component) {
@@ -1076,12 +1078,6 @@ const ui = {
         // Check status
         if (component.status && component.status !== 'OK') {
           tags.push({ text: `Status: ${component.status}`, className: 'error' });
-          isHealthy = false;
-        }
-
-        // Check if disabled but required
-        if (componentCapabilities.hasCapability(component, 'enable') && component.enabled === false) {
-          tags.push({ text: 'Disabled', className: 'error' });
           isHealthy = false;
         }
       }
@@ -1101,8 +1097,15 @@ const ui = {
         `<span class="availability-reason-tag ${tag.className}">${tag.text}</span>`
       ).join('');
 
-      // Add blocking class to item if it's blocking availability
-      const itemClass = (deviceIsBlocking && isUnavailable) ? 'availability-reason-item blocking' : 'availability-reason-item';
+      // Determine row class based on health and blocking status
+      let itemClass = 'availability-reason-item';
+      if (deviceIsBlocking && isUnavailable) {
+        itemClass += ' blocking';
+      } else if (isHealthy) {
+        itemClass += ' healthy';
+      } else {
+        itemClass += ' unhealthy';
+      }
 
       html += `
         <div class="${itemClass}">

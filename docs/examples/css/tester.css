@@ -1431,9 +1431,19 @@ input.field-problem {
   border: 1px solid rgba(100, 255, 218, 0.15);
 }
 
+.availability-reason-item.healthy {
+  border-color: rgba(100, 255, 218, 0.3);
+  background: rgba(100, 255, 218, 0.03);
+}
+
+.availability-reason-item.unhealthy {
+  border-color: rgba(255, 193, 7, 0.4);
+  background: rgba(255, 193, 7, 0.03);
+}
+
 .availability-reason-item.blocking {
-  border-color: rgba(255, 107, 107, 0.4);
-  background: rgba(255, 107, 107, 0.05);
+  border-color: rgba(255, 107, 107, 0.5);
+  background: rgba(255, 107, 107, 0.08);
 }
 
 .availability-reason-title {

@@ -981,7 +981,7 @@ const ui = {
     }
   },
 
-  // Update availability requirements section - shows why app is forced to UNAVAILABLE
+  // Update required devices section - shows all required devices and their health status
   updateAvailabilityReasons() {
     const container = dom.elements.availabilityReasons;
     if (!container) return;
@@ -995,53 +995,105 @@ const ui = {
     const currentState = cuss2.state;
     const blockers = cuss2.unavailableRequiredComponents || [];
 
-    // If no blockers OR not in UNAVAILABLE state, show healthy message
-    if (blockers.length === 0 || currentState !== ApplicationStateCodes.UNAVAILABLE) {
-      container.innerHTML = '<div class="availability-reasons-empty availability-reasons-healthy">All required devices are healthy. Application can transition to AVAILABLE when allowed by the current state.</div>';
+    // Get all required devices from the components list
+    const requiredDevices = [];
+    if (cuss2.components) {
+      Object.entries(cuss2.components).forEach(([id, component]) => {
+        if (component && component.required === true) {
+          requiredDevices.push({ id, component });
+        }
+      });
+    }
+
+    // Case 1: No required devices configured at all
+    if (requiredDevices.length === 0) {
+      container.innerHTML = '<div class="availability-reasons-empty">No required devices are configured for this application.</div>';
       return;
     }
 
-    // Build the blocking components list
-    let html = '<div class="availability-reasons-header">Application forced to UNAVAILABLE by required devices:</div>';
+    // Helper to safely get device label - fixes [object Object] bug
+    const getDeviceLabel = (id, component) => {
+      // Ensure id is a string, not an object
+      const idStr = (typeof id === 'string') ? id : String(id);
+      // Prefer deviceType, fallback to id string
+      if (component && typeof component.deviceType === 'string' && component.deviceType) {
+        return component.deviceType;
+      }
+      return idStr;
+    };
+
+    // Helper to determine if a component ID is in the blockers list
+    const isBlocking = (id) => {
+      // Handle both string IDs and object IDs in blockers array
+      return blockers.some(blockerId => {
+        const blockerIdStr = (typeof blockerId === 'string') ? blockerId : String(blockerId);
+        const idStr = (typeof id === 'string') ? id : String(id);
+        return blockerIdStr === idStr;
+      });
+    };
+
+    // Case 2: Required devices exist - build the full list
+    let html = '';
+
+    // Show warning block when UNAVAILABLE with blockers
+    const hasBlockers = blockers.length > 0;
+    const isUnavailable = currentState === ApplicationStateCodes.UNAVAILABLE;
+
+    if (isUnavailable && hasBlockers) {
+      html += `
+        <div class="availability-reasons-warning">
+          <strong>Application forced to UNAVAILABLE</strong> because the following required devices are unhealthy.
+          Until these devices are healthy, the application cannot transition back to AVAILABLE or ACTIVE.
+        </div>
+      `;
+    }
+
+    // Build the required devices list
     html += '<div class="availability-reason-list">';
 
-    blockers.forEach(componentId => {
-      const component = cuss2.components?.[componentId];
-      const displayName = component?.deviceType || componentId;
+    requiredDevices.forEach(({ id, component }) => {
+      const displayName = getDeviceLabel(id, component);
       const tags = [];
+      const deviceIsBlocking = isBlocking(id);
+
+      // Always add Required tag
+      tags.push({ text: 'Required', className: 'required' });
+
+      // Determine health status
+      let isHealthy = true;
 
       if (!component) {
-        // Component not found - offline or not reported
-        tags.push({ text: 'Required', className: 'required' });
+        // Component object missing - offline or not reported
         tags.push({ text: 'Offline or not reported', className: 'error' });
+        isHealthy = false;
       } else {
-        // Always add Required tag
-        tags.push({ text: 'Required', className: 'required' });
-
-        let hasSpecificReason = false;
-
         // Check ready state
         if (component.ready === false) {
           tags.push({ text: 'Not ready', className: 'error' });
-          hasSpecificReason = true;
+          isHealthy = false;
         }
 
         // Check status
         if (component.status && component.status !== 'OK') {
           tags.push({ text: `Status: ${component.status}`, className: 'error' });
-          hasSpecificReason = true;
+          isHealthy = false;
         }
 
         // Check if disabled but required
-        if (component.required && componentCapabilities.hasCapability(component, 'enable') && component.enabled === false) {
-          tags.push({ text: 'Disabled but required', className: 'error' });
-          hasSpecificReason = true;
+        if (componentCapabilities.hasCapability(component, 'enable') && component.enabled === false) {
+          tags.push({ text: 'Disabled', className: 'error' });
+          isHealthy = false;
         }
+      }
 
-        // Generic fallback if no specific reason found
-        if (!hasSpecificReason) {
-          tags.push({ text: 'Unavailable (required component)', className: 'error' });
-        }
+      // Add blocking indicator if this device is in the blockers list and app is UNAVAILABLE
+      if (deviceIsBlocking && isUnavailable) {
+        tags.push({ text: 'Blocking availability', className: 'blocking' });
+      }
+
+      // Add healthy tag if device is healthy
+      if (isHealthy) {
+        tags.push({ text: 'Healthy', className: 'healthy' });
       }
 
       // Build tags HTML
@@ -1049,8 +1101,11 @@ const ui = {
         `<span class="availability-reason-tag ${tag.className}">${tag.text}</span>`
       ).join('');
 
+      // Add blocking class to item if it's blocking availability
+      const itemClass = (deviceIsBlocking && isUnavailable) ? 'availability-reason-item blocking' : 'availability-reason-item';
+
       html += `
-        <div class="availability-reason-item">
+        <div class="${itemClass}">
           <div class="availability-reason-title">${displayName}</div>
           <div class="availability-reason-tags">${tagsHtml}</div>
         </div>

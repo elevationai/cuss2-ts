@@ -251,6 +251,29 @@
       </div>
     </template>
 
+    <!-- Required Devices Templates -->
+    <template id="required-devices-warning-template">
+      <div class="availability-reasons-warning">
+        <strong>Application forced to UNAVAILABLE</strong> because the following required devices are unhealthy.
+        Until these devices are healthy, the application cannot transition back to AVAILABLE or ACTIVE.
+      </div>
+    </template>
+
+    <template id="required-devices-empty-template">
+      <div class="availability-reasons-empty">No required devices are configured for this application.</div>
+    </template>
+
+    <template id="required-device-item-template">
+      <div class="availability-reason-item">
+        <div class="availability-reason-title"></div>
+        <div class="availability-reason-tags"></div>
+      </div>
+    </template>
+
+    <template id="required-device-tag-template">
+      <span class="availability-reason-tag"></span>
+    </template>
+
     <!-- Include the CUSS2 library and application JavaScript -->
     <script type="module" src="js/tester.js"></script>
   </body>

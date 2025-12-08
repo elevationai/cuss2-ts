@@ -982,13 +982,18 @@ const ui = {
   },
 
   // Update required devices section - shows all required devices and their health status
+  // Uses template-based DOM manipulation (not string concatenation) per project guidelines
   updateAvailabilityReasons() {
     const container = dom.elements.availabilityReasons;
     if (!container) return;
 
-    // Guard: if not connected, clear and return
+    // Clear existing content using DOM methods
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // Guard: if not connected, leave empty and return
     if (!cuss2) {
-      container.innerHTML = '';
       return;
     }
 
@@ -1005,17 +1010,17 @@ const ui = {
       });
     }
 
-    // Case 1: No required devices configured at all
+    // Case 1: No required devices configured - show empty state from template
     if (requiredDevices.length === 0) {
-      container.innerHTML = '<div class="availability-reasons-empty">No required devices are configured for this application.</div>';
+      const emptyTemplate = document.getElementById('required-devices-empty-template');
+      const emptyClone = emptyTemplate.content.cloneNode(true);
+      container.appendChild(emptyClone);
       return;
     }
 
     // Helper to safely get device label - fixes [object Object] bug
     const getDeviceLabel = (id, component) => {
-      // Ensure id is a string, not an object
       const idStr = (typeof id === 'string') ? id : String(id);
-      // Prefer deviceType, fallback to id string
       if (component && typeof component.deviceType === 'string' && component.deviceType) {
         return component.deviceType;
       }
@@ -1024,7 +1029,6 @@ const ui = {
 
     // Helper to determine if a component ID is in the blockers list
     const isBlocking = (id) => {
-      // Handle both string IDs and object IDs in blockers array
       return blockers.some(blockerId => {
         const blockerIdStr = (typeof blockerId === 'string') ? blockerId : String(blockerId);
         const idStr = (typeof id === 'string') ? id : String(id);
@@ -1032,25 +1036,25 @@ const ui = {
       });
     };
 
-    // Case 2: Required devices exist - build the full list
-    let html = '';
+    // Get template references
+    const warningTemplate = document.getElementById('required-devices-warning-template');
+    const itemTemplate = document.getElementById('required-device-item-template');
+    const tagTemplate = document.getElementById('required-device-tag-template');
 
     // Show warning block when UNAVAILABLE with blockers
     const hasBlockers = blockers.length > 0;
     const isUnavailable = currentState === ApplicationStateCodes.UNAVAILABLE;
 
     if (isUnavailable && hasBlockers) {
-      html += `
-        <div class="availability-reasons-warning">
-          <strong>Application forced to UNAVAILABLE</strong> because the following required devices are unhealthy.
-          Until these devices are healthy, the application cannot transition back to AVAILABLE or ACTIVE.
-        </div>
-      `;
+      const warningClone = warningTemplate.content.cloneNode(true);
+      container.appendChild(warningClone);
     }
 
-    // Build the required devices list
-    html += '<div class="availability-reason-list">';
+    // Create a list container
+    const listEl = document.createElement('div');
+    listEl.className = 'availability-reason-list';
 
+    // Build each device item using templates
     requiredDevices.forEach(({ id, component }) => {
       const displayName = getDeviceLabel(id, component);
       const tags = [];
@@ -1060,22 +1064,17 @@ const ui = {
       tags.push({ text: 'Required', className: 'required' });
 
       // Determine health status based on ready state and status only
-      // Note: "Disabled" is intentionally NOT shown in this summary panel -
-      // the per-device detail section has toggles for that
+      // Note: "Disabled" is intentionally NOT shown in this summary panel
       let isHealthy = true;
 
       if (!component) {
-        // Component object missing - offline or not reported
         tags.push({ text: 'Offline or not reported', className: 'error' });
         isHealthy = false;
       } else {
-        // Check ready state
         if (component.ready === false) {
           tags.push({ text: 'Not ready', className: 'error' });
           isHealthy = false;
         }
-
-        // Check status
         if (component.status && component.status !== 'OK') {
           tags.push({ text: `Status: ${component.status}`, className: 'error' });
           isHealthy = false;
@@ -1092,31 +1091,37 @@ const ui = {
         tags.push({ text: 'Healthy', className: 'healthy' });
       }
 
-      // Build tags HTML
-      const tagsHtml = tags.map(tag =>
-        `<span class="availability-reason-tag ${tag.className}">${tag.text}</span>`
-      ).join('');
+      // Clone item template and populate
+      const itemClone = itemTemplate.content.cloneNode(true);
+      const itemEl = itemClone.querySelector('.availability-reason-item');
+      const titleEl = itemClone.querySelector('.availability-reason-title');
+      const tagsContainer = itemClone.querySelector('.availability-reason-tags');
+
+      // Set title text
+      titleEl.textContent = displayName;
 
       // Determine row class based on health and blocking status
-      let itemClass = 'availability-reason-item';
       if (deviceIsBlocking && isUnavailable) {
-        itemClass += ' blocking';
+        itemEl.classList.add('blocking');
       } else if (isHealthy) {
-        itemClass += ' healthy';
+        itemEl.classList.add('healthy');
       } else {
-        itemClass += ' unhealthy';
+        itemEl.classList.add('unhealthy');
       }
 
-      html += `
-        <div class="${itemClass}">
-          <div class="availability-reason-title">${displayName}</div>
-          <div class="availability-reason-tags">${tagsHtml}</div>
-        </div>
-      `;
+      // Add tags using the tag template
+      tags.forEach(tag => {
+        const tagClone = tagTemplate.content.cloneNode(true);
+        const tagEl = tagClone.querySelector('.availability-reason-tag');
+        tagEl.textContent = tag.text;
+        tagEl.classList.add(tag.className);
+        tagsContainer.appendChild(tagClone);
+      });
+
+      listEl.appendChild(itemClone);
     });
 
-    html += '</div>';
-    container.innerHTML = html;
+    container.appendChild(listEl);
   },
 
   // Update state transition buttons

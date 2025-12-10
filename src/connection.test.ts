@@ -730,7 +730,7 @@ Deno.test(
       attemptCount++;
       if (attemptCount === 2) return;
       return () => {
-        ws.close(4001, "Testing Failure");
+        ws.close(1006, "Testing Failure");
       };
     });
 
@@ -1404,7 +1404,7 @@ Deno.test(
       attemptCount++;
       if (attemptCount < 3) {
         return () => {
-          ws.close(4001, "Testing Failure");
+          ws.close(1006, "Testing Failure");
         };
       }
       return undefined; // Success on third attempt
@@ -1659,7 +1659,7 @@ Deno.test(
       if (wsAttempts < 3) {
         return () => {
           // Simulate connection failure
-          setTimeout(() => ws.close(4000, "Test failure"), 5);
+          setTimeout(() => ws.close(1006, "Test failure"), 5);
         };
       }
       return undefined; // Success on 3rd attempt

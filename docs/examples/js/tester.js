@@ -4,6 +4,31 @@ const { ApplicationStateCodes, ComponentState, MessageCodes } = Models;
 
 let cuss2 = null;
 
+// ===== ERROR STATUS EXTRACTION =====
+/**
+ * Extract CUSS status code from an error object.
+ * The CUSS2 library throws PlatformResponseError with a messageCode property
+ * containing the CUSS status (e.g., WRONG_APPLICATION_STATE, SOFTWARE_ERROR).
+ * @param {Error} error - The error object to extract status from
+ * @returns {string|null} The CUSS status code or null if not found
+ */
+function extractStatusCodeFromError(error) {
+  if (!error) return null;
+
+  // PlatformResponseError from cuss2 library has messageCode property
+  if (error.messageCode && typeof error.messageCode === 'string') {
+    return error.messageCode;
+  }
+
+  // Fallback: parse from message text "Platform returned status code: X"
+  if (typeof error.message === 'string') {
+    const match = error.message.match(/status code:\s*([A-Z_]+)/i);
+    if (match) return match[1].toUpperCase();
+  }
+
+  return null;
+}
+
 // ===== TEST DATA DEFINITIONS =====
 // Company logo ITPS command (used in SETUP for printers)
 const companyLogo = 'LT0146940A020101000000001D01630064006400000000000000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001240001001E016400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C4FF9FDEFFC1FCC3FFC1FE7FDEFFC1FCC3FFC1F9C2FF03DCFFC1FCC3FFC1E7C1FF81C1FE07DBFFC1FCC3FF9FC1FC7FC1FFC1F87FDAFFC1FCC2FFC1FE7FC1E3C3FF9FDAFFC1FCC2FFC1FDC1FF3FC3FFC1F3DAFFC1FCC2FFC1F3C1FCC4FFC1FCDAFFC1FCC2FFC1E7C1F3C5FF7FD9FFC1FCC2FFC1DFC1E7C1FFC1F0003FC2FFC1F7D8FFC1FCC2FFBF9FC1FFC20003C2FFC1F9D8FFC1FCC2FFC27FC1F80FC1FFC1C07FC1FFC1FCD8FFC1FCC1FFC1FEC1FCC1FFC1C0C2FFC1FC0FC1FFC1FE7FD7FFC1FCC1FFC1FDC1FBC1FF07C3FF83C2FFBFD7FFC1FCC1FFC1FBC1F7C1FE1FC3FFC1E1C2FFC1DFD7FFC1FCC1FFC1F7C1EFC1F87FC3FFC1F87FC1FFC1EFD7FFC1FCC1FFC1EFC1DFC1F1C4FFC1FE3FC1FFC1E7D7FFC1FCC1FFC1DFBFC1C3C5FF8FC2F7D7FFC1FCC1FFC1DF7F8FC5FFC1C7C2FBD7FFC1FCC1FFBE7F1FC5FFC1E3C2FDD7FFC1FCC1FF7EC1FE3FC5FFC1F1C2FCD7FFC1FCC1FF7DC1FC7FC5FFC1F8C2FED7FFC1FCC1FEC1FBC1F8C6FFC1FCC37FD6FFC1FCC1FCC1F3C1F1C6FFC1FE3FBF7FD6FFC1FCC1FDC1F7C1F3C7FF1FC2BFD6FFC1FCC1FBC1EFC1E7C7FF9FC2DFD6FFC1FCC1FBC1EFC1CFC7FFC1CFC1FFC1DFD6FFC1FCC1F3C1DFC1CFC7FFC1C7C2EFD6FFC1FCC1F7C1DF9FC7FFC2E7C1EFD6FFC1FCC1F7BF3FC7FFC1F3C1F7C1EFD6FFC1FCC1EFBF3FC7FFC1F3C2F7D6FFC1FCC1EF7E3FC7FFC1F9C1FBC1F7D6FFC1FCC1CF7E7FC7FFC1F9C2FBD6FFC1FCC1DF7C7FC7FFC1FCC1FDC1FBD6FFC1FCC1DEC1FCC8FFC1FCC1FDC1FBD6FFC1FCC1DEC1FCC8FFC1FCC2FDD6FFC1FCBEC1F9C1FFC1E00003C1FFC1EFC2FFC1FE7FC1FDC1FFC1C00007C1FFC1DFC1FFC1F7C2FFBFC1FFC1C00007C1FFC1C00007C1FFC1C00FC1FCBDC1F9C1FFC1C00001C1FFC1C3C2FFC1FE7EC1FDC1FF800003C1FF8FC1FFC1E3C2FF1FC1FF800003C1FF800003C1FF8001C1FCBDC1F9C1FFC1C00001C1FFC1C3C2FFC1FE7EC1FDC1FF800003C1FF87C1FFC1C3C1FFC1FE0FC1FF800003C1FF800003C1FF80007CBDC1F9C1FFC1E00003C1FFC1C3C3FF3EC2FFC1C00003C1FF87C1FFC1C3C1FFC1FE0FC1FFC1C00003C1FFC1C00007C1FFC1C0003CBDC1F3C5FFC1C3C3FF3EC1FEC5FFC1C3C1FF87C1FFC1FE0FCAFFC1F81C7DC1F3C5FFC1C3C3FF3F7EC5FFC1C3C1FF87C1FFC1FC07CAFFC1FE0C7FC1F3C5FFC1C3C3FF3F7EC5FFC1E1C1FF8FC1FFC1FC07CBFF0C7BC1F3C5FFC1C3C3FF3FC1FEC5FFC1E1C1FF0FC1FFC1F843C2FFC1E7C6FFC1DFC1FF847BC1F3C5FFC1C3C3FF3FC1FEC5FFC1F1C1FF1FC1FFC1F843C2FFC1C3C6FF8FC1FF847BC1F3C5FFC1C3C3FFBFC1FEC5FFC1F0C1FE1FC1FFC1F0C1E1C2FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF9FC1FEC5FFC1F0C1FE1FC1FFC1F0C1E1C2FFC1C3C6FF8FC1FFC1C07BC1F3C1FFC1E00001C1FFC1C3C3FF9FC1FEC1FFC1C00003C1FFC1F87E3FC1FFC2F1C2FFC1C3C2FFC1C00003C1FF8FC1FFC1C07BC1F3C1FFC1C00001C1FFC1C3C3FF9FC1FEC1FF800003C1FFC1F87C3FC1FFC1E1C1F0C2FFC1C3C2FF800003C1FF8FC1FFC1C07BC1F3C1FFC1E00001C1FFC1C3C3FF9FC1FEC1FFC1C00003C1FFC1FC7C7FC1FFC1E1C1F0C2FFC1C3C2FF800003C1FF8FC1FFC1C07BC1F3C5FFC1C3C3FF9FC1FEC5FFC1FC387FC1FFC1C3C1F87FC1FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE387FC1FFC1C3C1F87FC1FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE10C2FFC1C7C1FC7FC1FFC1C3C6FF8FC1FF847BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE10C2FF87C1FC3FC1FFC1C3C6FF8FC1FF847FC1F3C5FFC1C3C3FF3FC1FEC6FF01C2FF87C1FE3FC1FFC1C3C6FF8FC1FF0CBDC1F3C5FFC1C3C3FF3FC1FEC6FF01C2FF0FC1FE1FC1FFC1C3C6FF8FC1FE0CBDC1F3C5FFC1C3C3FF3FC1FEC6FF81C2FF0FC1FE1FC1FFC1C3C6FF8FC1F81CBDC1F9C1FFC1E00003C1FFC1C00003C1FE7FC1FEC1FFC1C00007C2FF83C1FFC1FE1FC1FF1FC1FFC1C3C2FFC1C00007C1FF80003CBDC1F9C1FFC1C00001C1FFC1C00001C1FE7FC2FF800003C2FF83C1FFC1FE1FC1FF0FC1FFC1C3C2FF800003C1FF80007CBDC1F9C1FFC1C00001C1FFC1C00001C1FE7FC1FDC1FF800003C2FFC1C7C1FFC1FE1FC1FF8FC1FFC1C3C2FF800003C1FF8001C1FCC1FEC1FCC1FFC1E00003C1FFC1E00003C1FE7FC1FDC1FFC1C00003C2FFC1E7C2FF3FC1FF9FC1FFC1E7C2FFC1C00007C1FFC1C00FC1FCC1DEC1FCC8FFC1FCC1FFC1FDD6FFC1FCC1DEC1FCC8FFC1FCC1FFC1FDD6FFC1FCC1DF7E7FC7FFC1F9C1FFC1FBD6FFC1FCC1EF7E7FC7FFC1F9C1FFC1FBD6FFC1FCC1EFBF3FC7FFC1F1C1FFC1FBD6FFC1FCC1EFBF3FC7FFC1F3C1FFC1F7D6FFC1FCC1F7BF9FC7FFC1E7C1FFC1F7D6FFC1FCC1F7C1DF9FC7FFC1E7C1FFC1EFD6FFC1FCC1FBC1DFC1CFC7FFC1CFC1FFC1EFD6FFC1FCC1FBC1EFC1C7C7FF8FC1FFC1EFD6FFC1FCC1FDC1E7C1E3C7FF1FC1FFC1DFD6FFC1FCC1FDC1F7C1F3C7FF3FC1FFC1DFD6FFC1FCC1FEC1FBC1F9C6FFC1FE7FC1FFBFD6FFC1FCC1FEC1FBC1FCC6FFC1FCC2FF3FD6FFC1FCC1FF7DC1FE7FC5FFC1F9C2FF7FD6FFC1FCC1FFBEC1FF3FC5FFC1F1C1FFC1FED7FFC1FCC1FFBF7F8FC5FFC1E7C1FFC1FED7FFC1FCC2FF3FC1C7C5FF8FC1FFC1FDD7FFC1FCC2FFC1DFC1E3C5FF1FC1FFC1FBD7FFC1FCC2FFC1CFC1F0C4FFC1FC3FC1FFC1F7D7FFC1FCC2FFC1E7C1FC3FC3FFC1F0C1FFBFC1E7D7FFC1FCC2FFC1F3C1FF0FC3FFC1C3C1FF3FC1EFD7FFC1FCC2FFC1FDC1FFC1C3C3FF0FC1FEC1FFC1DFD7FFC1FCC2FFC1FEC1FFC1F03FC1FFC1F83FC1FDC1FFBFD7FFC1FCC3FF3FC1FC01C1FE00C1FFC1F3C1FF7FD7FFC1FCC3FFC1DFC1FFC1C00007C1FFC1E7C1FED8FFC1FCC3FFC1E7C2FF87C2FF9FC1F9D8FFC1FCC3FFC1F9C4FFC1FE7FC1F3D8FFC1FCC3FFC1FE7FC3FFC1F9C1FFC1EFD8FFC1FCC4FF8FC3FFC1C7C1FF9FD8FFC1FCC4FFC1F1C2FFC1E3FC1FF7FD8FFC1FCC4FFC1FE1FC1FFC1E1C1FFC1FCD9FFC1FCC5FFC1E0001FC1FFC1F3D9FFC1FCC9FFC1CFD9FFC1FCC9FF3FD9FFC1FCC8FFC1F8DAFFC1FCC8FFC1C7DAFFC1FCC7FFC1F07FDAFFC1FCC6FFC1FC0FDBFFC1FC';
@@ -51,6 +76,9 @@ const aeaCommands = {
     'Test Passport MRZ (TEST TESTER)': testPassportMRZ
   }
 };
+
+// ===== COMPONENT HELPERS =====
+// Shared utilities for working with CUSS2 components
 
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
 // Truly characteristic-based detection: inspect what operations the component actually supports
@@ -178,6 +206,35 @@ const urlUtils = {
     } catch (error) {
       return { hasMixedContent: false, error: error.message };
     }
+  },
+
+  // Update URL with connection parameters
+  updateUrlWithConnectionParams(formData) {
+    const params = new URLSearchParams();
+
+    // Required parameters
+    params.set('CLIENT-ID', formData.clientId);
+    params.set('CLIENT-SECRET', formData.clientSecret);
+    params.set('CUSS-WSS', formData.wss);
+
+    // Optional parameters - only add if they have values
+    if (formData.tokenUrl && formData.tokenUrl.trim()) {
+      params.set('OAUTH-URL', formData.tokenUrl);
+    }
+    if (formData.deviceId && formData.deviceId.trim()) {
+      params.set('DEVICE-ID', formData.deviceId);
+    }
+
+    // Preserve 'go' parameter if it was in the original URL
+    if (queryConfig.go) {
+      params.set('go', queryConfig.go);
+    }
+
+    // Update URL without triggering a page reload
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+
+    logger.info('URL updated with connection parameters');
   }
 };
 
@@ -196,6 +253,8 @@ const dom = {
     envDetails: null,
     stateButtons: {},
     appInfo: {},
+    unavailableWarning: null,
+    availabilityReasons: null,
     // Panels
     connectionPanel: null,
     stateManagementPanel: null,
@@ -253,6 +312,10 @@ const dom = {
       accessibleMode: document.getElementById("accessibleMode"),
       language: document.getElementById("language"),
     };
+
+    // Unavailable warning and availability requirements section
+    this.elements.unavailableWarning = document.getElementById("unavailableWarning");
+    this.elements.availabilityReasons = document.getElementById("availabilityReasons");
   },
 
   // Get form values
@@ -362,6 +425,143 @@ const logger = {
   event(message) {
     this.log(message, this.types.EVENT);
   },
+};
+
+// ===== UI FEEDBACK UTILITY =====
+const feedback = {
+  // ARIA live region for accessibility
+  _ariaRegion: null,
+
+  // Initialize feedback system
+  init() {
+    this._ariaRegion = document.getElementById('ariaLiveRegion');
+  },
+
+  // ===== BUTTON STATE MANAGEMENT =====
+
+  /**
+   * Set button to loading state with fixed dimensions
+   * @param {HTMLButtonElement} button
+   * @param {string} _loadingText - Ignored (kept for API compatibility)
+   */
+  setButtonLoading(button, _loadingText = null) {
+    if (!button) return;
+
+    // Only store original state once (avoid re-storing if already loading)
+    if (!button.dataset.originalDisabled) {
+      button.dataset.originalDisabled = button.disabled;
+    }
+
+    // Freeze dimensions to prevent layout shift (only if not already frozen)
+    if (!button.dataset.originalWidth) {
+      button.dataset.originalWidth = button.offsetWidth + 'px';
+      button.dataset.originalHeight = button.offsetHeight + 'px';
+      button.style.width = button.dataset.originalWidth;
+      button.style.height = button.dataset.originalHeight;
+    }
+
+    // Set up internal structure for spinner (only once)
+    if (!button.querySelector('.btn-label')) {
+      const labelText = button.textContent;
+      button.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span class="btn-label">${this._escapeHtml(labelText)}</span>`;
+    }
+
+    // Apply loading state
+    button.classList.remove('success', 'error');
+    button.classList.add('loading');
+    button.disabled = true;
+  },
+
+  /**
+   * Set button to success state (keeps original label)
+   * @param {HTMLButtonElement} button
+   * @param {number} duration - How long to show success state (ms)
+   */
+  setButtonSuccess(button, duration = 2000) {
+    if (!button) return;
+
+    // Remove loading state but keep fixed dimensions
+    button.classList.remove('loading', 'error');
+    button.classList.add('success');
+
+    // Keep the label text, just change visual state
+    setTimeout(() => {
+      this.resetButton(button);
+    }, duration);
+  },
+
+  /**
+   * Set button to error state (keeps original label)
+   * @param {HTMLButtonElement} button
+   * @param {number} duration - How long to show error state (ms)
+   */
+  setButtonError(button, duration = 3000) {
+    if (!button) return;
+
+    // Remove loading state but keep fixed dimensions
+    button.classList.remove('loading', 'success');
+    button.classList.add('error');
+
+    // Keep the label text, just change visual state
+    setTimeout(() => {
+      this.resetButton(button);
+    }, duration);
+  },
+
+  /**
+   * Reset button to original state
+   */
+  resetButton(button) {
+    if (!button) return;
+
+    // Remove state classes
+    button.classList.remove('loading', 'success', 'error');
+
+    // Restore original label (remove spinner structure)
+    const labelEl = button.querySelector('.btn-label');
+    if (labelEl) {
+      button.textContent = labelEl.textContent;
+    }
+
+    // Clear fixed dimensions
+    button.style.width = '';
+    button.style.height = '';
+
+    // Restore original disabled state
+    button.disabled = button.dataset.originalDisabled === 'true';
+
+    // Clean up datasets
+    delete button.dataset.originalDisabled;
+    delete button.dataset.originalWidth;
+    delete button.dataset.originalHeight;
+  },
+
+  // ===== ACCESSIBILITY HELPERS =====
+
+  /**
+   * Announce message to screen readers
+   */
+  _announceToScreenReader(message) {
+    if (!this._ariaRegion) return;
+
+    this._ariaRegion.textContent = message;
+
+    // Clear after announcement to allow repeat announcements
+    setTimeout(() => {
+      if (this._ariaRegion) {
+        this._ariaRegion.textContent = '';
+      }
+    }, 1000);
+  },
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  _escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 };
 
 // ===== HTML TEMPLATES =====
@@ -704,6 +904,162 @@ const templates = {
   }
 };
 
+// ===== CONNECTION STAGE MANAGEMENT =====
+const connectionStages = {
+  // Stage state tracking
+  authStage: {
+    state: 'pending', // pending, progress, success, error
+    attempts: 0,
+    lastError: null
+  },
+  websocketStage: {
+    state: 'pending',
+    attempts: 0,
+    lastError: null
+  },
+
+  // Reset all stages to pending
+  reset() {
+    this.authStage = { state: 'pending', attempts: 0, lastError: null };
+    this.websocketStage = { state: 'pending', attempts: 0, lastError: null };
+    this.updateUI();
+    this.clearFieldHighlights();
+  },
+
+  // Update a specific stage
+  updateStage(stage, state, message, attempts = null) {
+    const stageData = stage === 'auth' ? this.authStage : this.websocketStage;
+    stageData.state = state;
+    if (attempts !== null) {
+      stageData.attempts = attempts;
+    }
+    if (state === 'error' && message) {
+      stageData.lastError = message;
+    }
+    this.updateUI();
+
+    // Highlight problematic field on error
+    if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
+      this.highlightProblematicField();
+    }
+  },
+
+  // Update the UI based on current stage states
+  updateUI() {
+    // Update auth stage
+    this.updateStageUI('auth', this.authStage);
+
+    // Update websocket stage
+    this.updateStageUI('websocket', this.websocketStage);
+
+    // Update progress title
+    this.updateProgressTitle();
+  },
+
+  // Update a single stage in the UI
+  updateStageUI(stageName, stageData) {
+    const prefix = stageName === 'auth' ? 'auth' : 'websocket';
+    const stageElement = document.getElementById(`${prefix}Stage`);
+    const iconElement = document.getElementById(`${prefix}StageIcon`);
+    const statusElement = document.getElementById(`${prefix}StageStatus`);
+    const attemptsElement = document.getElementById(`${prefix}StageAttempts`);
+
+    if (!stageElement || !iconElement || !statusElement) return;
+
+    // Hide websocket stage when pending
+    if (stageName === 'websocket' && stageData.state === 'pending') {
+      stageElement.style.display = 'none';
+      return;
+    } else {
+      stageElement.style.display = '';
+    }
+
+    // Remove all state classes
+    stageElement.classList.remove('stage-progress', 'stage-success', 'stage-error');
+
+    // Add current state class
+    stageElement.classList.add(`stage-${stageData.state}`);
+
+    // Update icon
+    const icons = {
+      progress: '🔄',
+      success: '✅',
+      error: '❌'
+    };
+    iconElement.textContent = icons[stageData.state] || '';
+
+    // Update status text
+    const statusTexts = {
+      progress: stageName === 'auth' ? 'Authenticating...' : 'Connecting...',
+      success: stageName === 'auth' ? 'Authenticated ✓' : 'Connected ✓',
+      error: stageData.lastError || 'Failed'
+    };
+    statusElement.textContent = statusTexts[stageData.state] || '';
+
+    // Update attempts counter
+    if (attemptsElement) {
+      if (stageData.state === 'progress' && stageData.attempts > 0) {
+        // Show current attempt during progress
+        attemptsElement.textContent = `Attempt ${stageData.attempts}`;
+      } else if (stageData.state === 'error' && stageData.attempts > 0) {
+        // Show attempt number on error
+        attemptsElement.textContent = `Attempt ${stageData.attempts}`;
+      } else {
+        attemptsElement.textContent = '';
+      }
+    }
+  },
+
+  // Update progress title based on overall state
+  updateProgressTitle() {
+    const titleElement = document.getElementById('connectionProgressTitle');
+    if (!titleElement) return;
+
+    if (this.websocketStage.state === 'success') {
+      titleElement.textContent = '✅ Connected Successfully';
+    } else if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
+      titleElement.textContent = '⚠️ Connection Failed';
+    } else if (this.authStage.state === 'progress' || this.websocketStage.state === 'progress') {
+      titleElement.textContent = 'Connecting to Platform...';
+    } else {
+      titleElement.textContent = 'Connecting to Platform...';
+    }
+  },
+
+  // Highlight the problematic URL field
+  highlightProblematicField() {
+    this.clearFieldHighlights();
+
+    const wssInput = document.getElementById('wss');
+    const tokenUrlInput = document.getElementById('tokenUrl');
+
+    if (this.authStage.state === 'error') {
+      // Auth failed - highlight token URL (or client credentials, but we'll highlight token URL)
+      if (tokenUrlInput && tokenUrlInput.value.trim()) {
+        tokenUrlInput.classList.add('field-problem');
+        // Remove after animation
+        setTimeout(() => tokenUrlInput.classList.remove('field-problem'), 3000);
+      }
+    } else if (this.authStage.state === 'success' && this.websocketStage.state === 'error') {
+      // WebSocket failed - highlight WebSocket URL
+      if (wssInput) {
+        wssInput.classList.add('field-problem');
+        // Remove after animation
+        setTimeout(() => wssInput.classList.remove('field-problem'), 3000);
+      }
+    }
+  },
+
+  // Clear field highlights
+  clearFieldHighlights() {
+    const wssInput = document.getElementById('wss');
+    const tokenUrlInput = document.getElementById('tokenUrl');
+
+    if (wssInput) wssInput.classList.remove('field-problem');
+    if (tokenUrlInput) tokenUrlInput.classList.remove('field-problem');
+  }
+};
+
 // ===== UI UPDATE UTILITIES =====
 const ui = {
   // Connection status states
@@ -729,15 +1085,16 @@ const ui = {
       dom.setClass(dom.elements.connectionStatusConnected, status.class);
       dom.setText(dom.elements.connectionStatusConnected, status.text);
 
-      // Reset connection form UI
+      // Reset connection form UI - hide the progress indicator
       dom.setVisible(dom.elements.connectButtonContainer, true);
       dom.setVisible(dom.elements.connectionStatusContainer, false);
     } else if (state === "CONNECTING") {
-      // Show status bar with cancel button instead of connect button
+      // Show status bar with progress indicator instead of connect button
       dom.setVisible(dom.elements.connectButtonContainer, false);
       dom.setVisible(dom.elements.connectionStatusContainer, true);
-      dom.setClass(dom.elements.connectionStatus, status.class);
-      dom.setText(dom.elements.connectionStatus, status.text);
+
+      // Reset connection stages to initial state
+      connectionStages.reset();
     } else {
       // Switch to Connection view (disconnected/failed)
       dom.setVisible(dom.elements.connectionPanel, true);
@@ -749,12 +1106,6 @@ const ui = {
       // Show connect button, hide status
       dom.setVisible(dom.elements.connectButtonContainer, true);
       dom.setVisible(dom.elements.connectionStatusContainer, false);
-
-      // Update status text for any error messages
-      if (state === "FAILED" || state === "DISCONNECTED") {
-        dom.setClass(dom.elements.connectionStatus, status.class);
-        dom.setText(dom.elements.connectionStatus, status.text);
-      }
     }
   },
 
@@ -775,6 +1126,143 @@ const ui = {
     else {
       Object.values(dom.elements.appInfo).forEach((el) => dom.setText(el, "-"));
     }
+  },
+
+  // Update required devices section - shows all required devices and their health status
+  // Uses template-based DOM manipulation (not string concatenation) per project guidelines
+  updateAvailabilityReasons() {
+    const container = dom.elements.availabilityReasons;
+    const warningEl = dom.elements.unavailableWarning;
+    if (!container) return;
+
+    // Clear existing content using DOM methods
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // Guard: if not connected, leave empty and return
+    if (!cuss2) {
+      if (warningEl) warningEl.style.display = 'none';
+      return;
+    }
+
+    const currentState = cuss2.state;
+    const blockers = cuss2.unavailableRequiredComponents || [];
+
+    // Get all required devices from the components list
+    const requiredDevices = [];
+    if (cuss2.components) {
+      Object.entries(cuss2.components).forEach(([id, component]) => {
+        if (component && component.required === true) {
+          requiredDevices.push({ id, component });
+        }
+      });
+    }
+
+    // Case 1: No required devices configured - show empty state from template
+    if (requiredDevices.length === 0) {
+      if (warningEl) warningEl.style.display = 'none';
+      const emptyTemplate = document.getElementById('required-devices-empty-template');
+      const emptyClone = emptyTemplate.content.cloneNode(true);
+      container.appendChild(emptyClone);
+      return;
+    }
+
+    // Helper to determine if a component ID is in the blockers list
+    const isBlocking = (id) => {
+      return blockers.some(blockerId => {
+        const blockerIdStr = (typeof blockerId === 'string') ? blockerId : String(blockerId);
+        const idStr = (typeof id === 'string') ? id : String(id);
+        return blockerIdStr === idStr;
+      });
+    };
+
+    // Get template references
+    const itemTemplate = document.getElementById('required-device-item-template');
+    const tagTemplate = document.getElementById('required-device-tag-template');
+
+    // Create a list container
+    const listEl = document.createElement('div');
+    listEl.className = 'availability-reason-list';
+
+    // Track if any required devices are unhealthy
+    let hasUnhealthyDevices = false;
+    const isUnavailable = currentState === ApplicationStateCodes.UNAVAILABLE;
+
+    // Build each device item using templates
+    requiredDevices.forEach(({ id, component }) => {
+      const displayName = component?.deviceType || id;
+      const tags = [];
+      const deviceIsBlocking = isBlocking(id);
+
+      // Determine health status based on ready state and status only
+      // Note: "Disabled" is intentionally NOT shown in this summary panel
+      let isHealthy = true;
+
+      if (!component) {
+        tags.push({ text: 'Offline or not reported', className: 'error' });
+        isHealthy = false;
+      } else {
+        if (component.ready === false) {
+          tags.push({ text: 'Not ready', className: 'error' });
+          isHealthy = false;
+        }
+        if (component.status && component.status !== 'OK') {
+          tags.push({ text: `Status: ${component.status}`, className: 'error' });
+          isHealthy = false;
+        }
+      }
+
+      if (!isHealthy) {
+        hasUnhealthyDevices = true;
+      }
+
+      // Add blocking indicator if this device is in the blockers list and app is UNAVAILABLE
+      if (deviceIsBlocking && isUnavailable) {
+        tags.push({ text: 'Blocking availability', className: 'blocking' });
+      }
+
+      // Add healthy tag if device is healthy
+      if (isHealthy) {
+        tags.push({ text: 'Healthy', className: 'healthy' });
+      }
+
+      // Clone item template and populate
+      const itemClone = itemTemplate.content.cloneNode(true);
+      const itemEl = itemClone.querySelector('.availability-reason-item');
+      const titleEl = itemClone.querySelector('.availability-reason-title');
+      const tagsContainer = itemClone.querySelector('.availability-reason-tags');
+
+      // Set title text
+      titleEl.textContent = displayName;
+
+      // Determine row class based on health and blocking status
+      if (deviceIsBlocking && isUnavailable) {
+        itemEl.classList.add('blocking');
+      } else if (isHealthy) {
+        itemEl.classList.add('healthy');
+      } else {
+        itemEl.classList.add('unhealthy');
+      }
+
+      // Add tags using the tag template
+      tags.forEach(tag => {
+        const tagClone = tagTemplate.content.cloneNode(true);
+        const tagEl = tagClone.querySelector('.availability-reason-tag');
+        tagEl.textContent = tag.text;
+        tagEl.classList.add(tag.className);
+        tagsContainer.appendChild(tagClone);
+      });
+
+      listEl.appendChild(itemClone);
+    });
+
+    // Show/hide warning based on actual component health
+    if (warningEl) {
+      warningEl.style.display = (isUnavailable && hasUnhealthyDevices) ? 'block' : 'none';
+    }
+
+    container.appendChild(listEl);
   },
 
   // Update state transition buttons
@@ -950,6 +1438,8 @@ const ui = {
 
           // Update state buttons to reflect new required component status
           ui.updateStateButtons(cuss2.state);
+          // Update availability reasons to reflect required component change
+          ui.updateAvailabilityReasons();
         } catch (error) {
           logger.error(`Failed to toggle required state: ${error.message}`);
           // Revert on error
@@ -975,8 +1465,8 @@ const ui = {
         const action = button.dataset.action;
         const componentId = button.dataset.componentId;
 
-        // Disable button during operation
-        button.disabled = true;
+        // Disable button and show spinner (keeps original label)
+        feedback.setButtonLoading(button);
 
         try {
           // Check if this action requires input
@@ -991,10 +1481,13 @@ const ui = {
             // Actions without input (query, cancel, offer, pause, resume, stop, forward, backward, process)
             await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
+
+          // Success: green background briefly, then reset
+          feedback.setButtonSuccess(button);
         } catch (error) {
-          // Error is already logged in handler
-        } finally {
-          button.disabled = false;
+          // Error: red background briefly, then reset
+          // Note: CUSS status badge is already updated by the handler's catch block
+          feedback.setButtonError(button);
         }
       });
     });
@@ -1243,7 +1736,18 @@ function updateComponentStatusBadge(componentId, status) {
 
   // Create new status badge for non-OK status
   const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
-  const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+  // Transient statuses: these show briefly then fade out
+  // Includes CUSS2 component statuses that are temporary conditions from SETUP/SEND failures
+  const temporaryStatuses = [
+    'WRONG_APPLICATION_STATE',
+    'MEDIA_PRESENT',
+    'MEDIA_ABSENT',
+    'SOFTWARE_ERROR',
+    'DATA_MISSING',
+    'HARDWARE_ERROR',
+    'CANCELLED',
+    'TIMED_OUT'
+  ];
   const isTemporary = temporaryStatuses.includes(status);
   const fadeClass = isTemporary ? 'fade-out' : '';
 
@@ -1307,6 +1811,7 @@ const componentHandlers = {
   // Handle simple component actions (no input required)
   async handleComponentSimpleAction(component, action, componentId) {
     const name = component.deviceType;
+    let hadError = false;
 
     try {
       logger.info(`Executing ${action} on ${name}...`);
@@ -1324,18 +1829,30 @@ const componentHandlers = {
         throw new Error(`${action} not available on ${name}`);
       }
     } catch (error) {
+      hadError = true;
       logger.error(`Failed to ${action} ${name}: ${error.message}`);
+
+      // Extract CUSS status code from error and update badge immediately
+      const statusCode = extractStatusCodeFromError(error);
+      if (statusCode) {
+        updateComponentStatusBadge(componentId, statusCode);
+      }
+
       throw error;
     }
     finally {
-      // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
+      // Only update badge from component.status on success path
+      // On error, the catch block already set the badge from the error's status code
+      if (!hadError) {
+        updateComponentStatusBadge(componentId, component.status);
+      }
     }
   },
 
   // Handle component data action (setup/send/play/read)
   async handleComponentDataAction(component, action, inputValue, componentId) {
     const name = component.deviceType;
+    let hadError = false;
 
     try {
       let data = null;
@@ -1385,12 +1902,23 @@ const componentHandlers = {
       }
     }
     catch (error) {
+      hadError = true;
       logger.error(`Failed to ${action} ${name}: ${error.message}`);
+
+      // Extract CUSS status code from error and update badge immediately
+      const statusCode = extractStatusCodeFromError(error);
+      if (statusCode) {
+        updateComponentStatusBadge(componentId, statusCode);
+      }
+
       throw error;
     }
     finally {
-      // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
+      // Only update badge from component.status on success path
+      // On error, the catch block already set the badge from the error's status code
+      if (!hadError) {
+        updateComponentStatusBadge(componentId, component.status);
+      }
     }
   },
 
@@ -1484,21 +2012,191 @@ const componentHandlers = {
 
 // ===== CONNECTION MANAGEMENT =====
 const connectionManager = {
+  // Track if user ever successfully connected
+  wasEverConnected: false,
+  isReconnecting: false,
+
+  // Show reconnection banner
+  showReconnectionBanner() {
+    // Remove any existing banner
+    const existingBanner = document.getElementById('reconnectionBanner');
+    if (existingBanner) {
+      return; // Already showing
+    }
+
+    // Clone and add banner
+    const template = document.getElementById('reconnection-banner-template');
+    const clone = template.content.cloneNode(true);
+    document.body.insertBefore(clone, document.body.firstChild);
+
+    // Set reconnecting flag
+    this.isReconnecting = true;
+
+    // Add event listeners
+    const retryBtn = document.getElementById('retryConnectionBtn');
+    const cancelBtn = document.getElementById('cancelReconnectionBtn');
+
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => this.handleRetryNow());
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.handleCancelReconnection());
+    }
+
+    logger.info('Reconnection banner displayed');
+  },
+
+  // Hide reconnection banner
+  hideReconnectionBanner() {
+    const banner = document.getElementById('reconnectionBanner');
+    if (banner) {
+      banner.remove();
+      this.isReconnecting = false;
+      logger.info('Reconnection banner hidden');
+    }
+  },
+
+  // Update reconnection attempts counter
+  updateReconnectionAttempts(attempt) {
+    const attemptsElement = document.getElementById('reconnectionAttempts');
+    if (attemptsElement) {
+      attemptsElement.textContent = `Attempt ${attempt}`;
+    }
+  },
+
+  // Handle Retry Now button
+  handleRetryNow() {
+    logger.info('User requested immediate retry');
+    // Hide banner temporarily
+    this.hideReconnectionBanner();
+
+    // The library will continue retrying automatically
+    // Just show the banner again to indicate we're still trying
+    setTimeout(() => {
+      if (this.isReconnecting && !cuss2.connection.isOpen) {
+        this.showReconnectionBanner();
+      }
+    }, 100);
+  },
+
+  // Handle Cancel/Disconnect button
+  handleCancelReconnection() {
+    logger.info('User cancelled reconnection');
+    this.hideReconnectionBanner();
+    this.disconnect();
+  },
+
+  // Show success toast
+  showReconnectionSuccess() {
+    // Remove any existing toast
+    const existingToast = document.getElementById('reconnectionSuccessToast');
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    // Clone and add toast
+    const template = document.getElementById('reconnection-success-template');
+    const clone = template.content.cloneNode(true);
+    document.body.appendChild(clone);
+
+    // Auto-remove after animation
+    setTimeout(() => {
+      const toast = document.getElementById('reconnectionSuccessToast');
+      if (toast) {
+        toast.remove();
+      }
+    }, 3000);
+
+    logger.success('Reconnection successful!');
+  },
+
   // Setup connection event listeners
   setupConnectionListeners() {
     const connectionEvents = [
       {
         event: "connecting",
-        handler: (attempt) => logger.info(`WebSocket connection attempt ${attempt}`),
+        handler: (attempt) => {
+          logger.info(`WebSocket connection attempt ${attempt}`);
+
+          // Check if this is a reconnection attempt
+          if (this.wasEverConnected) {
+            // This is a reconnection - show banner
+            this.showReconnectionBanner();
+            this.updateReconnectionAttempts(attempt);
+          } else {
+            // Initial connection - update progress indicator
+            connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
+          }
+        },
       },
       {
         event: "authenticating",
-        handler: (attempt) => logger.info(`Authentication attempt ${attempt}`),
+        handler: (attempt) => {
+          logger.info(`Authentication attempt ${attempt}`);
+          connectionStages.updateStage('auth', 'progress', 'Authenticating...', attempt);
+        },
       },
-      { event: "authenticated", handler: () => logger.success("Authentication successful") },
-      { event: "open", handler: () => logger.success("WebSocket connection opened") },
-      { event: "close", handler: () => this.handleConnectionClose() },
-      { event: "error", handler: (error) => logger.error(`Connection error: ${error.message}`) },
+      {
+        event: "authenticated",
+        handler: () => {
+          logger.success("Authentication successful");
+          connectionStages.updateStage('auth', 'success', 'Authenticated');
+        }
+      },
+      {
+        event: "open",
+        handler: () => {
+          logger.success("WebSocket connection opened");
+
+          // Check if this was a reconnection
+          const wasReconnecting = this.isReconnecting;
+
+          // Mark as successfully connected
+          this.wasEverConnected = true;
+
+          if (wasReconnecting) {
+            // Reconnection successful - hide banner and show success toast
+            this.hideReconnectionBanner();
+            this.showReconnectionSuccess();
+          } else {
+            // Initial connection - update progress indicator
+            connectionStages.updateStage('websocket', 'success', 'Connected');
+          }
+        }
+      },
+      {
+        event: "close",
+        handler: (event) => {
+          // Only mark as error if it's not a normal close AND not during initial connection
+          if (event && event.code !== 1000 && connectionStages.websocketStage.state !== 'success' && !this.wasEverConnected) {
+            connectionStages.updateStage('websocket', 'error', 'Connection closed');
+          }
+          this.handleConnectionClose(event);
+        }
+      },
+      {
+        event: "error",
+        handler: (error) => {
+          logger.error(`Connection error: ${error.message}`);
+        }
+      },
+      {
+        event: "socketError",
+        handler: (error) => {
+          logger.error(`Socket error: ${error}`);
+          if (connectionStages.websocketStage.state !== 'success') {
+            connectionStages.updateStage('websocket', 'error', 'Connection failed');
+          }
+        }
+      },
+      {
+        event: "authenticationError",
+        handler: (error) => {
+          logger.error(`Authentication error: ${error.message}`);
+          connectionStages.updateStage('auth', 'error', error.message || 'Authentication failed');
+        }
+      },
     ];
 
     connectionEvents.forEach(({ event, handler }) => {
@@ -1507,12 +2205,40 @@ const connectionManager = {
   },
 
   // Handle connection close
-  handleConnectionClose() {
+  handleConnectionClose(event) {
     logger.error("WebSocket connection closed");
-    ui.updateConnectionStatus("DISCONNECTED");
-    dom.setButtonState(dom.elements.connectBtn, false);
-    dom.setButtonState(dom.elements.disconnectBtn, true);
-    Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+
+    // Check if this was a normal close (user disconnected) or abnormal
+    const isNormalClose = event && event.code === 1000;
+
+    // Check close code FIRST - normal close always means user disconnected
+    if (isNormalClose) {
+      // User manually disconnected - return to connection panel
+      logger.info("User manually disconnected");
+      ui.updateConnectionStatus("DISCONNECTED");
+      dom.setButtonState(dom.elements.connectBtn, false);
+      dom.setButtonState(dom.elements.disconnectBtn, true);
+      Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+
+      // Hide reconnection banner if showing
+      this.hideReconnectionBanner();
+    } else if (!this.wasEverConnected) {
+      // Initial connection failed (abnormal close before ever connecting)
+      // DON'T hide the status container - keep error details visible
+      logger.info("Initial connection failed - showing error details");
+
+      // Note: The connection status container will stay visible with error details
+      // User can see which stage failed (auth vs websocket)
+      // The cancel button allows them to dismiss and try again
+    } else {
+      // Connection dropped unexpectedly - user was connected before
+      // DON'T switch panels - the library will auto-reconnect
+      // The "connecting" event handler will show the reconnection banner
+      logger.info("Connection dropped - auto-reconnection will start");
+
+      // Disable state buttons during reconnection
+      Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+    }
   },
 
   // Setup platform event listeners
@@ -1524,6 +2250,7 @@ const connectionManager = {
           logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
           ui.updateStateDisplay(stateChange.current);
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
+          ui.updateAvailabilityReasons();
 
           // Set applicationOnline flag to enable automatic state transitions
           // When true, the library will automatically transition between UNAVAILABLE/AVAILABLE
@@ -1571,6 +2298,7 @@ const connectionManager = {
           ui.updateApplicationInfo(false);
           // Update the state display and buttons to reflect new state
           ui.updateStateDisplay(newState);
+          ui.updateAvailabilityReasons();
           // Dismiss timeout warning when leaving ACTIVE state
           ui.dismissTimeoutWarning();
           // Dismiss accessible mode toast when leaving ACTIVE state
@@ -1586,6 +2314,8 @@ const connectionManager = {
           componentHandlers.updateAllToggleStates();
           // Update state buttons to reflect required component availability
           ui.updateStateButtons(cuss2.state);
+          // Update availability reasons to reflect component health
+          ui.updateAvailabilityReasons();
           // Update the status badge to reflect the new component status
           updateComponentStatusBadge(component.id, component.status);
           // Update the ready badge to reflect the new component ready state
@@ -1649,9 +2379,14 @@ const connectionManager = {
     }
     catch (error) {
       logger.error(`Connection failed: ${error.message}`);
-      ui.updateConnectionStatus("FAILED");
-      dom.setButtonState(dom.elements.connectBtn, false);
-      dom.setButtonState(dom.elements.disconnectBtn, true);
+
+      // Don't call updateConnectionStatus("FAILED") here!
+      // The two-stage indicator is already showing detailed error information
+      // from the connection event handlers (authenticated, connecting, close, etc.)
+      // Let that detailed error state persist so the user can see what went wrong
+
+      // The connection status container will remain visible with error details
+      // User can click Cancel to dismiss it and try again
     }
   },
 
@@ -1703,6 +2438,10 @@ const connectionManager = {
     await cuss2.connected;
 
     logger.success("Connected successfully!");
+
+    // Update URL with connection parameters for easy refresh/reconnection
+    urlUtils.updateUrlWithConnectionParams(config);
+
     ui.updateConnectionStatus("CONNECTED");
     dom.setButtonState(dom.elements.connectBtn, true);
     dom.setButtonState(dom.elements.disconnectBtn, false);
@@ -1711,6 +2450,7 @@ const connectionManager = {
     ui.displayEnvironment(cuss2.environment);
     ui.displayComponents();
     ui.updateStateDisplay(cuss2.state);
+    ui.updateAvailabilityReasons();
 
     // Sync isOnline checkbox with current applicationOnline state
     if (dom.elements.isOnlineToggle) {
@@ -1742,9 +2482,22 @@ const connectionManager = {
   // Disconnect
   disconnect() {
     if (cuss2) {
-      cuss2.connection.close();
+      // Reset connection tracking flags BEFORE closing
+      // This ensures the close handler recognizes it as a manual disconnect
+      this.wasEverConnected = false;
+      this.isReconnecting = false;
+
+      // Close with code 1000 (normal close)
+      cuss2.connection.close(1000, "User disconnected");
       cuss2 = null;
+
+      // Hide reconnection banner if showing
+      this.hideReconnectionBanner();
+
+      // Reset UI
       ui.resetUI();
+
+      logger.info("Disconnected and reset connection state");
     }
   },
 };
@@ -1940,6 +2693,9 @@ function generateTokenUrl() {
 function init() {
   // Initialize DOM
   dom.init();
+
+  // Initialize feedback system
+  feedback.init();
 
   // Apply query parameters to form if provided
   if (queryConfig.clientId) document.getElementById("clientId").value = queryConfig.clientId;

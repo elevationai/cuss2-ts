@@ -351,23 +351,6 @@ button:disabled {
   text-align: right;
 }
 
-.connection-error-message {
-  margin-top: 12px;
-  padding: 12px;
-  background: rgba(255, 100, 100, 0.1);
-  border: 1px solid #ff6464;
-  border-radius: 6px;
-  color: #ff6464;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.connection-error-message strong {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 14px;
-}
-
 /* Field highlighting for problematic URLs */
 input.field-problem {
   border-color: #ff6464 !important;

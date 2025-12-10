@@ -909,7 +909,6 @@ const connectionStages = {
     this.authStage = { state: 'pending', attempts: 0, lastError: null };
     this.websocketStage = { state: 'pending', attempts: 0, lastError: null };
     this.updateUI();
-    this.hideErrorMessage();
     this.clearFieldHighlights();
   },
 
@@ -925,9 +924,8 @@ const connectionStages = {
     }
     this.updateUI();
 
-    // Check if we should show error message
+    // Highlight problematic field on error
     if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
-      this.showErrorMessage();
       this.highlightProblematicField();
     }
   },
@@ -954,29 +952,35 @@ const connectionStages = {
 
     if (!stageElement || !iconElement || !statusElement) return;
 
+    // Hide websocket stage when pending
+    if (stageName === 'websocket' && stageData.state === 'pending') {
+      stageElement.style.display = 'none';
+      return;
+    } else {
+      stageElement.style.display = '';
+    }
+
     // Remove all state classes
-    stageElement.classList.remove('stage-pending', 'stage-progress', 'stage-success', 'stage-error');
+    stageElement.classList.remove('stage-progress', 'stage-success', 'stage-error');
 
     // Add current state class
     stageElement.classList.add(`stage-${stageData.state}`);
 
     // Update icon
     const icons = {
-      pending: '⏳',
       progress: '🔄',
       success: '✅',
       error: '❌'
     };
-    iconElement.textContent = icons[stageData.state] || '⏳';
+    iconElement.textContent = icons[stageData.state] || '';
 
     // Update status text
     const statusTexts = {
-      pending: 'Pending...',
       progress: stageName === 'auth' ? 'Authenticating...' : 'Connecting...',
       success: stageName === 'auth' ? 'Authenticated ✓' : 'Connected ✓',
       error: stageData.lastError || 'Failed'
     };
-    statusElement.textContent = statusTexts[stageData.state] || statusTexts.pending;
+    statusElement.textContent = statusTexts[stageData.state] || '';
 
     // Update attempts counter
     if (attemptsElement) {
@@ -1005,35 +1009,6 @@ const connectionStages = {
       titleElement.textContent = 'Connecting to Platform...';
     } else {
       titleElement.textContent = 'Connecting to Platform...';
-    }
-  },
-
-  // Show error message with guidance
-  showErrorMessage() {
-    const messageElement = document.getElementById('connectionErrorMessage');
-    if (!messageElement) return;
-
-    let message = '';
-
-    if (this.authStage.state === 'error' && this.websocketStage.state === 'pending') {
-      message = '<strong>Authentication Failed</strong>Authentication could not complete. Please verify your Client ID, Client Secret, and Token URL are correct.';
-    } else if (this.authStage.state === 'success' && this.websocketStage.state === 'error') {
-      message = '<strong>WebSocket Connection Failed</strong>Authentication successful, but could not connect to WebSocket. Please verify your WebSocket URL is correct.';
-    } else if (this.authStage.state === 'error' && this.websocketStage.state === 'error') {
-      message = '<strong>Connection Failed</strong>Both authentication and WebSocket connection failed. Please verify all connection settings.';
-    }
-
-    if (message) {
-      messageElement.innerHTML = message;
-      messageElement.style.display = 'block';
-    }
-  },
-
-  // Hide error message
-  hideErrorMessage() {
-    const messageElement = document.getElementById('connectionErrorMessage');
-    if (messageElement) {
-      messageElement.style.display = 'none';
     }
   },
 

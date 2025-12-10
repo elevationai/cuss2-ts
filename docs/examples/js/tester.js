@@ -77,6 +77,9 @@ const aeaCommands = {
   }
 };
 
+// ===== COMPONENT HELPERS =====
+// Shared utilities for working with CUSS2 components
+
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
 // Truly characteristic-based detection: inspect what operations the component actually supports
 const componentCapabilities = {
@@ -250,6 +253,8 @@ const dom = {
     envDetails: null,
     stateButtons: {},
     appInfo: {},
+    unavailableWarning: null,
+    availabilityReasons: null,
     // Panels
     connectionPanel: null,
     stateManagementPanel: null,
@@ -302,6 +307,10 @@ const dom = {
       accessibleMode: document.getElementById("accessibleMode"),
       language: document.getElementById("language"),
     };
+
+    // Unavailable warning and availability requirements section
+    this.elements.unavailableWarning = document.getElementById("unavailableWarning");
+    this.elements.availabilityReasons = document.getElementById("availabilityReasons");
   },
 
   // Get form values
@@ -1114,6 +1123,143 @@ const ui = {
     }
   },
 
+  // Update required devices section - shows all required devices and their health status
+  // Uses template-based DOM manipulation (not string concatenation) per project guidelines
+  updateAvailabilityReasons() {
+    const container = dom.elements.availabilityReasons;
+    const warningEl = dom.elements.unavailableWarning;
+    if (!container) return;
+
+    // Clear existing content using DOM methods
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // Guard: if not connected, leave empty and return
+    if (!cuss2) {
+      if (warningEl) warningEl.style.display = 'none';
+      return;
+    }
+
+    const currentState = cuss2.state;
+    const blockers = cuss2.unavailableRequiredComponents || [];
+
+    // Get all required devices from the components list
+    const requiredDevices = [];
+    if (cuss2.components) {
+      Object.entries(cuss2.components).forEach(([id, component]) => {
+        if (component && component.required === true) {
+          requiredDevices.push({ id, component });
+        }
+      });
+    }
+
+    // Case 1: No required devices configured - show empty state from template
+    if (requiredDevices.length === 0) {
+      if (warningEl) warningEl.style.display = 'none';
+      const emptyTemplate = document.getElementById('required-devices-empty-template');
+      const emptyClone = emptyTemplate.content.cloneNode(true);
+      container.appendChild(emptyClone);
+      return;
+    }
+
+    // Helper to determine if a component ID is in the blockers list
+    const isBlocking = (id) => {
+      return blockers.some(blockerId => {
+        const blockerIdStr = (typeof blockerId === 'string') ? blockerId : String(blockerId);
+        const idStr = (typeof id === 'string') ? id : String(id);
+        return blockerIdStr === idStr;
+      });
+    };
+
+    // Get template references
+    const itemTemplate = document.getElementById('required-device-item-template');
+    const tagTemplate = document.getElementById('required-device-tag-template');
+
+    // Create a list container
+    const listEl = document.createElement('div');
+    listEl.className = 'availability-reason-list';
+
+    // Track if any required devices are unhealthy
+    let hasUnhealthyDevices = false;
+    const isUnavailable = currentState === ApplicationStateCodes.UNAVAILABLE;
+
+    // Build each device item using templates
+    requiredDevices.forEach(({ id, component }) => {
+      const displayName = component?.deviceType || id;
+      const tags = [];
+      const deviceIsBlocking = isBlocking(id);
+
+      // Determine health status based on ready state and status only
+      // Note: "Disabled" is intentionally NOT shown in this summary panel
+      let isHealthy = true;
+
+      if (!component) {
+        tags.push({ text: 'Offline or not reported', className: 'error' });
+        isHealthy = false;
+      } else {
+        if (component.ready === false) {
+          tags.push({ text: 'Not ready', className: 'error' });
+          isHealthy = false;
+        }
+        if (component.status && component.status !== 'OK') {
+          tags.push({ text: `Status: ${component.status}`, className: 'error' });
+          isHealthy = false;
+        }
+      }
+
+      if (!isHealthy) {
+        hasUnhealthyDevices = true;
+      }
+
+      // Add blocking indicator if this device is in the blockers list and app is UNAVAILABLE
+      if (deviceIsBlocking && isUnavailable) {
+        tags.push({ text: 'Blocking availability', className: 'blocking' });
+      }
+
+      // Add healthy tag if device is healthy
+      if (isHealthy) {
+        tags.push({ text: 'Healthy', className: 'healthy' });
+      }
+
+      // Clone item template and populate
+      const itemClone = itemTemplate.content.cloneNode(true);
+      const itemEl = itemClone.querySelector('.availability-reason-item');
+      const titleEl = itemClone.querySelector('.availability-reason-title');
+      const tagsContainer = itemClone.querySelector('.availability-reason-tags');
+
+      // Set title text
+      titleEl.textContent = displayName;
+
+      // Determine row class based on health and blocking status
+      if (deviceIsBlocking && isUnavailable) {
+        itemEl.classList.add('blocking');
+      } else if (isHealthy) {
+        itemEl.classList.add('healthy');
+      } else {
+        itemEl.classList.add('unhealthy');
+      }
+
+      // Add tags using the tag template
+      tags.forEach(tag => {
+        const tagClone = tagTemplate.content.cloneNode(true);
+        const tagEl = tagClone.querySelector('.availability-reason-tag');
+        tagEl.textContent = tag.text;
+        tagEl.classList.add(tag.className);
+        tagsContainer.appendChild(tagClone);
+      });
+
+      listEl.appendChild(itemClone);
+    });
+
+    // Show/hide warning based on actual component health
+    if (warningEl) {
+      warningEl.style.display = (isUnavailable && hasUnhealthyDevices) ? 'block' : 'none';
+    }
+
+    container.appendChild(listEl);
+  },
+
   // Update state transition buttons
   updateStateButtons(currentState) {
     // Disable all buttons first
@@ -1287,6 +1433,8 @@ const ui = {
 
           // Update state buttons to reflect new required component status
           ui.updateStateButtons(cuss2.state);
+          // Update availability reasons to reflect required component change
+          ui.updateAvailabilityReasons();
         } catch (error) {
           logger.error(`Failed to toggle required state: ${error.message}`);
           // Revert on error
@@ -2097,6 +2245,7 @@ const connectionManager = {
           logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
           ui.updateStateDisplay(stateChange.current);
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
+          ui.updateAvailabilityReasons();
 
           // Set applicationOnline flag to enable required component monitoring
           // Online when in AVAILABLE or ACTIVE (user is present)
@@ -2131,6 +2280,7 @@ const connectionManager = {
           ui.updateApplicationInfo(false);
           // Update the state display and buttons to reflect new state
           ui.updateStateDisplay(newState);
+          ui.updateAvailabilityReasons();
           // Dismiss timeout warning when leaving ACTIVE state
           ui.dismissTimeoutWarning();
           // Dismiss accessible mode toast when leaving ACTIVE state
@@ -2146,6 +2296,8 @@ const connectionManager = {
           componentHandlers.updateAllToggleStates();
           // Update state buttons to reflect required component availability
           ui.updateStateButtons(cuss2.state);
+          // Update availability reasons to reflect component health
+          ui.updateAvailabilityReasons();
           // Update the status badge to reflect the new component status
           updateComponentStatusBadge(component.id, component.status);
           // Update the ready badge to reflect the new component ready state
@@ -2280,6 +2432,7 @@ const connectionManager = {
     ui.displayEnvironment(cuss2.environment);
     ui.displayComponents();
     ui.updateStateDisplay(cuss2.state);
+    ui.updateAvailabilityReasons();
 
     // Setup component listeners
     componentHandlers.setupComponentListeners();

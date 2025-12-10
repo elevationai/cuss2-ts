@@ -80,21 +80,6 @@ const aeaCommands = {
 // ===== COMPONENT HELPERS =====
 // Shared utilities for working with CUSS2 components
 
-/**
- * Get a display-friendly label for a component.
- * Prefers deviceType, falls back to stringified ID.
- * @param {string|object} id - Component ID (may be string or object)
- * @param {object} component - Component object (may be null/undefined)
- * @returns {string} Display label
- */
-const getComponentDisplayName = (id, component) => {
-  const idStr = (typeof id === 'string') ? id : String(id);
-  if (component && typeof component.deviceType === 'string' && component.deviceType) {
-    return component.deviceType;
-  }
-  return idStr;
-};
-
 // ===== COMPONENT CAPABILITY DEFINITIONS =====
 // Truly characteristic-based detection: inspect what operations the component actually supports
 const componentCapabilities = {
@@ -268,6 +253,7 @@ const dom = {
     envDetails: null,
     stateButtons: {},
     appInfo: {},
+    unavailableWarning: null,
     availabilityReasons: null,
     // Panels
     connectionPanel: null,
@@ -322,7 +308,8 @@ const dom = {
       language: document.getElementById("language"),
     };
 
-    // Availability requirements section
+    // Unavailable warning and availability requirements section
+    this.elements.unavailableWarning = document.getElementById("unavailableWarning");
     this.elements.availabilityReasons = document.getElementById("availabilityReasons");
   },
 
@@ -1140,6 +1127,7 @@ const ui = {
   // Uses template-based DOM manipulation (not string concatenation) per project guidelines
   updateAvailabilityReasons() {
     const container = dom.elements.availabilityReasons;
+    const warningEl = dom.elements.unavailableWarning;
     if (!container) return;
 
     // Clear existing content using DOM methods
@@ -1149,6 +1137,7 @@ const ui = {
 
     // Guard: if not connected, leave empty and return
     if (!cuss2) {
+      if (warningEl) warningEl.style.display = 'none';
       return;
     }
 
@@ -1167,6 +1156,7 @@ const ui = {
 
     // Case 1: No required devices configured - show empty state from template
     if (requiredDevices.length === 0) {
+      if (warningEl) warningEl.style.display = 'none';
       const emptyTemplate = document.getElementById('required-devices-empty-template');
       const emptyClone = emptyTemplate.content.cloneNode(true);
       container.appendChild(emptyClone);
@@ -1183,31 +1173,22 @@ const ui = {
     };
 
     // Get template references
-    const warningTemplate = document.getElementById('required-devices-warning-template');
     const itemTemplate = document.getElementById('required-device-item-template');
     const tagTemplate = document.getElementById('required-device-tag-template');
-
-    // Show warning block when UNAVAILABLE with blockers
-    const hasBlockers = blockers.length > 0;
-    const isUnavailable = currentState === ApplicationStateCodes.UNAVAILABLE;
-
-    if (isUnavailable && hasBlockers) {
-      const warningClone = warningTemplate.content.cloneNode(true);
-      container.appendChild(warningClone);
-    }
 
     // Create a list container
     const listEl = document.createElement('div');
     listEl.className = 'availability-reason-list';
 
+    // Track if any required devices are unhealthy
+    let hasUnhealthyDevices = false;
+    const isUnavailable = currentState === ApplicationStateCodes.UNAVAILABLE;
+
     // Build each device item using templates
     requiredDevices.forEach(({ id, component }) => {
-      const displayName = getComponentDisplayName(id, component);
+      const displayName = component?.deviceType || id;
       const tags = [];
       const deviceIsBlocking = isBlocking(id);
-
-      // Always add Required tag
-      tags.push({ text: 'Required', className: 'required' });
 
       // Determine health status based on ready state and status only
       // Note: "Disabled" is intentionally NOT shown in this summary panel
@@ -1225,6 +1206,10 @@ const ui = {
           tags.push({ text: `Status: ${component.status}`, className: 'error' });
           isHealthy = false;
         }
+      }
+
+      if (!isHealthy) {
+        hasUnhealthyDevices = true;
       }
 
       // Add blocking indicator if this device is in the blockers list and app is UNAVAILABLE
@@ -1266,6 +1251,11 @@ const ui = {
 
       listEl.appendChild(itemClone);
     });
+
+    // Show/hide warning based on actual component health
+    if (warningEl) {
+      warningEl.style.display = (isUnavailable && hasUnhealthyDevices) ? 'block' : 'none';
+    }
 
     container.appendChild(listEl);
   },

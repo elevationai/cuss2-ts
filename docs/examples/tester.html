@@ -90,6 +90,10 @@
             <span id="currentState" class="state-badge STOPPED">STOPPED</span>
           </div>
 
+          <div id="unavailableWarning" class="availability-reasons-warning" style="display: none;">
+            <strong>Application forced to UNAVAILABLE</strong> because 1 or more required devices are unhealthy.
+          </div>
+
           <div class="actions">
             <button id="initializeBtn" disabled>Initialize</button>
             <button id="unavailableBtn" disabled>Unavailable</button>
@@ -253,13 +257,6 @@
     </template>
 
     <!-- Required Devices Templates -->
-    <template id="required-devices-warning-template">
-      <div class="availability-reasons-warning">
-        <strong>Application forced to UNAVAILABLE</strong> because the following required devices are unhealthy.
-        Until these devices are healthy, the application cannot transition back to AVAILABLE or ACTIVE.
-      </div>
-    </template>
-
     <template id="required-devices-empty-template">
       <div class="availability-reasons-empty">No required devices are configured for this application.</div>
     </template>

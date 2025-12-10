@@ -1431,8 +1431,10 @@ input.field-problem {
 
 .availability-reason-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 6px 8px;
   border-radius: 6px;
   background: rgba(15, 23, 42, 0.7);
@@ -1473,11 +1475,6 @@ input.field-problem {
   border: 1px solid rgba(148, 163, 184, 0.6);
   background: rgba(15, 23, 42, 0.9);
   color: #94a3b8;
-}
-
-.availability-reason-tag.required {
-  border-color: #ffc107;
-  color: #ffc107;
 }
 
 .availability-reason-tag.healthy {

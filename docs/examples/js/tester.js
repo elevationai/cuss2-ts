@@ -265,6 +265,8 @@ const dom = {
     connectButtonContainer: null,
     connectionStatusContainer: null,
     cancelConnectionBtn: null,
+    // isOnline checkbox
+    isOnlineToggle: null,
   },
 
   // Initialize DOM element cache
@@ -290,6 +292,9 @@ const dom = {
     this.elements.connectButtonContainer = document.getElementById("connectButtonContainer");
     this.elements.connectionStatusContainer = document.getElementById("connectionStatusContainer");
     this.elements.cancelConnectionBtn = document.getElementById("cancelConnectionBtn");
+
+    // isOnline checkbox
+    this.elements.isOnlineToggle = document.getElementById("isOnlineToggle");
 
     // State buttons
     this.elements.stateButtons = {
@@ -2247,13 +2252,26 @@ const connectionManager = {
           ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
           ui.updateAvailabilityReasons();
 
-          // Set applicationOnline flag to enable required component monitoring
-          // Online when in AVAILABLE or ACTIVE (user is present)
+          // Set applicationOnline flag to enable automatic state transitions
+          // When true, the library will automatically transition between UNAVAILABLE/AVAILABLE
+          // based on required component health
           if (cuss2) {
-            cuss2.applicationOnline =
-              stateChange.current === ApplicationStateCodes.AVAILABLE ||
-              stateChange.current === ApplicationStateCodes.ACTIVE;
-            logger.info(`Application online: ${cuss2.applicationOnline}`);
+            if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
+                stateChange.current === ApplicationStateCodes.ACTIVE) {
+              cuss2.applicationOnline = true;
+              logger.info(`Application online: true (reached ${stateChange.current})`);
+            }
+            // Reset to false on STOPPED or RELOAD state
+            else if (stateChange.current === ApplicationStateCodes.STOPPED ||
+                     stateChange.current === ApplicationStateCodes.RELOAD) {
+              cuss2.applicationOnline = false;
+              logger.info(`Application online: false (${stateChange.current})`);
+            }
+
+            // Sync checkbox with applicationOnline property
+            if (dom.elements.isOnlineToggle) {
+              dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
+            }
           }
         },
       },
@@ -2434,6 +2452,11 @@ const connectionManager = {
     ui.updateStateDisplay(cuss2.state);
     ui.updateAvailabilityReasons();
 
+    // Sync isOnline checkbox with current applicationOnline state
+    if (dom.elements.isOnlineToggle) {
+      dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
+    }
+
     // Setup component listeners
     componentHandlers.setupComponentListeners();
 
@@ -2508,6 +2531,30 @@ const stateManager = {
     }
 
     try {
+      // When user manually requests UNAVAILABLE, enter manual mode (set applicationOnline = false)
+      // This prevents auto-transitions back to AVAILABLE when components become healthy
+      if (action === "unavailable") {
+        cuss2.applicationOnline = false;
+        logger.info("User manually requested UNAVAILABLE - entering manual mode (applicationOnline = false)");
+        // Sync checkbox immediately
+        if (dom.elements.isOnlineToggle) {
+          dom.elements.isOnlineToggle.checked = false;
+        }
+      }
+      // When user manually requests AVAILABLE, resume automatic mode (set applicationOnline = true)
+      // This re-enables auto-transitions based on component health
+      else if (action === "available") {
+        await cuss2[request.method]();
+        cuss2.applicationOnline = true;
+        logger.info("User manually requested AVAILABLE - resuming automatic mode (applicationOnline = true)");
+        // Sync checkbox immediately
+        if (dom.elements.isOnlineToggle) {
+          dom.elements.isOnlineToggle.checked = true;
+        }
+        logger.success(`Requested ${request.state} state`);
+        return;
+      }
+
       const result = await cuss2[request.method]();
       logger.success(`Requested ${request.state} state`);
     }
@@ -2772,6 +2819,14 @@ function init() {
 
   // Setup cancel connection button
   dom.elements.cancelConnectionBtn.addEventListener("click", () => connectionManager.cancelConnection());
+
+  // Setup isOnline checkbox
+  dom.elements.isOnlineToggle.addEventListener("change", (e) => {
+    if (cuss2) {
+      cuss2.applicationOnline = e.target.checked;
+      logger.info(`Application online: ${e.target.checked}`);
+    }
+  });
 
   // Setup state buttons
   stateManager.setupStateButtons();

@@ -4,6 +4,31 @@ const { ApplicationStateCodes, ComponentState, MessageCodes } = Models;
 
 let cuss2 = null;
 
+// ===== ERROR STATUS EXTRACTION =====
+/**
+ * Extract CUSS status code from an error object.
+ * The CUSS2 library throws PlatformResponseError with a messageCode property
+ * containing the CUSS status (e.g., WRONG_APPLICATION_STATE, SOFTWARE_ERROR).
+ * @param {Error} error - The error object to extract status from
+ * @returns {string|null} The CUSS status code or null if not found
+ */
+function extractStatusCodeFromError(error) {
+  if (!error) return null;
+
+  // PlatformResponseError from cuss2 library has messageCode property
+  if (error.messageCode && typeof error.messageCode === 'string') {
+    return error.messageCode;
+  }
+
+  // Fallback: parse from message text "Platform returned status code: X"
+  if (typeof error.message === 'string') {
+    const match = error.message.match(/status code:\s*([A-Z_]+)/i);
+    if (match) return match[1].toUpperCase();
+  }
+
+  return null;
+}
+
 // ===== TEST DATA DEFINITIONS =====
 // Company logo ITPS command (used in SETUP for printers)
 const companyLogo = 'LT0146940A020101000000001D01630064006400000000000000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0001240001001E016400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C4FF9FDEFFC1FCC3FFC1FE7FDEFFC1FCC3FFC1F9C2FF03DCFFC1FCC3FFC1E7C1FF81C1FE07DBFFC1FCC3FF9FC1FC7FC1FFC1F87FDAFFC1FCC2FFC1FE7FC1E3C3FF9FDAFFC1FCC2FFC1FDC1FF3FC3FFC1F3DAFFC1FCC2FFC1F3C1FCC4FFC1FCDAFFC1FCC2FFC1E7C1F3C5FF7FD9FFC1FCC2FFC1DFC1E7C1FFC1F0003FC2FFC1F7D8FFC1FCC2FFBF9FC1FFC20003C2FFC1F9D8FFC1FCC2FFC27FC1F80FC1FFC1C07FC1FFC1FCD8FFC1FCC1FFC1FEC1FCC1FFC1C0C2FFC1FC0FC1FFC1FE7FD7FFC1FCC1FFC1FDC1FBC1FF07C3FF83C2FFBFD7FFC1FCC1FFC1FBC1F7C1FE1FC3FFC1E1C2FFC1DFD7FFC1FCC1FFC1F7C1EFC1F87FC3FFC1F87FC1FFC1EFD7FFC1FCC1FFC1EFC1DFC1F1C4FFC1FE3FC1FFC1E7D7FFC1FCC1FFC1DFBFC1C3C5FF8FC2F7D7FFC1FCC1FFC1DF7F8FC5FFC1C7C2FBD7FFC1FCC1FFBE7F1FC5FFC1E3C2FDD7FFC1FCC1FF7EC1FE3FC5FFC1F1C2FCD7FFC1FCC1FF7DC1FC7FC5FFC1F8C2FED7FFC1FCC1FEC1FBC1F8C6FFC1FCC37FD6FFC1FCC1FCC1F3C1F1C6FFC1FE3FBF7FD6FFC1FCC1FDC1F7C1F3C7FF1FC2BFD6FFC1FCC1FBC1EFC1E7C7FF9FC2DFD6FFC1FCC1FBC1EFC1CFC7FFC1CFC1FFC1DFD6FFC1FCC1F3C1DFC1CFC7FFC1C7C2EFD6FFC1FCC1F7C1DF9FC7FFC2E7C1EFD6FFC1FCC1F7BF3FC7FFC1F3C1F7C1EFD6FFC1FCC1EFBF3FC7FFC1F3C2F7D6FFC1FCC1EF7E3FC7FFC1F9C1FBC1F7D6FFC1FCC1CF7E7FC7FFC1F9C2FBD6FFC1FCC1DF7C7FC7FFC1FCC1FDC1FBD6FFC1FCC1DEC1FCC8FFC1FCC1FDC1FBD6FFC1FCC1DEC1FCC8FFC1FCC2FDD6FFC1FCBEC1F9C1FFC1E00003C1FFC1EFC2FFC1FE7FC1FDC1FFC1C00007C1FFC1DFC1FFC1F7C2FFBFC1FFC1C00007C1FFC1C00007C1FFC1C00FC1FCBDC1F9C1FFC1C00001C1FFC1C3C2FFC1FE7EC1FDC1FF800003C1FF8FC1FFC1E3C2FF1FC1FF800003C1FF800003C1FF8001C1FCBDC1F9C1FFC1C00001C1FFC1C3C2FFC1FE7EC1FDC1FF800003C1FF87C1FFC1C3C1FFC1FE0FC1FF800003C1FF800003C1FF80007CBDC1F9C1FFC1E00003C1FFC1C3C3FF3EC2FFC1C00003C1FF87C1FFC1C3C1FFC1FE0FC1FFC1C00003C1FFC1C00007C1FFC1C0003CBDC1F3C5FFC1C3C3FF3EC1FEC5FFC1C3C1FF87C1FFC1FE0FCAFFC1F81C7DC1F3C5FFC1C3C3FF3F7EC5FFC1C3C1FF87C1FFC1FC07CAFFC1FE0C7FC1F3C5FFC1C3C3FF3F7EC5FFC1E1C1FF8FC1FFC1FC07CBFF0C7BC1F3C5FFC1C3C3FF3FC1FEC5FFC1E1C1FF0FC1FFC1F843C2FFC1E7C6FFC1DFC1FF847BC1F3C5FFC1C3C3FF3FC1FEC5FFC1F1C1FF1FC1FFC1F843C2FFC1C3C6FF8FC1FF847BC1F3C5FFC1C3C3FFBFC1FEC5FFC1F0C1FE1FC1FFC1F0C1E1C2FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF9FC1FEC5FFC1F0C1FE1FC1FFC1F0C1E1C2FFC1C3C6FF8FC1FFC1C07BC1F3C1FFC1E00001C1FFC1C3C3FF9FC1FEC1FFC1C00003C1FFC1F87E3FC1FFC2F1C2FFC1C3C2FFC1C00003C1FF8FC1FFC1C07BC1F3C1FFC1C00001C1FFC1C3C3FF9FC1FEC1FF800003C1FFC1F87C3FC1FFC1E1C1F0C2FFC1C3C2FF800003C1FF8FC1FFC1C07BC1F3C1FFC1E00001C1FFC1C3C3FF9FC1FEC1FFC1C00003C1FFC1FC7C7FC1FFC1E1C1F0C2FFC1C3C2FF800003C1FF8FC1FFC1C07BC1F3C5FFC1C3C3FF9FC1FEC5FFC1FC387FC1FFC1C3C1F87FC1FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE387FC1FFC1C3C1F87FC1FFC1C3C6FF8FC1FFC1C07BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE10C2FFC1C7C1FC7FC1FFC1C3C6FF8FC1FF847BC1F3C5FFC1C3C3FF3FC1FEC5FFC1FE10C2FF87C1FC3FC1FFC1C3C6FF8FC1FF847FC1F3C5FFC1C3C3FF3FC1FEC6FF01C2FF87C1FE3FC1FFC1C3C6FF8FC1FF0CBDC1F3C5FFC1C3C3FF3FC1FEC6FF01C2FF0FC1FE1FC1FFC1C3C6FF8FC1FE0CBDC1F3C5FFC1C3C3FF3FC1FEC6FF81C2FF0FC1FE1FC1FFC1C3C6FF8FC1F81CBDC1F9C1FFC1E00003C1FFC1C00003C1FE7FC1FEC1FFC1C00007C2FF83C1FFC1FE1FC1FF1FC1FFC1C3C2FFC1C00007C1FF80003CBDC1F9C1FFC1C00001C1FFC1C00001C1FE7FC2FF800003C2FF83C1FFC1FE1FC1FF0FC1FFC1C3C2FF800003C1FF80007CBDC1F9C1FFC1C00001C1FFC1C00001C1FE7FC1FDC1FF800003C2FFC1C7C1FFC1FE1FC1FF8FC1FFC1C3C2FF800003C1FF8001C1FCC1FEC1FCC1FFC1E00003C1FFC1E00003C1FE7FC1FDC1FFC1C00003C2FFC1E7C2FF3FC1FF9FC1FFC1E7C2FFC1C00007C1FFC1C00FC1FCC1DEC1FCC8FFC1FCC1FFC1FDD6FFC1FCC1DEC1FCC8FFC1FCC1FFC1FDD6FFC1FCC1DF7E7FC7FFC1F9C1FFC1FBD6FFC1FCC1EF7E7FC7FFC1F9C1FFC1FBD6FFC1FCC1EFBF3FC7FFC1F1C1FFC1FBD6FFC1FCC1EFBF3FC7FFC1F3C1FFC1F7D6FFC1FCC1F7BF9FC7FFC1E7C1FFC1F7D6FFC1FCC1F7C1DF9FC7FFC1E7C1FFC1EFD6FFC1FCC1FBC1DFC1CFC7FFC1CFC1FFC1EFD6FFC1FCC1FBC1EFC1C7C7FF8FC1FFC1EFD6FFC1FCC1FDC1E7C1E3C7FF1FC1FFC1DFD6FFC1FCC1FDC1F7C1F3C7FF3FC1FFC1DFD6FFC1FCC1FEC1FBC1F9C6FFC1FE7FC1FFBFD6FFC1FCC1FEC1FBC1FCC6FFC1FCC2FF3FD6FFC1FCC1FF7DC1FE7FC5FFC1F9C2FF7FD6FFC1FCC1FFBEC1FF3FC5FFC1F1C1FFC1FED7FFC1FCC1FFBF7F8FC5FFC1E7C1FFC1FED7FFC1FCC2FF3FC1C7C5FF8FC1FFC1FDD7FFC1FCC2FFC1DFC1E3C5FF1FC1FFC1FBD7FFC1FCC2FFC1CFC1F0C4FFC1FC3FC1FFC1F7D7FFC1FCC2FFC1E7C1FC3FC3FFC1F0C1FFBFC1E7D7FFC1FCC2FFC1F3C1FF0FC3FFC1C3C1FF3FC1EFD7FFC1FCC2FFC1FDC1FFC1C3C3FF0FC1FEC1FFC1DFD7FFC1FCC2FFC1FEC1FFC1F03FC1FFC1F83FC1FDC1FFBFD7FFC1FCC3FF3FC1FC01C1FE00C1FFC1F3C1FF7FD7FFC1FCC3FFC1DFC1FFC1C00007C1FFC1E7C1FED8FFC1FCC3FFC1E7C2FF87C2FF9FC1F9D8FFC1FCC3FFC1F9C4FFC1FE7FC1F3D8FFC1FCC3FFC1FE7FC3FFC1F9C1FFC1EFD8FFC1FCC4FF8FC3FFC1C7C1FF9FD8FFC1FCC4FFC1F1C2FFC1E3FC1FF7FD8FFC1FCC4FFC1FE1FC1FFC1E1C1FFC1FCD9FFC1FCC5FFC1E0001FC1FFC1F3D9FFC1FCC9FFC1CFD9FFC1FCC9FF3FD9FFC1FCC8FFC1F8DAFFC1FCC8FFC1C7DAFFC1FCC7FFC1F07FDAFFC1FCC6FFC1FC0FDBFFC1FC';
@@ -388,6 +413,143 @@ const logger = {
   },
 };
 
+// ===== UI FEEDBACK UTILITY =====
+const feedback = {
+  // ARIA live region for accessibility
+  _ariaRegion: null,
+
+  // Initialize feedback system
+  init() {
+    this._ariaRegion = document.getElementById('ariaLiveRegion');
+  },
+
+  // ===== BUTTON STATE MANAGEMENT =====
+
+  /**
+   * Set button to loading state with fixed dimensions
+   * @param {HTMLButtonElement} button
+   * @param {string} _loadingText - Ignored (kept for API compatibility)
+   */
+  setButtonLoading(button, _loadingText = null) {
+    if (!button) return;
+
+    // Only store original state once (avoid re-storing if already loading)
+    if (!button.dataset.originalDisabled) {
+      button.dataset.originalDisabled = button.disabled;
+    }
+
+    // Freeze dimensions to prevent layout shift (only if not already frozen)
+    if (!button.dataset.originalWidth) {
+      button.dataset.originalWidth = button.offsetWidth + 'px';
+      button.dataset.originalHeight = button.offsetHeight + 'px';
+      button.style.width = button.dataset.originalWidth;
+      button.style.height = button.dataset.originalHeight;
+    }
+
+    // Set up internal structure for spinner (only once)
+    if (!button.querySelector('.btn-label')) {
+      const labelText = button.textContent;
+      button.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span class="btn-label">${this._escapeHtml(labelText)}</span>`;
+    }
+
+    // Apply loading state
+    button.classList.remove('success', 'error');
+    button.classList.add('loading');
+    button.disabled = true;
+  },
+
+  /**
+   * Set button to success state (keeps original label)
+   * @param {HTMLButtonElement} button
+   * @param {number} duration - How long to show success state (ms)
+   */
+  setButtonSuccess(button, duration = 2000) {
+    if (!button) return;
+
+    // Remove loading state but keep fixed dimensions
+    button.classList.remove('loading', 'error');
+    button.classList.add('success');
+
+    // Keep the label text, just change visual state
+    setTimeout(() => {
+      this.resetButton(button);
+    }, duration);
+  },
+
+  /**
+   * Set button to error state (keeps original label)
+   * @param {HTMLButtonElement} button
+   * @param {number} duration - How long to show error state (ms)
+   */
+  setButtonError(button, duration = 3000) {
+    if (!button) return;
+
+    // Remove loading state but keep fixed dimensions
+    button.classList.remove('loading', 'success');
+    button.classList.add('error');
+
+    // Keep the label text, just change visual state
+    setTimeout(() => {
+      this.resetButton(button);
+    }, duration);
+  },
+
+  /**
+   * Reset button to original state
+   */
+  resetButton(button) {
+    if (!button) return;
+
+    // Remove state classes
+    button.classList.remove('loading', 'success', 'error');
+
+    // Restore original label (remove spinner structure)
+    const labelEl = button.querySelector('.btn-label');
+    if (labelEl) {
+      button.textContent = labelEl.textContent;
+    }
+
+    // Clear fixed dimensions
+    button.style.width = '';
+    button.style.height = '';
+
+    // Restore original disabled state
+    button.disabled = button.dataset.originalDisabled === 'true';
+
+    // Clean up datasets
+    delete button.dataset.originalDisabled;
+    delete button.dataset.originalWidth;
+    delete button.dataset.originalHeight;
+  },
+
+  // ===== ACCESSIBILITY HELPERS =====
+
+  /**
+   * Announce message to screen readers
+   */
+  _announceToScreenReader(message) {
+    if (!this._ariaRegion) return;
+
+    this._ariaRegion.textContent = message;
+
+    // Clear after announcement to allow repeat announcements
+    setTimeout(() => {
+      if (this._ariaRegion) {
+        this._ariaRegion.textContent = '';
+      }
+    }, 1000);
+  },
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  _escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+};
+
 // ===== HTML TEMPLATES =====
 const templates = {
   // Environment details template
@@ -747,7 +909,6 @@ const connectionStages = {
     this.authStage = { state: 'pending', attempts: 0, lastError: null };
     this.websocketStage = { state: 'pending', attempts: 0, lastError: null };
     this.updateUI();
-    this.hideErrorMessage();
     this.clearFieldHighlights();
   },
 
@@ -763,9 +924,8 @@ const connectionStages = {
     }
     this.updateUI();
 
-    // Check if we should show error message
+    // Highlight problematic field on error
     if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
-      this.showErrorMessage();
       this.highlightProblematicField();
     }
   },
@@ -792,29 +952,35 @@ const connectionStages = {
 
     if (!stageElement || !iconElement || !statusElement) return;
 
+    // Hide websocket stage when pending
+    if (stageName === 'websocket' && stageData.state === 'pending') {
+      stageElement.style.display = 'none';
+      return;
+    } else {
+      stageElement.style.display = '';
+    }
+
     // Remove all state classes
-    stageElement.classList.remove('stage-pending', 'stage-progress', 'stage-success', 'stage-error');
+    stageElement.classList.remove('stage-progress', 'stage-success', 'stage-error');
 
     // Add current state class
     stageElement.classList.add(`stage-${stageData.state}`);
 
     // Update icon
     const icons = {
-      pending: '⏳',
       progress: '🔄',
       success: '✅',
       error: '❌'
     };
-    iconElement.textContent = icons[stageData.state] || '⏳';
+    iconElement.textContent = icons[stageData.state] || '';
 
     // Update status text
     const statusTexts = {
-      pending: 'Pending...',
       progress: stageName === 'auth' ? 'Authenticating...' : 'Connecting...',
       success: stageName === 'auth' ? 'Authenticated ✓' : 'Connected ✓',
       error: stageData.lastError || 'Failed'
     };
-    statusElement.textContent = statusTexts[stageData.state] || statusTexts.pending;
+    statusElement.textContent = statusTexts[stageData.state] || '';
 
     // Update attempts counter
     if (attemptsElement) {
@@ -843,35 +1009,6 @@ const connectionStages = {
       titleElement.textContent = 'Connecting to Platform...';
     } else {
       titleElement.textContent = 'Connecting to Platform...';
-    }
-  },
-
-  // Show error message with guidance
-  showErrorMessage() {
-    const messageElement = document.getElementById('connectionErrorMessage');
-    if (!messageElement) return;
-
-    let message = '';
-
-    if (this.authStage.state === 'error' && this.websocketStage.state === 'pending') {
-      message = '<strong>Authentication Failed</strong>Authentication could not complete. Please verify your Client ID, Client Secret, and Token URL are correct.';
-    } else if (this.authStage.state === 'success' && this.websocketStage.state === 'error') {
-      message = '<strong>WebSocket Connection Failed</strong>Authentication successful, but could not connect to WebSocket. Please verify your WebSocket URL is correct.';
-    } else if (this.authStage.state === 'error' && this.websocketStage.state === 'error') {
-      message = '<strong>Connection Failed</strong>Both authentication and WebSocket connection failed. Please verify all connection settings.';
-    }
-
-    if (message) {
-      messageElement.innerHTML = message;
-      messageElement.style.display = 'block';
-    }
-  },
-
-  // Hide error message
-  hideErrorMessage() {
-    const messageElement = document.getElementById('connectionErrorMessage');
-    if (messageElement) {
-      messageElement.style.display = 'none';
     }
   },
 
@@ -1175,8 +1312,8 @@ const ui = {
         const action = button.dataset.action;
         const componentId = button.dataset.componentId;
 
-        // Disable button during operation
-        button.disabled = true;
+        // Disable button and show spinner (keeps original label)
+        feedback.setButtonLoading(button);
 
         try {
           // Check if this action requires input
@@ -1191,10 +1328,13 @@ const ui = {
             // Actions without input (query, cancel, offer, pause, resume, stop, forward, backward, process)
             await componentHandlers.handleComponentSimpleAction(component, action, componentId);
           }
+
+          // Success: green background briefly, then reset
+          feedback.setButtonSuccess(button);
         } catch (error) {
-          // Error is already logged in handler
-        } finally {
-          button.disabled = false;
+          // Error: red background briefly, then reset
+          // Note: CUSS status badge is already updated by the handler's catch block
+          feedback.setButtonError(button);
         }
       });
     });
@@ -1443,7 +1583,18 @@ function updateComponentStatusBadge(componentId, status) {
 
   // Create new status badge for non-OK status
   const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
-  const temporaryStatuses = ['WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT'];
+  // Transient statuses: these show briefly then fade out
+  // Includes CUSS2 component statuses that are temporary conditions from SETUP/SEND failures
+  const temporaryStatuses = [
+    'WRONG_APPLICATION_STATE',
+    'MEDIA_PRESENT',
+    'MEDIA_ABSENT',
+    'SOFTWARE_ERROR',
+    'DATA_MISSING',
+    'HARDWARE_ERROR',
+    'CANCELLED',
+    'TIMED_OUT'
+  ];
   const isTemporary = temporaryStatuses.includes(status);
   const fadeClass = isTemporary ? 'fade-out' : '';
 
@@ -1507,6 +1658,7 @@ const componentHandlers = {
   // Handle simple component actions (no input required)
   async handleComponentSimpleAction(component, action, componentId) {
     const name = component.deviceType;
+    let hadError = false;
 
     try {
       logger.info(`Executing ${action} on ${name}...`);
@@ -1524,18 +1676,30 @@ const componentHandlers = {
         throw new Error(`${action} not available on ${name}`);
       }
     } catch (error) {
+      hadError = true;
       logger.error(`Failed to ${action} ${name}: ${error.message}`);
+
+      // Extract CUSS status code from error and update badge immediately
+      const statusCode = extractStatusCodeFromError(error);
+      if (statusCode) {
+        updateComponentStatusBadge(componentId, statusCode);
+      }
+
       throw error;
     }
     finally {
-      // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
+      // Only update badge from component.status on success path
+      // On error, the catch block already set the badge from the error's status code
+      if (!hadError) {
+        updateComponentStatusBadge(componentId, component.status);
+      }
     }
   },
 
   // Handle component data action (setup/send/play/read)
   async handleComponentDataAction(component, action, inputValue, componentId) {
     const name = component.deviceType;
+    let hadError = false;
 
     try {
       let data = null;
@@ -1585,12 +1749,23 @@ const componentHandlers = {
       }
     }
     catch (error) {
+      hadError = true;
       logger.error(`Failed to ${action} ${name}: ${error.message}`);
+
+      // Extract CUSS status code from error and update badge immediately
+      const statusCode = extractStatusCodeFromError(error);
+      if (statusCode) {
+        updateComponentStatusBadge(componentId, statusCode);
+      }
+
       throw error;
     }
     finally {
-      // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
+      // Only update badge from component.status on success path
+      // On error, the catch block already set the badge from the error's status code
+      if (!hadError) {
+        updateComponentStatusBadge(componentId, component.status);
+      }
     }
   },
 
@@ -2318,6 +2493,9 @@ function generateTokenUrl() {
 function init() {
   // Initialize DOM
   dom.init();
+
+  // Initialize feedback system
+  feedback.init();
 
   // Apply query parameters to form if provided
   if (queryConfig.clientId) document.getElementById("clientId").value = queryConfig.clientId;

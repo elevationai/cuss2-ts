@@ -285,6 +285,12 @@ button:disabled {
   animation: pulse 2s ease-in-out infinite;
 }
 
+.connection-stage.stage-initializing {
+  border-color: #64b5f6;
+  background: rgba(100, 181, 246, 0.05);
+  animation: pulse-initializing 2s ease-in-out infinite;
+}
+
 .connection-stage.stage-success {
   border-color: #64ffda;
   background: rgba(100, 255, 218, 0.05);
@@ -303,6 +309,17 @@ button:disabled {
   50% {
     border-color: #ffaa32;
     box-shadow: 0 0 0 4px rgba(255, 200, 100, 0);
+  }
+}
+
+@keyframes pulse-initializing {
+  0%, 100% {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 0 rgba(100, 181, 246, 0.4);
+  }
+  50% {
+    border-color: #42a5f5;
+    box-shadow: 0 0 0 4px rgba(100, 181, 246, 0);
   }
 }
 
@@ -341,6 +358,10 @@ button:disabled {
 
 .connection-stage.stage-progress .stage-status {
   color: #ffc864;
+}
+
+.connection-stage.stage-initializing .stage-status {
+  color: #64b5f6;
 }
 
 .stage-attempts {

@@ -983,6 +983,7 @@ const connectionStages = {
     // Update icon
     const icons = {
       progress: '🔄',
+      initializing: '⏳',  // Distinct icon for "open but initializing"
       success: '✅',
       error: '❌'
     };
@@ -991,6 +992,7 @@ const connectionStages = {
     // Update status text
     const statusTexts = {
       progress: stageName === 'auth' ? 'Authenticating...' : 'Connecting...',
+      initializing: 'Initializing...',  // WebSocket open, waiting for platform init
       success: stageName === 'auth' ? 'Authenticated ✓' : 'Connected ✓',
       error: stageData.lastError || 'Failed'
     };
@@ -1019,6 +1021,9 @@ const connectionStages = {
       titleElement.textContent = '✅ Connected Successfully';
     } else if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
       titleElement.textContent = '⚠️ Connection Failed';
+    } else if (this.websocketStage.state === 'initializing') {
+      // WebSocket is open, but platform/bridge initialization is in progress
+      titleElement.textContent = '⏳ Initializing Platform...';
     } else if (this.authStage.state === 'progress' || this.websocketStage.state === 'progress') {
       titleElement.textContent = 'Connecting to Platform...';
     } else {
@@ -2168,11 +2173,10 @@ const connectionManager = {
             this.hideReconnectionBanner();
             this.showReconnectionSuccess();
           } else {
-            // Initial connection - update progress indicator
-            // Show "Connected" on websocket stage for visual feedback,
-            // but don't set the completion flags yet - that happens after
-            // environment/components are loaded in performConnection()
-            connectionStages.updateStage('websocket', 'success', 'Connected');
+            // Initial connection - WebSocket is open but platform init is still in progress
+            // Show "Initializing..." state - NOT success yet!
+            // Success is only shown after environment/components are loaded in performConnection()
+            connectionStages.updateStage('websocket', 'initializing', 'Initializing...');
           }
         }
       },
@@ -2496,6 +2500,10 @@ const connectionManager = {
     // and we have environment, components, and initial state.
     this.hasCompletedInitialization = true;
     this.wasEverConnected = true;
+
+    // NOW we can show the websocket stage as fully "success"
+    // This transitions from "Initializing..." to "Connected ✓"
+    connectionStages.updateStage('websocket', 'success', 'Connected');
     logger.info("Initialization complete - connection fully established");
 
     // If auto-progressing to a state, do it now

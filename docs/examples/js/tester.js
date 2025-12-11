@@ -2033,6 +2033,13 @@ const connectionManager = {
   // Store the last error message for display in the UI
   lastConnectionError: null,
 
+  // Connection lifecycle management
+  // Stores references to attached handlers so they can be properly removed on cleanup
+  _connectionHandlers: null,
+  _platformHandlers: null,
+  _listenerConnection: null,  // The connection object handlers are attached to
+  _listenerCuss2: null,       // The cuss2 object platform handlers are attached to
+
   // Show reconnection banner
   showReconnectionBanner() {
     // Remove any existing banner
@@ -2128,108 +2135,113 @@ const connectionManager = {
     logger.success('Reconnection successful!');
   },
 
+  // Remove all connection event listeners from the previous connection
+  removeConnectionListeners() {
+    if (this._listenerConnection && this._connectionHandlers) {
+      for (const [event, handler] of Object.entries(this._connectionHandlers)) {
+        this._listenerConnection.off(event, handler);
+      }
+      logger.info("Removed connection event listeners");
+    }
+    this._connectionHandlers = null;
+    this._listenerConnection = null;
+  },
+
+  // Remove all platform event listeners from the previous cuss2 instance
+  removePlatformListeners() {
+    if (this._listenerCuss2 && this._platformHandlers) {
+      for (const [event, handler] of Object.entries(this._platformHandlers)) {
+        this._listenerCuss2.off(event, handler);
+      }
+      logger.info("Removed platform event listeners");
+    }
+    this._platformHandlers = null;
+    this._listenerCuss2 = null;
+  },
+
+  // Remove all listeners (convenience method)
+  removeAllListeners() {
+    this.removeConnectionListeners();
+    this.removePlatformListeners();
+  },
+
   // Setup connection event listeners
   setupConnectionListeners() {
-    const connectionEvents = [
-      {
-        event: "connecting",
-        handler: (attempt) => {
-          logger.info(`WebSocket connection attempt ${attempt}`);
+    // Clean up any existing listeners first
+    this.removeConnectionListeners();
 
-          // Check if this is a reconnection attempt
-          if (this.wasEverConnected) {
-            // This is a reconnection - show banner
-            this.showReconnectionBanner();
-            this.updateReconnectionAttempts(attempt);
-          } else {
-            // Initial connection - update progress indicator
-            connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
-          }
-        },
-      },
-      {
-        event: "authenticating",
-        handler: (attempt) => {
-          logger.info(`Authentication attempt ${attempt}`);
-          connectionStages.updateStage('auth', 'progress', 'Authenticating...', attempt);
-        },
-      },
-      {
-        event: "authenticated",
-        handler: () => {
-          logger.success("Authentication successful");
-          connectionStages.updateStage('auth', 'success', 'Authenticated');
-        }
-      },
-      {
-        event: "open",
-        handler: () => {
-          logger.success("WebSocket connection opened");
+    // Store reference to the connection we're attaching to
+    this._listenerConnection = cuss2.connection;
 
-          // Check if this was a reconnection (based on previous successful init)
-          const wasReconnecting = this.isReconnecting;
+    // Define handlers as named functions so we can remove them later
+    this._connectionHandlers = {
+      connecting: (attempt) => {
+        logger.info(`WebSocket connection attempt ${attempt}`);
+        if (this.wasEverConnected) {
+          this.showReconnectionBanner();
+          this.updateReconnectionAttempts(attempt);
+        } else {
+          connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
+        }
+      },
 
-          // NOTE: Do NOT set wasEverConnected or hasCompletedInitialization here!
-          // The WebSocket being open is only the transport layer.
-          // The bridge/platform may still fail to initialize (e.g., CORBA timeout).
-          // These flags are set at the END of performConnection() after full init.
+      authenticating: (attempt) => {
+        logger.info(`Authentication attempt ${attempt}`);
+        connectionStages.updateStage('auth', 'progress', 'Authenticating...', attempt);
+      },
 
-          if (wasReconnecting) {
-            // Reconnection successful - hide banner and show success toast
-            // Note: For reconnection, we set the flags here because we already
-            // completed initialization once before (wasEverConnected was true)
-            this.hasCompletedInitialization = true;
-            this.hideReconnectionBanner();
-            this.showReconnectionSuccess();
-          } else {
-            // Initial connection - WebSocket is open but platform init is still in progress
-            // Show "Initializing..." state - NOT success yet!
-            // Success is only shown after environment/components are loaded in performConnection()
-            connectionStages.updateStage('websocket', 'initializing', 'Initializing...');
-          }
-        }
+      authenticated: () => {
+        logger.success("Authentication successful");
+        connectionStages.updateStage('auth', 'success', 'Authenticated');
       },
-      {
-        event: "close",
-        handler: (event) => {
-          // Let handleConnectionClose manage all the logic and stage updates
-          // It has the full context to decide what state we should be in
-          this.handleConnectionClose(event);
-        }
-      },
-      {
-        event: "error",
-        handler: (error) => {
-          const errorMessage = (error && error.message) || 'Unknown error';
-          logger.error(`Connection error: ${errorMessage}`);
-          // Store the error message so it can be displayed in the UI
-          this.lastConnectionError = errorMessage;
-        }
-      },
-      {
-        event: "socketError",
-        handler: (error) => {
-          const errorMessage = (error && error.message) || String(error) || 'Socket error';
-          logger.error(`Socket error: ${errorMessage}`);
-          // Store the error message so it can be displayed in the UI
-          this.lastConnectionError = errorMessage;
-          if (connectionStages.websocketStage.state !== 'success') {
-            connectionStages.updateStage('websocket', 'error', errorMessage);
-          }
-        }
-      },
-      {
-        event: "authenticationError",
-        handler: (error) => {
-          logger.error(`Authentication error: ${error.message}`);
-          connectionStages.updateStage('auth', 'error', error.message || 'Authentication failed');
-        }
-      },
-    ];
 
-    connectionEvents.forEach(({ event, handler }) => {
+      open: () => {
+        logger.success("WebSocket connection opened");
+        const wasReconnecting = this.isReconnecting;
+
+        // NOTE: Do NOT set wasEverConnected or hasCompletedInitialization here!
+        // The WebSocket being open is only the transport layer.
+        // The bridge/platform may still fail to initialize (e.g., CORBA timeout).
+        // These flags are set at the END of performConnection() after full init.
+
+        if (wasReconnecting) {
+          this.hasCompletedInitialization = true;
+          this.hideReconnectionBanner();
+          this.showReconnectionSuccess();
+        } else {
+          connectionStages.updateStage('websocket', 'initializing', 'Initializing...');
+        }
+      },
+
+      close: (event) => {
+        this.handleConnectionClose(event);
+      },
+
+      error: (error) => {
+        const errorMessage = (error && error.message) || 'Unknown error';
+        logger.error(`Connection error: ${errorMessage}`);
+        this.lastConnectionError = errorMessage;
+      },
+
+      socketError: (error) => {
+        const errorMessage = (error && error.message) || String(error) || 'Socket error';
+        logger.error(`Socket error: ${errorMessage}`);
+        this.lastConnectionError = errorMessage;
+        if (connectionStages.websocketStage.state !== 'success') {
+          connectionStages.updateStage('websocket', 'error', errorMessage);
+        }
+      },
+
+      authenticationError: (error) => {
+        logger.error(`Authentication error: ${error.message}`);
+        connectionStages.updateStage('auth', 'error', error.message || 'Authentication failed');
+      },
+    };
+
+    // Attach all handlers
+    for (const [event, handler] of Object.entries(this._connectionHandlers)) {
       cuss2.connection.on(event, handler);
-    });
+    }
   },
 
   // Handle connection close
@@ -2298,110 +2310,90 @@ const connectionManager = {
 
   // Setup platform event listeners
   setupPlatformListeners() {
-    const platformEvents = [
-      {
-        event: "stateChange",
-        handler: (stateChange) => {
-          logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
-          ui.updateStateDisplay(stateChange.current);
-          ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
-          ui.updateAvailabilityReasons();
+    // Clean up any existing listeners first
+    this.removePlatformListeners();
 
-          // Set applicationOnline flag to enable automatic state transitions
-          // When true, the library will automatically transition between UNAVAILABLE/AVAILABLE
-          // based on required component health
-          if (cuss2) {
-            if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
-                stateChange.current === ApplicationStateCodes.ACTIVE) {
-              cuss2.applicationOnline = true;
-              logger.info(`Application online: true (reached ${stateChange.current})`);
-            }
-            // Reset to false on STOPPED or RELOAD state
-            else if (stateChange.current === ApplicationStateCodes.STOPPED ||
-                     stateChange.current === ApplicationStateCodes.RELOAD) {
-              cuss2.applicationOnline = false;
-              logger.info(`Application online: false (${stateChange.current})`);
-            }
+    // Store reference to the cuss2 instance we're attaching to
+    this._listenerCuss2 = cuss2;
 
-            // Sync checkbox with applicationOnline property
-            if (dom.elements.isOnlineToggle) {
-              dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
-            }
+    // Define handlers as named functions so we can remove them later
+    this._platformHandlers = {
+      stateChange: (stateChange) => {
+        logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
+        ui.updateStateDisplay(stateChange.current);
+        ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
+        ui.updateAvailabilityReasons();
+
+        // Set applicationOnline flag to enable automatic state transitions
+        if (cuss2) {
+          if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
+              stateChange.current === ApplicationStateCodes.ACTIVE) {
+            cuss2.applicationOnline = true;
+            logger.info(`Application online: true (reached ${stateChange.current})`);
           }
-        },
-      },
-      {
-        event: "activated",
-        handler: () => {
-          logger.event("Application activated");
-          ui.updateApplicationInfo(true);
-          // Dismiss timeout warning when successfully reactivated
-          ui.dismissTimeoutWarning();
-
-          // Show accessible mode toast if activated in accessible mode
-          if (cuss2.accessibleMode) {
-            const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
-            logger.info(`Accessible mode activated - showing acknowledgement prompt (${killTimeoutSeconds}s timeout)`);
-            ui.showAccessibleModeToast(killTimeoutSeconds);
+          else if (stateChange.current === ApplicationStateCodes.STOPPED ||
+                   stateChange.current === ApplicationStateCodes.RELOAD) {
+            cuss2.applicationOnline = false;
+            logger.info(`Application online: false (${stateChange.current})`);
           }
-        },
+
+          if (dom.elements.isOnlineToggle) {
+            dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
+          }
+        }
       },
-      {
-        event: "deactivated",
-        handler: (newState) => {
-          logger.event(`Application deactivated, new state: ${newState}`);
-          ui.updateApplicationInfo(false);
-          // Update the state display and buttons to reflect new state
-          ui.updateStateDisplay(newState);
-          ui.updateAvailabilityReasons();
-          // Dismiss timeout warning when leaving ACTIVE state
-          ui.dismissTimeoutWarning();
-          // Dismiss accessible mode toast when leaving ACTIVE state
-          ui.dismissAccessibleModeToast();
-        },
-      },
-      {
-        event: "componentStateChange",
-        handler: (component) => {
-          logger.event(`Component ${component.deviceType} state changed`);
-          // Don't redisplay all components on every state change - too aggressive
-          // Just update the toggle states to reflect current component state
-          componentHandlers.updateAllToggleStates();
-          // Update state buttons to reflect required component availability
-          ui.updateStateButtons(cuss2.state);
-          // Update availability reasons to reflect component health
-          ui.updateAvailabilityReasons();
-          // Update the status badge to reflect the new component status
-          updateComponentStatusBadge(component.id, component.status);
-          // Update the ready badge to reflect the new component ready state
-          updateComponentReadyBadge(component.id, component.ready);
-        },
-      },
-      {
-        event: "sessionTimeout",
-        handler: async () => {
-          // Get killTimeout from the environment data (fetched during initialization)
+
+      activated: () => {
+        logger.event("Application activated");
+        ui.updateApplicationInfo(true);
+        ui.dismissTimeoutWarning();
+
+        if (cuss2.accessibleMode) {
           const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
-          logger.error(`Session timeout warning - Application will be terminated in ${killTimeoutSeconds} seconds`);
-          ui.showTimeoutWarning(killTimeoutSeconds);
-
-          // Per CUSS2 spec, application should transition to AVAILABLE state on session timeout
-          if (cuss2 && cuss2.state === ApplicationStateCodes.ACTIVE) {
-            logger.info("Session timeout received - transitioning to AVAILABLE state");
-            try {
-              await cuss2.requestAvailableState();
-              logger.success("Successfully transitioned to AVAILABLE state");
-            } catch (error) {
-              logger.error(`Failed to transition to AVAILABLE state: ${error.message}`);
-            }
-          }
-        },
+          logger.info(`Accessible mode activated - showing acknowledgement prompt (${killTimeoutSeconds}s timeout)`);
+          ui.showAccessibleModeToast(killTimeoutSeconds);
+        }
       },
-    ];
 
-    platformEvents.forEach(({ event, handler }) => {
+      deactivated: (newState) => {
+        logger.event(`Application deactivated, new state: ${newState}`);
+        ui.updateApplicationInfo(false);
+        ui.updateStateDisplay(newState);
+        ui.updateAvailabilityReasons();
+        ui.dismissTimeoutWarning();
+        ui.dismissAccessibleModeToast();
+      },
+
+      componentStateChange: (component) => {
+        logger.event(`Component ${component.deviceType} state changed`);
+        componentHandlers.updateAllToggleStates();
+        ui.updateStateButtons(cuss2.state);
+        ui.updateAvailabilityReasons();
+        updateComponentStatusBadge(component.id, component.status);
+        updateComponentReadyBadge(component.id, component.ready);
+      },
+
+      sessionTimeout: async () => {
+        const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
+        logger.error(`Session timeout warning - Application will be terminated in ${killTimeoutSeconds} seconds`);
+        ui.showTimeoutWarning(killTimeoutSeconds);
+
+        if (cuss2 && cuss2.state === ApplicationStateCodes.ACTIVE) {
+          logger.info("Session timeout received - transitioning to AVAILABLE state");
+          try {
+            await cuss2.requestAvailableState();
+            logger.success("Successfully transitioned to AVAILABLE state");
+          } catch (error) {
+            logger.error(`Failed to transition to AVAILABLE state: ${error.message}`);
+          }
+        }
+      },
+    };
+
+    // Attach all handlers
+    for (const [event, handler] of Object.entries(this._platformHandlers)) {
       cuss2.on(event, handler);
-    });
+    }
   },
 
   // Connect to CUSS2
@@ -2464,6 +2456,10 @@ const connectionManager = {
     // This prevents old connections from continuing retry attempts
     if (cuss2) {
       logger.info("Closing previous connection before new attempt...");
+
+      // Remove event listeners FIRST to prevent stale events from firing
+      this.removeAllListeners();
+
       try {
         // Close the websocket connection
         cuss2.connection.close(1000, "New connection attempt");
@@ -2548,6 +2544,9 @@ const connectionManager = {
   cancelConnection() {
     logger.info("Cancelling connection attempt...");
 
+    // Remove event listeners FIRST to prevent stale events from firing
+    this.removeAllListeners();
+
     // Reset initialization flag and clear any stored error
     this.hasCompletedInitialization = false;
     this.lastConnectionError = null;
@@ -2564,8 +2563,10 @@ const connectionManager = {
   // Disconnect
   disconnect() {
     if (cuss2) {
+      // Remove event listeners FIRST to prevent stale events from firing
+      this.removeAllListeners();
+
       // Reset connection tracking flags BEFORE closing
-      // This ensures the close handler recognizes it as a manual disconnect
       this.wasEverConnected = false;
       this.hasCompletedInitialization = false;
       this.isReconnecting = false;

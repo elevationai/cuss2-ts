@@ -2012,8 +2012,11 @@ const componentHandlers = {
 
 // ===== CONNECTION MANAGEMENT =====
 const connectionManager = {
-  // Track if user ever successfully connected
+  // Track if user ever successfully connected (for reconnection UX)
   wasEverConnected: false,
+  // Track if the current connection attempt fully completed initialization
+  // This is stricter than wasEverConnected - it means platform/bridge init is done
+  hasCompletedInitialization: false,
   isReconnecting: false,
 
   // Show reconnection banner
@@ -2149,18 +2152,26 @@ const connectionManager = {
         handler: () => {
           logger.success("WebSocket connection opened");
 
-          // Check if this was a reconnection
+          // Check if this was a reconnection (based on previous successful init)
           const wasReconnecting = this.isReconnecting;
 
-          // Mark as successfully connected
-          this.wasEverConnected = true;
+          // NOTE: Do NOT set wasEverConnected or hasCompletedInitialization here!
+          // The WebSocket being open is only the transport layer.
+          // The bridge/platform may still fail to initialize (e.g., CORBA timeout).
+          // These flags are set at the END of performConnection() after full init.
 
           if (wasReconnecting) {
             // Reconnection successful - hide banner and show success toast
+            // Note: For reconnection, we set the flags here because we already
+            // completed initialization once before (wasEverConnected was true)
+            this.hasCompletedInitialization = true;
             this.hideReconnectionBanner();
             this.showReconnectionSuccess();
           } else {
             // Initial connection - update progress indicator
+            // Show "Connected" on websocket stage for visual feedback,
+            // but don't set the completion flags yet - that happens after
+            // environment/components are loaded in performConnection()
             connectionStages.updateStage('websocket', 'success', 'Connected');
           }
         }
@@ -2168,17 +2179,16 @@ const connectionManager = {
       {
         event: "close",
         handler: (event) => {
-          // Only mark as error if it's not a normal close AND not during initial connection
-          if (event && event.code !== 1000 && connectionStages.websocketStage.state !== 'success' && !this.wasEverConnected) {
-            connectionStages.updateStage('websocket', 'error', 'Connection closed');
-          }
+          // Let handleConnectionClose manage all the logic and stage updates
+          // It has the full context to decide what state we should be in
           this.handleConnectionClose(event);
         }
       },
       {
         event: "error",
         handler: (error) => {
-          logger.error(`Connection error: ${error.message}`);
+          const errorMessage = (error && error.message) || 'Unknown error';
+          logger.error(`Connection error: ${errorMessage}`);
         }
       },
       {
@@ -2222,19 +2232,30 @@ const connectionManager = {
 
       // Hide reconnection banner if showing
       this.hideReconnectionBanner();
-    } else if (!this.wasEverConnected) {
-      // Initial connection failed (abnormal close before ever connecting)
-      // DON'T hide the status container - keep error details visible
+    } else if (!this.hasCompletedInitialization) {
+      // Initial connection failed (abnormal close before initialization completed)
+      // This includes the case where WebSocket opened but bridge/CORBA timed out
       logger.info("Initial connection failed - showing error details");
 
-      // Note: The connection status container will stay visible with error details
-      // User can see which stage failed (auth vs websocket)
-      // The cancel button allows them to dismiss and try again
+      // Update the websocket stage to show error (even if it briefly showed "Connected")
+      // This overrides the optimistic "Connected" shown when WebSocket opened
+      connectionStages.updateStage('websocket', 'error', 'Connection failed');
+
+      // Keep connection panel visible with error details
+      // The connection status container shows which stage failed
+      // User can click Cancel to dismiss and try again
+
+      // Note: We do NOT call ui.updateConnectionStatus("FAILED") here because
+      // that would hide the connection status container with its detailed error info.
+      // The user can see the stage indicators showing where the failure occurred.
     } else {
-      // Connection dropped unexpectedly - user was connected before
+      // Connection dropped unexpectedly AFTER initialization completed
       // DON'T switch panels - the library will auto-reconnect
       // The "connecting" event handler will show the reconnection banner
       logger.info("Connection dropped - auto-reconnection will start");
+
+      // Reset initialization flag since we need to re-initialize
+      this.hasCompletedInitialization = false;
 
       // Disable state buttons during reconnection
       Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
@@ -2378,7 +2399,12 @@ const connectionManager = {
       await this.performConnection(config);
     }
     catch (error) {
-      logger.error(`Connection failed: ${error.message}`);
+      // Handle undefined/null error gracefully
+      const errorMessage = (error && error.message) || 'Unknown connection error';
+      logger.error(`Connection failed: ${errorMessage}`);
+
+      // Ensure initialization flag is reset on error
+      this.hasCompletedInitialization = false;
 
       // Don't call updateConnectionStatus("FAILED") here!
       // The two-stage indicator is already showing detailed error information
@@ -2394,6 +2420,10 @@ const connectionManager = {
   async performConnection(config) {
     logger.info("Connecting to CUSS2 platform...");
     ui.updateConnectionStatus("CONNECTING");
+
+    // Reset initialization flag for this new connection attempt
+    // This ensures we don't falsely treat a failure as "post-connection drop"
+    this.hasCompletedInitialization = false;
 
     // Close any existing connection before attempting a new one
     // This prevents old connections from continuing retry attempts
@@ -2460,6 +2490,14 @@ const connectionManager = {
     // Setup component listeners
     componentHandlers.setupComponentListeners();
 
+    // Mark initialization as complete AFTER all setup is done
+    // This is the key distinction: WebSocket "open" is just the transport layer,
+    // but hasCompletedInitialization means the platform/bridge fully initialized
+    // and we have environment, components, and initial state.
+    this.hasCompletedInitialization = true;
+    this.wasEverConnected = true;
+    logger.info("Initialization complete - connection fully established");
+
     // If auto-progressing to a state, do it now
     if (queryConfig.go) { // intentionally do no run if go is empty string
       const targetState = queryConfig.go.toUpperCase();
@@ -2470,6 +2508,10 @@ const connectionManager = {
   // Cancel ongoing connection attempt
   cancelConnection() {
     logger.info("Cancelling connection attempt...");
+
+    // Reset initialization flag
+    this.hasCompletedInitialization = false;
+
     if (cuss2) {
       // Close the connection which will abort any ongoing OAuth attempts
       cuss2.connection.close(1000, "Connection cancelled by user");
@@ -2485,6 +2527,7 @@ const connectionManager = {
       // Reset connection tracking flags BEFORE closing
       // This ensures the close handler recognizes it as a manual disconnect
       this.wasEverConnected = false;
+      this.hasCompletedInitialization = false;
       this.isReconnecting = false;
 
       // Close with code 1000 (normal close)

@@ -346,6 +346,10 @@ button:disabled {
 .stage-status {
   font-size: 13px;
   color: #a0a0a0;
+  /* Handle long error messages */
+  word-break: break-word;
+  flex: 1;
+  line-height: 1.4;
 }
 
 .connection-stage.stage-success .stage-status {

@@ -998,6 +998,13 @@ const connectionStages = {
     };
     statusElement.textContent = statusTexts[stageData.state] || '';
 
+    // Add title attribute for tooltip on error messages (useful for long errors)
+    if (stageData.state === 'error' && stageData.lastError) {
+      statusElement.title = stageData.lastError;
+    } else {
+      statusElement.title = '';
+    }
+
     // Update attempts counter
     if (attemptsElement) {
       if (stageData.state === 'progress' && stageData.attempts > 0) {
@@ -2023,6 +2030,8 @@ const connectionManager = {
   // This is stricter than wasEverConnected - it means platform/bridge init is done
   hasCompletedInitialization: false,
   isReconnecting: false,
+  // Store the last error message for display in the UI
+  lastConnectionError: null,
 
   // Show reconnection banner
   showReconnectionBanner() {
@@ -2193,14 +2202,19 @@ const connectionManager = {
         handler: (error) => {
           const errorMessage = (error && error.message) || 'Unknown error';
           logger.error(`Connection error: ${errorMessage}`);
+          // Store the error message so it can be displayed in the UI
+          this.lastConnectionError = errorMessage;
         }
       },
       {
         event: "socketError",
         handler: (error) => {
-          logger.error(`Socket error: ${error}`);
+          const errorMessage = (error && error.message) || String(error) || 'Socket error';
+          logger.error(`Socket error: ${errorMessage}`);
+          // Store the error message so it can be displayed in the UI
+          this.lastConnectionError = errorMessage;
           if (connectionStages.websocketStage.state !== 'success') {
-            connectionStages.updateStage('websocket', 'error', 'Connection failed');
+            connectionStages.updateStage('websocket', 'error', errorMessage);
           }
         }
       },
@@ -2220,7 +2234,19 @@ const connectionManager = {
 
   // Handle connection close
   handleConnectionClose(event) {
-    logger.error("WebSocket connection closed");
+    // Determine error message from available sources:
+    // 1. Stored lastConnectionError (from "error" or "socketError" events)
+    // 2. WebSocket close event reason
+    // 3. Generic fallback
+    const closeReason = event && event.reason;
+    const errorMessage = this.lastConnectionError || closeReason || 'Connection failed';
+
+    // Log close event with details
+    if (closeReason) {
+      logger.error(`WebSocket closed with reason: ${closeReason}`);
+    } else {
+      logger.error("WebSocket connection closed");
+    }
 
     // Check if this was a normal close (user disconnected) or abnormal
     const isNormalClose = event && event.code === 1000;
@@ -2236,14 +2262,18 @@ const connectionManager = {
 
       // Hide reconnection banner if showing
       this.hideReconnectionBanner();
+      // Clear stored error
+      this.lastConnectionError = null;
     } else if (!this.hasCompletedInitialization) {
       // Initial connection failed (abnormal close before initialization completed)
       // This includes the case where WebSocket opened but bridge/CORBA timed out
       logger.info("Initial connection failed - showing error details");
+      if (this.lastConnectionError) {
+        logger.error(`Error details: ${this.lastConnectionError}`);
+      }
 
-      // Update the websocket stage to show error (even if it briefly showed "Connected")
-      // This overrides the optimistic "Connected" shown when WebSocket opened
-      connectionStages.updateStage('websocket', 'error', 'Connection failed');
+      // Update the websocket stage to show error with specific message
+      connectionStages.updateStage('websocket', 'error', errorMessage);
 
       // Keep connection panel visible with error details
       // The connection status container shows which stage failed
@@ -2425,9 +2455,10 @@ const connectionManager = {
     logger.info("Connecting to CUSS2 platform...");
     ui.updateConnectionStatus("CONNECTING");
 
-    // Reset initialization flag for this new connection attempt
+    // Reset initialization flag and clear previous errors for this new connection attempt
     // This ensures we don't falsely treat a failure as "post-connection drop"
     this.hasCompletedInitialization = false;
+    this.lastConnectionError = null;
 
     // Close any existing connection before attempting a new one
     // This prevents old connections from continuing retry attempts
@@ -2517,8 +2548,9 @@ const connectionManager = {
   cancelConnection() {
     logger.info("Cancelling connection attempt...");
 
-    // Reset initialization flag
+    // Reset initialization flag and clear any stored error
     this.hasCompletedInitialization = false;
+    this.lastConnectionError = null;
 
     if (cuss2) {
       // Close the connection which will abort any ongoing OAuth attempts
@@ -2537,6 +2569,7 @@ const connectionManager = {
       this.wasEverConnected = false;
       this.hasCompletedInitialization = false;
       this.isReconnecting = false;
+      this.lastConnectionError = null;
 
       // Close with code 1000 (normal close)
       cuss2.connection.close(1000, "User disconnected");

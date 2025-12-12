@@ -1977,21 +1977,16 @@ const componentHandlers = {
     const dataDisplayBox = componentItem.querySelector('.data-display-box');
     if (!dataDisplayBox) return;
 
-    // Format the data for display
+    // Format the data for display - show only the raw data values
     let displayText = '';
     if (Array.isArray(dataRecords)) {
-      dataRecords.forEach((record, index) => {
-        if (index > 0) displayText += '\n---\n';
-        displayText += `Data: ${record.data || 'N/A'}\n`;
-        if (record.dsTypes && record.dsTypes.length > 0) {
-          displayText += `Type: ${record.dsTypes.join(', ')}\n`;
-        }
-        if (record.dataStatus) {
-          displayText += `Status: ${record.dataStatus}`;
-        }
-      });
+      displayText = dataRecords
+        .map(record => record.data || 'N/A')
+        .join('\n---\n');
+    } else if (dataRecords && typeof dataRecords === 'object' && dataRecords.data) {
+      displayText = dataRecords.data;
     } else {
-      displayText = JSON.stringify(dataRecords, null, 2);
+      displayText = String(dataRecords || 'N/A');
     }
 
     dataDisplayBox.textContent = displayText;

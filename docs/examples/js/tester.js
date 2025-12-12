@@ -1713,11 +1713,12 @@ const ui = {
       mixedContentBanner.remove();
     }
 
-    // Switch back to Connection panel
-    dom.setVisible(dom.elements.connectionPanel, true);
-    dom.setVisible(dom.elements.stateManagementPanel, false);
-    dom.setVisible(dom.elements.environmentPanel, false);
+    // Use updateConnectionStatus to properly reset all panel visibility
+    // This handles: connectionPanel, stateManagementPanel, environmentPanel,
+    // componentsPanel, eventLogPanel centering, connectButtonContainer, connectionStatusContainer
+    this.updateConnectionStatus("DISCONNECTED");
 
+    // Reset component list content
     dom.elements.componentList.innerHTML =
       '<p style="color: #666;">Connect to see available components...</p>';
     this.updateStateDisplay("STOPPED");
@@ -2218,13 +2219,33 @@ const connectionManager = {
       },
 
       error: (error) => {
-        const errorMessage = (error && error.message) || 'Unknown error';
+        // Handle both Error objects and Event objects
+        let errorMessage;
+        if (error && error.message) {
+          errorMessage = error.message;
+        } else if (error instanceof Event) {
+          errorMessage = 'Connection error';
+        } else {
+          errorMessage = 'Unknown error';
+        }
         logger.error(`Connection error: ${errorMessage}`);
         this.lastConnectionError = errorMessage;
       },
 
       socketError: (error) => {
-        const errorMessage = (error && error.message) || String(error) || 'Socket error';
+        // WebSocket error events don't contain detailed error info - they're just Event objects
+        // Check for actual Error with message, otherwise use a meaningful default
+        let errorMessage;
+        if (error && error.message) {
+          errorMessage = error.message;
+        } else if (error instanceof Event) {
+          // WebSocket error events don't expose details for security reasons
+          errorMessage = 'WebSocket connection failed';
+        } else if (error) {
+          errorMessage = String(error);
+        } else {
+          errorMessage = 'Socket error';
+        }
         logger.error(`Socket error: ${errorMessage}`);
         this.lastConnectionError = errorMessage;
         if (connectionStages.websocketStage.state !== 'success') {
@@ -2557,6 +2578,11 @@ const connectionManager = {
       cuss2 = null;
     }
     ui.updateConnectionStatus("DISCONNECTED");
+
+    // Reset button states (Connect enabled, Disconnect disabled)
+    dom.setButtonState(dom.elements.connectBtn, false);
+    dom.setButtonState(dom.elements.disconnectBtn, true);
+
     logger.info("Connection attempt cancelled");
   },
 
@@ -2579,8 +2605,13 @@ const connectionManager = {
       // Hide reconnection banner if showing
       this.hideReconnectionBanner();
 
-      // Reset UI
+      // Reset UI panels and visibility
       ui.resetUI();
+
+      // Reset button states (Connect enabled, Disconnect disabled, state buttons disabled)
+      dom.setButtonState(dom.elements.connectBtn, false);
+      dom.setButtonState(dom.elements.disconnectBtn, true);
+      Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
 
       logger.info("Disconnected and reset connection state");
     }

@@ -336,6 +336,13 @@ button:disabled {
   animation: hourglass-flip 1.5s ease-in-out infinite;
 }
 
+/* Explicitly disable icon animation for final states */
+.connection-stage.stage-success .stage-icon,
+.connection-stage.stage-error .stage-icon {
+  animation: none;
+  transform: rotate(0deg);
+}
+
 @keyframes hourglass-flip {
   0% {
     transform: rotate(0deg);

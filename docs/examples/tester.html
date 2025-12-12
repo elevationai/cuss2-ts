@@ -201,11 +201,8 @@
     <!-- Read Action Template -->
     <template id="read-action-template">
       <label class="component-action-label">Read</label>
-      <select class="component-action-dropdown read-dropdown" style="display: none;">
-        <option value="">Select test data...</option>
-      </select>
       <div class="data-display-container">
-        <label class="data-display-label">Data:</label>
+        <label class="data-display-label">Data: <span class="data-timestamp"></span></label>
         <div class="data-display-box"></div>
       </div>
       <input type="text" class="component-action-input read-input timeout-input" placeholder="Timeout ms (default: 30000)">

@@ -61,7 +61,7 @@ const dataTimestamps = new Map();
  */
 function updateAllDataTimestamps() {
   dataTimestamps.forEach((timestamp, componentId) => {
-    const componentItem = document.querySelector(`[data-component-id="${componentId}"]`);
+    const componentItem = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
     if (!componentItem) {
       // Component no longer exists, remove from tracking
       dataTimestamps.delete(componentId);
@@ -1971,7 +1971,7 @@ const componentHandlers = {
 
   // Update data display box for a component
   updateDataDisplay(componentId, dataRecords) {
-    const componentItem = document.querySelector(`[data-component-id="${componentId}"]`);
+    const componentItem = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
     if (!componentItem) return;
 
     const dataDisplayBox = componentItem.querySelector('.data-display-box');

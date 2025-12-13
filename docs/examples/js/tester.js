@@ -2342,6 +2342,22 @@ const connectionManager = {
           }
         },
       },
+      {
+        event: "message",
+        handler: (platformData) => {
+          // Log platform directives for visibility into API calls
+          // Future enhancements: 1) friendly directive names, 2) filter controls, 3) request/response tracking
+          const directive = platformData?.meta?.platformDirective;
+          if (directive) {
+            const componentId = platformData?.meta?.componentID;
+            const status = platformData?.meta?.messageCode || 'OK';
+            const msg = componentId !== undefined
+              ? `API: ${directive}(${componentId}) → ${status}`
+              : `API: ${directive} → ${status}`;
+            logger.info(msg);
+          }
+        },
+      },
     ];
 
     platformEvents.forEach(({ event, handler }) => {

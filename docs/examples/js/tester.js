@@ -279,6 +279,7 @@ const dom = {
     this.elements.currentState = document.getElementById("currentState");
     this.elements.componentList = document.getElementById("componentList");
     this.elements.logContainer = document.getElementById("logContainer");
+    this.elements.copyLogBtn = document.getElementById("copyLogBtn");
     this.elements.envDetails = document.getElementById("envDetails");
 
     // Panels
@@ -2835,6 +2836,28 @@ function init() {
 
   // Setup cancel connection button
   dom.elements.cancelConnectionBtn.addEventListener("click", () => connectionManager.cancelConnection());
+
+  // Setup copy log button
+  dom.elements.copyLogBtn.addEventListener("click", async () => {
+    const logContainer = dom.elements.logContainer;
+    const logEntries = logContainer.querySelectorAll('.log-entry');
+    const logText = Array.from(logEntries).map(entry => entry.textContent).join('\n');
+
+    try {
+      await navigator.clipboard.writeText(logText);
+      // Show feedback
+      const btn = dom.elements.copyLogBtn;
+      const originalText = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      logger.error(`Failed to copy log: ${err.message}`);
+    }
+  });
 
   // Setup isOnline checkbox
   dom.elements.isOnlineToggle.addEventListener("change", (e) => {

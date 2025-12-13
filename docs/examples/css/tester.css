@@ -76,6 +76,29 @@ body {
   box-shadow: 0 6px 20px rgba(255, 100, 100, 0.4);
 }
 
+.copy-btn-header {
+  padding: 6px 16px;
+  background: linear-gradient(135deg, #4a5568, #2d3748);
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.copy-btn-header:hover {
+  background: linear-gradient(135deg, #5a6578, #3d4758);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.copy-btn-header.copied {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  border-color: #48bb78;
+}
+
 /* ===== TYPOGRAPHY ===== */
 h1 {
   color: #64ffda;

@@ -301,7 +301,7 @@ export class Connection extends EventEmitter {
             const data = JSON.parse(event.data);
 
             if (data.ping) {
-              socket.send(`{ "pong": ${Date.now()} }`);
+              socket.send(JSON.stringify({ pong: new Date().toISOString() }));
               this.emit("ping", data);
               return;
             }

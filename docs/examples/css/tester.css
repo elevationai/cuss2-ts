@@ -285,6 +285,12 @@ button:disabled {
   animation: pulse 2s ease-in-out infinite;
 }
 
+.connection-stage.stage-initializing {
+  border-color: #64b5f6;
+  background: rgba(100, 181, 246, 0.05);
+  animation: pulse-initializing 2s ease-in-out infinite;
+}
+
 .connection-stage.stage-success {
   border-color: #64ffda;
   background: rgba(100, 255, 218, 0.05);
@@ -306,11 +312,53 @@ button:disabled {
   }
 }
 
+@keyframes pulse-initializing {
+  0%, 100% {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 0 rgba(100, 181, 246, 0.4);
+  }
+  50% {
+    border-color: #42a5f5;
+    box-shadow: 0 0 0 4px rgba(100, 181, 246, 0);
+  }
+}
+
 .stage-icon {
   font-size: 24px;
   min-width: 24px;
   text-align: center;
   transition: all 0.3s ease;
+  display: inline-block; /* Required for transform */
+}
+
+/* Animated hourglass flip for initializing state */
+.connection-stage.stage-initializing .stage-icon {
+  animation: hourglass-flip 1.5s ease-in-out infinite;
+}
+
+/* Explicitly disable icon animation for final states */
+.connection-stage.stage-success .stage-icon,
+.connection-stage.stage-error .stage-icon {
+  animation: none;
+  transform: rotate(0deg);
+}
+
+@keyframes hourglass-flip {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  75% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .stage-content {
@@ -329,6 +377,10 @@ button:disabled {
 .stage-status {
   font-size: 13px;
   color: #a0a0a0;
+  /* Handle long error messages */
+  word-break: break-word;
+  flex: 1;
+  line-height: 1.4;
 }
 
 .connection-stage.stage-success .stage-status {
@@ -341,6 +393,10 @@ button:disabled {
 
 .connection-stage.stage-progress .stage-status {
   color: #ffc864;
+}
+
+.connection-stage.stage-initializing .stage-status {
+  color: #64b5f6;
 }
 
 .stage-attempts {

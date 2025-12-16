@@ -11,11 +11,11 @@ const dsTypesHas = (
   charac0: ComponentCharacteristics,
   type: CussDataTypes | RegExp,
 ): boolean => {
-  const list = charac0?.dsTypesList as Array<string> | undefined;
+  const list = charac0?.dsTypesList as Array<CussDataTypes> | undefined;
   if (!list) return false;
 
   if (type instanceof RegExp) {
-    return list.some((d) => type.test(d));
+    return list.some((d) => type.test(String(d)));
   }
 
   return list.includes(type);

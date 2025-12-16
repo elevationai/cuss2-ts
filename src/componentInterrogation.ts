@@ -9,13 +9,13 @@ import {
 
 const dsTypesHas = (
   charac0: ComponentCharacteristics,
-  type: CussDataTypes | RegExp
+  type: CussDataTypes | RegExp,
 ): boolean => {
   const list = charac0?.dsTypesList as Array<string> | undefined;
   if (!list) return false;
 
   if (type instanceof RegExp) {
-    return list.some(d => type.test(d));
+    return list.some((d) => type.test(d));
   }
 
   return list.includes(type);

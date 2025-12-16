@@ -7,9 +7,20 @@ import {
   MediaTypes,
 } from "./types/modelExtensions.ts";
 
-const dsTypesHas = (charac0: ComponentCharacteristics, type: CussDataTypes) => {
-  return (charac0?.dsTypesList as Array<CussDataTypes>)?.find((d) => d === type);
+const dsTypesHas = (
+  charac0: ComponentCharacteristics,
+  type: CussDataTypes | RegExp
+): boolean => {
+  const list = charac0?.dsTypesList as Array<string> | undefined;
+  if (!list) return false;
+
+  if (type instanceof RegExp) {
+    return list.some(d => type.test(d));
+  }
+
+  return list.includes(type);
 };
+
 const mediaTypesHas = (mediaTypes: MediaTypes[], type: MediaTypes) => {
   return mediaTypes?.find((m) => m === type);
 };
@@ -73,9 +84,8 @@ export class ComponentInterrogation {
   static isKeypad = (component: EnvironmentComponent): boolean => {
     const charac0 = component.componentCharacteristics?.[0];
     if (!charac0) return false;
-    return !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY) ||
-      !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY_UP) ||
-      !!dsTypesHas(charac0, CussDataTypes.DS_TYPES_KEY_DOWN);
+
+    return dsTypesHas(charac0, /DS_TYPES_KEY/i);
   };
 
   static isIllumination = (component: EnvironmentComponent): boolean => {

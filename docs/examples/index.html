@@ -1,28 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Component Guides & Examples - CUSS2.ts Documentation</title>
-    <style>
-        :root {
-            --primary-cyan: #64ffda;
-            --secondary-blue: #48cae4;
-            --dark-navy: #0f0f1e;
-            --dark-purple: #1a1a2e;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --error-red: #ff6464;
-            --warning-orange: #ffc864;
-            --success-green: #64ff8c;
-            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
+---
+layout: page
+title: "CUSS2 Code Examples & Implementation Guide"
+description: "Interactive CUSS2 TypeScript examples and implementation guides. Learn to build airport self-service applications with component examples, code samples, and best practices."
+keywords: "CUSS2 examples, TypeScript examples, airport kiosk examples, airline self-service code, CUSS2 implementation, interactive examples"
+---
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+    :root {
+        --primary-cyan: #64ffda;
+        --secondary-blue: #48cae4;
+        --dark-navy: #0f0f1e;
+        --dark-purple: #1a1a2e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --error-red: #ff6464;
+        --warning-orange: #ffc864;
+        --success-green: #64ff8c;
+        --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
 
         html {
             scroll-behavior: smooth;
@@ -47,7 +42,6 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            padding: 1rem 0;
         }
 
         .nav-container {
@@ -160,6 +154,7 @@
 
         .page-header {
             margin-bottom: 3rem;
+            margin: 0 0 3rem;
         }
 
         .page-header h1 {
@@ -288,19 +283,6 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
-        <div class="nav-container">
-            <a href="../index.html" class="nav-brand">Cuss2.ts</a>
-            <ul class="nav-links">
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="/docs/api">API Reference</a></li>
-                <li><a href="index.html" class="active">Guides & Examples</a></li>
-                <li><a href="https://github.com/elevationai/cuss2-ts">GitHub</a></li>
-            </ul>
-        </div>
-    </nav>
-
     <div class="main-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -596,23 +578,11 @@ try {
         </main>
     </div>
 
-
-
-    <!-- Footer -->
-    <footer style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(26, 26, 46, 0.95); border-top: 1px solid rgba(100, 255, 218, 0.2); padding: 1rem 0; z-index: 100;">
-        <div style="max-width: 1400px; margin: 0 auto; padding: 0 2rem; text-align: center; color: #a0a0a0;">
-            <p>© 2025 Elevation AI - All rights reserved •
-                <a href="https://github.com/elevationai/cuss2-ts" style="color: #64ffda; text-decoration: none;">GitHub</a> •
-                <a href="https://jsr.io/@cuss/cuss2-ts" style="color: #64ffda; text-decoration: none;">JSR Package</a>
-            </p>
-        </div>
-    </footer>
-
-    <!-- Prism.js for Syntax Highlighting -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-vsc-dark-plus.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+<!-- Prism.js for Syntax Highlighting -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-vsc-dark-plus.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
 
     <style>
         /* Override Prism styles for better visibility */
@@ -675,5 +645,3 @@ try {
         window.addEventListener('scroll', updateActiveLink);
         document.addEventListener('DOMContentLoaded', updateActiveLink);
     </script>
-</body>
-</html>

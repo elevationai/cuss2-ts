@@ -1,0 +1,79 @@
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% if page.title %}{{ page.title }} - CUSS2.ts{% else %}CUSS2.ts - TypeScript SDK for Common Use Self-Service v2 Platform{% endif %}</title>
+	<meta name="description" content="{% if page.description %}{{ page.description }}{% else %}Complete CUSS2 development tools and libraries. TypeScript SDK, Angular wrapper, React hooks, and interactive sandbox for Common Use Self-Service v2 Platform development.{% endif %}">
+	<meta name="keywords" content="{% if page.keywords %}{{ page.keywords }}{% else %}CUSS2, Common Use Self-Service, airport kiosks, airline technology, TypeScript SDK, Angular, React, airport check-in, self-service kiosks, airline software{% endif %}">
+	<meta name="author" content="Elevation AI">
+	<meta name="robots" content="index, follow">
+	<link rel="canonical" href="https://ts.cuss2.dev{{ page.url }}">
+
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content="{% if page.url == '/' %}website{% else %}article{% endif %}">
+	<meta property="og:url" content="https://ts.cuss2.dev{{ page.url }}">
+	<meta property="og:title" content="{% if page.title %}{{ page.title }} - CUSS2.ts{% else %}CUSS2.dev - Complete SDKs for Airport Self-Service Development{% endif %}">
+	<meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}Professional CUSS2 development tools including TypeScript SDK, Angular wrapper, React hooks, and interactive sandbox for building airport self-service applications.{% endif %}">
+	<meta property="og:image" content="https://ts.cuss2.dev/assets/images/elevation-ai-logo-cuss2-development.png">
+	<meta property="og:site_name" content="CUSS2.dev">
+
+	<!-- Twitter -->
+	<meta property="twitter:card" content="summary_large_image">
+	<meta property="twitter:url" content="https://ts.cuss2.dev{{ page.url }}">
+	<meta property="twitter:title" content="{% if page.title %}{{ page.title }} - CUSS2.ts{% else %}CUSS2.dev - Complete SDKs for Airport Self-Service Development{% endif %}">
+	<meta property="twitter:description" content="{% if page.description %}{{ page.description }}{% else %}Professional CUSS2 development tools including TypeScript SDK, Angular wrapper, React hooks, and interactive sandbox.{% endif %}">
+	<meta property="twitter:image" content="https://ts.cuss2.dev/assets/images/elevation-ai-logo-cuss2-development.png">
+
+  <link rel="stylesheet" href="{{ 'assets/css/main.css' | relative_url }}">
+
+	<!-- Font Awesome: Lazy load to avoid blocking critical path -->
+	<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style"
+		onload="this.onload=null;this.rel='stylesheet'">
+	<noscript>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	</noscript>
+
+	<!-- Structured Data -->
+	<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "ts.CUSS2.dev",
+        "description": "Complete CUSS2 development tools and libraries for Common Use Self-Service v2 Platform",
+        "url": "https://ts.cuss2.dev",
+        "logo": "https://ts.cuss2.dev/assets/images/elevation-ai-logo-cuss2-development.png",
+        "foundingOrganization": {
+            "@type": "Organization",
+            "name": "Elevation AI",
+            "url": "https://elevationsoftware.ai"
+        },
+        "sameAs": [
+            "https://www.linkedin.com/company/elevationsoftwareai/",
+            "https://github.com/elevationai"
+        ],
+        "offers": [
+            {
+                "@type": "SoftwareApplication",
+                "name": "TypeScript SDK",
+                "description": "TypeScript SDK for Common Use Self-Service v2 Platform",
+                "url": "https://ts.cuss2.dev/"
+            }
+        ]
+    }
+    </script>
+
+    <!-- Load configuration -->
+    <script src="{{ "/config.js" | relative_url }}"></script>
+
+    <!-- Initialize reCAPTCHA -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.siteConfig && window.siteConfig.recaptchaSiteKey) {
+                const script = document.createElement('script');
+                script.src = `https://www.google.com/recaptcha/api.js?render=${window.siteConfig.recaptchaSiteKey}`;
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+
+</head>

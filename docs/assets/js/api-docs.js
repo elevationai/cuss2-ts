@@ -1,7 +1,10 @@
-// Mobile menu toggle
-document.getElementById("mobileMenuToggle").addEventListener("click", function () {
-  document.querySelector(".sidebar").classList.toggle("mobile-open");
-});
+// Mobile menu toggle (with null check for Jekyll pages)
+const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+if (mobileMenuToggle) {
+  mobileMenuToggle.addEventListener("click", function () {
+    document.querySelector(".sidebar").classList.toggle("mobile-open");
+  });
+}
 
 // TOC highlight using Intersection Observer
 document.addEventListener("DOMContentLoaded", function () {

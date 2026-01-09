@@ -1,79 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cuss2-ts - Connection API Reference</title>
-  <meta name="description" content="API documentation for connection module">
-  <link rel="stylesheet" href="../assets/css/main.css">
-  <!-- Prism.js CSS -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-</head>
-<body class="api-page">
-  <!-- Top Navigation -->
-  <nav class="top-nav">
-    <a href="../" class="logo">
-      Cuss2-ts
-    </a>
-    <ul class="nav-links">
-      <li><a href="../">Home</a></li>
-<li><a href="./">API Reference</a></li>
-<li><a href="../examples/index.html">Guides &amp; Examples</a></li>
-<li><a href="https://github.com/elevationai/cuss2-ts" target="_blank">GitHub</a></li>
-    </ul>
-    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
-  </nav>
+---
+layout: page
+title: Cuss2-ts - Connection API Reference
+description: API documentation for connection module
+---
 
-  <!-- Layout Container -->
-  <div class="layout-container">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="api-sidebar-header">
-        <a href="./" class="api-back-link">
-          <span>←</span> Back to API Reference
-        </a>
-        <h2 class="api-page-title">Connection</h2>
-      </div>
-      
-      
+<!-- Prism.js CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
+
+<!-- Layout Container -->
+<div class="layout-container">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="api-sidebar-header">
+      <a href="./" class="api-back-link">
+        <span>←</span> Back to API Reference
+      </a>
+      <h2 class="api-page-title">Connection</h2>
+    </div>
+
     <nav class="on-page-nav">
       <ul>
-        
-      <li>
-        <a href="#connection">Connection</a>
-        <ul><li><a href="#connection-connect">connect()</a></li>
-<li><a href="#connection-_createwebsocketandattacheventhandlers">_createWebSocketAndAttachEventHandlers()</a></li>
-<li><a href="#connection-send">send()</a></li>
-<li><a href="#connection-json">json()</a></li>
-<li><a href="#connection-sendandgetresponse">sendAndGetResponse()</a></li>
-<li><a href="#connection-close">close()</a></li>
-<li><a href="#connection-[symbol.dispose]">[Symbol.dispose]()</a></li></ul>
-      </li>
-    
+        <li>
+          <a href="#connection">Connection</a>
+          <ul>
+            <li><a href="#connection-connect">connect()</a></li>
+            <li><a href="#connection-_createwebsocketandattacheventhandlers">_createWebSocketAndAttachEventHandlers()</a></li>
+            <li><a href="#connection-send">send()</a></li>
+            <li><a href="#connection-json">json()</a></li>
+            <li><a href="#connection-sendandgetresponse">sendAndGetResponse()</a></li>
+            <li><a href="#connection-close">close()</a></li>
+            <li><a href="#connection-[symbol.dispose]">[Symbol.dispose]()</a></li>
+          </ul>
+        </li>
       </ul>
     </nav>
-  
-    </aside>
+  </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <article class="content-wrapper">
-        <div class="page-header">
-          <h1>Connection API Reference</h1>
-          <p>API documentation for connection module</p>
-        </div>
+  <!-- Main Content -->
+  <main class="main-content">
+    <article class="content-wrapper">
+      <div class="page-header">
+        <h1>Connection API Reference</h1>
+        <p>API documentation for connection module</p>
+      </div>
 
-        
-    <section id="connection" class="api-section">
-      <h2>Connection</h2>
-      <pre><code class="language-typescript">class Connection extends EventEmitter</code></pre>
-      
-      
-      <h3>Properties</h3>
-    <section class="properties-block">
-      <pre><code class="language-typescript">  on: (event: K, listener: (undefined: unknown) =&gt; void) =&gt; this;
+      <section id="connection" class="api-section">
+        <h2>Connection</h2>
+        <pre><code class="language-typescript">class Connection extends EventEmitter</code></pre>
+
+        <h3>Properties</h3>
+        <section class="properties-block">
+          <pre><code class="language-typescript">  on: (event: K, listener: (undefined: unknown) => void) => this;
   _auth: object;
   _baseURL: string;
   _socketURL: string;
@@ -83,11 +61,12 @@
   access_token: string;
   _retryOptions: object;
   get isOpen(): boolean;</code></pre>
-    </section>
-      <h3>Methods</h3>
+        </section>
 
-    <section class="method" id="connection-connect">
-      <pre><code class="language-typescript">static connect(
+        <h3>Methods</h3>
+
+        <section class="method" id="connection-connect">
+          <pre><code class="language-typescript">static connect(
   baseURL: string,
   client_id: string,
   client_secret: string,
@@ -95,64 +74,42 @@
   tokenURL?: string,
   retryOptions?: typeof Connection.prototype._retryOptions
 ): Connection</code></pre>
-    </section>
-  
+        </section>
 
-    <section class="method" id="connection-_createwebsocketandattacheventhandlers">
-      <pre><code class="language-typescript">_createWebSocketAndAttachEventHandlers(): void</code></pre>
-    </section>
-  
+        <section class="method" id="connection-_createwebsocketandattacheventhandlers">
+          <pre><code class="language-typescript">_createWebSocketAndAttachEventHandlers(): void</code></pre>
+        </section>
 
-    <section class="method" id="connection-send">
-      <pre><code class="language-typescript">send(data: ApplicationData): void</code></pre>
-    </section>
-  
+        <section class="method" id="connection-send">
+          <pre><code class="language-typescript">send(data: ApplicationData): void</code></pre>
+        </section>
 
-    <section class="method" id="connection-json">
-      <pre><code class="language-typescript">json(obj: unknown): void</code></pre>
-    </section>
-  
+        <section class="method" id="connection-json">
+          <pre><code class="language-typescript">json(obj: unknown): void</code></pre>
+        </section>
 
-    <section class="method" id="connection-sendandgetresponse">
-      <pre><code class="language-typescript">async sendAndGetResponse(
+        <section class="method" id="connection-sendandgetresponse">
+          <pre><code class="language-typescript">async sendAndGetResponse(
   applicationData: ApplicationData
 ): Promise&lt;PlatformData&gt;</code></pre>
-    </section>
-  
+        </section>
 
-    <section class="method" id="connection-close">
-      <pre><code class="language-typescript">close(code?: number, reason?: string): void</code></pre>
-    </section>
-  
+        <section class="method" id="connection-close">
+          <pre><code class="language-typescript">close(code?: number, reason?: string): void</code></pre>
+        </section>
 
-    <section class="method" id="connection-[symbol.dispose]">
-      <pre><code class="language-typescript">[Symbol.dispose](): void</code></pre>
-    </section>
-  
-    </section>
-  
+        <section class="method" id="connection-[symbol.dispose]">
+          <pre><code class="language-typescript">[Symbol.dispose](): void</code></pre>
+        </section>
+      </section>
+    </article>
+  </main>
+</div>
+<!-- End layout-container -->
 
-      </article>
-    </main>
-  </div>
-  <!-- End layout-container -->
+<!-- Prism.js JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
 
-  <!-- Footer -->
-  <footer class="api-footer">
-    <div class="footer-content">
-      <p>
-        © 2025 Elevation AI. All rights reserved.
-         • <a href="/api">Documentation</a> • <a href="https://github.com/elevationai/cuss2-ts" target="_blank">GitHub</a> • <a href="https://jsr.io/@cuss/cuss2-ts" target="_blank">JSR Package</a>
-      </p>
-    </div>
-  </footer>
-
-  <!-- Prism.js JavaScript -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
-  
-  <!-- API Documentation JavaScript -->
-  <script src="../assets/js/api-docs.js"></script>
-</body>
-</html>
+<script src="../assets/js/api-docs.js"></script>

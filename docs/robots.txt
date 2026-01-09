@@ -1,0 +1,34 @@
+# Robots.txt for CUSS2.ts Documentation Site
+# https://ts.cuss2.dev/robots.txt
+
+User-agent: *
+Allow: /
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Disallow crawling of Jekyll build files and cache
+Disallow: /_site/
+Disallow: /.jekyll-cache/
+Disallow: /.sass-cache/
+
+# Disallow crawling of development and config files
+Disallow: /Gemfile
+Disallow: /Gemfile.lock
+Disallow: /_config.yml
+Disallow: /.git/
+
+# Allow important documentation sections
+Allow: /api/
+Allow: /examples/
+Allow: /assets/
+
+# Sitemap location
+Sitemap: https://ts.cuss2.dev/sitemap.xml

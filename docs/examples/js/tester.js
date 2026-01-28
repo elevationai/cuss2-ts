@@ -308,6 +308,7 @@ const dom = {
 
     // App info elements
     this.elements.appInfo = {
+      brand: document.getElementById("brand"),
       multiTenant: document.getElementById("multiTenant"),
       accessibleMode: document.getElementById("accessibleMode"),
       language: document.getElementById("language"),
@@ -597,10 +598,10 @@ const templates = {
 
     // Session Timeouts
     html += `<div class="env-group"><strong>Session Timeouts</strong></div>`;
-    html += `<div class="env-item"><span class="env-label">Session Timeout:</span> <span class="env-value">${formatValue(env.sessionTimeout)}s</span></div>`;
-    html += `<div class="env-item"><span class="env-label">Kill Timeout:</span> <span class="env-value">${formatValue(env.killTimeout)}s</span></div>`;
+    html += `<div class="env-item"><span class="env-label">Session Timeout:</span> <span class="env-value">${formatValue(env.sessionTimeout)}ms</span></div>`;
+    html += `<div class="env-item"><span class="env-label">Kill Timeout:</span> <span class="env-value">${formatValue(env.killTimeout)}ms</span></div>`;
     html += `<div class="env-item"><span class="env-label">Expected ACK Time:</span> <span class="env-value">${formatValue(env.expectedAckTime)}ms</span></div>`;
-    html += `<div class="env-item"><span class="env-label">Max Cache Time:</span> <span class="env-value">${formatValue(env.maxCacheTime)}s</span></div>`;
+    html += `<div class="env-item"><span class="env-label">Max Cache Time:</span> <span class="env-value">${formatValue(env.maxCacheTime)}ms</span></div>`;
 
     return html;
   },
@@ -1117,8 +1118,9 @@ const ui = {
   },
 
   // Update application info
-  updateApplicationInfo(show = false) {
+  updateApplicationInfo(show = false, activation = null) {
     if (show && cuss2) {
+      dom.setText(dom.elements.appInfo.brand, activation?.applicationBrand || "-");
       dom.setText(dom.elements.appInfo.multiTenant, cuss2.multiTenant ? "Yes" : "No");
       dom.setText(dom.elements.appInfo.accessibleMode, cuss2.accessibleMode ? "Yes" : "No");
       dom.setText(dom.elements.appInfo.language, cuss2.language || "-");
@@ -1536,6 +1538,11 @@ const ui = {
       if (remainingSeconds <= 0) {
         clearInterval(this._timeoutCountdown);
         this._timeoutCountdown = null;
+        // Remove the banner when countdown ends
+        const banner = document.getElementById('timeoutBanner');
+        if (banner) {
+          banner.remove();
+        }
       }
     }, 1000);
   },
@@ -2015,6 +2022,7 @@ const connectionManager = {
   // Track if user ever successfully connected
   wasEverConnected: false,
   isReconnecting: false,
+  lastConfig: null,
 
   // Show reconnection banner
   showReconnectionBanner() {
@@ -2206,38 +2214,65 @@ const connectionManager = {
 
   // Handle connection close
   handleConnectionClose(event) {
-    logger.error("WebSocket connection closed");
+    const code = event?.code;
+    logger.error(`WebSocket connection closed (code: ${code}, reason: ${event?.reason})`);
 
-    // Check if this was a normal close (user disconnected) or abnormal
-    const isNormalClose = event && event.code === 1000;
+    // Close codes that should NOT reconnect (unrecoverable errors)
+    const noReconnectCodes = [
+      1000,  // Normal close (user disconnected)
+      4001,  // TIMEOUT - waiting for first message
+      4002,  // INVALID_MESSAGE
+      4003,  // INVALID_DIRECTIVE
+      4004,  // INVALID_TOKEN
+      4005,  // ALREADY_CONNECTED
+      4006,  // TENANT_DISABLED
+    ];
 
-    // Check close code FIRST - normal close always means user disconnected
-    if (isNormalClose) {
-      // User manually disconnected - return to connection panel
+    // Close codes that SHOULD reconnect
+    // 4007 = KILL_TIMEOUT, 4100 = SYSTEM_ERROR, or any unexpected code
+    const shouldReconnect = this.wasEverConnected && !noReconnectCodes.includes(code);
+
+    if (code === 1000) {
+      // User manually disconnected
       logger.info("User manually disconnected");
       ui.updateConnectionStatus("DISCONNECTED");
       dom.setButtonState(dom.elements.connectBtn, false);
       dom.setButtonState(dom.elements.disconnectBtn, true);
       Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
-
-      // Hide reconnection banner if showing
       this.hideReconnectionBanner();
     } else if (!this.wasEverConnected) {
-      // Initial connection failed (abnormal close before ever connecting)
-      // DON'T hide the status container - keep error details visible
+      // Initial connection failed
       logger.info("Initial connection failed - showing error details");
+      // Keep error details visible for user to see what failed
+    } else if (shouldReconnect) {
+      // Connection dropped - attempt reconnection
+      logger.info("Connection dropped - reconnecting in 1 second...");
 
-      // Note: The connection status container will stay visible with error details
-      // User can see which stage failed (auth vs websocket)
-      // The cancel button allows them to dismiss and try again
+      // Reset connection state
+      this.wasEverConnected = false;
+      this.isReconnecting = false;
+      cuss2 = null;
+
+      // Switch to connection panel and start reconnecting after delay
+      ui.resetUI();
+      if (this.lastConfig) {
+        setTimeout(() => this.connect(this.lastConfig), 1000);
+      } else {
+        logger.error("Cannot reconnect - no previous connection config");
+        ui.updateConnectionStatus("DISCONNECTED");
+        dom.setButtonState(dom.elements.connectBtn, false);
+        dom.setButtonState(dom.elements.disconnectBtn, true);
+      }
     } else {
-      // Connection dropped unexpectedly - user was connected before
-      // DON'T switch panels - the library will auto-reconnect
-      // The "connecting" event handler will show the reconnection banner
-      logger.info("Connection dropped - auto-reconnection will start");
-
-      // Disable state buttons during reconnection
-      Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
+      // Server error that won't be fixed by reconnecting
+      logger.info(`Connection closed with error code ${code} - not reconnecting`);
+      this.wasEverConnected = false;
+      this.isReconnecting = false;
+      cuss2 = null;
+      ui.resetUI();
+      ui.updateConnectionStatus("DISCONNECTED");
+      dom.setButtonState(dom.elements.connectBtn, false);
+      dom.setButtonState(dom.elements.disconnectBtn, true);
     }
   },
 
@@ -2249,7 +2284,6 @@ const connectionManager = {
         handler: (stateChange) => {
           logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
           ui.updateStateDisplay(stateChange.current);
-          ui.updateApplicationInfo(stateChange.current === ApplicationStateCodes.ACTIVE);
           ui.updateAvailabilityReasons();
 
           // Set applicationOnline flag to enable automatic state transitions
@@ -2277,9 +2311,9 @@ const connectionManager = {
       },
       {
         event: "activated",
-        handler: () => {
+        handler: (activation) => {
           logger.event("Application activated");
-          ui.updateApplicationInfo(true);
+          ui.updateApplicationInfo(true, activation);
           // Dismiss timeout warning when successfully reactivated
           ui.dismissTimeoutWarning();
 
@@ -2329,17 +2363,6 @@ const connectionManager = {
           const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
           logger.error(`Session timeout warning - Application will be terminated in ${killTimeoutSeconds} seconds`);
           ui.showTimeoutWarning(killTimeoutSeconds);
-
-          // Per CUSS2 spec, application should transition to AVAILABLE state on session timeout
-          if (cuss2 && cuss2.state === ApplicationStateCodes.ACTIVE) {
-            logger.info("Session timeout received - transitioning to AVAILABLE state");
-            try {
-              await cuss2.requestAvailableState();
-              logger.success("Successfully transitioned to AVAILABLE state");
-            } catch (error) {
-              logger.error(`Failed to transition to AVAILABLE state: ${error.message}`);
-            }
-          }
         },
       },
     ];
@@ -2436,6 +2459,9 @@ const connectionManager = {
 
     // Wait for connection
     await cuss2.connected;
+
+    // Store config for reconnection
+    this.lastConfig = config;
 
     logger.success("Connected successfully!");
 

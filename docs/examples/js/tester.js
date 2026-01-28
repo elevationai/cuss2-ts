@@ -1947,7 +1947,7 @@ const componentHandlers = {
     if (!cuss2 || !cuss2.components) return;
 
     Object.entries(cuss2.components).forEach(([id, component]) => {
-      const toggleElement = document.querySelector(`[data-component-id="${id}"]`);
+      const toggleElement = document.querySelector(`.enabled-toggle-container .toggle-switch[data-component-id="${id}"]`);
       if (toggleElement) {
         this.syncToggleState(toggleElement, component);
       }

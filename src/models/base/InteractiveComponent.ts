@@ -6,6 +6,7 @@
 import { BaseComponent } from "./BaseComponent.ts";
 import { MessageCodes, type PlatformData } from "cuss2-typescript-models";
 import type { UserEnableCapable } from "../capabilities/ComponentCapabilities.ts";
+import { getCurrentComponentState } from "../../types/modelExtensions.ts";
 
 export abstract class InteractiveComponent extends BaseComponent implements UserEnableCapable {
   override enabled: boolean = false;
@@ -18,7 +19,9 @@ export abstract class InteractiveComponent extends BaseComponent implements User
   async enable(): Promise<PlatformData> {
     const pd = await this.withPendingCall(() => this.api.enable(this.id));
     this.updateState(pd);
-    this.enabled = true;
+    if (!getCurrentComponentState(pd.meta)) {
+      this.enabled = true;
+    }
     return pd;
   }
 
@@ -31,7 +34,9 @@ export abstract class InteractiveComponent extends BaseComponent implements User
     try {
       const pd = await this.withPendingCall(() => this.api.disable(this.id));
       this.updateState(pd);
-      this.enabled = false;
+      if (!getCurrentComponentState(pd.meta)) {
+        this.enabled = false;
+      }
       return pd;
     }
     catch (e: unknown) {

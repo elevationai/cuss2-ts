@@ -9,6 +9,7 @@
 import { EventEmitter } from "events";
 import type { Cuss2 } from "../../cuss2.ts";
 import {
+  ApplicationStateCodes,
   ComponentState,
   type DataRecordList,
   type EnvironmentComponent,
@@ -18,6 +19,7 @@ import {
 } from "cuss2-typescript-models";
 import { DeviceType } from "../deviceType.ts";
 import type { ComponentAPI } from "../../cuss2/ComponentAPI.ts";
+import { getCurrentComponentState } from "../../types/modelExtensions.ts";
 
 export abstract class BaseComponent extends EventEmitter {
   protected _component: EnvironmentComponent;
@@ -106,8 +108,10 @@ export abstract class BaseComponent extends EventEmitter {
     // Subscribe to deactivation events
     cuss2.on("deactivated", () => {
       // Set enabled to false if this component uses the enabled property
-      if (this.enabled !== undefined) {
+      if (this.enabled !== undefined && this.enabled !== false) {
         this.enabled = false;
+        // Notify consumers so UI can update toggle states
+        cuss2.emit("componentStateChange", this);
       }
     });
   }
@@ -117,40 +121,70 @@ export abstract class BaseComponent extends EventEmitter {
   }
 
   stateIsDifferent(msg: PlatformData): boolean {
+    const ccs = getCurrentComponentState(msg.meta);
+    if (ccs) {
+      return this._status !== ccs.status ||
+        this._componentState !== ccs.componentState ||
+        (this.enabled !== undefined && this.enabled !== ccs.enabled);
+    }
     return this.status !== msg.meta.messageCode || this._componentState !== msg.meta.componentState;
   }
 
   updateState(msg: PlatformData): void {
     const { meta } = msg;
-    // Handle component state changes
-    if (meta?.componentState !== undefined && meta.componentState !== this._componentState) {
-      this._componentState = meta.componentState ?? ComponentState.UNAVAILABLE;
+    const ccs = getCurrentComponentState(meta);
 
-      // Only set enabled to false if component becomes UNAVAILABLE
-      // Don't touch enabled state for other state transitions (READY, ENABLED, etc.)
-      if (meta.componentState === ComponentState.UNAVAILABLE && this.enabled !== undefined) {
-        this.enabled = false;
+    if (ccs) {
+      // New path: use currentComponentState as the source of truth
+      if (ccs.componentState !== this._componentState) {
+        this._componentState = ccs.componentState;
+        this.emit("readyStateChange", ccs.componentState === ComponentState.READY);
       }
 
-      // Emit readyStateChange with current component state
-      this.emit("readyStateChange", meta.componentState === ComponentState.READY);
+      // Status is always applied — the new format already separates response codes from status
+      if (ccs.status !== this._status) {
+        this._status = ccs.status;
+        this.emit("statusChange", this._status);
+      }
+
+      // Sync enabled from platform (only for components that track enabled)
+      // Components can only be enabled in ACTIVE state — force false otherwise
+      if (this.enabled !== undefined) {
+        const appState = meta.currentApplicationState?.applicationStateCode;
+        if (this._componentState === ComponentState.UNAVAILABLE || appState !== ApplicationStateCodes.ACTIVE) {
+          this.enabled = false;
+        }
+        else if (ccs.enabled !== this.enabled) {
+          this.enabled = ccs.enabled;
+        }
+      }
+    }
+    else {
+      // Legacy path: existing behavior unchanged
+      if (meta?.componentState !== undefined && meta.componentState !== this._componentState) {
+        this._componentState = meta.componentState ?? ComponentState.UNAVAILABLE;
+
+        if (meta.componentState === ComponentState.UNAVAILABLE && this.enabled !== undefined) {
+          this.enabled = false;
+        }
+
+        this.emit("readyStateChange", meta.componentState === ComponentState.READY);
+      }
+
+      if (
+        !meta.platformDirective ||
+        meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY
+      ) {
+        if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
+          this._status = meta.messageCode as MessageCodes;
+          this.emit("statusChange", this._status);
+        }
+      }
     }
 
     // Auto-poll for required components that are not ready
     if (!this.ready && this.required && !this._poller && this.pollingInterval > 0) {
       this.pollUntilReady();
-    }
-
-    // If message contains no platformDirective (UNSOLICITED) or is a response to a query, handle status updates
-    if (
-      !meta.platformDirective ||
-      meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY
-    ) {
-      // Handle message code (status) changes
-      if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
-        this._status = meta.messageCode as MessageCodes;
-        this.emit("statusChange", this._status);
-      }
     }
   }
 

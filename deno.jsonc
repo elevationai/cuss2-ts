@@ -7,7 +7,10 @@
     "build": "deno run --allow-read --allow-write --allow-env --allow-run --allow-net scripts/build-js.ts",
     "test": "deno test --allow-net --allow-read --allow-env",
     "example": "deno run --allow-net --allow-env docs/examples/basic-connection.ts",
-    "serve": "deno run --allow-net --allow-read jsr:@std/http/file-server docs"
+    "serve": "deno run --allow-net --allow-read jsr:@std/http/file-server docs",
+    "devtools:build": "deno run --allow-read --allow-write --allow-env --allow-run --allow-net devtools/scripts/build-js.ts",
+    "devtools:serve": "deno run --allow-net --allow-read --allow-sys jsr:@std/http/file-server docs/examples --port 3000",
+    "devtools:example": "deno task devtools:build && echo 'Open http://localhost:3000/devtools.html in your browser' && deno task devtools:serve"
   },
   "compilerOptions": {
     "strict": true,
@@ -15,6 +18,7 @@
     "checkJs": true
   },
   "imports": {
+    "@cuss/cuss2-ts": "./mod.ts",
     "@types/node": "npm:@types/node@^22.15.17",
     "cuss2-typescript-models": "jsr:@cuss/cuss2-typescript-models@2.0.1",
     "events": "./vendor/node-events-fixed.ts",

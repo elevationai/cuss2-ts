@@ -625,11 +625,6 @@ input.field-problem {
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .component-actions-row {
-    grid-template-columns: 1fr;
-  }
-}
 
 .component-header {
   display: flex;
@@ -995,6 +990,50 @@ input.field-problem {
   content: 'No data received yet';
   color: rgba(224, 224, 224, 0.3);
   font-style: italic;
+}
+
+/* Keypad */
+.keypad-events-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.keypad-clear-btn {
+  font-size: 11px !important;
+  padding: 2px 12px !important;
+}
+
+.keypad-event-log {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.keypad-event-entry {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+}
+
+.keypad-event-time {
+  color: rgba(255, 255, 255, 0.4);
+  min-width: 70px;
+}
+
+.keypad-event-type {
+  font-weight: 600;
+  min-width: 70px;
+}
+
+.keypad-type-key { color: #64ffda; }
+.keypad-type-key_down { color: #ffd740; }
+.keypad-type-key_up { color: #82b1ff; }
+
+.keypad-event-key {
+  color: #e0e0e0;
 }
 
 /* Timeout input width fix */

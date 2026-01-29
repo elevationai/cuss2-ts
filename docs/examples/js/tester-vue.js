@@ -102,6 +102,7 @@ const app = createApp({
       componentInputs: {},
       componentStatuses: {},
       componentData: {},
+      keypadEvents: {},
 
       // Banners
       timeoutBanner: { visible: false, seconds: 0 },
@@ -429,6 +430,7 @@ const app = createApp({
       this.componentInputs = {};
       this.componentStatuses = {};
       this.componentData = {};
+      this.keypadEvents = {};
       this.buttonStates = {};
       this.pendingToggles = {};
       this.appState = 'STOPPED';
@@ -728,6 +730,12 @@ const app = createApp({
       this.componentInputs = inputs;
       this.componentStatuses = statuses;
       this.componentData = {};
+
+      const kpEvents = {};
+      for (const [id, component] of Object.entries(comps)) {
+        if (component.deviceType === 'KEY_PAD') kpEvents[id] = [];
+      }
+      this.keypadEvents = kpEvents;
     },
 
     refreshComponent(id) {
@@ -789,6 +797,38 @@ const app = createApp({
         this.logInfo(`Test data example: ${selectedName}`);
         this.logInfo(`Expected data: ${value}`);
       }
+    },
+
+    // ── Keypad Actions ──────────────────────────────────────────────────
+    async handleKeypadSetup(id, mode, buttonKey) {
+      const component = this.components[id];
+      if (!component) return;
+
+      this.buttonStates[buttonKey] = 'loading';
+      const modeRecords = {
+        'key': [{ data: '', dsTypes: ['DS_TYPES_KEY'] }],
+        'keydown': [{ data: '', dsTypes: ['DS_TYPES_KEY_DOWN'] }],
+        'keyup': [{ data: '', dsTypes: ['DS_TYPES_KEY_UP'] }],
+        'keydown+keyup': [
+          { data: '', dsTypes: ['DS_TYPES_KEY_DOWN'] },
+          { data: '', dsTypes: ['DS_TYPES_KEY_UP'] },
+        ],
+      };
+
+      try {
+        const records = modeRecords[mode];
+        this.logInfo(`Setting up ${component.deviceType} with mode: ${mode}`);
+        await component.setup(records);
+        this.logSuccess(`${component.deviceType} setup (${mode}) completed`);
+        this.setButtonSuccess(buttonKey);
+      } catch (error) {
+        this.logError(`Failed to setup ${component.deviceType}: ${error.message}`);
+        this.setButtonError(buttonKey);
+      }
+    },
+
+    clearKeypadHistory(id) {
+      this.keypadEvents[id] = [];
     },
 
     // ── Component Actions ─────────────────────────────────────────────
@@ -935,7 +975,6 @@ const app = createApp({
         { component: 'documentReader', handler: (records) => `Document scanned: ${records[0]?.data || 'Document data received'}` },
         { component: 'cardReader', handler: (records) => `Card read: ${records[0]?.data || 'Chip/NFC'}` },
         { component: 'scale', handler: (records) => `Weight: ${records[0]?.data || 'No data'}` },
-        { component: 'keypad', handler: (keyData) => `Key pressed: ${Object.entries(keyData).filter(([, v]) => v).map(([k]) => k).join(', ') || 'None'}` },
       ];
       listeners.forEach(({ component, handler }) => {
         if (cuss2[component]) {
@@ -945,6 +984,43 @@ const app = createApp({
           });
         }
       });
+
+      // Keypad listener — pushes individual events to history
+      if (cuss2.keypad) {
+        const keypadId = String(cuss2.keypad.id);
+        cuss2.keypad.on('data', (keyData) => {
+          const pressed = Object.entries(keyData)
+            .filter(([k, v]) => v && k !== 'dataRecords')
+            .map(([k]) => k);
+          this.logEvent(`Key pressed: ${pressed.join(', ') || 'None'}`);
+
+          if (keyData.dataRecords && this.keypadEvents[keypadId]) {
+            const logEl = this.$refs['keypadLog-' + keypadId]?.[0] || this.$refs['keypadLog-' + keypadId];
+            const wasAtBottom = logEl
+              ? (logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight) < 8
+              : true;
+
+            const dsTypeMap = { DS_TYPES_KEY: 'KEY', DS_TYPES_KEY_DOWN: 'KEY_DOWN', DS_TYPES_KEY_UP: 'KEY_UP' };
+            const time = new Date().toLocaleTimeString();
+            for (const record of keyData.dataRecords) {
+              const dsType = record.dsTypes?.find(t => dsTypeMap[t]);
+              this.keypadEvents[keypadId].push({
+                time,
+                type: dsType ? dsTypeMap[dsType] : 'KEY',
+                key: record.data || '?',
+              });
+            }
+            // Cap at 200 entries
+            if (this.keypadEvents[keypadId].length > 200) {
+              this.keypadEvents[keypadId] = this.keypadEvents[keypadId].slice(-200);
+            }
+
+            if (wasAtBottom && logEl) {
+              this.$nextTick(() => { logEl.scrollTop = logEl.scrollHeight; });
+            }
+          }
+        });
+      }
     },
 
     updateDataDisplay(componentId, dataRecords) {

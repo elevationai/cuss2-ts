@@ -26,6 +26,7 @@ export class Keypad extends UserInputComponent {
         HELP: data.includes("NAVHELP"),
         VOLUMEUP: data.includes("VOLUMEUP"),
         VOLUMEDOWN: data.includes("VOLUMEDOWN"),
+        dataRecords,
       };
 
       this.emit("data", keypadData);

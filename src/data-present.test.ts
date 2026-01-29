@@ -184,4 +184,5 @@ Deno.test("DATA_PRESENT - Keypad emits 'data' event with parsed key data", () =>
   assertEquals(dataSpy.calls.length, 1, "Keypad 'data' event should have fired");
   assertEquals(dataSpy.calls[0].args[0].NEXT, true);
   assertEquals(dataSpy.calls[0].args[0].UP, false);
+  assertEquals(dataSpy.calls[0].args[0].dataRecords, records, "dataRecords should contain the original records");
 });

@@ -595,6 +595,15 @@ input.field-problem {
   flex-wrap: wrap;
 }
 
+.component-item.header-only {
+  gap: 0;
+}
+
+.component-item.header-only .component-title-row {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 .component-title-left {
   display: flex;
   align-items: center;
@@ -878,7 +887,6 @@ input.field-problem {
   gap: 8px;
   flex-wrap: wrap;
   align-items: flex-start;
-  margin-top: auto;
 }
 
 .component-action-buttons .component-action-btn {
@@ -997,7 +1005,6 @@ input.field-problem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 12px;
 }
 
 .keypad-clear-btn {

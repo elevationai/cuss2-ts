@@ -165,7 +165,7 @@
             <h2>Components</h2>
             <div class="component-list">
               <div v-for="[id, component] in componentList" :key="id"
-                   class="component-item" :class="{ ready: component.ready, enabled: component.enabled }">
+                   class="component-item" :class="{ ready: component.ready, enabled: component.enabled, 'header-only': component.deviceType === 'HEADSET' }">
 
                 <!-- Title Row -->
                 <div class="component-title-row">
@@ -214,56 +214,20 @@
 
                 <!-- Keypad-specific Actions -->
                 <template v-if="component.deviceType === 'KEY_PAD'">
-                  <div class="component-actions-row">
-                    <div class="component-action-column left-column">
-                      <label class="component-action-label">Setup Mode</label>
-                      <div class="component-action-buttons">
-                        <button class="component-action-btn"
-                                :class="btnClasses('kp-key-' + id)"
-                                :disabled="btnDisabled('kp-key-' + id)"
-                                @click="handleKeypadSetup(id, 'key', 'kp-key-' + id)">
-                          <span class="btn-label">KEY (default)</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button class="component-action-btn"
-                                :class="btnClasses('kp-keydown-' + id)"
-                                :disabled="btnDisabled('kp-keydown-' + id)"
-                                @click="handleKeypadSetup(id, 'keydown', 'kp-keydown-' + id)">
-                          <span class="btn-label">KEY_DOWN</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button class="component-action-btn"
-                                :class="btnClasses('kp-keyup-' + id)"
-                                :disabled="btnDisabled('kp-keyup-' + id)"
-                                @click="handleKeypadSetup(id, 'keyup', 'kp-keyup-' + id)">
-                          <span class="btn-label">KEY_UP</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button class="component-action-btn"
-                                :class="btnClasses('kp-both-' + id)"
-                                :disabled="btnDisabled('kp-both-' + id)"
-                                @click="handleKeypadSetup(id, 'keydown+keyup', 'kp-both-' + id)">
-                          <span class="btn-label">KEY_DOWN + KEY_UP</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                      </div>
-                    </div>
-                    <div class="component-action-column right-column">
-                      <div class="keypad-events-header">
-                        <label class="component-action-label">Key Events</label>
-                        <button v-if="keypadEvents[id]?.length"
-                                class="component-action-btn keypad-clear-btn"
-                                @click="clearKeypadHistory(id)">Clear</button>
-                      </div>
-                      <div class="data-display-box keypad-event-log" :ref="'keypadLog-' + id">
-                        <div v-for="(evt, i) in keypadEvents[id]" :key="i" class="keypad-event-entry">
-                          <span class="keypad-event-time">{{ evt.time }}</span>
-                          <span class="keypad-event-type" :class="'keypad-type-' + evt.type.toLowerCase()">{{ evt.type }}</span>
-                          <span class="keypad-event-key">{{ evt.key }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <keypad-component
+                    :component="component"
+                    :component-id="id"
+                    :ref="'keypad-' + id"
+                    @log="log($event.message, $event.type)">
+                  </keypad-component>
+                </template>
+
+                <!-- Headset (header only, no actions) -->
+                <template v-else-if="component.deviceType === 'HEADSET'">
+                  <headset-component
+                    :component="component"
+                    :component-id="id">
+                  </headset-component>
                 </template>
 
                 <!-- Generic Actions Row -->

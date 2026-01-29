@@ -162,15 +162,28 @@
 
           <!-- Components Panel -->
           <div v-if="isConnected && componentList.length > 0" class="panel full-width">
-            <h2>Components</h2>
+            <div class="panel-header">
+              <h2>Components</h2>
+              <button type="button" class="collapse-all-btn" @click="allCollapsed ? expandAll() : collapseAll()">
+                {{ allCollapsed ? 'Expand All' : 'Collapse All' }}
+              </button>
+            </div>
             <div class="component-list">
               <div v-for="[id, component] in componentList" :key="id"
-                   class="component-item" :class="{ ready: component.ready, enabled: component.enabled, 'header-only': component.deviceType === 'HEADSET' }">
+                   class="component-item" :class="{ ready: component.ready, enabled: component.enabled, 'header-only': isHeaderOnly(component) || isCollapsed(id) }">
 
                 <!-- Title Row -->
-                <div class="component-title-row">
+                <div class="component-title-row"
+                     :style="!isHeaderOnly(component) ? 'cursor: pointer' : ''"
+                     @click="!isHeaderOnly(component) && toggleCollapse(id)">
                   <div class="component-title-left">
-                    <div class="component-name">{{ component.deviceType }}</div>
+                    <span v-if="!isHeaderOnly(component)" class="collapse-chevron" :class="{ collapsed: isCollapsed(id) }">&#9660;</span>
+
+                    <div class="component-name"
+                         @mouseenter="startCharHover($event, component)"
+                         @mouseleave="cancelCharHover()">
+                      {{ component.deviceType }}
+                    </div>
                     <div class="component-badges">
                       <span v-if="componentStatuses[id]?.statusBadge"
                             class="component-badge"
@@ -184,7 +197,7 @@
                       {{ componentStatuses[id]?.readyText }}
                     </span>
                   </div>
-                  <div class="component-controls">
+                  <div class="component-controls" @click.stop>
                     <button v-if="hasCap(component, 'query')"
                             class="component-action-btn component-query-btn"
                             :class="btnClasses('query-' + id)"
@@ -212,26 +225,28 @@
                   </div>
                 </div>
 
-                <!-- Keypad-specific Actions -->
-                <template v-if="component.deviceType === 'KEY_PAD'">
-                  <keypad-component
-                    :component="component"
-                    :component-id="id"
-                    :ref="'keypad-' + id"
-                    @log="log($event.message, $event.type)">
-                  </keypad-component>
-                </template>
+                <!-- Component Actions (hidden when collapsed) -->
+                <template v-if="!isCollapsed(id)">
+                  <!-- Keypad-specific Actions -->
+                  <template v-if="component.deviceType === 'KEY_PAD'">
+                    <keypad-component
+                      :component="component"
+                      :component-id="id"
+                      :ref="'keypad-' + id"
+                      @log="log($event.message, $event.type)">
+                    </keypad-component>
+                  </template>
 
-                <!-- Headset (header only, no actions) -->
-                <template v-else-if="component.deviceType === 'HEADSET'">
-                  <headset-component
-                    :component="component"
-                    :component-id="id">
-                  </headset-component>
-                </template>
+                  <!-- Headset (header only, no actions) -->
+                  <template v-else-if="component.deviceType === 'HEADSET'">
+                    <headset-component
+                      :component="component"
+                      :component-id="id">
+                    </headset-component>
+                  </template>
 
-                <!-- Generic Actions Row -->
-                <div v-else class="component-actions-row">
+                  <!-- Generic Actions Row -->
+                  <div v-else class="component-actions-row">
                   <!-- Left Column -->
                   <div class="component-action-column left-column">
                     <!-- Setup Section -->
@@ -400,6 +415,7 @@
                     </div>
                   </div>
                 </div>
+                </template>
               </div>
             </div>
           </div>
@@ -472,6 +488,12 @@
           </button>
           <button class="continue-anyway-btn" @click="handleMixedContentChoice('continue')">Continue Anyway</button>
         </div>
+      </div>
+
+      <!-- Global Characteristics Popover -->
+      <div v-if="charPopover.visible" class="char-popover"
+           :style="{ top: charPopover.top + 'px', left: charPopover.left + 'px' }">
+        <pre>{{ charPopover.json }}</pre>
       </div>
     </div>
 

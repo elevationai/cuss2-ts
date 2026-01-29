@@ -604,6 +604,55 @@ input.field-problem {
   border-bottom: none;
 }
 
+.collapse-chevron {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.collapse-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.collapse-all-btn {
+  font-size: 12px;
+  padding: 4px 12px;
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.2);
+  color: #64ffda;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.collapse-all-btn:hover {
+  background: rgba(100, 255, 218, 0.2);
+}
+
+.component-name {
+  cursor: help;
+}
+
+.char-popover {
+  position: absolute;
+  background: #1a1a2e;
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 6px;
+  padding: 12px;
+  z-index: 100;
+  max-width: 500px;
+  max-height: 400px;
+  overflow: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.char-popover pre {
+  margin: 0;
+  font-size: 11px;
+  color: #b0b0b0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .component-title-left {
   display: flex;
   align-items: center;

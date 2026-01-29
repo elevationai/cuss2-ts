@@ -81,6 +81,7 @@ const app = createApp({
       componentInputs: {},
       componentStatuses: {},
       componentData: {},
+      collapsedComponents: {},
 
       // Banners
       timeoutBanner: { visible: false, seconds: 0 },
@@ -101,6 +102,10 @@ const app = createApp({
 
       // Toggle pending states
       pendingToggles: {},
+
+      // Characteristics popover
+      charPopover: { visible: false, top: 0, left: 0, json: '' },
+      _charHoverTimer: null,
     };
   },
 
@@ -110,6 +115,11 @@ const app = createApp({
 
     componentList() {
       return Object.entries(this.components).filter(([id]) => this.componentInputs[id]);
+    },
+
+    allCollapsed() {
+      const collapsible = this.componentList.filter(([, c]) => !this.isHeaderOnly(c));
+      return collapsible.length > 0 && collapsible.every(([id]) => this.collapsedComponents[id]);
     },
 
     allowedTransitions() {
@@ -408,6 +418,7 @@ const app = createApp({
       this.componentInputs = {};
       this.componentStatuses = {};
       this.componentData = {};
+      this.collapsedComponents = {};
       this.buttonStates = {};
       this.pendingToggles = {};
       this.appState = 'STOPPED';
@@ -664,6 +675,33 @@ const app = createApp({
       return typeof component[cap] === 'function';
     },
 
+    startCharHover(event, component) {
+      this.cancelCharHover();
+      const el = event.currentTarget;
+      this._charHoverTimer = setTimeout(() => {
+        const rect = el.getBoundingClientRect();
+        this.charPopover = {
+          visible: true,
+          top: rect.bottom + window.scrollY + 6,
+          left: rect.left + window.scrollX,
+          json: JSON.stringify(component._component?.componentCharacteristics, null, 2),
+        };
+      }, 500);
+    },
+
+    cancelCharHover() {
+      if (this._charHoverTimer) {
+        clearTimeout(this._charHoverTimer);
+        this._charHoverTimer = null;
+      }
+      this.charPopover = { visible: false, top: 0, left: 0, json: '' };
+    },
+
+    isHeaderOnly(component) {
+      const headerOnlyTypes = ['HEADSET'];
+      return headerOnlyTypes.includes(component.deviceType);
+    },
+
     getCommandSet(component) {
       if (!this.aeaCommands) return null;
       const map = {
@@ -789,6 +827,28 @@ const app = createApp({
       } finally {
         delete this.pendingToggles[`enabled-${id}`];
       }
+    },
+
+    toggleCollapse(id) {
+      this.collapsedComponents[id] = !this.collapsedComponents[id];
+      this.collapsedComponents = { ...this.collapsedComponents };
+    },
+
+    collapseAll() {
+      for (const [id, component] of this.componentList) {
+        if (!this.isHeaderOnly(component)) {
+          this.collapsedComponents[id] = true;
+        }
+      }
+      this.collapsedComponents = { ...this.collapsedComponents };
+    },
+
+    expandAll() {
+      this.collapsedComponents = {};
+    },
+
+    isCollapsed(id) {
+      return !!this.collapsedComponents[id];
     },
 
     async handleToggleRequired(id) {

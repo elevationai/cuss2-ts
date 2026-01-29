@@ -1,69 +1,13 @@
-// ===== IMPORTS =====
 import { Cuss2, Models } from '../../dist/cuss2.esm.js';
+import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES, TEMPORARY_STATUSES } from './tester-data.js';
+import { extractStatusCodeFromError, validateURL, checkMixedContent, generateOAuthUrl } from './tester-utils.js';
+
 const { ApplicationStateCodes } = Models;
 const { createApp } = Vue;
 
 let cuss2 = null;
 
-// ===== UTILITY FUNCTIONS =====
-function extractStatusCodeFromError(error) {
-  if (!error) return null;
-  if (error.messageCode && typeof error.messageCode === 'string') return error.messageCode;
-  if (typeof error.message === 'string') {
-    const match = error.message.match(/status code:\s*([A-Z_]+)/i);
-    if (match) return match[1].toUpperCase();
-  }
-  return null;
-}
-
-// ===== TEST DATA =====
-const testBarcode = 'M1TESTER/TEST          UGZVFJ MCODENF9 3311 234Y016F0032 147>5180Mo5234BF9 00000000000';
-const testPassportMRZ = 'P<USATESTER<<TEST<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n5123456789USA9001014M3012315<<<<<<<<<<<<<<04';
-
-const bppSetupPrefix = `PT##$S6A#@;#TICK#CHEC#BOAR#0101110112011301210122012301C#0201A34#03BRB061661#0430G25F
-TT01#01L08004790100000`;
-const bppSendSimple = 'CP#A#01S#CP#C01#02@@01#03M1THIS IS A BARCODE#04THIS IS A BOARDING PASS#';
-const bppSendFull = 'CP#A#01S#CP#C01#02@@01#03M1TEST/ADULT                                            RFIFWX    DENLASF9    0775    174Y014B0004    347>5181        1174BF9    042231015000129000000000000000                                                                                                        #04TEST/ADULT#05WED,    JUN    23,    2021#06#07SEQ004#08#09#12RFIFWX#13NO    CARRY    ON    ALLOWED#14#15#16#17#20DEN    -->    LAS#30Denver    to    Las    Vegas#32F9        775#3312:30AM#3401:15PM#3501:00PM#404#43#4414B#5092518095#54#55#64Sold    by#66Frontier    Airlines#';
-
-const btpSetupPrefix = `BTT0801~J 500262=#01C0M5493450304#02C0M5493450304#03B1MA020250541=06#04B1MK200464141=06#05L0 A258250000#`;
-const btpSendSimple = 'BTP080101#01THIS IS A#02BAG TAG#03123#04456#0501#';
-
-const aeaCommandsData = {
-  boardingPassPrinter: {
-    'Setup: Assets + Logo': bppSetupPrefix,
-    'Send: Simple BP': bppSendSimple,
-    'Send: Full BP': bppSendFull,
-  },
-  bagTagPrinter: {
-    'Setup: Assets + Logo': btpSetupPrefix,
-    'Send: Simple BT': btpSendSimple,
-  },
-  barcodeReader: {
-    'Test Boarding Pass Barcode': testBarcode,
-  },
-  documentReader: {
-    'Test Passport MRZ (TEST TESTER)': testPassportMRZ,
-  },
-};
-
-async function loadCompanyLogo() {
-  try {
-    const response = await fetch('data/company-logo.itps');
-    const logo = (await response.text()).trim();
-    aeaCommandsData.boardingPassPrinter['Setup: Assets + Logo'] = `${bppSetupPrefix}\n${logo}`;
-    aeaCommandsData.bagTagPrinter['Setup: Assets + Logo'] = `${btpSetupPrefix}\n${logo}`;
-  } catch (e) {
-    console.warn('Failed to load company logo test data:', e);
-  }
-}
-
 // ===== CONSTANTS =====
-const CAPABILITY_METHODS = [
-  'query', 'cancel', 'setup', 'enable', 'disable',
-  'send', 'read', 'offer', 'play', 'pause', 'resume', 'stop',
-  'forward', 'backward', 'process',
-];
-
 const urlParams = new URLSearchParams(window.location.search);
 const queryConfig = {
   clientId: urlParams.get('CLIENT-ID'),
@@ -73,15 +17,6 @@ const queryConfig = {
   deviceId: urlParams.get('DEVICE-ID'),
   go: urlParams.get('go'),
 };
-
-const ALLOWED_PROTOCOLS = ['http:', 'https:', 'ws:', 'wss:'];
-
-const NO_RECONNECT_CODES = [1000, 4001, 4002, 4003, 4004, 4005, 4006];
-
-const TEMPORARY_STATUSES = [
-  'WRONG_APPLICATION_STATE', 'MEDIA_PRESENT', 'MEDIA_ABSENT',
-  'SOFTWARE_ERROR', 'DATA_MISSING', 'HARDWARE_ERROR', 'CANCELLED', 'TIMED_OUT',
-];
 
 const STATE_REQUESTS = {
   initialize: { method: 'requestInitializeState', state: 'INITIALIZE' },
@@ -104,57 +39,6 @@ const STATE_TRANSITIONS = {
 };
 
 const REQUESTABLE_STATES = ['initialize', 'unavailable', 'available', 'active', 'stopped', 'reload'];
-
-// ===== PURE FUNCTIONS =====
-function validateURL(url, urlType = 'URL') {
-  if (!url || typeof url !== 'string' || url.trim() === '') {
-    return { isValid: false, error: `${urlType} cannot be empty` };
-  }
-  try {
-    const parsedUrl = new URL(url.trim());
-    if (!ALLOWED_PROTOCOLS.includes(parsedUrl.protocol)) {
-      const allowedList = ALLOWED_PROTOCOLS.map(p => p.replace(':', '://')).join(', ');
-      return { isValid: false, error: `${urlType} uses unsupported protocol '${parsedUrl.protocol}'. Only ${allowedList} are supported.` };
-    }
-    return { isValid: true, url: parsedUrl.href };
-  } catch {
-    return { isValid: false, error: `${urlType} is not a valid URL format` };
-  }
-}
-
-function checkMixedContent(targetUrl) {
-  if (location.protocol !== 'https:') return { hasMixedContent: false };
-  try {
-    const url = new URL(targetUrl);
-    const isHttpTarget = url.protocol === 'http:' || url.protocol === 'ws:';
-    return {
-      hasMixedContent: isHttpTarget,
-      currentProtocol: location.protocol,
-      targetProtocol: url.protocol,
-      suggestedUrl: isHttpTarget
-        ? targetUrl.replace(/^(ws|http):/, url.protocol === 'ws:' ? 'wss:' : 'https:')
-        : targetUrl,
-    };
-  } catch {
-    return { hasMixedContent: false };
-  }
-}
-
-function generateOAuthUrl(wsUrl) {
-  if (!wsUrl) return '';
-  try {
-    const hasProtocol = /^(ws|wss|http|https):\/\//.test(wsUrl);
-    const normalizedUrl = hasProtocol ? wsUrl : `http://${wsUrl}`;
-    const url = new URL(normalizedUrl);
-    let httpScheme;
-    if (url.protocol === 'wss:') httpScheme = 'https:';
-    else if (url.protocol === 'ws:') httpScheme = 'http:';
-    else httpScheme = url.protocol;
-    return `${httpScheme}//${url.host}/oauth/token`;
-  } catch {
-    return '';
-  }
-}
 
 // ===== SUB-COMPONENTS =====
 const ToggleSwitch = {
@@ -797,10 +681,6 @@ const app = createApp({
     },
 
     // ── Component Helpers ─────────────────────────────────────────────
-    getCapabilities(component) {
-      return CAPABILITY_METHODS.filter(m => typeof component[m] === 'function');
-    },
-
     hasCap(component, cap) {
       return typeof component[cap] === 'function';
     },

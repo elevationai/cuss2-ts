@@ -490,9 +490,19 @@
         </div>
       </div>
 
+      <!-- Action Toasts -->
+      <div v-if="actionToasts.length" class="toast-container">
+        <div v-for="toast in actionToasts" :key="toast.id"
+             class="action-toast" :class="[toast.type, { fading: toast.fading }]">
+          {{ toast.message }}
+        </div>
+      </div>
+
       <!-- Global Characteristics Popover -->
       <div v-if="charPopover.visible" class="char-popover"
-           :style="{ top: charPopover.top + 'px', left: charPopover.left + 'px' }">
+           :style="{ top: charPopover.top + 'px', left: charPopover.left + 'px' }"
+           @mouseenter="clearCharHideTimer()"
+           @mouseleave="startCharHideTimer()">
         <pre>{{ charPopover.json }}</pre>
       </div>
     </div>

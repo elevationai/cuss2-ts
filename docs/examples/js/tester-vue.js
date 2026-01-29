@@ -97,6 +97,10 @@ const app = createApp({
       // Button states
       buttonStates: {},
 
+      // Action toasts
+      actionToasts: [],
+      toastIdCounter: 0,
+
       // AEA commands
       aeaCommands: null,
 
@@ -106,6 +110,7 @@ const app = createApp({
       // Characteristics popover
       charPopover: { visible: false, top: 0, left: 0, json: '' },
       _charHoverTimer: null,
+      _charHideTimer: null,
     };
   },
 
@@ -676,7 +681,10 @@ const app = createApp({
     },
 
     startCharHover(event, component) {
-      this.cancelCharHover();
+      this.clearCharHideTimer();
+      if (this._charHoverTimer) {
+        clearTimeout(this._charHoverTimer);
+      }
       const el = event.currentTarget;
       this._charHoverTimer = setTimeout(() => {
         const rect = el.getBoundingClientRect();
@@ -684,7 +692,7 @@ const app = createApp({
           visible: true,
           top: rect.bottom + window.scrollY + 6,
           left: rect.left + window.scrollX,
-          json: JSON.stringify(component._component?.componentCharacteristics, null, 2),
+          json: JSON.stringify(component._component, null, 2),
         };
       }, 500);
     },
@@ -694,7 +702,21 @@ const app = createApp({
         clearTimeout(this._charHoverTimer);
         this._charHoverTimer = null;
       }
-      this.charPopover = { visible: false, top: 0, left: 0, json: '' };
+      this.startCharHideTimer();
+    },
+
+    startCharHideTimer() {
+      this.clearCharHideTimer();
+      this._charHideTimer = setTimeout(() => {
+        this.charPopover = { visible: false, top: 0, left: 0, json: '' };
+      }, 200);
+    },
+
+    clearCharHideTimer() {
+      if (this._charHideTimer) {
+        clearTimeout(this._charHideTimer);
+        this._charHideTimer = null;
+      }
     },
 
     isHeaderOnly(component) {
@@ -815,15 +837,19 @@ const app = createApp({
 
       this.pendingToggles[`enabled-${id}`] = true;
       const action = component.enabled ? 'disable' : 'enable';
+      const name = component.deviceType;
+      this.logInfo(`${action === 'enable' ? 'Enabling' : 'Disabling'} ${name}...`);
+      const toast = this.addToast(`${name} (${id}) ${action}...`, 'pending');
 
       try {
-        this.logInfo(`${action === 'enable' ? 'Enabling' : 'Disabling'} ${component.deviceType}...`);
         await component[action]();
-        this.logSuccess(`${component.deviceType} ${action}d`);
+        this.logSuccess(`${name} ${action}d`);
         this.refreshComponent(id);
+        this.updateToast(toast.id, `${name} (${id}) ${action} — OK`, 'success', 1000);
       } catch (error) {
-        this.logError(`Failed to ${action} ${component.deviceType}: ${error.message}`);
+        this.logError(`Failed to ${action} ${name}: ${error.message}`);
         this.refreshComponent(id);
+        this.updateToast(toast.id, `${name} (${id}) ${action} — Failed`, 'error', 3000);
       } finally {
         delete this.pendingToggles[`enabled-${id}`];
       }
@@ -886,6 +912,8 @@ const app = createApp({
       if (!component) return;
 
       this.buttonStates[buttonKey] = 'loading';
+      const name = component.deviceType;
+      const toast = this.addToast(`${name} (${id}) ${action}...`, 'pending');
 
       try {
         const dataActions = { setup: 'setupText', send: 'sendText', offer: 'sendText', process: 'sendText', play: 'playText', read: 'readTimeout' };
@@ -896,9 +924,11 @@ const app = createApp({
         } else {
           await this.handleComponentSimpleAction(component, action, id);
         }
-        this.setButtonSuccess(buttonKey);
+        delete this.buttonStates[buttonKey];
+        this.updateToast(toast.id, `${name} (${id}) ${action} — OK`, 'success', 1000);
       } catch {
-        this.setButtonError(buttonKey);
+        delete this.buttonStates[buttonKey];
+        this.updateToast(toast.id, `${name} (${id}) ${action} — Failed`, 'error', 3000);
       }
     },
 
@@ -1096,23 +1126,33 @@ const app = createApp({
     },
 
     // ── Button State Management ───────────────────────────────────────
-    setButtonSuccess(key) {
-      this.buttonStates[key] = 'success';
-      setTimeout(() => { if (this.buttonStates[key] === 'success') delete this.buttonStates[key]; }, 2000);
-    },
-
-    setButtonError(key) {
-      this.buttonStates[key] = 'error';
-      setTimeout(() => { if (this.buttonStates[key] === 'error') delete this.buttonStates[key]; }, 3000);
-    },
-
     btnClasses(key) {
       const state = this.buttonStates[key];
-      return { loading: state === 'loading', success: state === 'success', error: state === 'error' };
+      return { loading: state === 'loading' };
     },
 
     btnDisabled(key) {
       return this.buttonStates[key] === 'loading';
+    },
+
+    // ── Toast Management ──────────────────────────────────────────────
+    addToast(message, type) {
+      const toast = { id: ++this.toastIdCounter, message, type, fading: false };
+      this.actionToasts.push(toast);
+      return toast;
+    },
+
+    updateToast(id, message, type, dismissMs) {
+      const toast = this.actionToasts.find(t => t.id === id);
+      if (!toast) return;
+      toast.message = message;
+      toast.type = type;
+      setTimeout(() => {
+        toast.fading = true;
+        setTimeout(() => {
+          this.actionToasts = this.actionToasts.filter(t => t.id !== id);
+        }, 300);
+      }, dismissMs);
     },
 
     // ── Format Helpers ────────────────────────────────────────────────

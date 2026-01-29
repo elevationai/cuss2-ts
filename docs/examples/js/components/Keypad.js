@@ -30,15 +30,19 @@ export default {
   methods: {
     async handleSetup(mode, buttonKey) {
       this.buttonStates[buttonKey] = 'loading';
+      const name = this.component.deviceType;
+      this.$emit('log', { message: `Setting up ${name} with mode: ${mode}`, type: 'info' });
+      const toast = this.$root.addToast(`${name} (${this.componentId}) setup (${mode})...`, 'pending');
       try {
         const records = SETUP_MODES[mode];
-        this.$emit('log', { message: `Setting up ${this.component.deviceType} with mode: ${mode}`, type: 'info' });
         await this.component.setup(records);
-        this.$emit('log', { message: `${this.component.deviceType} setup (${mode}) completed`, type: 'success' });
-        this.setButtonSuccess(buttonKey);
+        this.$emit('log', { message: `${name} setup (${mode}) completed`, type: 'success' });
+        this.$root.updateToast(toast.id, `${name} (${this.componentId}) setup (${mode}) — OK`, 'success', 1000);
       } catch (error) {
-        this.$emit('log', { message: `Failed to setup ${this.component.deviceType}: ${error.message}`, type: 'error' });
-        this.setButtonError(buttonKey);
+        this.$emit('log', { message: `Failed to setup ${name}: ${error.message}`, type: 'error' });
+        this.$root.updateToast(toast.id, `${name} (${this.componentId}) setup (${mode}) — Failed`, 'error', 3000);
+      } finally {
+        delete this.buttonStates[buttonKey];
       }
     },
 
@@ -70,19 +74,8 @@ export default {
       this.events = [];
     },
 
-    setButtonSuccess(key) {
-      this.buttonStates[key] = 'success';
-      setTimeout(() => { if (this.buttonStates[key] === 'success') delete this.buttonStates[key]; }, 1000);
-    },
-
-    setButtonError(key) {
-      this.buttonStates[key] = 'error';
-      setTimeout(() => { if (this.buttonStates[key] === 'error') delete this.buttonStates[key]; }, 1000);
-    },
-
     btnClasses(key) {
-      const state = this.buttonStates[key];
-      return { loading: state === 'loading', success: state === 'success', error: state === 'error' };
+      return { loading: this.buttonStates[key] === 'loading' };
     },
 
     btnDisabled(key) {

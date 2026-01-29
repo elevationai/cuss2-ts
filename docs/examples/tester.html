@@ -263,6 +263,52 @@
       </div>
     </template>
 
+    <!-- Timeout Warning Banner Template -->
+    <template id="timeout-banner-template">
+      <div id="timeoutBanner" class="timeout-banner">
+        <div class="timeout-header">
+          <strong>&#9888;&#65039; Session Timeout Warning</strong>
+          <button id="dismissTimeout" class="dismiss-btn">&times;</button>
+        </div>
+        <p>Application will be terminated in <span id="timeoutCounter"></span> seconds</p>
+      </div>
+    </template>
+
+    <!-- Mixed Content Warning Banner Template -->
+    <template id="mixed-content-banner-template">
+      <div id="mixedContentBanner" class="mixed-content-banner">
+        <div class="mixed-content-header">
+          <strong>&#128274; Mixed Content Security Warning</strong>
+          <button id="dismissMixedContent" class="dismiss-btn">&times;</button>
+        </div>
+        <p>This page is served over <strong class="mixed-current-protocol"></strong> but trying to connect to <strong class="mixed-target-protocol"></strong>.</p>
+        <p>Modern browsers block this for security reasons.</p>
+        <div class="mixed-content-actions">
+          <button id="useSuggestedUrl" class="suggested-url-btn"></button>
+          <button id="continueAnyway" class="continue-anyway-btn">Continue Anyway</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Environment Details Template -->
+    <template id="env-details-template">
+      <div class="env-group"><strong>Device Information</strong></div>
+      <div class="env-item"><span class="env-label">Device ID:</span> <span class="env-value env-deviceID">-</span></div>
+      <div class="env-item"><span class="env-label">Device Name:</span> <span class="env-value env-deviceModelName">-</span></div>
+      <div class="env-item env-location"><span class="env-label">Airport Code:</span> <span class="env-value env-airportCode">-</span></div>
+      <div class="env-item env-location"><span class="env-label">Terminal:</span> <span class="env-value env-terminalID">-</span></div>
+      <div class="env-item env-location"><span class="env-label">Gate:</span> <span class="env-value env-gateID">-</span></div>
+      <div class="env-group"><strong>CUSS Platform</strong></div>
+      <div class="env-item"><span class="env-label">CUSS Versions:</span> <span class="env-value env-cussVersions">-</span></div>
+      <div class="env-item"><span class="env-label">OS Name:</span> <span class="env-value env-osName">-</span></div>
+      <div class="env-item"><span class="env-label">OS Version:</span> <span class="env-value env-osVersion">-</span></div>
+      <div class="env-group"><strong>Session Timeouts</strong></div>
+      <div class="env-item"><span class="env-label">Session Timeout:</span> <span class="env-value env-sessionTimeout">-</span></div>
+      <div class="env-item"><span class="env-label">Kill Timeout:</span> <span class="env-value env-killTimeout">-</span></div>
+      <div class="env-item"><span class="env-label">Expected ACK Time:</span> <span class="env-value env-expectedAckTime">-</span></div>
+      <div class="env-item"><span class="env-label">Max Cache Time:</span> <span class="env-value env-maxCacheTime">-</span></div>
+    </template>
+
     <!-- Required Devices Templates -->
     <template id="required-devices-empty-template">
       <div class="availability-reasons-empty">No required devices are configured for this application.</div>

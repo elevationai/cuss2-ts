@@ -28,8 +28,7 @@ export class Keypad extends UserInputComponent {
         VOLUMEDOWN: data.includes("VOLUMEDOWN"),
       };
 
-      // Emit keypadData event
-      this.emit("keypadData", keypadData);
+      this.emit("data", keypadData);
     }
   }
 }

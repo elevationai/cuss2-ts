@@ -3,97 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CUSS2 DevTools Client - Interactive Demo</title>
+    <title>CUSS2 DevTools Client - Vue</title>
     <link rel="stylesheet" href="css/devtools.css">
+    <!-- Vue 3 CDN (no build step) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>CUSS2 DevTools Client</h1>
-        <p class="subtitle">Interactive WebSocket Client for CUSS2 Platform Development</p>
+    <div id="app">
+        <div class="container">
+            <h1>CUSS2 DevTools Client</h1>
+            <p class="subtitle">Interactive WebSocket Client for CUSS2 Platform Development</p>
 
-        <!-- Connection Panel -->
-        <div class="card connection-card">
-            <div class="connection-controls">
-                <label for="wsUrl">URL</label>
-                <input type="text" id="wsUrl" value="ws://localhost:22222/devtools" placeholder="ws://localhost:22222/devtools">
-                <button id="connectBtn" onclick="connect()">Connect</button>
-                <button id="disconnectBtn" class="secondary" onclick="disconnect()" disabled>Disconnect</button>
+            <!-- Connection Panel -->
+            <div class="card connection-card">
+                <div class="connection-controls">
+                    <label>URL</label>
+                    <input type="text" v-model="wsUrl" placeholder="ws://localhost:22222/devtools"
+                           @keypress.enter="connect">
+                    <button @click="connect" :disabled="connectionStatus !== 'disconnected'">Connect</button>
+                    <button class="secondary" @click="disconnect" :disabled="connectionStatus !== 'connected'">Disconnect</button>
+                </div>
             </div>
-        </div>
 
-        <!-- Tenant/Brand Controls -->
-        <div class="tenant-controls hidden" id="tenantControls">
-            <div class="tenant-controls-title">Tenants & Brands</div>
-            <div class="tenant-buttons" id="tenantButtons">
-                <!-- Tenant/Brand buttons will be added here dynamically -->
+            <!-- Tenant/Brand Controls -->
+            <div class="tenant-controls" v-if="tenantBrandList.length > 0">
+                <div class="tenant-controls-title">Tenants &amp; Brands</div>
+                <div class="tenant-buttons">
+                    <button v-for="tb in tenantBrandList" :key="tb.id"
+                            class="tenant-button"
+                            :class="'state-' + tb.state.toLowerCase()"
+                            @click="tb.state === 'AVAILABLE' && activateBrand(tb.tenant, tb.brand)">
+                        <span class="tenant-name">{{ tb.tenant }}</span>
+                        <span class="brand-name">/ {{ tb.brand }}</span>
+                        <br>
+                        <span style="font-size: 0.85rem; font-weight: 600;">{{ tb.state }}</span>
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- Components Section -->
-        <div class="components-section hidden" id="componentsSection">
-            <div class="components-header">
-                <h2 class="components-title">Discovered Components</h2>
-                <button id="refreshStateBtn" class="secondary" onclick="refreshState()" disabled>Refresh State</button>
-            </div>
-            <div id="componentList" class="component-list">
+            <!-- Components Section -->
+            <div class="components-section" v-if="components.length > 0">
+                <div class="components-header">
+                    <h2 class="components-title">Discovered Components</h2>
+                    <button class="secondary" @click="refreshState" :disabled="connectionStatus !== 'connected'">Refresh State</button>
+                </div>
+                <div class="component-list">
+                    <div v-for="component in components" :key="component.componentID" class="component-item">
+                        <!-- Component Header -->
+                        <div class="component-header">
+                            <div class="component-header-left">
+                                <div v-if="component.actions && 'power' in component.actions" class="power-toggle-wrapper">
+                                    <toggle-switch
+                                        :value="!!getState(component.componentID).power"
+                                        :power="true"
+                                        @toggle="sendPower(component.componentID)"></toggle-switch>
+                                </div>
+                                <span class="component-name">
+                                    <span class="component-id">#{{ component.componentID }}</span>
+                                    <strong :title="component.name"
+                                            style="font-size: 1.1rem; font-weight: 700;">{{ component.name }}</strong>
+                                </span>
+                            </div>
+                            <div class="component-header-right">
+                                <span class="state-item"
+                                      :class="getState(component.componentID).enabled ? 'enabled' : 'disabled'">
+                                    {{ getState(component.componentID).enabled ? 'Enabled' : 'Disabled' }}
+                                </span>
+                                <span class="state-item"
+                                      :class="{ ok: getState(component.componentID).status === 'OK' }">
+                                    {{ getState(component.componentID).status || 'UNKNOWN' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Component State -->
+                        <div class="component-state" v-if="filteredState(component.componentID).length > 0">
+                            <span v-for="s in filteredState(component.componentID)" :key="s.key" class="state-item">
+                                {{ s.key }}: {{ s.value }}
+                            </span>
+                        </div>
+
+                        <!-- Component Actions -->
+                        <div class="component-actions">
+                            <!-- Keypad UI -->
+                            <keypad-ui v-if="isKeypad(component)"
+                                       :component-id="component.componentID"
+                                       @keyaction="handleKeyAction"></keypad-ui>
+
+                            <!-- Standard Actions -->
+                            <template v-else-if="hasNonPowerActions(component)">
+                                <template v-for="(params, actionName) in component.actions" :key="actionName">
+                                    <div v-if="actionName !== 'power'" class="action-row">
+                                        <div class="action-label">{{ actionName }}</div>
+                                        <div class="action-inputs">
+                                            <!-- No parameters - just an execute button -->
+                                            <template v-if="!params || Object.keys(params).length === 0">
+                                                <button class="action-button"
+                                                        @click="executeAction(component.componentID, actionName)">
+                                                    Execute
+                                                </button>
+                                            </template>
+
+                                            <!-- Has parameters -->
+                                            <template v-else>
+                                                <template v-for="(paramType, paramName) in params" :key="paramName">
+                                                    <!-- Boolean parameter -->
+                                                    <div v-if="cleanType(paramType) === 'Boolean'" class="action-param-row">
+                                                        <span class="action-param-label">{{ formatName(paramName) }}</span>
+                                                        <toggle-switch
+                                                            :value="!!(getState(component.componentID)[paramName])"
+                                                            @toggle="handleBooleanToggle(component.componentID, actionName, paramName)"></toggle-switch>
+                                                    </div>
+                                                    <!-- String parameter -->
+                                                    <div v-else-if="cleanType(paramType) === 'String'" class="action-param-row">
+                                                        <span class="action-param-label">{{ formatName(paramName) }}</span>
+                                                        <input class="action-input" type="text"
+                                                               placeholder="Press Enter to send"
+                                                               @keypress.enter="handleStringAction($event, component.componentID, actionName, paramName)">
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </template>
+
+                            <!-- No actions available -->
+                            <div v-else class="no-actions">No actions available</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Component Template -->
-    <template id="component-template">
-        <div class="component-item">
-            <div class="component-header">
-                <div class="component-header-left">
-                    <span class="component-type"></span>
-                    <!-- Power toggle will be inserted here if needed -->
-                    <span class="component-name">
-                        <span class="component-id"></span>
-                        <strong></strong>
-                    </span>
-                </div>
-                <div class="component-header-right">
-                    <span class="state-item state-enabled">Enabled</span>
-                    <span class="state-item state-status hidden"></span>
-                </div>
-            </div>
-            <div class="component-state hidden"></div>
-            <div class="component-actions"></div>
-            <div class="no-actions hidden">No actions available</div>
-        </div>
-    </template>
-
-    <!-- Toggle Template -->
-    <template id="toggle-template">
-        <div class="toggle-switch">
-            <div class="toggle-slider"></div>
-        </div>
-    </template>
-
-    <!-- Action Row Template -->
-    <template id="action-row-template">
-        <div class="action-row">
-            <div class="action-label"></div>
-            <div class="action-inputs"></div>
-        </div>
-    </template>
-
-    <!-- Keypad Template -->
-    <template id="keypad-template">
-        <div class="keypad-container">
-            <div class="keypad-grid">
-                <button class="keypad-button black home" data-key="f23" style="grid-area: home;"></button>
-                <button class="keypad-button yellow-up" data-key="f18"></button>
-                <button class="keypad-button red end" data-key="f24" style="grid-area: end;"></button>
-                <button class="keypad-button white-back" data-key="f21">BACK</button>
-                <button class="keypad-button green" data-key="f20"></button>
-                <button class="keypad-button white-next" data-key="f22">NEXT</button>
-                <button class="keypad-button blue" data-key="f17"><span>?</span></button>
-                <button class="keypad-button yellow-down" data-key="f19"></button>
-            </div>
-        </div>
-    </template>
-
-    <script type="module" src="js/devtools.js"></script>
+    <script type="module" src="js/devtools-vue.js"></script>
 </body>
 </html>

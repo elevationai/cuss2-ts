@@ -1960,19 +1960,24 @@ const componentHandlers = {
       {
         component: "barcodeReader",
         event: "data",
-        handler: (data) => `Barcode scanned: ${data.rawData}`,
+        handler: (records) => `Barcode scanned: ${records[0]?.data || 'No data'}`,
       },
       {
         component: "documentReader",
         event: "data",
-        handler: (data) => `Document scanned: ${data.rawData || 'Document data received'}`,
+        handler: (records) => `Document scanned: ${records[0]?.data || 'Document data received'}`,
       },
       {
         component: "cardReader",
         event: "data",
-        handler: (data) => `Card read: ${data.track1 || data.track2 || "Chip/NFC"}`,
+        handler: (records) => `Card read: ${records[0]?.data || "Chip/NFC"}`,
       },
-      { component: "scale", event: "data", handler: (data) => `Weight: ${data.weight} ${data.unit}` },
+      { component: "scale", event: "data", handler: (records) => `Weight: ${records[0]?.data || 'No data'}` },
+      {
+        component: "keypad",
+        event: "data",
+        handler: (keyData) => `Key pressed: ${Object.entries(keyData).filter(([, v]) => v).map(([k]) => k).join(', ') || 'None'}`,
+      },
     ];
 
     componentListeners.forEach(({ component, event, handler }) => {

@@ -240,6 +240,28 @@
                     </keypad-component>
                   </template>
 
+                  <!-- Barcode Reader -->
+                  <template v-else-if="component.deviceType === 'BARCODE_READER'">
+                    <barcode-reader-component
+                      :component="component"
+                      :component-id="id"
+                      :ref="'barcodereader-' + id"
+                      @log="log($event.message, $event.type)"
+                      @status-update="updateComponentStatus(id, $event)">
+                    </barcode-reader-component>
+                  </template>
+
+                  <!-- Document Reader -->
+                  <template v-else-if="component.deviceType === 'PASSPORT_READER'">
+                    <document-reader-component
+                      :component="component"
+                      :component-id="id"
+                      :ref="'docreader-' + id"
+                      @log="log($event.message, $event.type)"
+                      @status-update="updateComponentStatus(id, $event)">
+                    </document-reader-component>
+                  </template>
+
                   <!-- Headset (header only, no actions) -->
                   <template v-else-if="component.deviceType === 'HEADSET'">
                     <headset-component

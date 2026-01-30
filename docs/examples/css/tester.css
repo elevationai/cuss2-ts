@@ -1066,6 +1066,75 @@ input.field-problem {
   color: #e0e0e0;
 }
 
+/* Document Reader */
+.dr-types-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dr-type-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  background: rgba(10, 10, 20, 0.5);
+  color: rgba(224, 224, 224, 0.7);
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dr-type-chip:hover:not(:disabled) {
+  border-color: rgba(100, 255, 218, 0.6);
+  color: #e0e0e0;
+}
+
+.dr-type-chip.selected {
+  background: rgba(100, 255, 218, 0.15);
+  border-color: #64ffda;
+  color: #64ffda;
+  font-weight: 600;
+}
+
+.dr-type-chip.pending {
+  border-color: #ffa726;
+  color: #ffa726;
+  background: rgba(255, 167, 38, 0.1);
+}
+
+.dr-type-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dr-no-types {
+  color: rgba(224, 224, 224, 0.3);
+  font-style: italic;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+.dr-read-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dr-read-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dr-selection-summary {
+  font-size: 11px;
+  color: rgba(100, 255, 218, 0.6);
+  margin-top: 4px;
+}
+
 /* Timeout input width fix */
 .timeout-input {
   max-width: 250px;

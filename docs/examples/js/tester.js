@@ -5,6 +5,8 @@ import ToggleSwitch from './components/ToggleSwitch.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';
 import GenericComponent from './components/GenericComponent.js';
+import DocumentReader from './components/DocumentReader.js';
+import BarcodeReader from './components/BarcodeReader.js';
 import EventLog from './components/EventLog.js';
 import WsMessages from './components/WsMessages.js';
 
@@ -915,13 +917,11 @@ const app = createApp({
 
     // ── Component Data Listeners ──────────────────────────────────────
     setupComponentListeners() {
-      const listeners = [
-        { component: 'barcodeReader', handler: (records) => `Barcode scanned: ${records[0]?.data || 'No data'}` },
-        { component: 'documentReader', handler: (records) => `Document scanned: ${records[0]?.data || 'Document data received'}` },
+      const genericListeners = [
         { component: 'cardReader', handler: (records) => `Card read: ${records[0]?.data || 'Chip/NFC'}` },
         { component: 'scale', handler: (records) => `Weight: ${records[0]?.data || 'No data'}` },
       ];
-      listeners.forEach(({ component, handler }) => {
+      genericListeners.forEach(({ component, handler }) => {
         if (cuss2[component]) {
           const compId = String(cuss2[component].id);
           cuss2[component].on('data', (dataRecords) => {
@@ -932,6 +932,28 @@ const app = createApp({
           });
         }
       });
+
+      // Barcode Reader — delegates to BarcodeReader component via $refs
+      if (cuss2.barcodeReader) {
+        const barcodeId = String(cuss2.barcodeReader.id);
+        cuss2.barcodeReader.on('data', (dataRecords) => {
+          this.logEvent(`Barcode scanned: ${dataRecords[0]?.data || 'No data'}`);
+          const ref = this.$refs['barcodereader-' + barcodeId];
+          const comp = Array.isArray(ref) ? ref[0] : ref;
+          comp?.updateData(dataRecords);
+        });
+      }
+
+      // Document Reader — delegates to DocumentReader component via $refs
+      if (cuss2.documentReader) {
+        const docReaderId = String(cuss2.documentReader.id);
+        cuss2.documentReader.on('data', (dataRecords) => {
+          this.logEvent(`Document scanned: ${dataRecords[0]?.data || 'Document data received'}`);
+          const ref = this.$refs['docreader-' + docReaderId];
+          const docReader = Array.isArray(ref) ? ref[0] : ref;
+          docReader?.updateData(dataRecords);
+        });
+      }
 
       // Keypad listener — delegates to Keypad component via $refs
       if (cuss2.keypad) {
@@ -1104,6 +1126,8 @@ app.component('toggle-switch', ToggleSwitch);
 app.component('keypad-component', Keypad);
 app.component('headset-component', Headset);
 app.component('generic-component', GenericComponent);
+app.component('document-reader-component', DocumentReader);
+app.component('barcode-reader-component', BarcodeReader);
 app.component('event-log', EventLog);
 app.component('ws-messages', WsMessages);
 app.mount('#app');

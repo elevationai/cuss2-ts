@@ -1,2773 +1,1073 @@
-// ===== IMPORTS =====
-import { Cuss2, Models } from "../../dist/cuss2.esm.js";
-const { ApplicationStateCodes, ComponentState, MessageCodes } = Models;
+import { Cuss2, Models, criticalErrors } from '../../dist/cuss2.esm.js';
+import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES } from './tester-data.js';
+import { extractStatusCodeFromError, validateURL, checkMixedContent, generateOAuthUrl } from './tester-utils.js';
+import ToggleSwitch from './components/ToggleSwitch.js';
+import Keypad from './components/Keypad.js';
+import Headset from './components/Headset.js';
+import GenericComponent from './components/GenericComponent.js';
+
+const { ApplicationStateCodes } = Models;
+const { createApp } = Vue;
 
 let cuss2 = null;
 
-// ===== ERROR STATUS EXTRACTION =====
-/**
- * Extract CUSS status code from an error object.
- * The CUSS2 library throws PlatformResponseError with a messageCode property
- * containing the CUSS status (e.g., WRONG_APPLICATION_STATE, SOFTWARE_ERROR).
- * @param {Error} error - The error object to extract status from
- * @returns {string|null} The CUSS status code or null if not found
- */
-function extractStatusCodeFromError(error) {
-  if (!error) return null;
-
-  // PlatformResponseError from cuss2 library has messageCode property
-  if (error.messageCode && typeof error.messageCode === 'string') {
-    return error.messageCode;
-  }
-
-  // Fallback: parse from message text "Platform returned status code: X"
-  if (typeof error.message === 'string') {
-    const match = error.message.match(/status code:\s*([A-Z_]+)/i);
-    if (match) return match[1].toUpperCase();
-  }
-
-  return null;
-}
-
-// ===== TEST DATA DEFINITIONS =====
-
-// Test barcode data (for barcode reader simulation)
-const testBarcode = 'M1TESTER/TEST          UGZVFJ MCODENF9 3311 234Y016F0032 147>5180Mo5234BF9 00000000000';
-
-// Test passport MRZ data (Machine Readable Zone) - ICAO 9303 standard
-const testPassportMRZ = 'P<USATESTER<<TEST<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n5123456789USA9001014M3012315<<<<<<<<<<<<<<04';
-
-// Boarding pass printer SETUP data (multi-line: assets + logo)
-const bppSetupPrefix = `PT##$S6A#@;#TICK#CHEC#BOAR#0101110112011301210122012301C#0201A34#03BRB061661#0430G25F
-TT01#01L08004790100000`;
-
-// Boarding pass printer SEND data
-const bppSendSimple = 'CP#A#01S#CP#C01#02@@01#03M1THIS IS A BARCODE#04THIS IS A BOARDING PASS#';
-const bppSendFull = 'CP#A#01S#CP#C01#02@@01#03M1TEST/ADULT                                            RFIFWX    DENLASF9    0775    174Y014B0004    347>5181        1174BF9    042231015000129000000000000000                                                                                                        #04TEST/ADULT#05WED,    JUN    23,    2021#06#07SEQ004#08#09#12RFIFWX#13NO    CARRY    ON    ALLOWED#14#15#16#17#20DEN    -->    LAS#30Denver    to    Las    Vegas#32F9        775#3312:30AM#3401:15PM#3501:00PM#404#43#4414B#5092518095#54#55#64Sold    by#66Frontier    Airlines#';
-
-// Bag tag printer SETUP data (multi-line: assets + logo)
-const btpSetupPrefix = `BTT0801~J 500262=#01C0M5493450304#02C0M5493450304#03B1MA020250541=06#04B1MK200464141=06#05L0 A258250000#`;
-
-// Bag tag printer SEND data
-const btpSendSimple = 'BTP080101#01THIS IS A#02BAG TAG#03123#04456#0501#';
-
-const aeaCommands = {
-  // Boarding pass printer commands
-  boardingPassPrinter: {
-    'Setup: Assets + Logo': bppSetupPrefix,
-    'Send: Simple BP': bppSendSimple,
-    'Send: Full BP': bppSendFull
-  },
-  // Bag tag printer commands
-  bagTagPrinter: {
-    'Setup: Assets + Logo': btpSetupPrefix,
-    'Send: Simple BT': btpSendSimple
-  },
-  // Test data for barcode readers
-  barcodeReader: {
-    'Test Boarding Pass Barcode': testBarcode
-  },
-  // Test data for document readers
-  documentReader: {
-    'Test Passport MRZ (TEST TESTER)': testPassportMRZ
-  }
-};
-
-// Load company logo from external file and append to printer setup commands
-async function loadCompanyLogo() {
-  try {
-    const response = await fetch('data/company-logo.itps');
-    const logo = (await response.text()).trim();
-    aeaCommands.boardingPassPrinter['Setup: Assets + Logo'] = `${bppSetupPrefix}\n${logo}`;
-    aeaCommands.bagTagPrinter['Setup: Assets + Logo'] = `${btpSetupPrefix}\n${logo}`;
-  } catch (e) {
-    console.warn('Failed to load company logo test data:', e);
-  }
-}
-
-// ===== COMPONENT HELPERS =====
-// Shared utilities for working with CUSS2 components
-
-// ===== COMPONENT CAPABILITY DEFINITIONS =====
-const CAPABILITY_METHODS = [
-  'query', 'cancel', 'setup', 'enable', 'disable',
-  'send', 'read', 'offer', 'play', 'pause', 'resume', 'stop'
-];
-
-const componentCapabilities = {
-  getCapabilities(component) {
-    return CAPABILITY_METHODS.filter(m => typeof component[m] === 'function');
-  },
-
-  hasCapability(component, capability) {
-    return typeof component[capability] === 'function';
-  }
-};
-
-// ===== QUERY PARAMETER PARSING =====
+// ===== CONSTANTS =====
 const urlParams = new URLSearchParams(window.location.search);
 const queryConfig = {
-  clientId: urlParams.get("CLIENT-ID"),
-  clientSecret: urlParams.get("CLIENT-SECRET"),
-  wss: urlParams.get("CUSS-WSS"),
-  tokenUrl: urlParams.get("OAUTH-URL"),
-  deviceId: urlParams.get("DEVICE-ID"),
-  go: urlParams.get("go"),
+  clientId: urlParams.get('CLIENT-ID'),
+  clientSecret: urlParams.get('CLIENT-SECRET'),
+  wss: urlParams.get('CUSS-WSS'),
+  tokenUrl: urlParams.get('OAUTH-URL'),
+  deviceId: urlParams.get('DEVICE-ID'),
+  go: urlParams.get('go'),
 };
 
-// ===== URL UTILITIES =====
-const urlUtils = {
-  // Allowed protocols for CUSS2 connections
-  ALLOWED_PROTOCOLS: ['http:', 'https:', 'ws:', 'wss:'],
-
-  // Validate URL format and protocol
-  validateURL(url, urlType = 'URL') {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
-      return { isValid: false, error: `${urlType} cannot be empty` };
-    }
-
-    try {
-      const parsedUrl = new URL(url.trim());
-
-      if (!this.ALLOWED_PROTOCOLS.includes(parsedUrl.protocol)) {
-        const allowedList = this.ALLOWED_PROTOCOLS.map(p => p.replace(':', '://')).join(', ');
-        return {
-          isValid: false,
-          error: `${urlType} uses unsupported protocol '${parsedUrl.protocol}'. Only ${allowedList} are supported.`
-        };
-      }
-
-      return { isValid: true, url: parsedUrl.href };
-    } catch (error) {
-      return { isValid: false, error: `${urlType} is not a valid URL format` };
-    }
-  },
-
-  // Check for mixed content issues
-  checkMixedContent(targetUrl) {
-    // Only check if current page is served over HTTPS
-    if (location.protocol !== 'https:') {
-      return { hasMixedContent: false };
-    }
-
-    try {
-      const url = new URL(targetUrl);
-      const isHttpTarget = url.protocol === 'http:' || url.protocol === 'ws:';
-
-      return {
-        hasMixedContent: isHttpTarget,
-        currentProtocol: location.protocol,
-        targetProtocol: url.protocol,
-        suggestedUrl: isHttpTarget ? targetUrl.replace(/^(ws|http):/, url.protocol === 'ws:' ? 'wss:' : 'https:') : targetUrl
-      };
-    } catch (error) {
-      return { hasMixedContent: false, error: error.message };
-    }
-  },
-
-  // Update URL with connection parameters
-  updateUrlWithConnectionParams(formData) {
-    const params = new URLSearchParams();
-
-    // Required parameters
-    params.set('CLIENT-ID', formData.clientId);
-    params.set('CLIENT-SECRET', formData.clientSecret);
-    params.set('CUSS-WSS', formData.wss);
-
-    // Optional parameters - only add if they have values
-    if (formData.tokenUrl && formData.tokenUrl.trim()) {
-      params.set('OAUTH-URL', formData.tokenUrl);
-    }
-    if (formData.deviceId && formData.deviceId.trim()) {
-      params.set('DEVICE-ID', formData.deviceId);
-    }
-
-    // Preserve 'go' parameter if it was in the original URL
-    if (queryConfig.go) {
-      params.set('go', queryConfig.go);
-    }
-
-    // Update URL without triggering a page reload
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState({}, '', newUrl);
-
-    logger.info('URL updated with connection parameters');
-  }
+const STATE_REQUESTS = {
+  initialize: { method: 'requestInitializeState', state: 'INITIALIZE' },
+  unavailable: { method: 'requestUnavailableState', state: 'UNAVAILABLE' },
+  available: { method: 'requestAvailableState', state: 'AVAILABLE' },
+  active: { method: 'requestActiveState', state: 'ACTIVE' },
+  stopped: { method: 'requestStoppedState', state: 'STOPPED' },
+  reload: { method: 'requestReload', state: 'RELOAD', confirm: 'This will close the connection. Continue?' },
 };
 
-// ===== DOM HELPERS =====
-const dom = {
-  // Cache DOM elements
-  elements: {
-    form: null,
-    connectBtn: null,
-    disconnectBtn: null,
-    connectionStatus: null,
-    connectionStatusConnected: null,
-    currentState: null,
-    componentList: null,
-    logContainer: null,
-    envDetails: null,
-    stateButtons: {},
-    appInfo: {},
-    unavailableWarning: null,
-    availabilityReasons: null,
-    // Panels
-    connectionPanel: null,
-    stateManagementPanel: null,
-    environmentPanel: null,
-    componentsPanel: null,
-    eventLogPanel: null,
-    // New connection UI elements
-    connectButtonContainer: null,
-    connectionStatusContainer: null,
-    cancelConnectionBtn: null,
-    // isOnline checkbox
-    isOnlineToggle: null,
-  },
+const STATE_TRANSITIONS = {
+  [ApplicationStateCodes.STOPPED]: ['initialize'],
+  [ApplicationStateCodes.INITIALIZE]: ['unavailable', 'stopped', 'disabled'],
+  [ApplicationStateCodes.UNAVAILABLE]: ['stopped', 'suspended', 'reload', 'available'],
+  [ApplicationStateCodes.AVAILABLE]: ['suspended', 'reload', 'disabled', 'active', 'unavailable', 'stopped'],
+  [ApplicationStateCodes.ACTIVE]: ['active', 'unavailable', 'disabled', 'reload', 'stopped', 'available'],
+  [ApplicationStateCodes.RELOAD]: ['disabled', 'initialize', 'unavailable'],
+  [ApplicationStateCodes.SUSPENDED]: ['available', 'unavailable', 'stopped'],
+  [ApplicationStateCodes.DISABLED]: ['stopped', 'initialize'],
+};
 
-  // Initialize DOM element cache
-  init() {
-    this.elements.form = document.getElementById("connectionForm");
-    this.elements.connectBtn = document.getElementById("connectBtn");
-    this.elements.disconnectBtn = document.getElementById("disconnectBtn");
-    this.elements.connectionStatus = document.getElementById("connectionStatus");
-    this.elements.connectionStatusConnected = document.getElementById("connectionStatusConnected");
-    this.elements.currentState = document.getElementById("currentState");
-    this.elements.componentList = document.getElementById("componentList");
-    this.elements.logContainer = document.getElementById("logContainer");
-    this.elements.envDetails = document.getElementById("envDetails");
+const REQUESTABLE_STATES = ['initialize', 'unavailable', 'available', 'active', 'stopped', 'reload'];
 
-    // Panels
-    this.elements.connectionPanel = document.getElementById("connectionPanel");
-    this.elements.stateManagementPanel = document.getElementById("stateManagementPanel");
-    this.elements.environmentPanel = document.getElementById("environmentPanel");
-    this.elements.componentsPanel = document.getElementById("componentsPanel");
-    this.elements.eventLogPanel = document.getElementById("eventLogPanel");
-
-    // New connection UI elements
-    this.elements.connectButtonContainer = document.getElementById("connectButtonContainer");
-    this.elements.connectionStatusContainer = document.getElementById("connectionStatusContainer");
-    this.elements.cancelConnectionBtn = document.getElementById("cancelConnectionBtn");
-
-    // isOnline checkbox
-    this.elements.isOnlineToggle = document.getElementById("isOnlineToggle");
-
-    // State buttons
-    this.elements.stateButtons = {
-      initialize: document.getElementById("initializeBtn"),
-      unavailable: document.getElementById("unavailableBtn"),
-      available: document.getElementById("availableBtn"),
-      active: document.getElementById("activeBtn"),
-      stopped: document.getElementById("stoppedBtn"),
-      reload: document.getElementById("reloadBtn"),
-    };
-
-    // App info elements
-    this.elements.appInfo = {
-      brand: document.getElementById("brand"),
-      multiTenant: document.getElementById("multiTenant"),
-      accessibleMode: document.getElementById("accessibleMode"),
-      language: document.getElementById("language"),
-    };
-
-    // Unavailable warning and availability requirements section
-    this.elements.unavailableWarning = document.getElementById("unavailableWarning");
-    this.elements.availabilityReasons = document.getElementById("availabilityReasons");
-  },
-
-  // Get form values
-  getFormData() {
+// ===== MAIN APP =====
+const app = createApp({
+  data() {
     return {
-      wss: document.getElementById("wss").value,
-      clientId: document.getElementById("clientId").value,
-      clientSecret: document.getElementById("clientSecret").value,
-      deviceId: document.getElementById("deviceId").value,
-      tokenUrl: document.getElementById("tokenUrl").value,
+      // Form
+      form: {
+        wss: 'http://localhost:22222/platform/subscribe',
+        clientId: 'EAI',
+        clientSecret: 'secret',
+        deviceId: '',
+        tokenUrl: '',
+      },
+      fieldErrors: {},
+      fieldProblem: null,
+
+      // Connection
+      connectionState: 'disconnected',
+      connectionStages: {
+        auth: { state: 'pending', attempts: 0, lastError: null },
+        websocket: { state: 'pending', attempts: 0, lastError: null },
+      },
+      wasEverConnected: false,
+      isReconnecting: false,
+      lastConfig: null,
+
+      // App state
+      appState: 'STOPPED',
+      appInfo: { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' },
+      isOnline: false,
+
+      // Environment
+      environment: null,
+
+      // Components
+      components: {},
+      componentStatuses: {},
+      collapsedComponents: {},
+
+      // Banners
+      timeoutBanner: { visible: false, seconds: 0 },
+      accessibleModeBanner: { visible: false, seconds: 0 },
+      reconnectionBanner: { visible: false, attempts: 0 },
+      reconnectionSuccess: { visible: false },
+      mixedContentBanner: { visible: false, currentProtocol: '', targetProtocol: '', suggestedUrl: '' },
+
+      // Log
+      logEntries: [],
+      logIdCounter: 0,
+
+      // Button states
+      buttonStates: {},
+
+      // Action toasts
+      actionToasts: [],
+      toastIdCounter: 0,
+
+      // AEA commands
+      aeaCommands: null,
+
+      // Toggle pending states
+      pendingToggles: {},
+
+      // Characteristics popover
+      charPopover: { visible: false, top: 0, left: 0, json: '' },
+      _charHoverTimer: null,
+      _charHideTimer: null,
     };
   },
 
-  // Update element text content
-  setText(element, text) {
-    if (element) element.textContent = text;
-  },
+  computed: {
+    isConnected() { return this.connectionState === 'connected'; },
+    isConnecting() { return this.connectionState === 'connecting'; },
 
-  // Update element class
-  setClass(element, className) {
-    if (element) element.className = className;
-  },
+    componentList() {
+      return Object.entries(this.components);
+    },
 
-  // Enable/disable button
-  setButtonState(button, disabled) {
-    if (button) button.disabled = disabled;
-  },
+    allCollapsed() {
+      const collapsible = this.componentList.filter(([, c]) => !this.isHeaderOnly(c));
+      return collapsible.length > 0 && collapsible.every(([id]) => this.collapsedComponents[id]);
+    },
 
-  // Show/hide element
-  setVisible(element, visible) {
-    if (element) element.style.display = visible ? "block" : "none";
-  },
-
-  // Show validation error on input field
-  showFieldError(inputId, errorMessage) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-
-    // Remove any existing error
-    this.clearFieldError(inputId);
-
-    // Add error class to input
-    input.classList.add('error');
-
-    // Create error message element
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'field-error';
-    errorDiv.id = `${inputId}-error`;
-    errorDiv.textContent = errorMessage;
-
-    // Insert error after input
-    input.parentNode.insertBefore(errorDiv, input.nextSibling);
-  },
-
-  // Clear validation error from input field
-  clearFieldError(inputId) {
-    const input = document.getElementById(inputId);
-    const errorDiv = document.getElementById(`${inputId}-error`);
-
-    if (input) {
-      input.classList.remove('error');
-    }
-    if (errorDiv) {
-      errorDiv.remove();
-    }
-  },
-
-  // Clear all field errors
-  clearAllFieldErrors() {
-    const errorElements = document.querySelectorAll('.field-error');
-    const inputElements = document.querySelectorAll('.error');
-
-    errorElements.forEach(el => el.remove());
-    inputElements.forEach(el => el.classList.remove('error'));
-  },
-};
-
-// ===== LOGGING UTILITY =====
-const logger = {
-  // Log types enum
-  types: {
-    INFO: "info",
-    SUCCESS: "success",
-    ERROR: "error",
-    EVENT: "event",
-  },
-
-  // Create a log entry
-  log(message, type = "info") {
-    const entry = document.createElement("div");
-    entry.className = `log-entry ${type}`;
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-    dom.elements.logContainer.appendChild(entry);
-    dom.elements.logContainer.scrollTop = dom.elements.logContainer.scrollHeight;
-  },
-
-  // Convenience methods
-  info(message) {
-    this.log(message, this.types.INFO);
-  },
-  success(message) {
-    this.log(message, this.types.SUCCESS);
-  },
-  error(message) {
-    this.log(message, this.types.ERROR);
-  },
-  event(message) {
-    this.log(message, this.types.EVENT);
-  },
-};
-
-// ===== UI FEEDBACK UTILITY =====
-const feedback = {
-  // ARIA live region for accessibility
-  _ariaRegion: null,
-
-  // Initialize feedback system
-  init() {
-    this._ariaRegion = document.getElementById('ariaLiveRegion');
-  },
-
-  // ===== BUTTON STATE MANAGEMENT =====
-
-  /**
-   * Set button to loading state with fixed dimensions
-   * @param {HTMLButtonElement} button
-   * @param {string} _loadingText - Ignored (kept for API compatibility)
-   */
-  setButtonLoading(button, _loadingText = null) {
-    if (!button) return;
-
-    // Only store original state once (avoid re-storing if already loading)
-    if (!button.dataset.originalDisabled) {
-      button.dataset.originalDisabled = button.disabled;
-    }
-
-    // Freeze dimensions to prevent layout shift (only if not already frozen)
-    if (!button.dataset.originalWidth) {
-      button.dataset.originalWidth = button.offsetWidth + 'px';
-      button.dataset.originalHeight = button.offsetHeight + 'px';
-      button.style.width = button.dataset.originalWidth;
-      button.style.height = button.dataset.originalHeight;
-    }
-
-    // Set up internal structure for spinner (only once)
-    if (!button.querySelector('.btn-label')) {
-      const labelText = button.textContent;
-      button.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span class="btn-label">${this._escapeHtml(labelText)}</span>`;
-    }
-
-    // Apply loading state
-    button.classList.remove('success', 'error');
-    button.classList.add('loading');
-    button.disabled = true;
-  },
-
-  /**
-   * Set button to success state (keeps original label)
-   * @param {HTMLButtonElement} button
-   * @param {number} duration - How long to show success state (ms)
-   */
-  setButtonSuccess(button, duration = 2000) {
-    if (!button) return;
-
-    // Remove loading state but keep fixed dimensions
-    button.classList.remove('loading', 'error');
-    button.classList.add('success');
-
-    // Keep the label text, just change visual state
-    setTimeout(() => {
-      this.resetButton(button);
-    }, duration);
-  },
-
-  /**
-   * Set button to error state (keeps original label)
-   * @param {HTMLButtonElement} button
-   * @param {number} duration - How long to show error state (ms)
-   */
-  setButtonError(button, duration = 3000) {
-    if (!button) return;
-
-    // Remove loading state but keep fixed dimensions
-    button.classList.remove('loading', 'success');
-    button.classList.add('error');
-
-    // Keep the label text, just change visual state
-    setTimeout(() => {
-      this.resetButton(button);
-    }, duration);
-  },
-
-  /**
-   * Reset button to original state
-   */
-  resetButton(button) {
-    if (!button) return;
-
-    // Remove state classes
-    button.classList.remove('loading', 'success', 'error');
-
-    // Restore original label (remove spinner structure)
-    const labelEl = button.querySelector('.btn-label');
-    if (labelEl) {
-      button.textContent = labelEl.textContent;
-    }
-
-    // Clear fixed dimensions
-    button.style.width = '';
-    button.style.height = '';
-
-    // Restore original disabled state
-    button.disabled = button.dataset.originalDisabled === 'true';
-
-    // Clean up datasets
-    delete button.dataset.originalDisabled;
-    delete button.dataset.originalWidth;
-    delete button.dataset.originalHeight;
-  },
-
-  // ===== ACCESSIBILITY HELPERS =====
-
-  /**
-   * Announce message to screen readers
-   */
-  _announceToScreenReader(message) {
-    if (!this._ariaRegion) return;
-
-    this._ariaRegion.textContent = message;
-
-    // Clear after announcement to allow repeat announcements
-    setTimeout(() => {
-      if (this._ariaRegion) {
-        this._ariaRegion.textContent = '';
+    allowedTransitions() {
+      if (!cuss2 || !cuss2.connection?.isOpen) return [];
+      const validTransitions = STATE_TRANSITIONS[this.appState] || [];
+      let allowed = validTransitions.filter(a => REQUESTABLE_STATES.includes(a));
+      const hasBlockers = cuss2.unavailableRequiredComponents?.length > 0;
+      if (hasBlockers) {
+        allowed = allowed.filter(a => a !== 'available' && a !== 'active');
       }
-    }, 1000);
-  },
-
-  /**
-   * Escape HTML to prevent XSS
-   */
-  _escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-};
-
-// ===== HTML TEMPLATES =====
-const templates = {
-  // Environment details template - clones HTML template and populates with env data
-  environmentDetails(env) {
-    const formatValue = (value) => {
-      if (value === null || value === undefined) return '-';
-      if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-      if (typeof value === 'object') return JSON.stringify(value, null, 2);
-      return String(value);
-    };
-
-    const template = document.getElementById('env-details-template');
-    const clone = template.content.cloneNode(true);
-
-    // Populate flat values
-    const set = (cls, val) => {
-      const el = clone.querySelector(`.${cls}`);
-      if (el) el.textContent = formatValue(val);
-    };
-
-    set('env-deviceID', env.deviceID);
-    set('env-deviceModelName', env.deviceModelName);
-    set('env-cussVersions', env.cussVersions?.join(', '));
-    set('env-osName', env.osName);
-    set('env-osVersion', env.osVersion);
-    set('env-sessionTimeout', env.sessionTimeout != null ? `${env.sessionTimeout}ms` : null);
-    set('env-killTimeout', env.killTimeout != null ? `${env.killTimeout}ms` : null);
-    set('env-expectedAckTime', env.expectedAckTime != null ? `${env.expectedAckTime}ms` : null);
-    set('env-maxCacheTime', env.maxCacheTime != null ? `${env.maxCacheTime}ms` : null);
-
-    // Device location (conditional)
-    if (env.deviceLocation) {
-      set('env-airportCode', env.deviceLocation.airportCode);
-      set('env-terminalID', env.deviceLocation.terminalID);
-      set('env-gateID', env.deviceLocation.gateID);
-    } else {
-      clone.querySelectorAll('.env-location').forEach(el => el.remove());
-    }
-
-    return clone;
-  },
-
-  // Component item template - creates DOM elements from HTML template
-  componentItem(id, component) {
-    // Clone the base component template
-    const template = document.getElementById('component-template');
-    const clone = template.content.cloneNode(true);
-    const componentEl = clone.querySelector('.component-item');
-
-    // Set component state classes
-    if (component.ready) componentEl.classList.add('ready');
-    if (component.enabled) componentEl.classList.add('enabled');
-
-    // Populate title row
-    const componentName = clone.querySelector('.component-name');
-    componentName.textContent = `${component.deviceType} (ID: ${id})`;
-
-    // Set ready badge
-    const readyBadge = clone.querySelector('.ready-badge');
-    if (component.ready) {
-      readyBadge.textContent = 'Ready';
-      readyBadge.classList.add('ready');
-    } else {
-      readyBadge.textContent = 'Not Ready';
-      readyBadge.classList.add('not-ready');
-    }
-
-    // Setup Query button
-    const queryBtn = clone.querySelector('[data-action="query"]');
-    queryBtn.dataset.componentId = id;
-
-    // Setup Required toggle
-    const requiredToggle = clone.querySelector('.toggle-required');
-    requiredToggle.dataset.componentId = id;
-    requiredToggle.dataset.currentRequired = component.required;
-    if (component.required) {
-      requiredToggle.classList.add('required');
-    }
-
-    // Setup Enabled toggle (only if component supports it)
-    const enabledToggleContainer = clone.querySelector('.enabled-toggle-container');
-    if (componentCapabilities.hasCapability(component, 'enable')) {
-      enabledToggleContainer.style.display = '';
-      const enabledToggle = clone.querySelector('.enabled-toggle-container .toggle-switch');
-      enabledToggle.dataset.componentId = id;
-      enabledToggle.dataset.currentState = component.enabled;
-
-      if (component.enabled) {
-        enabledToggle.classList.add('enabled');
-      }
-      if (!component.ready) {
-        enabledToggle.classList.add('disabled');
-      }
-    }
-
-    // Get capabilities and populate action columns
-    // Inspect the component's actual methods to determine what it can do
-    const capabilities = componentCapabilities.getCapabilities(component);
-    const leftColumn = clone.querySelector('.left-column');
-    const rightColumn = clone.querySelector('.right-column');
-
-      // Populate columns based on component type
-    this.populateActionColumns(leftColumn, rightColumn, id, component, capabilities);
-
-    return clone;
-  },
-
-  // Populate action columns based on component capabilities
-  populateActionColumns(leftColumn, rightColumn, id, component, capabilities) {
-    // Left column - Setup (most components)
-    if (capabilities.includes('setup')) {
-      const setupTemplate = document.getElementById('setup-action-template');
-      const setupClone = setupTemplate.content.cloneNode(true);
-      const textarea = setupClone.querySelector('.setup-textarea');
-      const button = setupClone.querySelector('.setup-btn');
-      const dropdown = setupClone.querySelector('.setup-dropdown');
-
-      textarea.id = `setup-input-${id}`;
-      button.dataset.componentId = id;
-      this._populateDropdown(dropdown, this._getCommandSet(component), textarea);
-
-      leftColumn.appendChild(setupClone);
-    }
-
-    // Right column - varies by component type
-    if (capabilities.includes('send')) {
-      // Output components (HEADSET, BOARDING_PASS_PRINTER, CONVEYOR)
-      const sendTemplate = document.getElementById('send-action-template');
-      const sendClone = sendTemplate.content.cloneNode(true);
-      const textarea = sendClone.querySelector('.send-textarea');
-      const buttonsContainer = sendClone.querySelector('.send-buttons');
-      const dropdown = sendClone.querySelector('.send-dropdown');
-
-      textarea.id = `send-input-${id}`;
-      this._populateDropdown(dropdown, this._getCommandSet(component), textarea);
-
-      // Add Send button
-      this.addButton(buttonsContainer, 'Send', 'send', id);
-
-      // Add additional capability-based buttons
-      if (capabilities.includes('forward')) this.addButton(buttonsContainer, 'Forward', 'forward', id);
-      if (capabilities.includes('backward')) this.addButton(buttonsContainer, 'Backward', 'backward', id);
-      if (capabilities.includes('process')) this.addButton(buttonsContainer, 'Process', 'process', id);
-      if (capabilities.includes('cancel')) {
-        this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
-      }
-
-      rightColumn.appendChild(sendClone);
-    } else if (capabilities.includes('play')) {
-      // Announcement components
-      const playTemplate = document.getElementById('play-action-template');
-      const playClone = playTemplate.content.cloneNode(true);
-      const textarea = playClone.querySelector('.play-textarea');
-      const buttonsContainer = playClone.querySelector('.play-buttons');
-
-      textarea.id = `play-input-${id}`;
-
-      // Add playback control buttons
-      this.addButton(buttonsContainer, 'Play', 'play', id);
-      if (capabilities.includes('pause')) this.addButton(buttonsContainer, 'Pause', 'pause', id);
-      if (capabilities.includes('resume')) this.addButton(buttonsContainer, 'Resume', 'resume', id);
-      if (capabilities.includes('stop')) this.addButton(buttonsContainer, 'Stop', 'stop', id);
-      if (capabilities.includes('cancel')) this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
-
-      rightColumn.appendChild(playClone);
-    } else if (capabilities.includes('read')) {
-      // Media input components
-      const readTemplate = document.getElementById('read-action-template');
-      const readClone = readTemplate.content.cloneNode(true);
-      const input = readClone.querySelector('.read-input');
-      const buttonsContainer = readClone.querySelector('.read-buttons');
-      const dropdown = readClone.querySelector('.read-dropdown');
-
-      input.id = `read-input-${id}`;
-      // For readers, dropdown logs test data instead of filling input
-      this._populateDropdown(dropdown, this._getCommandSet(component), null);
-
-      // Add Read and Cancel buttons
-      this.addButton(buttonsContainer, 'Read', 'read', id);
-      if (capabilities.includes('cancel')) {
-        this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
-      }
-
-      rightColumn.appendChild(readClone);
-    } else {
-      // Default right column - just buttons (Offer, Cancel, etc.)
-      const rightButtonsTemplate = document.getElementById('right-buttons-template');
-      const rightButtonsClone = rightButtonsTemplate.content.cloneNode(true);
-      const buttonsContainer = rightButtonsClone.querySelector('.right-buttons');
-
-      if (capabilities.includes('offer')) {
-        this.addButton(buttonsContainer, 'Offer', 'offer', id);
-      }
-      if (capabilities.includes('cancel')) {
-        this.addButton(buttonsContainer, 'Cancel', 'cancel', id);
-      }
-
-      if (buttonsContainer.children.length > 0) {
-        rightColumn.appendChild(rightButtonsClone);
-      }
-    }
-  },
-
-  // Get the command set for a component's device type (if any)
-  _getCommandSet(component) {
-    const map = {
-      'BOARDING_PASS_PRINTER': aeaCommands.boardingPassPrinter,
-      'BAG_TAG_PRINTER': aeaCommands.bagTagPrinter,
-      'BARCODE_READER': aeaCommands.barcodeReader,
-      'PASSPORT_READER': aeaCommands.documentReader,
-    };
-    return map[component.deviceType] || null;
-  },
-
-  // Populate a dropdown with commands and wire up a change listener.
-  // If targetInput is provided, selecting an option fills the input.
-  // Otherwise, the selection is logged to the event log.
-  _populateDropdown(dropdown, commandSet, targetInput) {
-    if (!commandSet || !dropdown) return;
-
-    Object.entries(commandSet).forEach(([name, value]) => {
-      const option = document.createElement('option');
-      option.value = value;
-      option.textContent = name;
-      dropdown.appendChild(option);
-    });
-
-    dropdown.style.display = 'block';
-    dropdown.addEventListener('change', (e) => {
-      if (!e.target.value) return;
-      if (targetInput) {
-        targetInput.value = e.target.value;
-      } else {
-        const selectedName = e.target.options[e.target.selectedIndex].text;
-        logger.info(`Test data example: ${selectedName}`);
-        logger.info(`Expected data: ${e.target.value}`);
-      }
-    });
-  },
-
-  // Helper to add a button to a container
-  addButton(container, text, action, componentId) {
-    const button = document.createElement('button');
-    button.className = 'component-action-btn';
-    button.textContent = text;
-    button.dataset.action = action;
-    button.dataset.componentId = componentId;
-    container.appendChild(button);
-  },
-
-  // Clone and populate the timeout warning banner template
-  timeoutWarning(seconds) {
-    const template = document.getElementById('timeout-banner-template');
-    const clone = template.content.cloneNode(true);
-    clone.getElementById('timeoutCounter').textContent = seconds;
-    return clone;
-  },
-
-  // Clone and populate the mixed content warning banner template
-  mixedContentWarning(currentProtocol, targetProtocol, suggestedUrl) {
-    const template = document.getElementById('mixed-content-banner-template');
-    const clone = template.content.cloneNode(true);
-    clone.querySelector('.mixed-current-protocol').textContent = currentProtocol.replace(':', '').toUpperCase();
-    clone.querySelector('.mixed-target-protocol').textContent = targetProtocol.replace(':', '').toUpperCase();
-    const suggestedBtn = clone.getElementById('useSuggestedUrl');
-    suggestedBtn.textContent = `Use Secure URL: ${suggestedUrl}`;
-    suggestedBtn.dataset.url = suggestedUrl;
-    return clone;
-  }
-};
-
-// ===== CONNECTION STAGE MANAGEMENT =====
-const connectionStages = {
-  // Stage state tracking
-  authStage: {
-    state: 'pending', // pending, progress, success, error
-    attempts: 0,
-    lastError: null
-  },
-  websocketStage: {
-    state: 'pending',
-    attempts: 0,
-    lastError: null
-  },
-
-  // Reset all stages to pending
-  reset() {
-    this.authStage = { state: 'pending', attempts: 0, lastError: null };
-    this.websocketStage = { state: 'pending', attempts: 0, lastError: null };
-    this.updateUI();
-    this.clearFieldHighlights();
-  },
-
-  // Update a specific stage
-  updateStage(stage, state, message, attempts = null) {
-    const stageData = stage === 'auth' ? this.authStage : this.websocketStage;
-    stageData.state = state;
-    if (attempts !== null) {
-      stageData.attempts = attempts;
-    }
-    if (state === 'error' && message) {
-      stageData.lastError = message;
-    }
-    this.updateUI();
-
-    // Highlight problematic field on error
-    if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
-      this.highlightProblematicField();
-    }
-  },
-
-  // Update the UI based on current stage states
-  updateUI() {
-    // Update auth stage
-    this.updateStageUI('auth', this.authStage);
-
-    // Update websocket stage
-    this.updateStageUI('websocket', this.websocketStage);
-
-    // Update progress title
-    this.updateProgressTitle();
-  },
-
-  // Update a single stage in the UI
-  updateStageUI(stageName, stageData) {
-    const prefix = stageName === 'auth' ? 'auth' : 'websocket';
-    const stageElement = document.getElementById(`${prefix}Stage`);
-    const iconElement = document.getElementById(`${prefix}StageIcon`);
-    const statusElement = document.getElementById(`${prefix}StageStatus`);
-    const attemptsElement = document.getElementById(`${prefix}StageAttempts`);
-
-    if (!stageElement || !iconElement || !statusElement) return;
-
-    // Hide websocket stage when pending
-    if (stageName === 'websocket' && stageData.state === 'pending') {
-      stageElement.style.display = 'none';
-      return;
-    } else {
-      stageElement.style.display = '';
-    }
-
-    // Remove all state classes
-    stageElement.classList.remove('stage-progress', 'stage-success', 'stage-error');
-
-    // Add current state class
-    stageElement.classList.add(`stage-${stageData.state}`);
-
-    // Update icon
-    const icons = {
-      progress: '🔄',
-      success: '✅',
-      error: '❌'
-    };
-    iconElement.textContent = icons[stageData.state] || '';
-
-    // Update status text
-    const statusTexts = {
-      progress: stageName === 'auth' ? 'Authenticating...' : 'Connecting...',
-      success: stageName === 'auth' ? 'Authenticated ✓' : 'Connected ✓',
-      error: stageData.lastError || 'Failed'
-    };
-    statusElement.textContent = statusTexts[stageData.state] || '';
-
-    // Update attempts counter
-    if (attemptsElement) {
-      if (stageData.state === 'progress' && stageData.attempts > 0) {
-        // Show current attempt during progress
-        attemptsElement.textContent = `Attempt ${stageData.attempts}`;
-      } else if (stageData.state === 'error' && stageData.attempts > 0) {
-        // Show attempt number on error
-        attemptsElement.textContent = `Attempt ${stageData.attempts}`;
-      } else {
-        attemptsElement.textContent = '';
-      }
-    }
-  },
-
-  // Update progress title based on overall state
-  updateProgressTitle() {
-    const titleElement = document.getElementById('connectionProgressTitle');
-    if (!titleElement) return;
-
-    if (this.websocketStage.state === 'success') {
-      titleElement.textContent = '✅ Connected Successfully';
-    } else if (this.authStage.state === 'error' || this.websocketStage.state === 'error') {
-      titleElement.textContent = '⚠️ Connection Failed';
-    } else if (this.authStage.state === 'progress' || this.websocketStage.state === 'progress') {
-      titleElement.textContent = 'Connecting to Platform...';
-    } else {
-      titleElement.textContent = 'Connecting to Platform...';
-    }
-  },
-
-  // Highlight the problematic URL field
-  highlightProblematicField() {
-    this.clearFieldHighlights();
-
-    const wssInput = document.getElementById('wss');
-    const tokenUrlInput = document.getElementById('tokenUrl');
-
-    if (this.authStage.state === 'error') {
-      // Auth failed - highlight token URL (or client credentials, but we'll highlight token URL)
-      if (tokenUrlInput && tokenUrlInput.value.trim()) {
-        tokenUrlInput.classList.add('field-problem');
-        // Remove after animation
-        setTimeout(() => tokenUrlInput.classList.remove('field-problem'), 3000);
-      }
-    } else if (this.authStage.state === 'success' && this.websocketStage.state === 'error') {
-      // WebSocket failed - highlight WebSocket URL
-      if (wssInput) {
-        wssInput.classList.add('field-problem');
-        // Remove after animation
-        setTimeout(() => wssInput.classList.remove('field-problem'), 3000);
-      }
-    }
-  },
-
-  // Clear field highlights
-  clearFieldHighlights() {
-    const wssInput = document.getElementById('wss');
-    const tokenUrlInput = document.getElementById('tokenUrl');
-
-    if (wssInput) wssInput.classList.remove('field-problem');
-    if (tokenUrlInput) tokenUrlInput.classList.remove('field-problem');
-  }
-};
-
-// ===== UI UPDATE UTILITIES =====
-const ui = {
-  // Connection status states
-  connectionStates: {
-    CONNECTED: { class: "status connected", text: "Connected" },
-    DISCONNECTED: { class: "status disconnected", text: "Disconnected" },
-    CONNECTING: { class: "status connecting", text: "Connecting..." },
-    FAILED: { class: "status disconnected", text: "Connection failed" },
-  },
-
-  // Update connection status
-  updateConnectionStatus(state) {
-    const status = this.connectionStates[state];
-
-    if (state === "CONNECTED") {
-      // Switch to State Management view (connected)
-      dom.setVisible(dom.elements.connectionPanel, false);
-      dom.setVisible(dom.elements.stateManagementPanel, true);
-      dom.setVisible(dom.elements.environmentPanel, true);
-      dom.setVisible(dom.elements.componentsPanel, true);
-      dom.elements.eventLogPanel.classList.remove('panel-centered');
-      dom.setVisible(dom.elements.connectionStatusConnected, true);
-      dom.setClass(dom.elements.connectionStatusConnected, status.class);
-      dom.setText(dom.elements.connectionStatusConnected, status.text);
-
-      // Reset connection form UI - hide the progress indicator
-      dom.setVisible(dom.elements.connectButtonContainer, true);
-      dom.setVisible(dom.elements.connectionStatusContainer, false);
-    } else if (state === "CONNECTING") {
-      // Show status bar with progress indicator instead of connect button
-      dom.setVisible(dom.elements.connectButtonContainer, false);
-      dom.setVisible(dom.elements.connectionStatusContainer, true);
-
-      // Reset connection stages to initial state
-      connectionStages.reset();
-    } else {
-      // Switch to Connection view (disconnected/failed)
-      dom.setVisible(dom.elements.connectionPanel, true);
-      dom.setVisible(dom.elements.stateManagementPanel, false);
-      dom.setVisible(dom.elements.environmentPanel, false);
-      dom.setVisible(dom.elements.componentsPanel, false);
-      dom.elements.eventLogPanel.classList.add('panel-centered');
-
-      // Show connect button, hide status
-      dom.setVisible(dom.elements.connectButtonContainer, true);
-      dom.setVisible(dom.elements.connectionStatusContainer, false);
-    }
-  },
-
-  // Update state display
-  updateStateDisplay(state) {
-    dom.setClass(dom.elements.currentState, `state-badge ${state}`);
-    dom.setText(dom.elements.currentState, state);
-    this.updateStateButtons(state);
-  },
-
-  // Update application info
-  updateApplicationInfo(show = false, activation = null) {
-    if (show && cuss2) {
-      dom.setText(dom.elements.appInfo.brand, activation?.applicationBrand || "-");
-      dom.setText(dom.elements.appInfo.multiTenant, cuss2.multiTenant ? "Yes" : "No");
-      dom.setText(dom.elements.appInfo.accessibleMode, cuss2.accessibleMode ? "Yes" : "No");
-      dom.setText(dom.elements.appInfo.language, cuss2.language || "-");
-    }
-    else {
-      Object.values(dom.elements.appInfo).forEach((el) => dom.setText(el, "-"));
-    }
-  },
-
-  // Update required devices section - shows all required devices and their health status
-  // Uses template-based DOM manipulation (not string concatenation) per project guidelines
-  updateAvailabilityReasons() {
-    const container = dom.elements.availabilityReasons;
-    const warningEl = dom.elements.unavailableWarning;
-    if (!container) return;
-
-    // Clear existing content using DOM methods
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
-    }
-
-    // Guard: if not connected, leave empty and return
-    if (!cuss2) {
-      if (warningEl) warningEl.style.display = 'none';
-      return;
-    }
-
-    const currentState = cuss2.state;
-    const blockers = cuss2.unavailableRequiredComponents || [];
-
-    // Get all required devices from the components list
-    const requiredDevices = [];
-    if (cuss2.components) {
-      Object.entries(cuss2.components).forEach(([id, component]) => {
+      return allowed;
+    },
+
+    tokenUrlPlaceholder() {
+      return generateOAuthUrl(this.form.wss) || 'http://localhost:22222/oauth/token';
+    },
+
+    generateButtonText() {
+      return this.form.tokenUrl.trim() ? 'Regenerate' : 'Generate';
+    },
+
+    generateButtonDisabled() {
+      if (!this.form.tokenUrl.trim()) return false;
+      return this.form.tokenUrl.trim() === generateOAuthUrl(this.form.wss);
+    },
+
+    progressTitle() {
+      if (this.connectionStages.websocket.state === 'success') return '\u2705 Connected Successfully';
+      if (this.connectionStages.auth.state === 'error' || this.connectionStages.websocket.state === 'error') return '\u26A0\uFE0F Connection Failed';
+      return 'Connecting to Platform...';
+    },
+
+    requiredDevices() {
+      const devices = [];
+      for (const [id, component] of Object.entries(this.components)) {
         if (component && component.required === true) {
-          requiredDevices.push({ id, component });
+          devices.push({ id, component });
         }
-      });
-    }
+      }
+      return devices;
+    },
 
-    // Case 1: No required devices configured - show empty state from template
-    if (requiredDevices.length === 0) {
-      if (warningEl) warningEl.style.display = 'none';
-      const emptyTemplate = document.getElementById('required-devices-empty-template');
-      const emptyClone = emptyTemplate.content.cloneNode(true);
-      container.appendChild(emptyClone);
-      return;
-    }
+    computedRequiredDeviceItems() {
+      if (!cuss2) return [];
+      const blockers = cuss2.unavailableRequiredComponents || [];
+      const isUnavailable = this.appState === ApplicationStateCodes.UNAVAILABLE;
 
-    // Helper to determine if a component ID is in the blockers list
-    const isBlocking = (id) => {
-      return blockers.some(blockerId => {
-        const blockerIdStr = (typeof blockerId === 'string') ? blockerId : String(blockerId);
-        const idStr = (typeof id === 'string') ? id : String(id);
-        return blockerIdStr === idStr;
-      });
-    };
+      return this.requiredDevices.map(({ id, component }) => {
+        const tags = [];
+        const isBlocking = blockers.some(b => String(b) === String(id));
+        let isHealthy = true;
 
-    // Get template references
-    const itemTemplate = document.getElementById('required-device-item-template');
-    const tagTemplate = document.getElementById('required-device-tag-template');
-
-    // Create a list container
-    const listEl = document.createElement('div');
-    listEl.className = 'availability-reason-list';
-
-    // Track if any required devices are unhealthy
-    let hasUnhealthyDevices = false;
-    const isUnavailable = currentState === ApplicationStateCodes.UNAVAILABLE;
-
-    // Build each device item using templates
-    requiredDevices.forEach(({ id, component }) => {
-      const displayName = component?.deviceType || id;
-      const tags = [];
-      const deviceIsBlocking = isBlocking(id);
-
-      // Determine health status based on ready state and status only
-      // Note: "Disabled" is intentionally NOT shown in this summary panel
-      let isHealthy = true;
-
-      if (!component) {
-        tags.push({ text: 'Offline or not reported', className: 'error' });
-        isHealthy = false;
-      } else {
-        if (component.ready === false) {
-          tags.push({ text: 'Not ready', className: 'error' });
+        if (!component) {
+          tags.push({ text: 'Offline or not reported', className: 'error' });
           isHealthy = false;
-        }
-        if (component.status && component.status !== 'OK') {
-          tags.push({ text: `Status: ${component.status}`, className: 'error' });
-          isHealthy = false;
-        }
-      }
-
-      if (!isHealthy) {
-        hasUnhealthyDevices = true;
-      }
-
-      // Add blocking indicator if this device is in the blockers list and app is UNAVAILABLE
-      if (deviceIsBlocking && isUnavailable) {
-        tags.push({ text: 'Blocking availability', className: 'blocking' });
-      }
-
-      // Add healthy tag if device is healthy
-      if (isHealthy) {
-        tags.push({ text: 'Healthy', className: 'healthy' });
-      }
-
-      // Clone item template and populate
-      const itemClone = itemTemplate.content.cloneNode(true);
-      const itemEl = itemClone.querySelector('.availability-reason-item');
-      const titleEl = itemClone.querySelector('.availability-reason-title');
-      const tagsContainer = itemClone.querySelector('.availability-reason-tags');
-
-      // Set title text
-      titleEl.textContent = displayName;
-
-      // Determine row class based on health and blocking status
-      if (deviceIsBlocking && isUnavailable) {
-        itemEl.classList.add('blocking');
-      } else if (isHealthy) {
-        itemEl.classList.add('healthy');
-      } else {
-        itemEl.classList.add('unhealthy');
-      }
-
-      // Add tags using the tag template
-      tags.forEach(tag => {
-        const tagClone = tagTemplate.content.cloneNode(true);
-        const tagEl = tagClone.querySelector('.availability-reason-tag');
-        tagEl.textContent = tag.text;
-        tagEl.classList.add(tag.className);
-        tagsContainer.appendChild(tagClone);
-      });
-
-      listEl.appendChild(itemClone);
-    });
-
-    // Show/hide warning based on actual component health
-    if (warningEl) {
-      warningEl.style.display = (isUnavailable && hasUnhealthyDevices) ? 'block' : 'none';
-    }
-
-    container.appendChild(listEl);
-  },
-
-  // Update state transition buttons
-  updateStateButtons(currentState) {
-    // Disable all buttons first
-    Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
-
-    if (!cuss2 || !cuss2.connection.isOpen) return;
-
-    // Check if there are any unavailable required components
-    const hasUnavailableRequiredComponents = cuss2.unavailableRequiredComponents?.length > 0;
-
-    // Define what states applications can move to based on platform logic
-    const canMoveTo = {
-      [ApplicationStateCodes.STOPPED]: ["initialize"],
-      [ApplicationStateCodes.INITIALIZE]: ["unavailable", "stopped", "disabled"],
-      [ApplicationStateCodes.UNAVAILABLE]: ["stopped", "suspended", "reload", "available"],
-      [ApplicationStateCodes.AVAILABLE]: ["suspended", "reload", "disabled", "active", "unavailable", "stopped"],
-      [ApplicationStateCodes.ACTIVE]: ["active", "unavailable", "disabled", "reload", "stopped", "available"],
-      [ApplicationStateCodes.RELOAD]: ["disabled", "initialize", "unavailable"],
-      [ApplicationStateCodes.SUSPENDED]: ["available", "unavailable", "stopped"],
-      [ApplicationStateCodes.DISABLED]: ["stopped", "initialize"],
-    };
-
-    // Define what states applications are allowed to request
-    const canRequest = ["initialize", "unavailable", "available", "active", "reload"];
-
-    // Get transitions that are both valid to move to AND allowed to request
-    const validTransitions = canMoveTo[currentState] || [];
-    let allowedTransitions = validTransitions.filter(action => canRequest.includes(action));
-
-    // If there are unavailable required components, block transitions to AVAILABLE and ACTIVE
-    if (hasUnavailableRequiredComponents) {
-      allowedTransitions = allowedTransitions.filter(action => {
-        // Only allow transitions that don't require all components to be healthy
-        // Block AVAILABLE and ACTIVE - these require all required components to be ready
-        return action !== 'available' && action !== 'active';
-      });
-
-      // Log the restriction for user awareness
-      if (allowedTransitions.length < validTransitions.filter(action => canRequest.includes(action)).length) {
-        logger.info(`AVAILABLE/ACTIVE transitions blocked: ${cuss2.unavailableRequiredComponents.length} required component(s) unavailable`);
-      }
-    }
-
-    // Enable buttons for allowed transitions
-    allowedTransitions.forEach((action) => {
-      if (dom.elements.stateButtons[action]) {
-        dom.setButtonState(dom.elements.stateButtons[action], false);
-      }
-    });
-
-    // STOPPED button always stays disabled (not requestable by applications)
-    dom.setButtonState(dom.elements.stateButtons.stopped, true);
-  },
-
-  // Display environment info
-  displayEnvironment(env) {
-    dom.elements.envDetails.replaceChildren(templates.environmentDetails(env));
-  },
-
-  // Display components
-  displayComponents() {
-    if (!cuss2 || !cuss2.components) {
-      dom.elements.componentList.innerHTML = '<p style="color: #666;">No components available</p>';
-      return;
-    }
-
-    dom.elements.componentList.innerHTML = "";
-
-    Object.entries(cuss2.components).forEach(([id, component]) => {
-      const item = this.createComponentItem(id, component);
-      dom.elements.componentList.appendChild(item);
-    });
-  },
-
-  // Create a component item element
-  createComponentItem(id, component) {
-    // Use the new template-based approach
-    const fragment = templates.componentItem(id, component);
-
-    // Extract the actual element from the DocumentFragment
-    const item = fragment.querySelector('.component-item');
-
-    // Add toggle switch event listener (only if toggle exists)
-    const toggleElement = item.querySelector('.toggle-switch:not(.toggle-required)');
-
-    if (toggleElement) {
-      toggleElement.addEventListener('click', async (e) => {
-        e.stopPropagation();
-
-        // Don't allow toggle if component is not ready or already pending
-        if (!component.ready || toggleElement.classList.contains('pending')) {
-          return;
-        }
-
-        const originalState = toggleElement.dataset.currentState === 'true';
-        const action = originalState ? 'disable' : 'enable';
-
-        // Set pending state immediately
-        toggleElement.classList.add('pending');
-        toggleElement.classList.remove('enabled');
-
-        try {
-          await componentHandlers.handleComponentAction(component, action, id);
-
-          // Success: Get fresh component reference and update based on actual component state
-          const freshComponent = cuss2.components[id];
-          componentHandlers.syncToggleState(toggleElement, freshComponent || component);
-        } catch (error) {
-          // Error: Revert to original state
-          if (originalState) {
-            toggleElement.classList.add('enabled');
-          } else {
-            toggleElement.classList.remove('enabled');
-          }
-          toggleElement.dataset.currentState = originalState;
-        } finally {
-          // Always remove pending state
-          toggleElement.classList.remove('pending');
-        }
-      });
-    }
-
-    // Add required toggle event listener
-    const requiredToggleElement = item.querySelector('.toggle-required');
-    if (requiredToggleElement) {
-      requiredToggleElement.addEventListener('click', async (e) => {
-        e.stopPropagation();
-
-        // Don't allow toggle if already pending
-        if (requiredToggleElement.classList.contains('pending')) {
-          return;
-        }
-
-        const currentRequired = requiredToggleElement.dataset.currentRequired === 'true';
-        const newRequired = !currentRequired;
-
-        // Set pending state immediately
-        requiredToggleElement.classList.add('pending');
-
-        try {
-          // Update the component's required property
-          component.required = newRequired;
-
-          // Update toggle visual state
-          if (newRequired) {
-            requiredToggleElement.classList.add('required');
-          } else {
-            requiredToggleElement.classList.remove('required');
-          }
-          requiredToggleElement.dataset.currentRequired = newRequired;
-
-          // Log the change
-          logger.info(`Component ${component.deviceType} marked as ${newRequired ? 'REQUIRED' : 'NOT REQUIRED'}`);
-
-          // Enforce CUSS2 required device rules based on the change
-          if (cuss2) {
-            // Only trigger state changes if the logic makes sense
-            if (newRequired && !component.ready) {
-              // Marking an unavailable component as required → force UNAVAILABLE
-              logger.info(`Required component ${component.deviceType} is not ready - requesting UNAVAILABLE state`);
-              cuss2.requestUnavailableState();
-            } else if (!newRequired) {
-              // Unmarking a component as required → check if we can leave UNAVAILABLE
-              // Only call sync if we're in UNAVAILABLE and might be able to transition to AVAILABLE
-              if (cuss2.state === ApplicationStateCodes.UNAVAILABLE) {
-                cuss2.checkRequiredComponentsAndSyncState();
-              }
-            }
-            // If marking a READY component as required while in ACTIVE/AVAILABLE → do nothing
-          }
-
-          // Update state buttons to reflect new required component status
-          ui.updateStateButtons(cuss2.state);
-          // Update availability reasons to reflect required component change
-          ui.updateAvailabilityReasons();
-        } catch (error) {
-          logger.error(`Failed to toggle required state: ${error.message}`);
-          // Revert on error
-          component.required = currentRequired;
-          if (currentRequired) {
-            requiredToggleElement.classList.add('required');
-          } else {
-            requiredToggleElement.classList.remove('required');
-          }
-          requiredToggleElement.dataset.currentRequired = currentRequired;
-        } finally {
-          // Always remove pending state
-          requiredToggleElement.classList.remove('pending');
-        }
-      });
-    }
-
-    // Add action button event listeners
-    const actionButtons = item.querySelectorAll('.component-action-btn');
-    actionButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const action = button.dataset.action;
-        const componentId = button.dataset.componentId;
-
-        // Disable button and show spinner (keeps original label)
-        feedback.setButtonLoading(button);
-
-        try {
-          // Check if this action requires input
-          const inputId = `${action}-input-${componentId}`;
-          const input = document.getElementById(inputId);
-
-          if (input) {
-            // Actions that need input data
-            const inputValue = input.value.trim();
-            await componentHandlers.handleComponentDataAction(component, action, inputValue, componentId);
-          } else {
-            // Actions without input (query, cancel, offer, pause, resume, stop, forward, backward, process)
-            await componentHandlers.handleComponentSimpleAction(component, action, componentId);
-          }
-
-          // Success: green background briefly, then reset
-          feedback.setButtonSuccess(button);
-        } catch (error) {
-          // Error: red background briefly, then reset
-          // Note: CUSS status badge is already updated by the handler's catch block
-          feedback.setButtonError(button);
-        }
-      });
-    });
-
-    return item;
-  },
-
-  // Store the timeout countdown interval so we can clear it
-  _timeoutCountdown: null,
-
-  // Show timeout warning banner with countdown
-  showTimeoutWarning(seconds) {
-    // Clear any existing countdown
-    if (this._timeoutCountdown) {
-      clearInterval(this._timeoutCountdown);
-      this._timeoutCountdown = null;
-    }
-
-    // Remove any existing banner
-    const existingBanner = document.getElementById('timeoutBanner');
-    if (existingBanner) {
-      existingBanner.remove();
-    }
-
-    // Add banner to body
-    document.body.insertBefore(templates.timeoutWarning(seconds), document.body.firstChild);
-
-    // Add dismiss button handler
-    const dismissBtn = document.getElementById('dismissTimeout');
-    if (dismissBtn) {
-      dismissBtn.addEventListener('click', () => {
-        this.dismissTimeoutWarning();
-      });
-    }
-
-    // Start countdown timer
-    let remainingSeconds = seconds;
-    const counter = document.getElementById('timeoutCounter');
-
-    this._timeoutCountdown = setInterval(() => {
-      remainingSeconds--;
-      if (counter) {
-        counter.textContent = remainingSeconds;
-      }
-
-      if (remainingSeconds <= 0) {
-        clearInterval(this._timeoutCountdown);
-        this._timeoutCountdown = null;
-        // Remove the banner when countdown ends
-        const banner = document.getElementById('timeoutBanner');
-        if (banner) {
-          banner.remove();
-        }
-      }
-    }, 1000);
-  },
-
-  // Dismiss timeout warning banner
-  dismissTimeoutWarning() {
-    // Clear countdown interval
-    if (this._timeoutCountdown) {
-      clearInterval(this._timeoutCountdown);
-      this._timeoutCountdown = null;
-    }
-
-    // Remove banner
-    const banner = document.getElementById('timeoutBanner');
-    if (banner) {
-      banner.remove();
-    }
-  },
-
-  // Store the accessible mode countdown interval
-  _accessibleModeCountdown: null,
-
-  // Show accessible mode acknowledgement toast with countdown
-  showAccessibleModeToast(seconds) {
-    // Clear any existing countdown
-    if (this._accessibleModeCountdown) {
-      clearInterval(this._accessibleModeCountdown);
-      this._accessibleModeCountdown = null;
-    }
-
-    // Remove any existing banner
-    const existingBanner = document.getElementById('accessibleModeBanner');
-    if (existingBanner) {
-      existingBanner.remove();
-    }
-
-    // Clone template and add to body
-    const template = document.getElementById('accessible-mode-toast-template');
-    const clone = template.content.cloneNode(true);
-
-    // Set initial countdown value
-    const counterElement = clone.getElementById('accessibleModeCounter');
-    if (counterElement) {
-      counterElement.textContent = seconds;
-    }
-
-    document.body.insertBefore(clone, document.body.firstChild);
-
-    // Add acknowledge button handler
-    const acknowledgeBtn = document.getElementById('acknowledgeAccessibleMode');
-    if (acknowledgeBtn) {
-      acknowledgeBtn.addEventListener('click', async () => {
-        try {
-          logger.info('Acknowledging accessible mode...');
-          await cuss2.acknowledgeAccessibleMode();
-          logger.success('Accessible mode acknowledged');
-          this.dismissAccessibleModeToast();
-        } catch (error) {
-          logger.error(`Failed to acknowledge accessible mode: ${error.message}`);
-        }
-      });
-    }
-
-    // Start countdown timer
-    let remainingSeconds = seconds;
-    const counter = document.getElementById('accessibleModeCounter');
-
-    this._accessibleModeCountdown = setInterval(() => {
-      remainingSeconds--;
-      if (counter) {
-        counter.textContent = remainingSeconds;
-      }
-
-      if (remainingSeconds <= 0) {
-        clearInterval(this._accessibleModeCountdown);
-        this._accessibleModeCountdown = null;
-      }
-    }, 1000);
-  },
-
-  // Dismiss accessible mode toast
-  dismissAccessibleModeToast() {
-    // Clear countdown interval
-    if (this._accessibleModeCountdown) {
-      clearInterval(this._accessibleModeCountdown);
-      this._accessibleModeCountdown = null;
-    }
-
-    // Remove banner
-    const banner = document.getElementById('accessibleModeBanner');
-    if (banner) {
-      banner.remove();
-    }
-  },
-
-  // Show mixed content warning banner
-  showMixedContentWarning(mixedContentInfo) {
-    // Remove any existing banner
-    const existingBanner = document.getElementById('mixedContentBanner');
-    if (existingBanner) {
-      existingBanner.remove();
-    }
-
-    // Add banner to body
-    document.body.insertBefore(
-      templates.mixedContentWarning(
-        mixedContentInfo.currentProtocol,
-        mixedContentInfo.targetProtocol,
-        mixedContentInfo.suggestedUrl
-      ),
-      document.body.firstChild
-    );
-
-    // Set up event listeners
-    const dismissBtn = document.getElementById('dismissMixedContent');
-    const suggestedBtn = document.getElementById('useSuggestedUrl');
-    const continueBtn = document.getElementById('continueAnyway');
-
-    dismissBtn?.addEventListener('click', () => {
-      document.getElementById('mixedContentBanner')?.remove();
-    });
-
-    suggestedBtn?.addEventListener('click', () => {
-      const suggestedUrl = suggestedBtn.dataset.url;
-
-      // Update WebSocket URL field
-      const wssInput = document.getElementById('wss');
-      if (wssInput) {
-        wssInput.value = suggestedUrl;
-        // Trigger input event to update OAuth URL
-        wssInput.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-
-      // Remove banner
-      document.getElementById('mixedContentBanner')?.remove();
-
-      // Log the change
-      logger.info(`Switched to secure URL: ${suggestedUrl}`);
-    });
-
-    continueBtn?.addEventListener('click', () => {
-      document.getElementById('mixedContentBanner')?.remove();
-    });
-
-    return new Promise((resolve, reject) => {
-      // Return a promise that resolves when user makes a choice
-      continueBtn?.addEventListener('click', () => resolve('continue'));
-      suggestedBtn?.addEventListener('click', () => resolve('suggested'));
-      dismissBtn?.addEventListener('click', () => reject(new Error('User cancelled connection')));
-    });
-  },
-
-  // Reset UI to disconnected state
-  resetUI() {
-    // Dismiss timeout banner (clears countdown and removes banner)
-    this.dismissTimeoutWarning();
-
-    // Dismiss accessible mode toast (clears countdown and removes banner)
-    this.dismissAccessibleModeToast();
-
-    // Remove mixed content banner if present
-    const mixedContentBanner = document.getElementById('mixedContentBanner');
-    if (mixedContentBanner) {
-      mixedContentBanner.remove();
-    }
-
-    // Switch back to Connection panel
-    dom.setVisible(dom.elements.connectionPanel, true);
-    dom.setVisible(dom.elements.stateManagementPanel, false);
-    dom.setVisible(dom.elements.environmentPanel, false);
-
-    dom.elements.componentList.innerHTML =
-      '<p style="color: #666;">Connect to see available components...</p>';
-    this.updateStateDisplay("STOPPED");
-    this.updateApplicationInfo(false);
-  },
-};
-
-// Helper function to show or remove status badge for a component
-function updateComponentStatusBadge(componentId, status) {
-  // Find the component element
-  const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-  if (!componentElement) return;
-
-  // Find the badges container
-  const badgesContainer = componentElement.querySelector('.component-badges');
-  if (!badgesContainer) return;
-
-  // Remove any existing status badge
-  const existingStatusBadge = badgesContainer.querySelector('.component-badge.status-badge');
-  if (existingStatusBadge) {
-    existingStatusBadge.remove();
-  }
-
-  // If status is OK, just remove the badge and return (no badge needed)
-  if (!status || status === 'OK') {
-    return;
-  }
-
-  // Create new status badge for non-OK status
-  const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
-  // Transient statuses: these show briefly then fade out
-  // Includes CUSS2 component statuses that are temporary conditions from SETUP/SEND failures
-  const temporaryStatuses = [
-    'WRONG_APPLICATION_STATE',
-    'MEDIA_PRESENT',
-    'MEDIA_ABSENT',
-    'SOFTWARE_ERROR',
-    'DATA_MISSING',
-    'HARDWARE_ERROR',
-    'CANCELLED',
-    'TIMED_OUT'
-  ];
-  const isTemporary = temporaryStatuses.includes(status);
-  const fadeClass = isTemporary ? 'fade-out' : '';
-
-  const badge = document.createElement('span');
-  badge.className = `component-badge status-badge ${statusClass} ${fadeClass}`;
-  badge.textContent = status.replace(/_/g, ' ');
-
-  // Add to container
-  badgesContainer.appendChild(badge);
-
-  // If temporary, remove after animation completes
-  if (isTemporary) {
-    badge.addEventListener('animationend', () => {
-      badge.remove();
-    }, { once: true });
-  }
-}
-
-function updateComponentReadyBadge(componentId, ready) {
-  // Find the component element
-  const componentElement = document.querySelector(`[data-component-id="${componentId}"]`)?.closest('.component-item');
-  if (!componentElement) return;
-
-  // Find the ready badge
-  const readyBadge = componentElement.querySelector('.ready-badge');
-  if (!readyBadge) return;
-
-  // Update badge text and classes
-  readyBadge.className = 'component-badge ready-badge'; // Reset classes
-  if (ready) {
-    readyBadge.textContent = 'Ready';
-    readyBadge.classList.add('ready');
-  } else {
-    readyBadge.textContent = 'Not Ready';
-    readyBadge.classList.add('not-ready');
-  }
-}
-
-// ===== COMPONENT HANDLERS =====
-const componentHandlers = {
-  // Handle component action (enable/disable)
-  async handleComponentAction(component, action, componentId) {
-    const name = component.deviceType;
-
-    try {
-      const actionText = action === 'enable' ? 'Enabling' : 'Disabling';
-      logger.info(`${actionText} ${name}...`);
-      await component[action]();
-      logger.success(`${name} ${action}d`);
-    }
-    catch (error) {
-      logger.error(`Failed to ${action} ${name}: ${error.message}`);
-      throw error; // Re-throw so the toggle can handle the error state
-    }
-    finally {
-      // Update status badge based on current component status
-      updateComponentStatusBadge(componentId, component.status);
-    }
-  },
-
-  // Handle simple component actions (no input required)
-  async handleComponentSimpleAction(component, action, componentId) {
-    const name = component.deviceType;
-    let hadError = false;
-
-    try {
-      logger.info(`Executing ${action} on ${name}...`);
-
-      // Check if the method exists on the component
-      if (typeof component[action] === 'function') {
-        const result = await component[action]();
-        logger.success(`${action} completed on ${name}`);
-
-        // Log result for query actions
-        if (action === 'query' && result) {
-          logger.event(`Query result: ${JSON.stringify(result.meta || result)}`);
-        }
-      } else {
-        throw new Error(`${action} not available on ${name}`);
-      }
-    } catch (error) {
-      hadError = true;
-      logger.error(`Failed to ${action} ${name}: ${error.message}`);
-
-      // Extract CUSS status code from error and update badge immediately
-      const statusCode = extractStatusCodeFromError(error);
-      if (statusCode) {
-        updateComponentStatusBadge(componentId, statusCode);
-      }
-
-      throw error;
-    }
-    finally {
-      // Only update badge from component.status on success path
-      // On error, the catch block already set the badge from the error's status code
-      if (!hadError) {
-        updateComponentStatusBadge(componentId, component.status);
-      }
-    }
-  },
-
-  // Handle component data action (setup/send/play/read)
-  async handleComponentDataAction(component, action, inputValue, componentId) {
-    const name = component.deviceType;
-    let hadError = false;
-
-    try {
-      let data = null;
-
-      // Parse input based on action type
-      if (inputValue) {
-        if (action === 'read') {
-          // For read, the input is timeout in milliseconds
-          data = parseInt(inputValue) || 30000;
-        } else if (action === 'play') {
-          // For play, it's just text/SSML (not JSON)
-          data = inputValue;
-        } else if (action === 'setup' || action === 'send') {
-          // For setup/send, create DataRecordList format
-          // If input contains newlines, split into separate DataRecords (one per line)
-          // This is required for multi-line printer SETUP commands
-          const lines = inputValue.split('\n').filter(line => line.trim() !== '');
-          data = lines.map(line => ({
-            data: line,
-            dsTypes: ['DS_TYPES_ITPS']  // Default to ITPS for printer commands
-          }));
         } else {
-          // For other actions, parse as JSON
-          try {
-            data = JSON.parse(inputValue);
-          } catch (parseError) {
-            logger.error(`Invalid JSON for ${action}: ${parseError.message}`);
-            throw new Error(`Invalid JSON: ${parseError.message}`);
+          if (component.ready === false) {
+            tags.push({ text: 'Not ready', className: 'error' });
+            isHealthy = false;
+          }
+          if (component.status && component.status !== 'OK') {
+            tags.push({ text: `Status: ${component.status}`, className: 'error' });
+            isHealthy = false;
           }
         }
-      }
 
-      const actionText = action.charAt(0).toUpperCase() + action.slice(1);
-      logger.info(`${actionText} ${name}${data !== null ? ' with: ' + (typeof data === 'object' ? JSON.stringify(data) : data) : ''}...`);
-
-      // Call the appropriate method on the component
-      if (typeof component[action] === 'function') {
-        const result = data !== null ? await component[action](data) : await component[action]();
-        logger.success(`${name} ${action} completed`);
-
-        // Log result for read operations
-        if (action === 'read' && result) {
-          logger.event(`Read data: ${JSON.stringify(result)}`);
+        if (isBlocking && isUnavailable) {
+          tags.push({ text: 'Blocking availability', className: 'blocking' });
         }
-      } else {
-        throw new Error(`${action} not available on ${name}`);
-      }
-    }
-    catch (error) {
-      hadError = true;
-      logger.error(`Failed to ${action} ${name}: ${error.message}`);
-
-      // Extract CUSS status code from error and update badge immediately
-      const statusCode = extractStatusCodeFromError(error);
-      if (statusCode) {
-        updateComponentStatusBadge(componentId, statusCode);
-      }
-
-      throw error;
-    }
-    finally {
-      // Only update badge from component.status on success path
-      // On error, the catch block already set the badge from the error's status code
-      if (!hadError) {
-        updateComponentStatusBadge(componentId, component.status);
-      }
-    }
-  },
-
-  // Sync toggle visual state with component state
-  syncToggleState(toggleElement, component) {
-    // Check if component has enabled property (InteractiveComponents)
-    if (component.enabled !== undefined) {
-      if (component.enabled) {
-        toggleElement.classList.add('enabled');
-      } else {
-        toggleElement.classList.remove('enabled');
-      }
-      toggleElement.dataset.currentState = component.enabled.toString();
-    }
-  },
-
-  // Update all toggle states after component refresh
-  updateAllToggleStates() {
-    if (!cuss2 || !cuss2.components) return;
-
-    Object.entries(cuss2.components).forEach(([id, component]) => {
-      const toggleElement = document.querySelector(`.enabled-toggle-container .toggle-switch[data-component-id="${id}"]`);
-      if (toggleElement) {
-        this.syncToggleState(toggleElement, component);
-      }
-    });
-  },
-
-  // Setup component data listeners
-  setupComponentListeners() {
-    const componentListeners = [
-      {
-        component: "barcodeReader",
-        event: "data",
-        handler: (records) => `Barcode scanned: ${records[0]?.data || 'No data'}`,
-      },
-      {
-        component: "documentReader",
-        event: "data",
-        handler: (records) => `Document scanned: ${records[0]?.data || 'Document data received'}`,
-      },
-      {
-        component: "cardReader",
-        event: "data",
-        handler: (records) => `Card read: ${records[0]?.data || "Chip/NFC"}`,
-      },
-      { component: "scale", event: "data", handler: (records) => `Weight: ${records[0]?.data || 'No data'}` },
-      {
-        component: "keypad",
-        event: "data",
-        handler: (keyData) => `Key pressed: ${Object.entries(keyData).filter(([, v]) => v).map(([k]) => k).join(', ') || 'None'}`,
-      },
-    ];
-
-    componentListeners.forEach(({ component, event, handler }) => {
-      if (cuss2[component]) {
-        cuss2[component].on(event, (dataRecords) => {
-          // Log to console
-          logger.event(handler(dataRecords));
-
-          // Update data display box in UI
-          componentHandlers.updateDataDisplay(cuss2[component].id, dataRecords);
-        });
-      }
-    });
-  },
-
-  // Update data display box for a component
-  updateDataDisplay(componentId, dataRecords) {
-    const componentItem = document.querySelector(`[data-component-id="${componentId}"]`);
-    if (!componentItem) return;
-
-    const dataDisplayBox = componentItem.querySelector('.data-display-box');
-    if (!dataDisplayBox) return;
-
-    // Format the data for display
-    let displayText = '';
-    if (Array.isArray(dataRecords)) {
-      dataRecords.forEach((record, index) => {
-        if (index > 0) displayText += '\n---\n';
-        displayText += `Data: ${record.data || 'N/A'}\n`;
-        if (record.dsTypes && record.dsTypes.length > 0) {
-          displayText += `Type: ${record.dsTypes.join(', ')}\n`;
+        if (isHealthy) {
+          tags.push({ text: 'Healthy', className: 'healthy' });
         }
-        if (record.dataStatus) {
-          displayText += `Status: ${record.dataStatus}`;
-        }
+
+        let rowClass = '';
+        if (isBlocking && isUnavailable) rowClass = 'blocking';
+        else if (isHealthy) rowClass = 'healthy';
+        else rowClass = 'unhealthy';
+
+        return { id, name: component?.deviceType || id, tags, rowClass, isHealthy };
       });
-    } else {
-      displayText = JSON.stringify(dataRecords, null, 2);
-    }
-
-    dataDisplayBox.textContent = displayText;
-  },
-};
-
-// ===== CONNECTION MANAGEMENT =====
-const connectionManager = {
-  // Track if user ever successfully connected
-  wasEverConnected: false,
-  isReconnecting: false,
-  lastConfig: null,
-
-  // Show reconnection banner
-  showReconnectionBanner() {
-    // Remove any existing banner
-    const existingBanner = document.getElementById('reconnectionBanner');
-    if (existingBanner) {
-      return; // Already showing
-    }
-
-    // Clone and add banner
-    const template = document.getElementById('reconnection-banner-template');
-    const clone = template.content.cloneNode(true);
-    document.body.insertBefore(clone, document.body.firstChild);
-
-    // Set reconnecting flag
-    this.isReconnecting = true;
-
-    // Add event listeners
-    const retryBtn = document.getElementById('retryConnectionBtn');
-    const cancelBtn = document.getElementById('cancelReconnectionBtn');
-
-    if (retryBtn) {
-      retryBtn.addEventListener('click', () => this.handleRetryNow());
-    }
-
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.handleCancelReconnection());
-    }
-
-    logger.info('Reconnection banner displayed');
-  },
-
-  // Hide reconnection banner
-  hideReconnectionBanner() {
-    const banner = document.getElementById('reconnectionBanner');
-    if (banner) {
-      banner.remove();
-      this.isReconnecting = false;
-      logger.info('Reconnection banner hidden');
-    }
-  },
-
-  // Update reconnection attempts counter
-  updateReconnectionAttempts(attempt) {
-    const attemptsElement = document.getElementById('reconnectionAttempts');
-    if (attemptsElement) {
-      attemptsElement.textContent = `Attempt ${attempt}`;
-    }
-  },
-
-  // Handle Retry Now button
-  handleRetryNow() {
-    logger.info('User requested immediate retry');
-    // Hide banner temporarily
-    this.hideReconnectionBanner();
-
-    // The library will continue retrying automatically
-    // Just show the banner again to indicate we're still trying
-    setTimeout(() => {
-      if (this.isReconnecting && !cuss2.connection.isOpen) {
-        this.showReconnectionBanner();
-      }
-    }, 100);
-  },
-
-  // Handle Cancel/Disconnect button
-  handleCancelReconnection() {
-    logger.info('User cancelled reconnection');
-    this.hideReconnectionBanner();
-    this.disconnect();
-  },
-
-  // Show success toast
-  showReconnectionSuccess() {
-    // Remove any existing toast
-    const existingToast = document.getElementById('reconnectionSuccessToast');
-    if (existingToast) {
-      existingToast.remove();
-    }
-
-    // Clone and add toast
-    const template = document.getElementById('reconnection-success-template');
-    const clone = template.content.cloneNode(true);
-    document.body.appendChild(clone);
-
-    // Auto-remove after animation
-    setTimeout(() => {
-      const toast = document.getElementById('reconnectionSuccessToast');
-      if (toast) {
-        toast.remove();
-      }
-    }, 3000);
-
-    logger.success('Reconnection successful!');
-  },
-
-  // Setup connection event listeners
-  setupConnectionListeners() {
-    const connectionEvents = [
-      {
-        event: "connecting",
-        handler: (attempt) => {
-          logger.info(`WebSocket connection attempt ${attempt}`);
-
-          // Check if this is a reconnection attempt
-          if (this.wasEverConnected) {
-            // This is a reconnection - show banner
-            this.showReconnectionBanner();
-            this.updateReconnectionAttempts(attempt);
-          } else {
-            // Initial connection - update progress indicator
-            connectionStages.updateStage('websocket', 'progress', 'Connecting...', attempt);
-          }
-        },
-      },
-      {
-        event: "authenticating",
-        handler: (attempt) => {
-          logger.info(`Authentication attempt ${attempt}`);
-          connectionStages.updateStage('auth', 'progress', 'Authenticating...', attempt);
-        },
-      },
-      {
-        event: "authenticated",
-        handler: () => {
-          logger.success("Authentication successful");
-          connectionStages.updateStage('auth', 'success', 'Authenticated');
-        }
-      },
-      {
-        event: "open",
-        handler: () => {
-          logger.success("WebSocket connection opened");
-
-          // Check if this was a reconnection
-          const wasReconnecting = this.isReconnecting;
-
-          // Mark as successfully connected
-          this.wasEverConnected = true;
-
-          if (wasReconnecting) {
-            // Reconnection successful - hide banner and show success toast
-            this.hideReconnectionBanner();
-            this.showReconnectionSuccess();
-          } else {
-            // Initial connection - update progress indicator
-            connectionStages.updateStage('websocket', 'success', 'Connected');
-          }
-        }
-      },
-      {
-        event: "close",
-        handler: (event) => {
-          // Only mark as error if it's not a normal close AND not during initial connection
-          if (event && event.code !== 1000 && connectionStages.websocketStage.state !== 'success' && !this.wasEverConnected) {
-            connectionStages.updateStage('websocket', 'error', 'Connection closed');
-          }
-          this.handleConnectionClose(event);
-        }
-      },
-      {
-        event: "error",
-        handler: (error) => {
-          logger.error(`Connection error: ${error.message}`);
-        }
-      },
-      {
-        event: "socketError",
-        handler: (error) => {
-          logger.error(`Socket error: ${error}`);
-          if (connectionStages.websocketStage.state !== 'success') {
-            connectionStages.updateStage('websocket', 'error', 'Connection failed');
-          }
-        }
-      },
-      {
-        event: "authenticationError",
-        handler: (error) => {
-          logger.error(`Authentication error: ${error.message}`);
-          connectionStages.updateStage('auth', 'error', error.message || 'Authentication failed');
-        }
-      },
-    ];
-
-    connectionEvents.forEach(({ event, handler }) => {
-      cuss2.connection.on(event, handler);
-    });
-  },
-
-  // Handle connection close
-  handleConnectionClose(event) {
-    const code = event?.code;
-    logger.error(`WebSocket connection closed (code: ${code}, reason: ${event?.reason})`);
-
-    // Close codes that should NOT reconnect (unrecoverable errors)
-    const noReconnectCodes = [
-      1000,  // Normal close (user disconnected)
-      4001,  // TIMEOUT - waiting for first message
-      4002,  // INVALID_MESSAGE
-      4003,  // INVALID_DIRECTIVE
-      4004,  // INVALID_TOKEN
-      4005,  // ALREADY_CONNECTED
-      4006,  // TENANT_DISABLED
-    ];
-
-    // Close codes that SHOULD reconnect
-    // 4007 = KILL_TIMEOUT, 4100 = SYSTEM_ERROR, or any unexpected code
-    const shouldReconnect = this.wasEverConnected && !noReconnectCodes.includes(code);
-
-    if (code === 1000) {
-      // User manually disconnected
-      logger.info("User manually disconnected");
-      ui.updateConnectionStatus("DISCONNECTED");
-      dom.setButtonState(dom.elements.connectBtn, false);
-      dom.setButtonState(dom.elements.disconnectBtn, true);
-      Object.values(dom.elements.stateButtons).forEach((btn) => dom.setButtonState(btn, true));
-      this.hideReconnectionBanner();
-    } else if (!this.wasEverConnected) {
-      // Initial connection failed
-      logger.info("Initial connection failed - showing error details");
-      // Keep error details visible for user to see what failed
-    } else if (shouldReconnect) {
-      // Connection dropped - attempt reconnection
-      logger.info("Connection dropped - reconnecting in 1 second...");
-
-      // Reset connection state
-      this.wasEverConnected = false;
-      this.isReconnecting = false;
-      cuss2 = null;
-
-      // Switch to connection panel and start reconnecting after delay
-      ui.resetUI();
-      if (this.lastConfig) {
-        setTimeout(() => this.connect(this.lastConfig), 1000);
-      } else {
-        logger.error("Cannot reconnect - no previous connection config");
-        ui.updateConnectionStatus("DISCONNECTED");
-        dom.setButtonState(dom.elements.connectBtn, false);
-        dom.setButtonState(dom.elements.disconnectBtn, true);
-      }
-    } else {
-      // Server error that won't be fixed by reconnecting
-      logger.info(`Connection closed with error code ${code} - not reconnecting`);
-      this.wasEverConnected = false;
-      this.isReconnecting = false;
-      cuss2 = null;
-      ui.resetUI();
-      ui.updateConnectionStatus("DISCONNECTED");
-      dom.setButtonState(dom.elements.connectBtn, false);
-      dom.setButtonState(dom.elements.disconnectBtn, true);
-    }
-  },
-
-  // Setup platform event listeners
-  setupPlatformListeners() {
-    const platformEvents = [
-      {
-        event: "stateChange",
-        handler: (stateChange) => {
-          logger.event(`State changed: ${stateChange.previous} → ${stateChange.current}`);
-          ui.updateStateDisplay(stateChange.current);
-          ui.updateAvailabilityReasons();
-
-          // Set applicationOnline flag to enable automatic state transitions
-          // When true, the library will automatically transition between UNAVAILABLE/AVAILABLE
-          // based on required component health
-          if (cuss2) {
-            if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
-                stateChange.current === ApplicationStateCodes.ACTIVE) {
-              cuss2.applicationOnline = true;
-              logger.info(`Application online: true (reached ${stateChange.current})`);
-            }
-            // Reset to false on STOPPED or RELOAD state
-            else if (stateChange.current === ApplicationStateCodes.STOPPED ||
-                     stateChange.current === ApplicationStateCodes.RELOAD) {
-              cuss2.applicationOnline = false;
-              logger.info(`Application online: false (${stateChange.current})`);
-            }
-
-            // Sync checkbox with applicationOnline property
-            if (dom.elements.isOnlineToggle) {
-              dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
-            }
-          }
-        },
-      },
-      {
-        event: "activated",
-        handler: (activation) => {
-          logger.event("Application activated");
-          ui.updateApplicationInfo(true, activation);
-          // Dismiss timeout warning when successfully reactivated
-          ui.dismissTimeoutWarning();
-
-          // Show accessible mode toast if activated in accessible mode
-          if (cuss2.accessibleMode) {
-            const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
-            logger.info(`Accessible mode activated - showing acknowledgement prompt (${killTimeoutSeconds}s timeout)`);
-            ui.showAccessibleModeToast(killTimeoutSeconds);
-          }
-        },
-      },
-      {
-        event: "deactivated",
-        handler: (newState) => {
-          logger.event(`Application deactivated, new state: ${newState}`);
-          ui.updateApplicationInfo(false);
-          // Update the state display and buttons to reflect new state
-          ui.updateStateDisplay(newState);
-          ui.updateAvailabilityReasons();
-          // Dismiss timeout warning when leaving ACTIVE state
-          ui.dismissTimeoutWarning();
-          // Dismiss accessible mode toast when leaving ACTIVE state
-          ui.dismissAccessibleModeToast();
-        },
-      },
-      {
-        event: "componentStateChange",
-        handler: (component) => {
-          logger.event(`Component ${component.deviceType} state changed`);
-          // Don't redisplay all components on every state change - too aggressive
-          // Just update the toggle states to reflect current component state
-          componentHandlers.updateAllToggleStates();
-          // Update state buttons to reflect required component availability
-          ui.updateStateButtons(cuss2.state);
-          // Update availability reasons to reflect component health
-          ui.updateAvailabilityReasons();
-          // Update the status badge to reflect the new component status
-          updateComponentStatusBadge(component.id, component.status);
-          // Update the ready badge to reflect the new component ready state
-          updateComponentReadyBadge(component.id, component.ready);
-        },
-      },
-      {
-        event: "sessionTimeout",
-        handler: async () => {
-          // Get killTimeout from the environment data (fetched during initialization)
-          const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
-          logger.error(`Session timeout warning - Application will be terminated in ${killTimeoutSeconds} seconds`);
-          ui.showTimeoutWarning(killTimeoutSeconds);
-        },
-      },
-    ];
-
-    platformEvents.forEach(({ event, handler }) => {
-      cuss2.on(event, handler);
-    });
-  },
-
-  // Connect to CUSS2
-  async connect(config) {
-    try {
-      // Check for mixed content issues before connecting
-      const mixedContentCheck = urlUtils.checkMixedContent(config.wss);
-      if (mixedContentCheck.hasMixedContent) {
-        logger.info("Mixed content detected, showing warning...");
-
-        try {
-          const userChoice = await ui.showMixedContentWarning(mixedContentCheck);
-
-          if (userChoice === 'suggested') {
-            // User chose to use suggested URL, but form should already be updated
-            // Just return, the new URL will be used on next connection attempt
-            return;
-          } else if (userChoice === 'continue') {
-            // User chose to continue anyway, proceed with connection
-          }
-        } catch (error) {
-          // User cancelled
-          logger.info("Connection cancelled by user");
-          ui.updateConnectionStatus("DISCONNECTED");
-          return;
-        }
-      }
-
-      await this.performConnection(config);
-    }
-    catch (error) {
-      logger.error(`Connection failed: ${error.message}`);
-
-      // Don't call updateConnectionStatus("FAILED") here!
-      // The two-stage indicator is already showing detailed error information
-      // from the connection event handlers (authenticated, connecting, close, etc.)
-      // Let that detailed error state persist so the user can see what went wrong
-
-      // The connection status container will remain visible with error details
-      // User can click Cancel to dismiss it and try again
-    }
-  },
-
-  // Perform the actual connection
-  async performConnection(config) {
-    logger.info("Connecting to CUSS2 platform...");
-    ui.updateConnectionStatus("CONNECTING");
-
-    // Close any existing connection before attempting a new one
-    // This prevents old connections from continuing retry attempts
-    if (cuss2) {
-      logger.info("Closing previous connection before new attempt...");
-      try {
-        // Close the websocket connection
-        cuss2.connection.close(1000, "New connection attempt");
-
-        // Wait a bit for cleanup
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (e) {
-        logger.error(`Error closing previous connection: ${e.message}`);
-      }
-      cuss2 = null;
-    }
-
-    // Pass through the token URL if provided, otherwise let the library handle it
-    const tokenUrl = config.tokenUrl?.trim() || undefined;
-
-    logger.info(`Using WebSocket URL: ${config.wss}`);
-    if (tokenUrl) {
-      logger.info(`Using OAuth Token URL: ${tokenUrl}`);
-    } else {
-      logger.info(`OAuth Token URL will be derived from WebSocket URL by the library`);
-    }
-
-    cuss2 = Cuss2.connect(
-      config.clientId,
-      config.clientSecret,
-      config.wss,
-      config.deviceId || undefined,
-      tokenUrl,
-    );
-    window.cuss2 = cuss2;
-
-    // Setup all listeners
-    this.setupConnectionListeners();
-    this.setupPlatformListeners();
-
-    // Wait for connection
-    await cuss2.connected;
-
-    // Store config for reconnection
-    this.lastConfig = config;
-
-    logger.success("Connected successfully!");
-
-    // Update URL with connection parameters for easy refresh/reconnection
-    urlUtils.updateUrlWithConnectionParams(config);
-
-    ui.updateConnectionStatus("CONNECTED");
-    dom.setButtonState(dom.elements.connectBtn, true);
-    dom.setButtonState(dom.elements.disconnectBtn, false);
-
-    // Display environment and components
-    ui.displayEnvironment(cuss2.environment);
-    ui.displayComponents();
-    ui.updateStateDisplay(cuss2.state);
-    ui.updateAvailabilityReasons();
-
-    // Sync isOnline checkbox with current applicationOnline state
-    if (dom.elements.isOnlineToggle) {
-      dom.elements.isOnlineToggle.checked = cuss2.applicationOnline;
-    }
-
-    // Setup component listeners
-    componentHandlers.setupComponentListeners();
-
-    // If auto-progressing to a state, do it now
-    if (queryConfig.go) { // intentionally do no run if go is empty string
-      const targetState = queryConfig.go.toUpperCase();
-      await stateManager.progressToState(targetState);
-    }
-  },
-
-  // Cancel ongoing connection attempt
-  cancelConnection() {
-    logger.info("Cancelling connection attempt...");
-    if (cuss2) {
-      // Close the connection which will abort any ongoing OAuth attempts
-      cuss2.connection.close(1000, "Connection cancelled by user");
-      cuss2 = null;
-    }
-    ui.updateConnectionStatus("DISCONNECTED");
-    logger.info("Connection attempt cancelled");
-  },
-
-  // Disconnect
-  disconnect() {
-    if (cuss2) {
-      // Reset connection tracking flags BEFORE closing
-      // This ensures the close handler recognizes it as a manual disconnect
-      this.wasEverConnected = false;
-      this.isReconnecting = false;
-
-      // Close with code 1000 (normal close)
-      cuss2.connection.close(1000, "User disconnected");
-      cuss2 = null;
-
-      // Hide reconnection banner if showing
-      this.hideReconnectionBanner();
-
-      // Reset UI
-      ui.resetUI();
-
-      logger.info("Disconnected and reset connection state");
-    }
-  },
-};
-
-// ===== STATE MANAGEMENT =====
-const stateManager = {
-  // State request mapping
-  stateRequests: {
-    initialize: { method: "requestInitializeState", state: "INITIALIZE" },
-    unavailable: { method: "requestUnavailableState", state: "UNAVAILABLE" },
-    available: { method: "requestAvailableState", state: "AVAILABLE" },
-    active: { method: "requestActiveState", state: "ACTIVE" },
-    stopped: { method: "requestStoppedState", state: "STOPPED" },
-    reload: {
-      method: "requestReload",
-      state: "RELOAD",
-      confirm: "This will close the connection. Continue?",
+    },
+
+    showUnavailableWarning() {
+      return this.appState === ApplicationStateCodes.UNAVAILABLE &&
+        this.computedRequiredDeviceItems.some(d => !d.isHealthy);
     },
   },
 
-  // Request state change
-  async requestState(action) {
-    const request = this.stateRequests[action];
-    if (!request) {
-      return;
-    }
+  methods: {
+    // ── Logging ────────────────────────────────────────────────────────
+    log(message, type = 'info') {
+      this.logEntries.push({
+        id: ++this.logIdCounter,
+        message: `[${new Date().toLocaleTimeString()}] ${message}`,
+        type,
+      });
+      this.$nextTick(() => {
+        const container = this.$refs.logContainer;
+        if (container) container.scrollTop = container.scrollHeight;
+      });
+    },
+    logInfo(msg) { this.log(msg, 'info'); },
+    logSuccess(msg) { this.log(msg, 'success'); },
+    logError(msg) { this.log(msg, 'error'); },
+    logEvent(msg) { this.log(msg, 'event'); },
 
-    // Check for confirmation requirement
-    if (request.confirm && !confirm(request.confirm)) {
-      return;
-    }
-
-    try {
-      // When user manually requests UNAVAILABLE, enter manual mode (set applicationOnline = false)
-      // This prevents auto-transitions back to AVAILABLE when components become healthy
-      if (action === "unavailable") {
-        cuss2.applicationOnline = false;
-        logger.info("User manually requested UNAVAILABLE - entering manual mode (applicationOnline = false)");
-        // Sync checkbox immediately
-        if (dom.elements.isOnlineToggle) {
-          dom.elements.isOnlineToggle.checked = false;
-        }
+    // ── Form Validation ───────────────────────────────────────────────
+    showFieldError(field, message) {
+      this.fieldErrors[field] = message;
+    },
+    clearFieldError(field) {
+      delete this.fieldErrors[field];
+    },
+    clearAllFieldErrors() {
+      this.fieldErrors = {};
+    },
+    onFieldBlur(field) {
+      const value = this.form[field]?.trim();
+      if (value) {
+        const label = field === 'wss' ? 'WebSocket URL' : 'Token URL';
+        const validation = validateURL(value, label);
+        if (!validation.isValid) this.showFieldError(field, validation.error);
+        else this.clearFieldError(field);
       }
-      // When user manually requests AVAILABLE, resume automatic mode (set applicationOnline = true)
-      // This re-enables auto-transitions based on component health
-      else if (action === "available") {
-        await cuss2[request.method]();
-        cuss2.applicationOnline = true;
-        logger.info("User manually requested AVAILABLE - resuming automatic mode (applicationOnline = true)");
-        // Sync checkbox immediately
-        if (dom.elements.isOnlineToggle) {
-          dom.elements.isOnlineToggle.checked = true;
-        }
-        logger.success(`Requested ${request.state} state`);
-        return;
-      }
-
-      const result = await cuss2[request.method]();
-      logger.success(`Requested ${request.state} state`);
-    }
-    catch (error) {
-      logger.error(`Failed to request ${request.state}: ${error.message}`);
-    }
-  },
-
-  // Setup state button listeners
-  setupStateButtons() {
-    Object.entries(dom.elements.stateButtons).forEach(([action, button]) => {
-      button.addEventListener("click", () => this.requestState(action));
-    });
-  },
-
-  // Progress through states to reach a target state
-  async progressToState(targetState) {
-    if (!cuss2) {
-      logger.error("Cannot progress to state: not connected");
-      return;
-    }
-
-    // Validate target state
-    const targetIndex = ["UNAVAILABLE", "AVAILABLE", "ACTIVE"].indexOf(targetState);
-    if (targetIndex === -1) {
-      logger.error(`Invalid target state: ${targetState}`);
-      return;
-    }
-
-    logger.info(`Auto-progressing to ${targetState} state...`);
-
-    const s1 = (await cuss2.requestUnavailableState())?.meta.currentApplicationState.applicationStateCode;
-    if(s1 !== ApplicationStateCodes.UNAVAILABLE || targetIndex === 0) {
-      return;
-    }
-    const s2 = (await cuss2.requestAvailableState())?.meta.currentApplicationState.applicationStateCode;
-    if(s2 !== ApplicationStateCodes.AVAILABLE || targetIndex === 1) {
-      return;
-    }
-    await cuss2.requestActiveState();
-  },
-};
-
-// ===== INITIALIZATION =====
-
-// Function to generate OAuth URL from WebSocket URL (for placeholder/UI only)
-function generateOAuthUrl(wsUrl) {
-  if (!wsUrl) return '';
-
-  try {
-    // Handle URLs that might not have protocol
-    const hasProtocol = wsUrl.startsWith('ws://') || wsUrl.startsWith('wss://') || wsUrl.startsWith('http://') || wsUrl.startsWith('https://');
-    const normalizedUrl = hasProtocol ? wsUrl : `http://${wsUrl}`;
-
-    const url = new URL(normalizedUrl);
-
-    // Map protocols for UI display only: ws/wss/http/https → http/https
-    let httpScheme;
-    if (url.protocol === 'wss:') {
-      httpScheme = 'https:';
-    } else if (url.protocol === 'ws:') {
-      httpScheme = 'http:';
-    } else {
-      httpScheme = url.protocol; // Already http: or https:
-    }
-
-    // Construct OAuth URL for placeholder text
-    return `${httpScheme}//${url.host}/oauth/token`;
-  } catch (error) {
-    return '';
-  }
-}
-
-// Function to update Token URL placeholder text
-function updateTokenUrlPlaceholder() {
-  const wssInput = document.getElementById("wss");
-  const tokenUrlInput = document.getElementById("tokenUrl");
-
-  if (wssInput && tokenUrlInput) {
-    const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
-    const placeholderUrl = generateOAuthUrl(wsUrl);
-    tokenUrlInput.placeholder = placeholderUrl;
-  }
-}
-
-// Function to check if WebSocket URL and Token URL are in sync
-function areUrlsInSync() {
-  const wssInput = document.getElementById("wss");
-  const tokenUrlInput = document.getElementById("tokenUrl");
-
-  if (!wssInput || !tokenUrlInput) return true;
-
-  const currentTokenUrl = tokenUrlInput.value.trim();
-  const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
-  const expectedTokenUrl = generateOAuthUrl(wsUrl);
-
-  return currentTokenUrl === expectedTokenUrl;
-}
-
-// Function to update Generate/Regenerate button text and state
-function updateGenerateButton() {
-  const tokenUrlInput = document.getElementById("tokenUrl");
-  const generateBtn = document.getElementById("generateTokenBtn");
-
-  if (tokenUrlInput && generateBtn) {
-    const hasValue = tokenUrlInput.value.trim() !== '';
-
-    if (!hasValue) {
-      // No value - show "Generate" and enable
-      generateBtn.textContent = 'Generate';
-      generateBtn.disabled = false;
-    } else {
-      // Has value - show "Regenerate"
-      generateBtn.textContent = 'Regenerate';
-
-      // Check if in sync
-      const inSync = areUrlsInSync();
-      generateBtn.disabled = inSync; // Disable when in sync, enable when out of sync
-    }
-  }
-}
-
-// Function to generate/fill Token URL
-function generateTokenUrl() {
-  const wssInput = document.getElementById("wss");
-  const tokenUrlInput = document.getElementById("tokenUrl");
-
-  if (wssInput && tokenUrlInput) {
-    const wsUrl = wssInput.value.trim() || 'http://localhost:22222';
-    const generatedUrl = generateOAuthUrl(wsUrl);
-    tokenUrlInput.value = generatedUrl;
-    updateGenerateButton();
-  }
-}
-
-async function init() {
-  // Initialize DOM
-  dom.init();
-
-  // Initialize feedback system
-  feedback.init();
-
-  // Load external test data (company logo for printer setup commands)
-  await loadCompanyLogo();
-
-  // Apply query parameters to form if provided
-  if (queryConfig.clientId) document.getElementById("clientId").value = queryConfig.clientId;
-  if (queryConfig.clientSecret) {
-    document.getElementById("clientSecret").value = queryConfig.clientSecret;
-  }
-  if (queryConfig.wss) document.getElementById("wss").value = queryConfig.wss;
-  if (queryConfig.tokenUrl) document.getElementById("tokenUrl").value = queryConfig.tokenUrl;
-  if (queryConfig.deviceId) document.getElementById("deviceId").value = queryConfig.deviceId;
-
-  // Update Token URL placeholder based on WebSocket URL
-  updateTokenUrlPlaceholder();
-
-  // Initialize Generate/Regenerate button state
-  updateGenerateButton();
-
-  // Add event listeners for WebSocket URL changes
-  const wssInput = document.getElementById("wss");
-  if (wssInput) {
-    // Update placeholder and button when WebSocket URL changes
-    wssInput.addEventListener("input", () => {
-      updateTokenUrlPlaceholder();
-      updateGenerateButton(); // Check sync status
-    });
-    wssInput.addEventListener("change", () => {
-      updateTokenUrlPlaceholder();
-      updateGenerateButton(); // Check sync status
-    });
-  }
-
-  // Add event listener for Token URL changes (to update button)
-  const tokenUrlInput = document.getElementById("tokenUrl");
-  if (tokenUrlInput) {
-    tokenUrlInput.addEventListener("input", updateGenerateButton);
-    tokenUrlInput.addEventListener("change", updateGenerateButton);
-  }
-
-  // Add event listener for Generate/Regenerate button
-  const generateBtn = document.getElementById("generateTokenBtn");
-  if (generateBtn) {
-    generateBtn.addEventListener("click", generateTokenUrl);
-  }
-
-  // Setup form submission
-  dom.elements.form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    // Clear any previous validation errors
-    dom.clearAllFieldErrors();
-
-    const formData = dom.getFormData();
-    let hasErrors = false;
-
-    // Validate WebSocket URL
-    const wssValidation = urlUtils.validateURL(formData.wss, 'WebSocket URL');
-    if (!wssValidation.isValid) {
-      dom.showFieldError('wss', wssValidation.error);
-      hasErrors = true;
-    }
-
-    // Validate Token URL if provided
-    if (formData.tokenUrl && formData.tokenUrl.trim() !== '') {
-      const tokenValidation = urlUtils.validateURL(formData.tokenUrl, 'Token URL');
-      if (!tokenValidation.isValid) {
-        dom.showFieldError('tokenUrl', tokenValidation.error);
+    },
+    onFieldInput(field) {
+      this.clearFieldError(field);
+    },
+    validateForm() {
+      this.clearAllFieldErrors();
+      let hasErrors = false;
+      const wssValidation = validateURL(this.form.wss, 'WebSocket URL');
+      if (!wssValidation.isValid) {
+        this.showFieldError('wss', wssValidation.error);
         hasErrors = true;
       }
-    }
-
-    // Don't proceed if there are validation errors
-    if (hasErrors) {
-      logger.error('Please fix the validation errors before connecting');
-      return;
-    }
-
-    await connectionManager.connect(formData);
-  });
-
-  // Setup real-time URL validation
-  if (wssInput) {
-    wssInput.addEventListener("blur", () => {
-      const value = wssInput.value.trim();
-      if (value) {
-        const validation = urlUtils.validateURL(value, 'WebSocket URL');
-        if (!validation.isValid) {
-          dom.showFieldError('wss', validation.error);
-        } else {
-          dom.clearFieldError('wss');
+      if (this.form.tokenUrl?.trim()) {
+        const tokenValidation = validateURL(this.form.tokenUrl, 'Token URL');
+        if (!tokenValidation.isValid) {
+          this.showFieldError('tokenUrl', tokenValidation.error);
+          hasErrors = true;
         }
       }
-    });
+      return !hasErrors;
+    },
+    generateTokenUrl() {
+      this.form.tokenUrl = generateOAuthUrl(this.form.wss) || '';
+    },
 
-    wssInput.addEventListener("input", () => {
-      // Clear error on input to give immediate feedback
-      dom.clearFieldError('wss');
-    });
-  }
+    // ── Connection Stages ─────────────────────────────────────────────
+    resetConnectionStages() {
+      this.connectionStages = {
+        auth: { state: 'pending', attempts: 0, lastError: null },
+        websocket: { state: 'pending', attempts: 0, lastError: null },
+      };
+      this.fieldProblem = null;
+    },
+    updateConnectionStage(stage, state, message, attempts = null) {
+      const stageData = this.connectionStages[stage];
+      stageData.state = state;
+      if (attempts !== null) stageData.attempts = attempts;
+      if (state === 'error' && message) stageData.lastError = message;
+      if (state === 'error') this.highlightProblematicField();
+    },
+    highlightProblematicField() {
+      this.fieldProblem = null;
+      if (this.connectionStages.auth.state === 'error') {
+        this.fieldProblem = 'tokenUrl';
+      } else if (this.connectionStages.auth.state === 'success' && this.connectionStages.websocket.state === 'error') {
+        this.fieldProblem = 'wss';
+      }
+      if (this.fieldProblem) {
+        setTimeout(() => { this.fieldProblem = null; }, 3000);
+      }
+    },
+    stageIcon(stageState) {
+      return { progress: '\uD83D\uDD04', success: '\u2705', error: '\u274C' }[stageState] || '\u23F3';
+    },
+    stageStatusText(stageName, stageData) {
+      const texts = {
+        progress: stageName === 'auth' ? 'Authenticating...' : 'Connecting...',
+        success: stageName === 'auth' ? 'Authenticated \u2713' : 'Connected \u2713',
+        error: stageData.lastError || 'Failed',
+      };
+      return texts[stageData.state] || 'Pending...';
+    },
+    stageAttemptsText(stageData) {
+      if ((stageData.state === 'progress' || stageData.state === 'error') && stageData.attempts > 0) {
+        return `Attempt ${stageData.attempts}`;
+      }
+      return '';
+    },
 
-  if (tokenUrlInput) {
-    // Add validation listeners (in addition to existing ones)
-    tokenUrlInput.addEventListener("blur", () => {
-      const value = tokenUrlInput.value.trim();
-      if (value) {
-        const validation = urlUtils.validateURL(value, 'Token URL');
-        if (!validation.isValid) {
-          dom.showFieldError('tokenUrl', validation.error);
+    // ── Connection Management ─────────────────────────────────────────
+    async handleSubmit() {
+      if (!this.validateForm()) {
+        this.logError('Please fix the validation errors before connecting');
+        return;
+      }
+      await this.connect({ ...this.form });
+    },
+
+    async connect(config) {
+      try {
+        const mixedContentCheck = checkMixedContent(config.wss);
+        if (mixedContentCheck.hasMixedContent) {
+          this.logInfo('Mixed content detected, showing warning...');
+          try {
+            const userChoice = await this.showMixedContentWarning(mixedContentCheck);
+            if (userChoice === 'suggested') return;
+          } catch {
+            this.logInfo('Connection cancelled by user');
+            this.connectionState = 'disconnected';
+            return;
+          }
+        }
+        await this.performConnection(config);
+      } catch (error) {
+        this.logError(`Connection failed: ${error.message}`);
+      }
+    },
+
+    async performConnection(config) {
+      this.logInfo('Connecting to CUSS2 platform...');
+      this.connectionState = 'connecting';
+      this.resetConnectionStages();
+
+      if (cuss2) {
+        this.logInfo('Closing previous connection before new attempt...');
+        try {
+          cuss2.connection.close(1000, 'New connection attempt');
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (e) {
+          this.logError(`Error closing previous connection: ${e.message}`);
+        }
+        cuss2 = null;
+      }
+
+      const tokenUrl = config.tokenUrl?.trim() || undefined;
+      this.logInfo(`Using WebSocket URL: ${config.wss}`);
+      if (tokenUrl) this.logInfo(`Using OAuth Token URL: ${tokenUrl}`);
+      else this.logInfo('OAuth Token URL will be derived from WebSocket URL by the library');
+
+      cuss2 = Cuss2.connect(config.clientId, config.clientSecret, config.wss, config.deviceId || undefined, tokenUrl);
+      window.cuss2 = cuss2;
+
+      this.setupConnectionListeners();
+      this.setupPlatformListeners();
+      await cuss2.connected;
+
+      this.lastConfig = config;
+      this.logSuccess('Connected successfully!');
+      this.updateUrlWithConnectionParams(config);
+
+      this.connectionState = 'connected';
+      this.environment = cuss2.environment;
+      this.initComponents();
+      this.appState = cuss2.state;
+      this.isOnline = cuss2.applicationOnline;
+
+      this.setupComponentListeners();
+
+      if (queryConfig.go) {
+        await this.progressToState(queryConfig.go.toUpperCase());
+      }
+    },
+
+    cancelConnection() {
+      this.logInfo('Cancelling connection attempt...');
+      if (cuss2) {
+        cuss2.connection.close(1000, 'Connection cancelled by user');
+        cuss2 = null;
+      }
+      this.connectionState = 'disconnected';
+      this.logInfo('Connection attempt cancelled');
+    },
+
+    disconnect() {
+      if (cuss2) {
+        this.wasEverConnected = false;
+        this.isReconnecting = false;
+        cuss2.connection.close(1000, 'User disconnected');
+        cuss2 = null;
+        this.reconnectionBanner.visible = false;
+        this.resetUI();
+        this.logInfo('Disconnected and reset connection state');
+      }
+    },
+
+    resetUI() {
+      this.dismissTimeoutWarning();
+      this.dismissAccessibleModeToast();
+      this.mixedContentBanner.visible = false;
+      this.connectionState = 'disconnected';
+      this.components = {};
+      this.componentStatuses = {};
+      this.collapsedComponents = {};
+      this.buttonStates = {};
+      this.pendingToggles = {};
+      this.appState = 'STOPPED';
+      this.appInfo = { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' };
+      this.environment = null;
+      this.isOnline = false;
+    },
+
+    updateUrlWithConnectionParams(formData) {
+      const params = new URLSearchParams();
+      params.set('CLIENT-ID', formData.clientId);
+      params.set('CLIENT-SECRET', formData.clientSecret);
+      params.set('CUSS-WSS', formData.wss);
+      if (formData.tokenUrl?.trim()) params.set('OAUTH-URL', formData.tokenUrl);
+      if (formData.deviceId?.trim()) params.set('DEVICE-ID', formData.deviceId);
+      if (queryConfig.go) params.set('go', queryConfig.go);
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+      this.logInfo('URL updated with connection parameters');
+    },
+
+    // ── Connection Listeners ──────────────────────────────────────────
+    setupConnectionListeners() {
+      cuss2.connection.on('connecting', (attempt) => {
+        this.logInfo(`WebSocket connection attempt ${attempt}`);
+        if (this.wasEverConnected) {
+          this.reconnectionBanner = { visible: true, attempts: attempt };
+          this.isReconnecting = true;
         } else {
-          dom.clearFieldError('tokenUrl');
+          this.updateConnectionStage('websocket', 'progress', 'Connecting...', attempt);
+        }
+      });
+
+      cuss2.connection.on('authenticating', (attempt) => {
+        this.logInfo(`Authentication attempt ${attempt}`);
+        this.updateConnectionStage('auth', 'progress', 'Authenticating...', attempt);
+      });
+
+      cuss2.connection.on('authenticated', () => {
+        this.logSuccess('Authentication successful');
+        this.updateConnectionStage('auth', 'success', 'Authenticated');
+      });
+
+      cuss2.connection.on('open', () => {
+        this.logSuccess('WebSocket connection opened');
+        const wasReconnecting = this.isReconnecting;
+        this.wasEverConnected = true;
+        if (wasReconnecting) {
+          this.reconnectionBanner.visible = false;
+          this.isReconnecting = false;
+          this.showReconnectionSuccess();
+        } else {
+          this.updateConnectionStage('websocket', 'success', 'Connected');
+        }
+      });
+
+      cuss2.connection.on('close', (event) => {
+        if (event && event.code !== 1000 && this.connectionStages.websocket.state !== 'success' && !this.wasEverConnected) {
+          this.updateConnectionStage('websocket', 'error', 'Connection closed');
+        }
+        this.handleConnectionClose(event);
+      });
+
+      cuss2.connection.on('error', (error) => {
+        this.logError(`Connection error: ${error.message}`);
+      });
+
+      cuss2.connection.on('socketError', (error) => {
+        this.logError(`Socket error: ${error}`);
+        if (this.connectionStages.websocket.state !== 'success') {
+          this.updateConnectionStage('websocket', 'error', 'Connection failed');
+        }
+      });
+
+      cuss2.connection.on('authenticationError', (error) => {
+        this.logError(`Authentication error: ${error.message}`);
+        this.updateConnectionStage('auth', 'error', error.message || 'Authentication failed');
+      });
+    },
+
+    // ── Platform Listeners ────────────────────────────────────────────
+    setupPlatformListeners() {
+      cuss2.on('stateChange', (stateChange) => {
+        this.logEvent(`State changed: ${stateChange.previous} \u2192 ${stateChange.current}`);
+        this.appState = stateChange.current;
+
+        if (cuss2) {
+          if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
+              stateChange.current === ApplicationStateCodes.ACTIVE) {
+            cuss2.applicationOnline = true;
+            this.isOnline = true;
+            this.logInfo(`Application online: true (reached ${stateChange.current})`);
+          } else if (stateChange.current === ApplicationStateCodes.STOPPED ||
+                     stateChange.current === ApplicationStateCodes.RELOAD) {
+            cuss2.applicationOnline = false;
+            this.isOnline = false;
+            this.logInfo(`Application online: false (${stateChange.current})`);
+          }
+        }
+      });
+
+      cuss2.on('activated', (activation) => {
+        this.logEvent('Application activated');
+        this.appInfo.brand = activation?.applicationBrand || '-';
+        if (cuss2) {
+          this.appInfo.multiTenant = cuss2.multiTenant ? 'Yes' : 'No';
+          this.appInfo.accessibleMode = cuss2.accessibleMode ? 'Yes' : 'No';
+          this.appInfo.language = cuss2.language || '-';
+        }
+        this.dismissTimeoutWarning();
+        if (cuss2.accessibleMode) {
+          const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
+          this.logInfo(`Accessible mode activated - showing acknowledgement prompt (${killTimeoutSeconds}s timeout)`);
+          this.showAccessibleModeToast(killTimeoutSeconds);
+        }
+      });
+
+      cuss2.on('deactivated', (newState) => {
+        this.logEvent(`Application deactivated, new state: ${newState}`);
+        this.appInfo = { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' };
+        this.appState = newState;
+        this.dismissTimeoutWarning();
+        this.dismissAccessibleModeToast();
+      });
+
+      cuss2.on('componentStateChange', (component) => {
+        this.logEvent(`Component ${component.deviceType} state changed`);
+        this.refreshComponent(component.id);
+      });
+
+      cuss2.on('sessionTimeout', () => {
+        const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
+        this.logError(`Session timeout warning - Application will be terminated in ${killTimeoutSeconds} seconds`);
+        this.showTimeoutWarning(killTimeoutSeconds);
+      });
+    },
+
+    // ── Connection Close Handling ─────────────────────────────────────
+    handleConnectionClose(event) {
+      const code = event?.code;
+      this.logError(`WebSocket connection closed (code: ${code}, reason: ${event?.reason})`);
+
+      const shouldReconnect = this.wasEverConnected && !NO_RECONNECT_CODES.includes(code);
+
+      if (code === 1000) {
+        this.logInfo('User manually disconnected');
+        this.connectionState = 'disconnected';
+        this.reconnectionBanner.visible = false;
+      } else if (!this.wasEverConnected) {
+        this.logInfo('Initial connection failed - showing error details');
+      } else if (shouldReconnect) {
+        this.logInfo('Connection dropped - reconnecting in 1 second...');
+        this.wasEverConnected = false;
+        this.isReconnecting = false;
+        cuss2 = null;
+        this.resetUI();
+        if (this.lastConfig) {
+          setTimeout(() => this.connect(this.lastConfig), 1000);
+        } else {
+          this.logError('Cannot reconnect - no previous connection config');
+          this.connectionState = 'disconnected';
+        }
+      } else {
+        this.logInfo(`Connection closed with error code ${code} - not reconnecting`);
+        this.wasEverConnected = false;
+        this.isReconnecting = false;
+        cuss2 = null;
+        this.resetUI();
+        this.connectionState = 'disconnected';
+      }
+    },
+
+    // ── Reconnection Banner ───────────────────────────────────────────
+    handleRetryNow() {
+      this.logInfo('User requested immediate retry');
+      this.reconnectionBanner.visible = false;
+      setTimeout(() => {
+        if (this.isReconnecting && !cuss2?.connection?.isOpen) {
+          this.reconnectionBanner.visible = true;
+        }
+      }, 100);
+    },
+
+    handleCancelReconnection() {
+      this.logInfo('User cancelled reconnection');
+      this.reconnectionBanner.visible = false;
+      this.disconnect();
+    },
+
+    showReconnectionSuccess() {
+      this.reconnectionSuccess.visible = true;
+      setTimeout(() => { this.reconnectionSuccess.visible = false; }, 3000);
+      this.logSuccess('Reconnection successful!');
+    },
+
+    // ── State Management ──────────────────────────────────────────────
+    isTransitionAllowed(action) {
+      return this.allowedTransitions.includes(action);
+    },
+
+    async requestState(action) {
+      const request = STATE_REQUESTS[action];
+      if (!request) return;
+      if (request.confirm && !confirm(request.confirm)) return;
+
+      try {
+        if (action === 'unavailable') {
+          cuss2.applicationOnline = false;
+          this.isOnline = false;
+          this.logInfo('User manually requested UNAVAILABLE - entering manual mode (applicationOnline = false)');
+        } else if (action === 'available') {
+          await cuss2[request.method]();
+          cuss2.applicationOnline = true;
+          this.isOnline = true;
+          this.logInfo('User manually requested AVAILABLE - resuming automatic mode (applicationOnline = true)');
+          this.logSuccess(`Requested ${request.state} state`);
+          return;
+        }
+
+        await cuss2[request.method]();
+        this.logSuccess(`Requested ${request.state} state`);
+      } catch (error) {
+        this.logError(`Failed to request ${request.state}: ${error.message}`);
+      }
+    },
+
+    onIsOnlineChange() {
+      if (cuss2) {
+        cuss2.applicationOnline = this.isOnline;
+        this.logInfo(`Application online: ${this.isOnline}`);
+      }
+    },
+
+    async progressToState(targetState) {
+      if (!cuss2) {
+        this.logError('Cannot progress to state: not connected');
+        return;
+      }
+      const targetIndex = ['UNAVAILABLE', 'AVAILABLE', 'ACTIVE'].indexOf(targetState);
+      if (targetIndex === -1) {
+        this.logError(`Invalid target state: ${targetState}`);
+        return;
+      }
+      this.logInfo(`Auto-progressing to ${targetState} state...`);
+
+      const s1 = (await cuss2.requestUnavailableState())?.meta.currentApplicationState.applicationStateCode;
+      if (s1 !== ApplicationStateCodes.UNAVAILABLE || targetIndex === 0) return;
+      const s2 = (await cuss2.requestAvailableState())?.meta.currentApplicationState.applicationStateCode;
+      if (s2 !== ApplicationStateCodes.AVAILABLE || targetIndex === 1) return;
+      await cuss2.requestActiveState();
+    },
+
+    // ── Component Helpers ─────────────────────────────────────────────
+    hasCap(component, cap) {
+      return typeof component[cap] === 'function';
+    },
+
+    startCharHover(event, component) {
+      this.clearCharHideTimer();
+      if (this._charHoverTimer) {
+        clearTimeout(this._charHoverTimer);
+      }
+      const el = event.currentTarget;
+      this._charHoverTimer = setTimeout(() => {
+        const rect = el.getBoundingClientRect();
+        this.charPopover = {
+          visible: true,
+          top: rect.bottom + window.scrollY + 6,
+          left: rect.left + window.scrollX,
+          json: JSON.stringify(component._component, null, 2),
+        };
+      }, 500);
+    },
+
+    cancelCharHover() {
+      if (this._charHoverTimer) {
+        clearTimeout(this._charHoverTimer);
+        this._charHoverTimer = null;
+      }
+      this.startCharHideTimer();
+    },
+
+    startCharHideTimer() {
+      this.clearCharHideTimer();
+      this._charHideTimer = setTimeout(() => {
+        this.charPopover = { visible: false, top: 0, left: 0, json: '' };
+      }, 200);
+    },
+
+    clearCharHideTimer() {
+      if (this._charHideTimer) {
+        clearTimeout(this._charHideTimer);
+        this._charHideTimer = null;
+      }
+    },
+
+    isHeaderOnly(component) {
+      const headerOnlyTypes = ['HEADSET'];
+      return headerOnlyTypes.includes(component.deviceType);
+    },
+
+    initComponents() {
+      if (!cuss2?.components) return;
+      const comps = {};
+      const statuses = {};
+      for (const [id, component] of Object.entries(cuss2.components)) {
+        comps[id] = component;
+        const displayStatus = component.status || 'OK';
+        statuses[id] = {
+          statusBadge: displayStatus.replace(/_/g, ' '),
+          statusClass: this.statusClass(displayStatus),
+        };
+      }
+      this.components = comps;
+      this.componentStatuses = statuses;
+    },
+
+    refreshComponent(id) {
+      if (!cuss2?.components) return;
+      const component = cuss2.components[id];
+      if (!component) return;
+      this.components[id] = component;
+      this.updateComponentStatus(id, component.status);
+      // Trigger reactivity for computed properties
+      this.components = { ...this.components };
+    },
+
+    statusClass(status) {
+      if (!status || status === 'OK') return 'status-ok';
+      if (criticalErrors.includes(status)) return 'status-critical';
+      return 'status-warning';
+    },
+
+    updateComponentStatus(id, status) {
+      if (!this.componentStatuses[id]) return;
+      const displayStatus = status || 'OK';
+      this.componentStatuses[id].statusBadge = displayStatus.replace(/_/g, ' ');
+      this.componentStatuses[id].statusClass = this.statusClass(displayStatus);
+    },
+
+
+
+    // ── Component Actions ─────────────────────────────────────────────
+    async handleToggleEnabled(id) {
+      const component = this.components[id];
+      if (!component || !component.ready || this.pendingToggles[`enabled-${id}`]) return;
+
+      this.pendingToggles[`enabled-${id}`] = true;
+      const action = component.enabled ? 'disable' : 'enable';
+      const name = component.deviceType;
+      this.logInfo(`${action === 'enable' ? 'Enabling' : 'Disabling'} ${name}...`);
+      const toast = this.addToast(`${name} (${id}) ${action}...`, 'pending');
+
+      try {
+        await component[action]();
+        this.logSuccess(`${name} ${action}d`);
+        this.refreshComponent(id);
+        this.updateToast(toast.id, `${name} (${id}) ${action} — OK`, 'success', 1000);
+      } catch (error) {
+        this.logError(`Failed to ${action} ${name}: ${error.message}`);
+        this.refreshComponent(id);
+        this.updateToast(toast.id, `${name} (${id}) ${action} — Failed`, 'error', 3000);
+      } finally {
+        delete this.pendingToggles[`enabled-${id}`];
+      }
+    },
+
+    toggleCollapse(id) {
+      this.collapsedComponents[id] = !this.collapsedComponents[id];
+      this.collapsedComponents = { ...this.collapsedComponents };
+    },
+
+    collapseAll() {
+      for (const [id, component] of this.componentList) {
+        if (!this.isHeaderOnly(component)) {
+          this.collapsedComponents[id] = true;
         }
       }
-    });
+      this.collapsedComponents = { ...this.collapsedComponents };
+    },
 
-    tokenUrlInput.addEventListener("input", () => {
-      // Clear error on input to give immediate feedback
-      dom.clearFieldError('tokenUrl');
-    });
-  }
+    expandAll() {
+      this.collapsedComponents = {};
+    },
 
-  // Setup disconnect button
-  dom.elements.disconnectBtn.addEventListener("click", () => connectionManager.disconnect());
+    isCollapsed(id) {
+      return !!this.collapsedComponents[id];
+    },
 
-  // Setup cancel connection button
-  dom.elements.cancelConnectionBtn.addEventListener("click", () => connectionManager.cancelConnection());
+    async handleToggleRequired(id) {
+      const component = this.components[id];
+      if (!component || this.pendingToggles[`required-${id}`]) return;
 
-  // Setup isOnline checkbox
-  dom.elements.isOnlineToggle.addEventListener("change", (e) => {
+      this.pendingToggles[`required-${id}`] = true;
+      const newRequired = !component.required;
+
+      try {
+        component.required = newRequired;
+        this.logInfo(`Component ${component.deviceType} marked as ${newRequired ? 'REQUIRED' : 'NOT REQUIRED'}`);
+
+        if (cuss2) {
+          if (newRequired && !component.ready) {
+            this.logInfo(`Required component ${component.deviceType} is not ready - requesting UNAVAILABLE state`);
+            cuss2.requestUnavailableState();
+          } else if (!newRequired && cuss2.state === ApplicationStateCodes.UNAVAILABLE) {
+            cuss2.checkRequiredComponentsAndSyncState();
+          }
+        }
+        // Trigger reactivity
+        this.components = { ...this.components };
+      } catch (error) {
+        this.logError(`Failed to toggle required state: ${error.message}`);
+        component.required = !newRequired;
+        this.components = { ...this.components };
+      } finally {
+        delete this.pendingToggles[`required-${id}`];
+      }
+    },
+
+    async handleActionButton(id, action, buttonKey) {
+      const component = this.components[id];
+      if (!component) return;
+
+      this.buttonStates[buttonKey] = 'loading';
+      const name = component.deviceType;
+      const toast = this.addToast(`${name} (${id}) ${action}...`, 'pending');
+
+      try {
+        await this.handleComponentSimpleAction(component, action, id);
+        delete this.buttonStates[buttonKey];
+        this.updateToast(toast.id, `${name} (${id}) ${action} — OK`, 'success', 1000);
+      } catch {
+        delete this.buttonStates[buttonKey];
+        this.updateToast(toast.id, `${name} (${id}) ${action} — Failed`, 'error', 3000);
+      }
+    },
+
+    async handleComponentSimpleAction(component, action, id) {
+      const name = component.deviceType;
+      let hadError = false;
+      try {
+        this.logInfo(`Executing ${action} on ${name}...`);
+        if (typeof component[action] !== 'function') throw new Error(`${action} not available on ${name}`);
+        const result = await component[action]();
+        this.logSuccess(`${action} completed on ${name}`);
+        if (action === 'query' && result) {
+          this.logEvent(`Query result: ${JSON.stringify(result.meta || result)}`);
+        }
+      } catch (error) {
+        hadError = true;
+        this.logError(`Failed to ${action} ${name}: ${error.message}`);
+        const statusCode = extractStatusCodeFromError(error);
+        if (statusCode) this.updateComponentStatus(id, statusCode);
+        throw error;
+      } finally {
+        if (!hadError) this.updateComponentStatus(id, component.status);
+      }
+    },
+
+    // ── Component Data Listeners ──────────────────────────────────────
+    setupComponentListeners() {
+      const listeners = [
+        { component: 'barcodeReader', handler: (records) => `Barcode scanned: ${records[0]?.data || 'No data'}` },
+        { component: 'documentReader', handler: (records) => `Document scanned: ${records[0]?.data || 'Document data received'}` },
+        { component: 'cardReader', handler: (records) => `Card read: ${records[0]?.data || 'Chip/NFC'}` },
+        { component: 'scale', handler: (records) => `Weight: ${records[0]?.data || 'No data'}` },
+      ];
+      listeners.forEach(({ component, handler }) => {
+        if (cuss2[component]) {
+          const compId = String(cuss2[component].id);
+          cuss2[component].on('data', (dataRecords) => {
+            this.logEvent(handler(dataRecords));
+            const ref = this.$refs['generic-' + compId];
+            const generic = Array.isArray(ref) ? ref[0] : ref;
+            generic?.updateData(dataRecords);
+          });
+        }
+      });
+
+      // Keypad listener — delegates to Keypad component via $refs
+      if (cuss2.keypad) {
+        const keypadId = String(cuss2.keypad.id);
+        cuss2.keypad.on('data', (keyData) => {
+          const pressed = Object.entries(keyData)
+            .filter(([k, v]) => v && k !== 'dataRecords')
+            .map(([k]) => k);
+          this.logEvent(`Key pressed: ${pressed.join(', ') || 'None'}`);
+
+          if (keyData.dataRecords) {
+            const ref = this.$refs['keypad-' + keypadId];
+            const keypad = Array.isArray(ref) ? ref[0] : ref;
+            keypad?.addEvents(keyData.dataRecords);
+          }
+        });
+      }
+    },
+
+    // ── Banner/Toast Management ───────────────────────────────────────
+    showTimeoutWarning(seconds) {
+      this.dismissTimeoutWarning();
+      this.timeoutBanner = { visible: true, seconds };
+      this._timeoutInterval = setInterval(() => {
+        this.timeoutBanner.seconds--;
+        if (this.timeoutBanner.seconds <= 0) this.dismissTimeoutWarning();
+      }, 1000);
+    },
+
+    dismissTimeoutWarning() {
+      if (this._timeoutInterval) {
+        clearInterval(this._timeoutInterval);
+        this._timeoutInterval = null;
+      }
+      this.timeoutBanner.visible = false;
+    },
+
+    showAccessibleModeToast(seconds) {
+      this.dismissAccessibleModeToast();
+      this.accessibleModeBanner = { visible: true, seconds };
+      this._accessibleModeInterval = setInterval(() => {
+        this.accessibleModeBanner.seconds--;
+        if (this.accessibleModeBanner.seconds <= 0) {
+          clearInterval(this._accessibleModeInterval);
+          this._accessibleModeInterval = null;
+        }
+      }, 1000);
+    },
+
+    dismissAccessibleModeToast() {
+      if (this._accessibleModeInterval) {
+        clearInterval(this._accessibleModeInterval);
+        this._accessibleModeInterval = null;
+      }
+      this.accessibleModeBanner.visible = false;
+    },
+
+    async acknowledgeAccessibleMode() {
+      try {
+        this.logInfo('Acknowledging accessible mode...');
+        await cuss2.acknowledgeAccessibleMode();
+        this.logSuccess('Accessible mode acknowledged');
+        this.dismissAccessibleModeToast();
+      } catch (error) {
+        this.logError(`Failed to acknowledge accessible mode: ${error.message}`);
+      }
+    },
+
+    showMixedContentWarning(info) {
+      this.mixedContentBanner = {
+        visible: true,
+        currentProtocol: info.currentProtocol.replace(':', '').toUpperCase(),
+        targetProtocol: info.targetProtocol.replace(':', '').toUpperCase(),
+        suggestedUrl: info.suggestedUrl,
+      };
+      return new Promise((resolve, reject) => {
+        this._mixedContentResolve = resolve;
+        this._mixedContentReject = reject;
+      });
+    },
+
+    handleMixedContentChoice(choice) {
+      const suggestedUrl = this.mixedContentBanner.suggestedUrl;
+      this.mixedContentBanner.visible = false;
+      if (choice === 'dismiss') {
+        this._mixedContentReject?.(new Error('User cancelled connection'));
+      } else if (choice === 'suggested') {
+        this.form.wss = suggestedUrl;
+        this.logInfo(`Switched to secure URL: ${suggestedUrl}`);
+        this._mixedContentResolve?.('suggested');
+      } else {
+        this._mixedContentResolve?.('continue');
+      }
+      this._mixedContentResolve = null;
+      this._mixedContentReject = null;
+    },
+
+    // ── Button State Management ───────────────────────────────────────
+    btnClasses(key) {
+      const state = this.buttonStates[key];
+      return { loading: state === 'loading' };
+    },
+
+    btnDisabled(key) {
+      return this.buttonStates[key] === 'loading';
+    },
+
+    // ── Toast Management ──────────────────────────────────────────────
+    addToast(message, type) {
+      const toast = { id: ++this.toastIdCounter, message, type, fading: false };
+      this.actionToasts.push(toast);
+      return toast;
+    },
+
+    updateToast(id, message, type, dismissMs) {
+      const toast = this.actionToasts.find(t => t.id === id);
+      if (!toast) return;
+      toast.message = message;
+      toast.type = type;
+      setTimeout(() => {
+        toast.fading = true;
+        setTimeout(() => {
+          this.actionToasts = this.actionToasts.filter(t => t.id !== id);
+        }, 300);
+      }, dismissMs);
+    },
+
+    // ── Format Helpers ────────────────────────────────────────────────
+    fmtValue(value) {
+      if (value == null) return '-';
+      if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+      if (typeof value === 'object') return JSON.stringify(value, null, 2);
+      return String(value);
+    },
+
+    fmtMs(value) {
+      return value != null ? `${value}ms` : '-';
+    },
+  },
+
+  async mounted() {
+    await loadCompanyLogo();
+    this.aeaCommands = aeaCommandsData;
+
+    if (queryConfig.clientId) this.form.clientId = queryConfig.clientId;
+    if (queryConfig.clientSecret) this.form.clientSecret = queryConfig.clientSecret;
+    if (queryConfig.wss) this.form.wss = queryConfig.wss;
+    if (queryConfig.tokenUrl) this.form.tokenUrl = queryConfig.tokenUrl;
+    if (queryConfig.deviceId) this.form.deviceId = queryConfig.deviceId;
+
+    this.logInfo('CUSS2 Browser Client Demo ready');
+
+    if (typeof queryConfig.go === 'string') {
+      this.logInfo(`Auto-connect requested with target state: ${queryConfig.go.toUpperCase()}`);
+      this.handleSubmit();
+    }
+  },
+
+  beforeUnmount() {
+    this.dismissTimeoutWarning();
+    this.dismissAccessibleModeToast();
     if (cuss2) {
-      cuss2.applicationOnline = e.target.checked;
-      logger.info(`Application online: ${e.target.checked}`);
+      cuss2.connection.close(1000, 'App unmounting');
+      cuss2 = null;
     }
-  });
+  },
+});
 
-  // Setup state buttons
-  stateManager.setupStateButtons();
-
-  // Initial log message
-  logger.info("CUSS2 Browser Client Demo ready");
-
-  // Auto-connect if 'go' parameter is present
-  if (typeof queryConfig.go === "string") {
-    logger.info(`Auto-connect requested with target state: ${queryConfig.go.toUpperCase()}`);
-    dom.elements.form.requestSubmit();
-  }
-}
-
-// Initialize when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-}
-else {
-  init();
-}
+app.component('toggle-switch', ToggleSwitch);
+app.component('keypad-component', Keypad);
+app.component('headset-component', Headset);
+app.component('generic-component', GenericComponent);
+app.mount('#app');

@@ -1,9 +1,10 @@
-import { Cuss2, Models } from '../../dist/cuss2.esm.js';
-import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES, TEMPORARY_STATUSES } from './tester-data.js';
+import { Cuss2, Models, criticalErrors } from '../../dist/cuss2.esm.js';
+import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES } from './tester-data.js';
 import { extractStatusCodeFromError, validateURL, checkMixedContent, generateOAuthUrl } from './tester-utils.js';
 import ToggleSwitch from './components/ToggleSwitch.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';
+import GenericComponent from './components/GenericComponent.js';
 
 const { ApplicationStateCodes } = Models;
 const { createApp } = Vue;
@@ -78,9 +79,7 @@ const app = createApp({
 
       // Components
       components: {},
-      componentInputs: {},
       componentStatuses: {},
-      componentData: {},
       collapsedComponents: {},
 
       // Banners
@@ -119,7 +118,7 @@ const app = createApp({
     isConnecting() { return this.connectionState === 'connecting'; },
 
     componentList() {
-      return Object.entries(this.components).filter(([id]) => this.componentInputs[id]);
+      return Object.entries(this.components);
     },
 
     allCollapsed() {
@@ -420,9 +419,7 @@ const app = createApp({
       this.mixedContentBanner.visible = false;
       this.connectionState = 'disconnected';
       this.components = {};
-      this.componentInputs = {};
       this.componentStatuses = {};
-      this.componentData = {};
       this.collapsedComponents = {};
       this.buttonStates = {};
       this.pendingToggles = {};
@@ -724,49 +721,20 @@ const app = createApp({
       return headerOnlyTypes.includes(component.deviceType);
     },
 
-    getCommandSet(component) {
-      if (!this.aeaCommands) return null;
-      const map = {
-        'BOARDING_PASS_PRINTER': this.aeaCommands.boardingPassPrinter,
-        'BAG_TAG_PRINTER': this.aeaCommands.bagTagPrinter,
-        'BARCODE_READER': this.aeaCommands.barcodeReader,
-        'PASSPORT_READER': this.aeaCommands.documentReader,
-      };
-      return map[component.deviceType] || null;
-    },
-
-    filteredCommands(component, prefix) {
-      const cmds = this.getCommandSet(component);
-      if (!cmds) return [];
-      return Object.entries(cmds).filter(([key]) => key.startsWith(prefix));
-    },
-
-    testDataEntries(component) {
-      const cmds = this.getCommandSet(component);
-      if (!cmds) return [];
-      return Object.entries(cmds).filter(([key]) => !key.startsWith('Setup:') && !key.startsWith('Send:'));
-    },
-
     initComponents() {
       if (!cuss2?.components) return;
       const comps = {};
-      const inputs = {};
       const statuses = {};
       for (const [id, component] of Object.entries(cuss2.components)) {
         comps[id] = component;
-        inputs[id] = { setupText: '', sendText: '', playText: '', readTimeout: '' };
+        const displayStatus = component.status || 'OK';
         statuses[id] = {
-          statusBadge: null,
-          statusClass: '',
-          isFading: false,
-          readyText: component.ready ? 'Ready' : 'Not Ready',
-          readyClass: component.ready ? 'ready' : 'not-ready',
+          statusBadge: displayStatus.replace(/_/g, ' '),
+          statusClass: this.statusClass(displayStatus),
         };
       }
       this.components = comps;
-      this.componentInputs = inputs;
       this.componentStatuses = statuses;
-      this.componentData = {};
     },
 
     refreshComponent(id) {
@@ -775,60 +743,24 @@ const app = createApp({
       if (!component) return;
       this.components[id] = component;
       this.updateComponentStatus(id, component.status);
-      this.updateComponentReady(id, component.ready);
       // Trigger reactivity for computed properties
       this.components = { ...this.components };
     },
 
+    statusClass(status) {
+      if (!status || status === 'OK') return 'status-ok';
+      if (criticalErrors.includes(status)) return 'status-critical';
+      return 'status-warning';
+    },
+
     updateComponentStatus(id, status) {
       if (!this.componentStatuses[id]) return;
-      if (!status || status === 'OK') {
-        this.componentStatuses[id].statusBadge = null;
-        this.componentStatuses[id].statusClass = '';
-        this.componentStatuses[id].isFading = false;
-        return;
-      }
-      const statusClass = `status-${status.toLowerCase().replace(/_/g, '-')}`;
-      const isFading = TEMPORARY_STATUSES.includes(status);
-      this.componentStatuses[id].statusBadge = status.replace(/_/g, ' ');
-      this.componentStatuses[id].statusClass = statusClass;
-      this.componentStatuses[id].isFading = isFading;
-      if (isFading) {
-        setTimeout(() => {
-          if (this.componentStatuses[id]?.isFading) {
-            this.componentStatuses[id].statusBadge = null;
-            this.componentStatuses[id].isFading = false;
-          }
-        }, 5000);
-      }
+      const displayStatus = status || 'OK';
+      this.componentStatuses[id].statusBadge = displayStatus.replace(/_/g, ' ');
+      this.componentStatuses[id].statusClass = this.statusClass(displayStatus);
     },
 
-    updateComponentReady(id, ready) {
-      if (!this.componentStatuses[id]) return;
-      this.componentStatuses[id].readyText = ready ? 'Ready' : 'Not Ready';
-      this.componentStatuses[id].readyClass = ready ? 'ready' : 'not-ready';
-    },
 
-    onStatusBadgeFaded(id) {
-      if (this.componentStatuses[id]) {
-        this.componentStatuses[id].statusBadge = null;
-        this.componentStatuses[id].isFading = false;
-      }
-    },
-
-    onDropdownChange(id, type, event) {
-      const value = event.target.value;
-      if (!value) return;
-      if (type === 'setup') {
-        this.componentInputs[id].setupText = value;
-      } else if (type === 'send') {
-        this.componentInputs[id].sendText = value;
-      } else {
-        const selectedName = event.target.options[event.target.selectedIndex].text;
-        this.logInfo(`Test data example: ${selectedName}`);
-        this.logInfo(`Expected data: ${value}`);
-      }
-    },
 
     // ── Component Actions ─────────────────────────────────────────────
     async handleToggleEnabled(id) {
@@ -916,14 +848,7 @@ const app = createApp({
       const toast = this.addToast(`${name} (${id}) ${action}...`, 'pending');
 
       try {
-        const dataActions = { setup: 'setupText', send: 'sendText', offer: 'sendText', process: 'sendText', play: 'playText', read: 'readTimeout' };
-        if (dataActions[action]) {
-          const inputs = this.componentInputs[id];
-          const inputValue = inputs?.[dataActions[action]]?.trim() || '';
-          await this.handleComponentDataAction(component, action, inputValue, id);
-        } else {
-          await this.handleComponentSimpleAction(component, action, id);
-        }
+        await this.handleComponentSimpleAction(component, action, id);
         delete this.buttonStates[buttonKey];
         this.updateToast(toast.id, `${name} (${id}) ${action} — OK`, 'success', 1000);
       } catch {
@@ -954,49 +879,6 @@ const app = createApp({
       }
     },
 
-    async handleComponentDataAction(component, action, inputValue, id) {
-      const name = component.deviceType;
-      let hadError = false;
-      try {
-        let data = null;
-        if (inputValue) {
-          if (action === 'read') {
-            data = parseInt(inputValue) || 30000;
-          } else if (action === 'play') {
-            data = inputValue;
-          } else if (action === 'setup' || action === 'send' || action === 'offer' || action === 'process') {
-            const lines = inputValue.split('\n').filter(line => line.trim() !== '');
-            data = lines.map(line => ({ data: line, dsTypes: ['DS_TYPES_ITPS'] }));
-          } else {
-            try { data = JSON.parse(inputValue); }
-            catch (parseError) {
-              this.logError(`Invalid JSON for ${action}: ${parseError.message}`);
-              throw new Error(`Invalid JSON: ${parseError.message}`);
-            }
-          }
-        }
-
-        const actionText = action.charAt(0).toUpperCase() + action.slice(1);
-        this.logInfo(`${actionText} ${name}${data !== null ? ' with: ' + (typeof data === 'object' ? JSON.stringify(data) : data) : ''}...`);
-
-        if (typeof component[action] !== 'function') throw new Error(`${action} not available on ${name}`);
-        const result = data !== null ? await component[action](data) : await component[action]();
-        this.logSuccess(`${name} ${action} completed`);
-
-        if (action === 'read' && result) {
-          this.logEvent(`Read data: ${JSON.stringify(result)}`);
-        }
-      } catch (error) {
-        hadError = true;
-        this.logError(`Failed to ${action} ${name}: ${error.message}`);
-        const statusCode = extractStatusCodeFromError(error);
-        if (statusCode) this.updateComponentStatus(id, statusCode);
-        throw error;
-      } finally {
-        if (!hadError) this.updateComponentStatus(id, component.status);
-      }
-    },
-
     // ── Component Data Listeners ──────────────────────────────────────
     setupComponentListeners() {
       const listeners = [
@@ -1007,9 +889,12 @@ const app = createApp({
       ];
       listeners.forEach(({ component, handler }) => {
         if (cuss2[component]) {
+          const compId = String(cuss2[component].id);
           cuss2[component].on('data', (dataRecords) => {
             this.logEvent(handler(dataRecords));
-            this.updateDataDisplay(cuss2[component].id, dataRecords);
+            const ref = this.$refs['generic-' + compId];
+            const generic = Array.isArray(ref) ? ref[0] : ref;
+            generic?.updateData(dataRecords);
           });
         }
       });
@@ -1030,21 +915,6 @@ const app = createApp({
           }
         });
       }
-    },
-
-    updateDataDisplay(componentId, dataRecords) {
-      let displayText = '';
-      if (Array.isArray(dataRecords)) {
-        dataRecords.forEach((record, index) => {
-          if (index > 0) displayText += '\n---\n';
-          displayText += `Data: ${record.data || 'N/A'}\n`;
-          if (record.dsTypes?.length > 0) displayText += `Type: ${record.dsTypes.join(', ')}\n`;
-          if (record.dataStatus) displayText += `Status: ${record.dataStatus}`;
-        });
-      } else {
-        displayText = JSON.stringify(dataRecords, null, 2);
-      }
-      this.componentData[String(componentId)] = displayText;
     },
 
     // ── Banner/Toast Management ───────────────────────────────────────
@@ -1199,4 +1069,5 @@ const app = createApp({
 app.component('toggle-switch', ToggleSwitch);
 app.component('keypad-component', Keypad);
 app.component('headset-component', Headset);
+app.component('generic-component', GenericComponent);
 app.mount('#app');

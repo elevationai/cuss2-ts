@@ -756,40 +756,13 @@ input.field-problem {
   border: 1px solid #64ffda;
 }
 
-.component-badge.status-error,
-.component-badge.status-unavailable,
-.component-badge.status-not-responding {
+.component-badge.status-critical {
   background: rgba(255, 100, 100, 0.2);
   color: #ff6464;
   border: 1px solid #ff6464;
 }
 
-.component-badge.status-wrong-application-state {
-  background: rgba(255, 100, 100, 0.2);
-  color: #ff6464;
-  border: 1px solid #ff6464;
-}
-
-/* Fade out animation for temporary status badges */
-.component-badge.fade-out {
-  animation: fadeOut 3s forwards;
-}
-
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    visibility: hidden;
-  }
-}
-
-.component-badge.status-media-absent,
-.component-badge.status-media-present {
+.component-badge.status-warning {
   background: rgba(255, 193, 7, 0.2);
   color: #ffc107;
   border: 1px solid #ffc107;

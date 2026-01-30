@@ -187,15 +187,14 @@
                     <div class="component-badges">
                       <span v-if="componentStatuses[id]?.statusBadge"
                             class="component-badge"
-                            :class="[componentStatuses[id].statusClass, { 'fade-out': componentStatuses[id].isFading }]"
-                            @animationend="onStatusBadgeFaded(id)">
+                            :class="componentStatuses[id].statusClass">
                         {{ componentStatuses[id].statusBadge }}
                       </span>
+                      <span v-if="component.componentState === 'BUSY'"
+                            class="component-badge status-warning">
+                        BUSY
+                      </span>
                     </div>
-                    <span class="component-badge"
-                          :class="componentStatuses[id]?.readyClass">
-                      {{ componentStatuses[id]?.readyText }}
-                    </span>
                   </div>
                   <div class="component-controls" @click.stop>
                     <button v-if="hasCap(component, 'query')"
@@ -245,176 +244,14 @@
                     </headset-component>
                   </template>
 
-                  <!-- Generic Actions Row -->
-                  <div v-else class="component-actions-row">
-                  <!-- Left Column -->
-                  <div class="component-action-column left-column">
-                    <!-- Setup Section -->
-                    <template v-if="hasCap(component, 'setup')">
-                      <label class="component-action-label">Setup</label>
-                      <select v-if="filteredCommands(component, 'Setup:').length > 0"
-                              class="component-action-dropdown"
-                              @change="onDropdownChange(id, 'setup', $event)">
-                        <option value="">Select AEA command...</option>
-                        <option v-for="[name, value] in filteredCommands(component, 'Setup:')"
-                                :key="name" :value="value">{{ name }}</option>
-                      </select>
-                      <textarea class="component-action-textarea"
-                                placeholder="Setup data (ITPS command)" rows="5"
-                                v-model="componentInputs[id].setupText"></textarea>
-                      <button class="component-action-btn"
-                              :class="btnClasses('setup-' + id)"
-                              :disabled="btnDisabled('setup-' + id)"
-                              @click="handleActionButton(id, 'setup', 'setup-' + id)">
-                        <span class="btn-label">Setup</span>
-                        <span class="btn-spinner"></span>
-                      </button>
-                    </template>
-
-                    <!-- Send Section -->
-                    <template v-if="hasCap(component, 'send')">
-                      <label class="component-action-label">Send</label>
-                      <select v-if="filteredCommands(component, 'Send:').length > 0"
-                              class="component-action-dropdown"
-                              @change="onDropdownChange(id, 'send', $event)">
-                        <option value="">Select AEA command...</option>
-                        <option v-for="[name, value] in filteredCommands(component, 'Send:')"
-                                :key="name" :value="value">{{ name }}</option>
-                      </select>
-                      <textarea class="component-action-textarea"
-                                placeholder="Send data (ITPS command)" rows="5"
-                                v-model="componentInputs[id].sendText"></textarea>
-                      <div class="component-action-buttons">
-                        <button class="component-action-btn"
-                                :class="btnClasses('send-' + id)"
-                                :disabled="btnDisabled('send-' + id)"
-                                @click="handleActionButton(id, 'send', 'send-' + id)">
-                          <span class="btn-label">Send</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button v-if="hasCap(component, 'offer')"
-                                class="component-action-btn"
-                                :class="btnClasses('offer-' + id)"
-                                :disabled="btnDisabled('offer-' + id)"
-                                @click="handleActionButton(id, 'offer', 'offer-' + id)">
-                          <span class="btn-label">Offer</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button v-if="hasCap(component, 'process')"
-                                class="component-action-btn"
-                                :class="btnClasses('process-' + id)"
-                                :disabled="btnDisabled('process-' + id)"
-                                @click="handleActionButton(id, 'process', 'process-' + id)">
-                          <span class="btn-label">Process</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                      </div>
-                    </template>
-
-                    <!-- Play Section -->
-                    <template v-if="hasCap(component, 'play')">
-                      <label class="component-action-label">Play</label>
-                      <textarea class="component-action-textarea"
-                                placeholder="SSML or text" rows="5"
-                                v-model="componentInputs[id].playText"></textarea>
-                      <div class="component-action-buttons">
-                        <button class="component-action-btn"
-                                :class="btnClasses('play-' + id)"
-                                :disabled="btnDisabled('play-' + id)"
-                                @click="handleActionButton(id, 'play', 'play-' + id)">
-                          <span class="btn-label">Play</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button v-if="hasCap(component, 'pause')"
-                                class="component-action-btn"
-                                :class="btnClasses('pause-' + id)"
-                                :disabled="btnDisabled('pause-' + id)"
-                                @click="handleActionButton(id, 'pause', 'pause-' + id)">
-                          <span class="btn-label">Pause</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button v-if="hasCap(component, 'resume')"
-                                class="component-action-btn"
-                                :class="btnClasses('resume-' + id)"
-                                :disabled="btnDisabled('resume-' + id)"
-                                @click="handleActionButton(id, 'resume', 'resume-' + id)">
-                          <span class="btn-label">Resume</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button v-if="hasCap(component, 'stop')"
-                                class="component-action-btn"
-                                :class="btnClasses('stop-' + id)"
-                                :disabled="btnDisabled('stop-' + id)"
-                                @click="handleActionButton(id, 'stop', 'stop-' + id)">
-                          <span class="btn-label">Stop</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                      </div>
-                    </template>
-                  </div>
-
-                  <!-- Right Column -->
-                  <div class="component-action-column right-column">
-                    <!-- Read Section -->
-                    <template v-if="hasCap(component, 'read')">
-                      <label class="component-action-label">Read</label>
-                      <select v-if="testDataEntries(component).length > 0"
-                              class="component-action-dropdown"
-                              @change="onDropdownChange(id, 'read', $event)">
-                        <option value="">Select test data...</option>
-                        <option v-for="[name, value] in testDataEntries(component)"
-                                :key="name" :value="value">{{ name }}</option>
-                      </select>
-                      <div class="data-display-container">
-                        <label class="data-display-label">Data:</label>
-                        <div class="data-display-box">
-                          <template v-if="componentData[id]">{{ componentData[id] }}</template>
-                        </div>
-                      </div>
-                      <input type="text" class="component-action-input timeout-input"
-                             placeholder="Timeout ms (default: 30000)"
-                             v-model="componentInputs[id].readTimeout">
-                      <div class="component-action-buttons">
-                        <button class="component-action-btn"
-                                :class="btnClasses('read-' + id)"
-                                :disabled="btnDisabled('read-' + id)"
-                                @click="handleActionButton(id, 'read', 'read-' + id)">
-                          <span class="btn-label">Read</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                        <button v-if="hasCap(component, 'cancel')"
-                                class="component-action-btn"
-                                :class="btnClasses('cancel-' + id)"
-                                :disabled="btnDisabled('cancel-' + id)"
-                                @click="handleActionButton(id, 'cancel', 'cancel-' + id)">
-                          <span class="btn-label">Cancel</span>
-                          <span class="btn-spinner"></span>
-                        </button>
-                      </div>
-                    </template>
-
-                    <!-- Additional right-column buttons (forward, backward) -->
-                    <div v-if="hasCap(component, 'forward') || hasCap(component, 'backward')"
-                         class="component-action-buttons">
-                      <button v-if="hasCap(component, 'forward')"
-                              class="component-action-btn"
-                              :class="btnClasses('forward-' + id)"
-                              :disabled="btnDisabled('forward-' + id)"
-                              @click="handleActionButton(id, 'forward', 'forward-' + id)">
-                        <span class="btn-label">Forward</span>
-                        <span class="btn-spinner"></span>
-                      </button>
-                      <button v-if="hasCap(component, 'backward')"
-                              class="component-action-btn"
-                              :class="btnClasses('backward-' + id)"
-                              :disabled="btnDisabled('backward-' + id)"
-                              @click="handleActionButton(id, 'backward', 'backward-' + id)">
-                        <span class="btn-label">Backward</span>
-                        <span class="btn-spinner"></span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  <!-- Generic Component -->
+                  <generic-component v-else
+                    :component="component"
+                    :component-id="id"
+                    :ref="'generic-' + id"
+                    @log="log($event.message, $event.type)"
+                    @status-update="updateComponentStatus(id, $event)">
+                  </generic-component>
                 </template>
               </div>
             </div>

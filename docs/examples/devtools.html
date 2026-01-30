@@ -56,6 +56,7 @@
                                     <toggle-switch
                                         :value="!!getState(component.componentID).power"
                                         :power="true"
+                                        :pending="!!pendingToggles['power-' + component.componentID]"
                                         @toggle="sendPower(component.componentID)"></toggle-switch>
                                 </div>
                                 <span class="component-name">
@@ -112,6 +113,7 @@
                                                         <span class="action-param-label">{{ formatName(paramName) }}</span>
                                                         <toggle-switch
                                                             :value="!!(getState(component.componentID)[paramName])"
+                                                            :pending="!!pendingToggles[paramName + '-' + component.componentID]"
                                                             @toggle="handleBooleanToggle(component.componentID, actionName, paramName)"></toggle-switch>
                                                     </div>
                                                     <!-- String parameter -->

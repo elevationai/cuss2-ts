@@ -363,6 +363,11 @@ button.secondary:hover:not(:disabled) {
     background: #64ffda;
 }
 
+.toggle-switch.pending {
+    background: #ff9f0a;
+    cursor: wait;
+}
+
 /* Power toggle specific styles */
 .toggle-switch.power-toggle {
     width: 60px;

@@ -57,7 +57,7 @@ export const helpers = {
   },
 };
 
-const criticalErrors = [
+export const criticalErrors = [
   MessageCodes.CANCELLED,
   MessageCodes.WRONG_APPLICATION_STATE,
   MessageCodes.OUT_OF_SEQUENCE,

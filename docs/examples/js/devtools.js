@@ -10,12 +10,13 @@ const ToggleSwitch = {
   props: {
     value: Boolean,
     power: Boolean,
+    pending: Boolean,
   },
   emits: ['toggle'],
   template: `
         <div class="toggle-switch"
-             :class="{ active: value, 'power-toggle': power }"
-             @click.stop="$emit('toggle')">
+             :class="{ active: value, 'power-toggle': power, pending: pending }"
+             @click.stop="!pending && $emit('toggle')">
             <div class="toggle-slider"></div>
         </div>
     `,
@@ -84,6 +85,7 @@ const app = createApp({
       connectionStatus: 'disconnected',
       components: [],
       componentStates: {},
+      pendingToggles: {},
       tenants: {},
     };
   },
@@ -279,6 +281,7 @@ const app = createApp({
         }
       });
 
+      this.componentStates = { ...this.componentStates };
       this.addLogEntry('received', `Component #${id} update:`, msg);
     },
 
@@ -301,34 +304,46 @@ const app = createApp({
 
     // ── Actions ──────────────────────────────────────────────────────
     async sendPower(componentId) {
+      const key = `power-${componentId}`;
+      if (this.pendingToggles[key]) return;
+
       const currentValue = !!this.getState(componentId).power;
       const newValue = !currentValue;
 
-      // Optimistic update
+      this.pendingToggles[key] = true;
       if (!this.componentStates[componentId]) {
         this.componentStates[componentId] = {};
       }
       this.componentStates[componentId].power = newValue;
+      this.componentStates = { ...this.componentStates };
 
       try {
         await client.cmd(componentId, 'power', { on: newValue });
         this.addLogEntry('sent', `Power ${newValue ? 'on' : 'off'} for component #${componentId} - OK`);
-        setTimeout(() => this.refreshState(), 100);
+        await this.refreshState();
       } catch (error) {
         this.componentStates[componentId].power = currentValue;
+        this.componentStates = { ...this.componentStates };
         this.addLogEntry('error', `Power command failed for component #${componentId}: ${error.message}`);
+      } finally {
+        delete this.pendingToggles[key];
+        this.pendingToggles = { ...this.pendingToggles };
       }
     },
 
     async handleBooleanToggle(componentId, actionName, paramName) {
+      const key = `${paramName}-${componentId}`;
+      if (this.pendingToggles[key]) return;
+
       const currentValue = !!(this.getState(componentId)[paramName]);
       const newValue = !currentValue;
 
-      // Optimistic update
+      this.pendingToggles[key] = true;
       if (!this.componentStates[componentId]) {
         this.componentStates[componentId] = {};
       }
       this.componentStates[componentId][paramName] = newValue;
+      this.componentStates = { ...this.componentStates };
 
       const args = {};
       if (actionName === 'power') {
@@ -340,10 +355,14 @@ const app = createApp({
       try {
         await client.cmd(componentId, actionName, args);
         this.addLogEntry('sent', `${actionName} ${paramName}: ${newValue} on component #${componentId} - OK`);
-        setTimeout(() => this.refreshState(), 100);
+        await this.refreshState();
       } catch (error) {
         this.componentStates[componentId][paramName] = currentValue;
+        this.componentStates = { ...this.componentStates };
         this.addLogEntry('error', `${actionName} failed for component #${componentId}: ${error.message}`);
+      } finally {
+        delete this.pendingToggles[key];
+        this.pendingToggles = { ...this.pendingToggles };
       }
     },
 

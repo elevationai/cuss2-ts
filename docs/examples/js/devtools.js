@@ -23,6 +23,16 @@ const ToggleSwitch = {
 };
 
 // ── Keypad Component ─────────────────────────────────────────────────────────
+const KEYBOARD_TO_KEYPAD = {
+  ArrowUp: 'f18',
+  ArrowDown: 'f19',
+  ArrowLeft: 'f21',
+  ArrowRight: 'f22',
+  Enter: 'f20',
+  Home: 'f23',
+  End: 'f24',
+};
+
 const KeypadUI = {
   name: 'KeypadUI',
   props: {
@@ -32,6 +42,7 @@ const KeypadUI = {
   data() {
     return {
       activeKeys: {},
+      capturing: false,
       buttons: [
         { key: 'f17', classes: 'blue', helpIcon: true },
         { key: 'f18', classes: 'yellow-up' },
@@ -58,9 +69,46 @@ const KeypadUI = {
         delete this.activeKeys[btn.key];
       }
     },
+    onMouseEnter() {
+      this.capturing = true;
+      window.addEventListener('keydown', this.captureKeyDown, true);
+      window.addEventListener('keyup', this.captureKeyUp, true);
+    },
+    onMouseLeave() {
+      this.capturing = false;
+      window.removeEventListener('keydown', this.captureKeyDown, true);
+      window.removeEventListener('keyup', this.captureKeyUp, true);
+      // Release any held keys
+      for (const key of Object.keys(this.activeKeys)) {
+        delete this.activeKeys[key];
+        this.$emit('keyaction', { type: 'keyup', key, componentId: this.componentId });
+      }
+    },
+    captureKeyDown(e) {
+      const mapped = KEYBOARD_TO_KEYPAD[e.key];
+      if (!mapped) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.activeKeys[mapped]) return; // already held
+      this.activeKeys[mapped] = true;
+      this.$emit('keyaction', { type: 'keydown', key: mapped, componentId: this.componentId });
+    },
+    captureKeyUp(e) {
+      const mapped = KEYBOARD_TO_KEYPAD[e.key];
+      if (!mapped) return;
+      e.preventDefault();
+      e.stopPropagation();
+      delete this.activeKeys[mapped];
+      this.$emit('keyaction', { type: 'keyup', key: mapped, componentId: this.componentId });
+    },
+  },
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.captureKeyDown, true);
+    window.removeEventListener('keyup', this.captureKeyUp, true);
   },
   template: `
-        <div class="keypad-container">
+        <div class="keypad-container" :class="{ capturing }"
+             @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
             <div class="keypad-grid">
                 <button v-for="btn in buttons" :key="btn.key"
                         class="keypad-button"
@@ -73,6 +121,7 @@ const KeypadUI = {
                     <template v-else>{{ btn.label || '' }}</template>
                 </button>
             </div>
+            <div v-if="capturing" class="keypad-capture-hint">Keyboard captured</div>
         </div>
     `,
 };

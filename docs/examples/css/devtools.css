@@ -603,6 +603,19 @@ button.secondary:hover:not(:disabled) {
     box-shadow: 0 4px 15px rgba(100, 255, 218, 0.1);
     max-width: 280px;
     margin: 0 auto;
+    transition: border-color 0.15s ease;
+}
+
+.keypad-container.capturing {
+    border-color: #64ffda;
+    box-shadow: 0 4px 15px rgba(100, 255, 218, 0.25);
+}
+
+.keypad-capture-hint {
+    text-align: center;
+    font-size: 11px;
+    color: rgba(100, 255, 218, 0.7);
+    margin-top: 12px;
 }
 
 .keypad-grid {

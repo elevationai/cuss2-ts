@@ -363,6 +363,7 @@ export class Connection extends EventEmitter {
   }
 
   json(obj: unknown) {
+    this.emit("send", obj);
     this._socket?.send(JSON.stringify(obj));
   }
 
@@ -381,6 +382,7 @@ export class Connection extends EventEmitter {
       meta.deviceID = this.deviceID;
     }
     const promise = this.waitFor(reqId, ["messageError", "socketError", "close"]);
+    this.emit("send", applicationData);
     this._socket?.send(JSON.stringify(applicationData));
     const message = (await promise) as PlatformData;
     const messageCode = message.meta?.messageCode;

@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="css/tester.css">
     <!-- Vue 3 CDN (no build step) -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@11/styles/github-dark-dimmed.min.css">
+    <script src="https://unpkg.com/@highlightjs/cdn-assets@11/highlight.min.js"></script>
+    <script src="https://unpkg.com/@highlightjs/cdn-assets@11/languages/json.min.js"></script>
   </head>
   <body>
     <div id="app">
@@ -257,17 +261,22 @@
             </div>
           </div>
 
-          <!-- Event Log Panel -->
-          <div class="panel full-width panel-centered">
-            <h2>Event Log</h2>
-            <div class="log-container" ref="logContainer">
-              <div v-for="entry in logEntries" :key="entry.id"
-                   class="log-entry" :class="entry.type">
-                {{ entry.message }}
-              </div>
-            </div>
-          </div>
         </div>
+      </div>
+
+      <!-- Bottom Panel (fixed) -->
+      <div class="log-panel" ref="logPanel" :style="{ height: logPanelHeight + 'px' }">
+        <div class="log-panel-resize" @mousedown="startLogResize"></div>
+        <div class="log-panel-header">
+          <div class="log-panel-tabs">
+            <button class="log-tab" :class="{ active: activeLogTab === 'log' }" @click="activeLogTab = 'log'">Event Log</button>
+            <button class="log-tab" :class="{ active: activeLogTab === 'messages' }" @click="activeLogTab = 'messages'">Messages</button>
+          </div>
+          <button class="log-clear-btn" @click="clearActiveTab" title="Clear">&#128465;</button>
+        </div>
+
+        <event-log v-show="activeLogTab === 'log'" ref="eventLog"></event-log>
+        <ws-messages v-show="activeLogTab === 'messages'" ref="wsMessages"></ws-messages>
       </div>
 
       <!-- Timeout Warning Banner -->

@@ -5,6 +5,8 @@ import ToggleSwitch from './components/ToggleSwitch.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';
 import GenericComponent from './components/GenericComponent.js';
+import EventLog from './components/EventLog.js';
+import WsMessages from './components/WsMessages.js';
 
 const { ApplicationStateCodes } = Models;
 const { createApp } = Vue;
@@ -89,9 +91,9 @@ const app = createApp({
       reconnectionSuccess: { visible: false },
       mixedContentBanner: { visible: false, currentProtocol: '', targetProtocol: '', suggestedUrl: '' },
 
-      // Log
-      logEntries: [],
-      logIdCounter: 0,
+      // Bottom panel
+      logPanelHeight: Math.round(window.innerHeight * 0.25),
+      activeLogTab: 'log',
 
       // Button states
       buttonStates: {},
@@ -215,20 +217,36 @@ const app = createApp({
   methods: {
     // ── Logging ────────────────────────────────────────────────────────
     log(message, type = 'info') {
-      this.logEntries.push({
-        id: ++this.logIdCounter,
-        message: `[${new Date().toLocaleTimeString()}] ${message}`,
-        type,
-      });
-      this.$nextTick(() => {
-        const container = this.$refs.logContainer;
-        if (container) container.scrollTop = container.scrollHeight;
-      });
+      this.$refs.eventLog?.log(message, type);
     },
     logInfo(msg) { this.log(msg, 'info'); },
     logSuccess(msg) { this.log(msg, 'success'); },
     logError(msg) { this.log(msg, 'error'); },
     logEvent(msg) { this.log(msg, 'event'); },
+
+    startLogResize(e) {
+      e.preventDefault();
+      const startY = e.clientY;
+      const startHeight = this.logPanelHeight;
+      const onMove = (e) => {
+        const newHeight = Math.max(80, Math.min(window.innerHeight * 0.8, startHeight + (startY - e.clientY)));
+        this.logPanelHeight = newHeight;
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    },
+
+    clearActiveTab() {
+      if (this.activeLogTab === 'log') {
+        this.$refs.eventLog?.clear();
+      } else {
+        this.$refs.wsMessages?.clear();
+      }
+    },
 
     // ── Form Validation ───────────────────────────────────────────────
     showFieldError(field, message) {
@@ -497,6 +515,19 @@ const app = createApp({
       cuss2.connection.on('authenticationError', (error) => {
         this.logError(`Authentication error: ${error.message}`);
         this.updateConnectionStage('auth', 'error', error.message || 'Authentication failed');
+      });
+
+      // WS message capture
+      cuss2.connection.on('message', (data) => {
+        this.$refs.wsMessages?.add('received', data);
+      });
+      cuss2.connection.on('ack', (data) => {
+        if (data?.ackCode !== 'ACK_OK') {
+          this.$refs.wsMessages?.add('received', data);
+        }
+      });
+      cuss2.connection.on('send', (data) => {
+        this.$refs.wsMessages?.add('sent', data);
       });
     },
 
@@ -1070,4 +1101,6 @@ app.component('toggle-switch', ToggleSwitch);
 app.component('keypad-component', Keypad);
 app.component('headset-component', Headset);
 app.component('generic-component', GenericComponent);
+app.component('event-log', EventLog);
+app.component('ws-messages', WsMessages);
 app.mount('#app');

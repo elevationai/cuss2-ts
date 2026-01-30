@@ -12,6 +12,7 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  padding-bottom: 25vh;
 }
 
 .grid {
@@ -1132,14 +1133,60 @@ input.field-problem {
   transform: none;
 }
 
-/* ===== LOG CONTAINER ===== */
-.log-container {
+/* ===== LOG PANEL (fixed bottom) ===== */
+.log-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: #0a0a14;
-  border: 1px solid rgba(100, 255, 218, 0.2);
-  border-radius: 8px;
-  padding: 10px;
-  max-height: 300px;
+  border-top: 1px solid rgba(100, 255, 218, 0.3);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.log-panel-resize {
+  height: 5px;
+  cursor: ns-resize;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.log-panel-resize:hover {
+  background: rgba(100, 255, 218, 0.3);
+}
+
+.log-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 12px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64ffda;
+  border-bottom: 1px solid rgba(100, 255, 218, 0.15);
+}
+
+.log-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.log-clear-btn:hover {
+  opacity: 1;
+}
+
+.log-container {
+  flex: 1;
   overflow-y: auto;
+  padding: 0 12px 8px;
   font-family: "Courier New", monospace;
   font-size: 12px;
 }
@@ -1163,6 +1210,126 @@ input.field-problem {
 
 .log-entry.event {
   color: #48cae4;
+}
+
+/* ===== TABS ===== */
+.log-panel-tabs {
+  display: flex;
+  gap: 0;
+}
+
+.log-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #888;
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.log-tab:hover {
+  color: #ccc;
+}
+
+.log-tab.active {
+  color: #64ffda;
+  border-bottom-color: #64ffda;
+}
+
+/* ===== WS MESSAGES ===== */
+.ws-messages {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.ws-message-list {
+  flex: 0 0 55%;
+  overflow-y: auto;
+  border-right: 1px solid rgba(100, 255, 218, 0.15);
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  outline: none;
+}
+
+.ws-message-row {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ws-message-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ws-message-row.selected {
+  background: rgba(100, 255, 218, 0.1);
+}
+
+.ws-message-row.sent {
+  color: #6fbf73;
+}
+
+.ws-message-row.sent .ws-arrow {
+  color: #6fbf73;
+}
+
+.ws-message-row.received {
+  color: #e0e0e0;
+}
+
+.ws-message-row.received .ws-arrow {
+  color: #ff6464;
+}
+
+.ws-arrow {
+  flex-shrink: 0;
+  width: 16px;
+  font-weight: bold;
+}
+
+.ws-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-time {
+  flex-shrink: 0;
+  color: #666;
+  margin-left: 8px;
+  font-size: 11px;
+}
+
+.ws-message-detail {
+  flex: 0 0 45%;
+  overflow-y: auto;
+  padding: 8px 12px;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+}
+
+.ws-message-detail pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ws-message-detail pre code.hljs {
+  background: transparent;
+  padding: 0;
+}
+
+.ws-no-selection {
+  color: #555;
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
 }
 
 /* ===== ACTIONS ===== */

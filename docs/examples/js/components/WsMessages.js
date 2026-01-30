@@ -15,7 +15,9 @@ export default {
   },
   methods: {
     add(direction, data) {
-      const label = this.messageLabel(data);
+      const label = direction === 'disconnect'
+        ? `DISCONNECT (${data.code}) ${data.reason}`
+        : this.messageLabel(data);
       const formatted = JSON.stringify(data, null, 2);
       const time = new Date().toLocaleTimeString();
       this.messages.push({ direction, label, formatted, time });
@@ -70,7 +72,7 @@ export default {
         <div v-for="(msg, i) in messages" :key="i"
              class="ws-message-row" :class="[msg.direction, { selected: selected === i }]"
              @click="selected = i">
-          <span class="ws-arrow" v-html="msg.direction === 'sent' ? '&#8593;' : '&#8595;'"></span>
+          <span class="ws-arrow" v-html="msg.direction === 'sent' ? '&#8593;' : msg.direction === 'disconnect' ? '&#10005;' : '&#8595;'"></span>
           <span class="ws-label">{{ msg.label }}</span>
           <span class="ws-time">{{ msg.time }}</span>
         </div>

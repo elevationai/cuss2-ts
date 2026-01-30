@@ -1286,6 +1286,14 @@ input.field-problem {
   color: #ff6464;
 }
 
+.ws-message-row.disconnect {
+  color: #f0c040;
+}
+
+.ws-message-row.disconnect .ws-arrow {
+  color: #f0c040;
+}
+
 .ws-arrow {
   flex-shrink: 0;
   width: 16px;

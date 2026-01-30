@@ -495,6 +495,9 @@ const app = createApp({
       });
 
       cuss2.connection.on('close', (event) => {
+        const code = event?.code ?? '';
+        const reason = event?.reason || 'No reason';
+        this.$refs.wsMessages?.add('disconnect', { code, reason });
         if (event && event.code !== 1000 && this.connectionStages.websocket.state !== 'success' && !this.wasEverConnected) {
           this.updateConnectionStage('websocket', 'error', 'Connection closed');
         }

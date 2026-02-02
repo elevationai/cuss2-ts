@@ -14,15 +14,20 @@
             <h1>CUSS2 DevTools Client</h1>
             <p class="subtitle">Interactive WebSocket Client for CUSS2 Platform Development</p>
 
-            <!-- Connection Panel -->
-            <div class="card connection-card">
+            <!-- Connection Panel (hidden when connected) -->
+            <div class="card connection-card" v-if="connectionStatus !== 'connected'">
                 <div class="connection-controls">
                     <label>URL</label>
                     <input type="text" v-model="wsUrl" placeholder="ws://localhost:22222/devtools"
                            @keypress.enter="connect">
                     <button @click="connect" :disabled="connectionStatus !== 'disconnected'">Connect</button>
-                    <button class="secondary" @click="disconnect" :disabled="connectionStatus !== 'connected'">Disconnect</button>
                 </div>
+            </div>
+
+            <!-- Disconnect bar (shown when connected) -->
+            <div class="disconnect-bar" v-if="connectionStatus === 'connected'">
+                <span class="disconnect-url">{{ wsUrl }}</span>
+                <button class="secondary" @click="disconnect">Disconnect</button>
             </div>
 
             <!-- Tenant/Brand Controls -->
@@ -91,6 +96,21 @@
                                        :component-id="component.componentID"
                                        @keyaction="handleKeyAction"></keypad-ui>
 
+                            <!-- Data Reader UI (Barcode/Document) -->
+                            <data-reader-ui v-else-if="isDataReader(component)"
+                                            :component-id="component.componentID"
+                                            :reader-type="getReaderType(component)"
+                                            :component="component"
+                                            @send-data="handleSendData"
+                                            @media-inserted="handleMediaInserted"></data-reader-ui>
+
+                            <!-- Headset UI -->
+                            <headset-ui v-else-if="isHeadset(component)"
+                                        :component-id="component.componentID"
+                                        :inserted="!!getState(component.componentID).inserted"
+                                        :pending="!!pendingToggles['inserted-' + component.componentID]"
+                                        @toggle-inserted="handleHeadsetInserted"></headset-ui>
+
                             <!-- Standard Actions -->
                             <template v-else-if="hasNonPowerActions(component)">
                                 <template v-for="(params, actionName) in component.actions" :key="actionName">
@@ -139,6 +159,6 @@
         </div>
     </div>
 
-    <script type="module" src="js/devtools.js"></script>
+    <script type="module" src="js/devtools/devtools.js"></script>
 </body>
 </html>

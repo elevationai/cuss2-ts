@@ -1,6 +1,4 @@
 // ===== TEST DATA =====
-const testBarcode = 'M1TESTER/TEST          UGZVFJ MCODENF9 3311 234Y016F0032 147>5180Mo5234BF9 00000000000';
-const testPassportMRZ = 'P<USATESTER<<TEST<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n5123456789USA9001014M3012315<<<<<<<<<<<<<<04';
 
 const bppSetupPrefix = `PT##$S6A#@;#TICK#CHEC#BOAR#0101110112011301210122012301C#0201A34#03BRB061661#0430G25F
 TT01#01L08004790100000`;
@@ -19,12 +17,6 @@ export const aeaCommandsData = {
   bagTagPrinter: {
     'Setup: Assets + Logo': btpSetupPrefix,
     'Send: Simple BT': btpSendSimple,
-  },
-  barcodeReader: {
-    'Test Boarding Pass Barcode': testBarcode,
-  },
-  documentReader: {
-    'Test Passport MRZ (TEST TESTER)': testPassportMRZ,
   },
 };
 

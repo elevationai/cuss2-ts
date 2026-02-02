@@ -1,7 +1,7 @@
-import { extractStatusCodeFromError } from '../tester-utils.js';
+import { extractStatusCodeFromError } from '../utils.js';
 
 export default {
-  name: 'BarcodeReader',
+  name: 'DocumentReader',
   props: {
     component: { type: Object, required: true },
     componentId: { type: String, required: true },
@@ -50,7 +50,7 @@ export default {
     },
 
     async sendSetup(previous) {
-      const buttonKey = 'br-setup';
+      const buttonKey = 'dr-setup';
       this.buttonStates[buttonKey] = 'loading';
       const name = this.component.deviceType;
       const toast = this.$root.addToast(`${name} (${this.componentId}) setup...`, 'pending');
@@ -137,7 +137,7 @@ export default {
           <button v-for="dsType in availableDsTypes" :key="dsType"
                   class="dr-type-chip"
                   :class="{ selected: isSelected(dsType), pending: pendingType === dsType }"
-                  :disabled="btnDisabled('br-setup')"
+                  :disabled="btnDisabled('dr-setup')"
                   @click="toggleType(dsType)">
             {{ formatLabel(dsType) }}
           </button>

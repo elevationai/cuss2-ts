@@ -1,130 +1,15 @@
-import { CUSS2DevToolsClient, ComponentInterrogation } from '../../dist/cuss2-devtools.esm.js';
+import { CUSS2DevToolsClient, ComponentInterrogation } from '../../../dist/cuss2-devtools.esm.js';
+import { exampleData } from './data.js';
+import ToggleSwitch from './components/ToggleSwitch.js';
+import KeypadUI from './components/KeypadUI.js';
+import DataReaderUI from './components/DataReaderUI.js';
+import HeadsetUI from './components/HeadsetUI.js';
 
 const { createApp } = Vue;
 
+export { exampleData };
+
 let client = null;
-
-// ── Toggle Switch Component ─────────────────────────────────────────────────
-const ToggleSwitch = {
-  name: 'ToggleSwitch',
-  props: {
-    value: Boolean,
-    power: Boolean,
-    pending: Boolean,
-  },
-  emits: ['toggle'],
-  template: `
-        <div class="toggle-switch"
-             :class="{ active: value, 'power-toggle': power, pending: pending }"
-             @click.stop="!pending && $emit('toggle')">
-            <div class="toggle-slider"></div>
-        </div>
-    `,
-};
-
-// ── Keypad Component ─────────────────────────────────────────────────────────
-const KEYBOARD_TO_KEYPAD = {
-  ArrowUp: 'f18',
-  ArrowDown: 'f19',
-  ArrowLeft: 'f21',
-  ArrowRight: 'f22',
-  Enter: 'f20',
-  Home: 'f23',
-  End: 'f24',
-};
-
-const KeypadUI = {
-  name: 'KeypadUI',
-  props: {
-    componentId: { type: [Number, String], required: true },
-  },
-  emits: ['keyaction'],
-  data() {
-    return {
-      activeKeys: {},
-      capturing: false,
-      buttons: [
-        { key: 'f17', classes: 'blue', helpIcon: true },
-        { key: 'f18', classes: 'yellow-up' },
-        { key: 'f19', classes: 'yellow-down' },
-        { key: 'f20', classes: 'green' },
-        { key: 'f21', classes: 'white-back', label: 'BACK' },
-        { key: 'f22', classes: 'white-next', label: 'NEXT' },
-        { key: 'f23', classes: 'black home', style: 'grid-area: home' },
-        { key: 'f24', classes: 'red end', style: 'grid-area: end' },
-      ],
-    };
-  },
-  methods: {
-    onDown(btn) {
-      this.activeKeys[btn.key] = true;
-      this.$emit('keyaction', { type: 'keydown', key: btn.key, componentId: this.componentId });
-    },
-    onUp(btn) {
-      delete this.activeKeys[btn.key];
-      this.$emit('keyaction', { type: 'keyup', key: btn.key, componentId: this.componentId });
-    },
-    onLeave(btn) {
-      if (this.activeKeys[btn.key]) {
-        delete this.activeKeys[btn.key];
-      }
-    },
-    onMouseEnter() {
-      this.capturing = true;
-      window.addEventListener('keydown', this.captureKeyDown, true);
-      window.addEventListener('keyup', this.captureKeyUp, true);
-    },
-    onMouseLeave() {
-      this.capturing = false;
-      window.removeEventListener('keydown', this.captureKeyDown, true);
-      window.removeEventListener('keyup', this.captureKeyUp, true);
-      // Release any held keys
-      for (const key of Object.keys(this.activeKeys)) {
-        delete this.activeKeys[key];
-        this.$emit('keyaction', { type: 'keyup', key, componentId: this.componentId });
-      }
-    },
-    captureKeyDown(e) {
-      const mapped = KEYBOARD_TO_KEYPAD[e.key];
-      if (!mapped) return;
-      e.preventDefault();
-      e.stopPropagation();
-      if (this.activeKeys[mapped]) return; // already held
-      this.activeKeys[mapped] = true;
-      this.$emit('keyaction', { type: 'keydown', key: mapped, componentId: this.componentId });
-    },
-    captureKeyUp(e) {
-      const mapped = KEYBOARD_TO_KEYPAD[e.key];
-      if (!mapped) return;
-      e.preventDefault();
-      e.stopPropagation();
-      delete this.activeKeys[mapped];
-      this.$emit('keyaction', { type: 'keyup', key: mapped, componentId: this.componentId });
-    },
-  },
-  beforeUnmount() {
-    window.removeEventListener('keydown', this.captureKeyDown, true);
-    window.removeEventListener('keyup', this.captureKeyUp, true);
-  },
-  template: `
-        <div class="keypad-container" :class="{ capturing }"
-             @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-            <div class="keypad-grid">
-                <button v-for="btn in buttons" :key="btn.key"
-                        class="keypad-button"
-                        :class="[btn.classes, { active: activeKeys[btn.key] }]"
-                        :style="btn.style || ''"
-                        @mousedown="onDown(btn)"
-                        @mouseup="onUp(btn)"
-                        @mouseleave="onLeave(btn)">
-                    <span v-if="btn.helpIcon">?</span>
-                    <template v-else>{{ btn.label || '' }}</template>
-                </button>
-            </div>
-            <div v-if="capturing" class="keypad-capture-hint">Keyboard captured</div>
-        </div>
-    `,
-};
 
 // ── Main Application ─────────────────────────────────────────────────────────
 const app = createApp({
@@ -167,6 +52,25 @@ const app = createApp({
 
     isKeypad(component) {
       return ComponentInterrogation.isKeypad(component);
+    },
+
+    isDataReader(component) {
+      return ComponentInterrogation.isBarcodeReader(component) || ComponentInterrogation.isDocumentReader(component);
+    },
+
+    isHeadset(component) {
+      // Server sends `type` instead of `componentType`; isHeadset needs
+      // componentType to exclude Announcement components.
+      return ComponentInterrogation.isHeadset({
+        ...component,
+        componentType: component.type,
+      });
+    },
+
+    getReaderType(component) {
+      if (ComponentInterrogation.isDocumentReader(component)) return 'documentReader';
+      if (ComponentInterrogation.isBarcodeReader(component)) return 'barcodeReader';
+      return null;
     },
 
     hasNonPowerActions(component) {
@@ -448,9 +352,59 @@ const app = createApp({
         this.addLogEntry('error', `${type} failed: ${error.message}`);
       }
     },
+
+    async handleHeadsetInserted({ componentId }) {
+      const key = `inserted-${componentId}`;
+      if (this.pendingToggles[key]) return;
+
+      const currentValue = !!(this.getState(componentId).inserted);
+      const newValue = !currentValue;
+
+      this.pendingToggles[key] = true;
+      if (!this.componentStates[componentId]) {
+        this.componentStates[componentId] = {};
+      }
+      this.componentStates[componentId].inserted = newValue;
+      this.componentStates = { ...this.componentStates };
+
+      try {
+        await client.cmd(componentId, 'inserted', { inserted: newValue });
+        this.addLogEntry('sent', `inserted: ${newValue} on component #${componentId}`);
+        await this.refreshState();
+      } catch (error) {
+        this.componentStates[componentId].inserted = currentValue;
+        this.componentStates = { ...this.componentStates };
+        this.addLogEntry('error', `inserted failed for component #${componentId}: ${error.message}`);
+      } finally {
+        delete this.pendingToggles[key];
+        this.pendingToggles = { ...this.pendingToggles };
+      }
+    },
+
+    async handleMediaInserted({ componentId, inserted }) {
+      try {
+        await client.cmd(componentId, 'presence', { media_inserted: inserted });
+        this.addLogEntry('sent', `media_inserted: ${inserted} on component #${componentId}`);
+      } catch (error) {
+        this.addLogEntry('error', `media_inserted failed for component #${componentId}: ${error.message}`);
+      }
+    },
+
+    async handleSendData({ componentId, data, dsType }) {
+      try {
+        const args = { data };
+        if (dsType) args.dsType = dsType;
+        await client.cmd(componentId, 'input', args);
+        this.addLogEntry('sent', `input data on component #${componentId}` + (dsType ? ` (${dsType})` : ''));
+      } catch (error) {
+        this.addLogEntry('error', `input failed for component #${componentId}: ${error.message}`);
+      }
+    },
   },
 });
 
 app.component('toggle-switch', ToggleSwitch);
 app.component('keypad-ui', KeypadUI);
+app.component('data-reader-ui', DataReaderUI);
+app.component('headset-ui', HeadsetUI);
 app.mount('#app');

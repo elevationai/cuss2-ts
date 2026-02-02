@@ -1,4 +1,4 @@
-import { extractStatusCodeFromError } from '../tester-utils.js';
+import { extractStatusCodeFromError } from '../utils.js';
 
 export default {
   name: 'GenericComponent',

@@ -1,6 +1,6 @@
-import { Cuss2, Models, criticalErrors } from '../../dist/cuss2.esm.js';
-import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES } from './tester-data.js';
-import { extractStatusCodeFromError, validateURL, checkMixedContent, generateOAuthUrl } from './tester-utils.js';
+import { Cuss2, Models, criticalErrors } from '../../../dist/cuss2.esm.js';
+import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES } from './data.js';
+import { extractStatusCodeFromError, validateURL, checkMixedContent, generateOAuthUrl } from './utils.js';
 import ToggleSwitch from './components/ToggleSwitch.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';

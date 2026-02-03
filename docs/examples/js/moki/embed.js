@@ -178,7 +178,7 @@
 
   var toggle = document.createElement('button');
   toggle.id = 'moki-toggle';
-  toggle.textContent = 'MoKi';
+  toggle.textContent = 'MŏKi';
 
   var gear = document.createElement('button');
   gear.id = 'moki-gear';
@@ -200,10 +200,10 @@
   overlay.id = 'moki-modal-overlay';
   overlay.innerHTML =
     '<div id="moki-modal">' +
-      '<h3>MoKi Settings</h3>' +
+      '<h3>MŏKi Settings</h3>' +
       '<label for="moki-cfg-ws">WebSocket URL</label>' +
       '<input id="moki-cfg-ws" type="text" placeholder="auto-detect">' +
-      '<label for="moki-cfg-src">Moki Source URL</label>' +
+      '<label for="moki-cfg-src">Mŏki Source URL</label>' +
       '<input id="moki-cfg-src" type="text" placeholder="' + DEFAULT_SRC + '">' +
       '<label for="moki-cfg-pos">Position</label>' +
       '<select id="moki-cfg-pos"><option value="right">Right</option><option value="left">Left</option></select>' +

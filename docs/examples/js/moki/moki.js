@@ -15,7 +15,7 @@ let client = null;
 const app = createApp({
   data() {
     return {
-      wsUrl: 'ws://localhost:22222/devtools',
+      wsUrl: new URLSearchParams(window.location.search).get('ws') || 'ws://localhost:22222/devtools',
       connectionStatus: 'disconnected',
       components: [],
       componentStates: {},

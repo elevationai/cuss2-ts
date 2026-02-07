@@ -74,7 +74,7 @@ function validateComponentId(componentID: unknown) {
 export class Cuss2 extends EventEmitter {
   connection: Connection;
   environment: EnvironmentLevel = {} as EnvironmentLevel;
-  components: Record<string, BaseComponent> | undefined = undefined;
+  components: Record<number, BaseComponent> | undefined = undefined;
 
   // State management
   private _currentState: StateChange = new StateChange(AppState.STOPPED, AppState.STOPPED);
@@ -260,11 +260,12 @@ export class Cuss2 extends EventEmitter {
       const componentList = response.payload?.componentList as ComponentList;
       if (this.components) return componentList;
 
-      const components: Record<string, BaseComponent> = this.components = {};
+      const components: Record<number, BaseComponent> = this.components = {};
 
       //first find feeders & dispensers, so they can be linked when printers are created
       componentList.forEach((component) => {
-        const id = String(component.componentID);
+        const id = component.componentID;
+        if (id == null) return;
         let instance;
 
         if (isFeeder(component)) instance = new Feeder(component, this);
@@ -277,7 +278,8 @@ export class Cuss2 extends EventEmitter {
       });
 
       componentList.forEach((component) => {
-        const id = String(component.componentID);
+        const id = component.componentID;
+        if (id == null) return;
         let instance;
 
         if (isAnnouncement(component)) {

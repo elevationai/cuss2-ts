@@ -4,6 +4,7 @@ import ToggleSwitch from './components/ToggleSwitch.js';
 import KeypadUI from './components/KeypadUI.js';
 import DataReaderUI from './components/DataReaderUI.js';
 import HeadsetUI from './components/HeadsetUI.js';
+import AnnouncementUI from './components/AnnouncementUI.js';
 
 const { createApp } = Vue;
 
@@ -21,6 +22,7 @@ const app = createApp({
       componentStates: {},
       pendingToggles: {},
       tenants: {},
+      announcementLogs: {},
     };
   },
 
@@ -65,6 +67,18 @@ const app = createApp({
         ...component,
         componentType: component.type,
       });
+    },
+
+    isAnnouncement(component) {
+      // Server sends `type` instead of `componentType`
+      return ComponentInterrogation.isAnnouncement({
+        ...component,
+        componentType: component.type,
+      });
+    },
+
+    getAnnouncementLogs(componentId) {
+      return this.announcementLogs[componentId] || [];
     },
 
     getReaderType(component) {
@@ -135,6 +149,12 @@ const app = createApp({
 
         client.on('message', (msg) => {
           this.addLogEntry('received', 'Platform message', msg);
+
+          // Announcement play event
+          if (msg.event === 'announcement_play' && msg.componentID != null) {
+            this.handleAnnouncementPlay(msg);
+            return;
+          }
 
           // Component update broadcast
           if ('componentID' in msg && !msg.action) {
@@ -253,6 +273,35 @@ const app = createApp({
         });
         this.addLogEntry('received', `Tenant ${tenant} (all brands) state changed to ${state}`);
       }
+    },
+
+    handleAnnouncementPlay(msg) {
+      const id = msg.componentID;
+      if (!this.announcementLogs[id]) {
+        this.announcementLogs[id] = [];
+      }
+
+      // Extract text from dataRecords
+      // Structure: { dsTypes: ["DS_TYPES_SSML"], data: "<speak>...</speak>", encoding: "TEXT" }
+      let text = '';
+      if (msg.dataRecords && Array.isArray(msg.dataRecords)) {
+        for (const record of msg.dataRecords) {
+          if (typeof record.data === 'string') {
+            // Strip SSML/XML tags to get plain text
+            text = record.data.replace(/<[^>]*>/g, '').trim();
+            break;
+          }
+        }
+      }
+
+      const entry = {
+        time: new Date().toLocaleTimeString(),
+        text: text || '(no text)',
+      };
+
+      this.announcementLogs[id].push(entry);
+      this.announcementLogs = { ...this.announcementLogs };
+      this.addLogEntry('received', `Announcement #${id}: "${text}"`);
     },
 
     // ── Actions ──────────────────────────────────────────────────────
@@ -407,4 +456,5 @@ app.component('toggle-switch', ToggleSwitch);
 app.component('keypad-ui', KeypadUI);
 app.component('data-reader-ui', DataReaderUI);
 app.component('headset-ui', HeadsetUI);
+app.component('announcement-ui', AnnouncementUI);
 app.mount('#app');

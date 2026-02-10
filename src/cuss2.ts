@@ -78,9 +78,8 @@ export class Cuss2 extends EventEmitter {
 
   // State management
   private _currentState: StateChange = new StateChange(AppState.STOPPED, AppState.STOPPED);
-  /**
-   * How much gold the party starts with.
-   */
+  private _sessionStartedAt: number | undefined = undefined;
+
   bagTagPrinter?: BagTagPrinter;
   boardingPassPrinter?: BoardingPassPrinter;
   documentReader?: DocumentReader;
@@ -104,6 +103,23 @@ export class Cuss2 extends EventEmitter {
 
   get state(): AppState {
     return this._currentState.current;
+  }
+
+  /**
+   * Returns the timestamp (ms since epoch) when the current session started,
+   * or undefined if no session is active.
+   */
+  get sessionStartedAt(): number | undefined {
+    return this._sessionStartedAt;
+  }
+
+  /**
+   * Returns the duration of the current active session in milliseconds,
+   * or undefined if no session is active.
+   */
+  get sessionDuration(): number | undefined {
+    if (this._sessionStartedAt == null) return undefined;
+    return Date.now() - this._sessionStartedAt;
   }
 
   get connected(): Promise<unknown> {
@@ -209,12 +225,14 @@ export class Cuss2 extends EventEmitter {
         }
       }
       else if (currentState === AppState.ACTIVE) {
+        this._sessionStartedAt = Date.now();
         this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
         this.accessibleMode = payload?.applicationActivation?.accessibleMode || false;
         this.language = payload?.applicationActivation?.languageID || "en-US";
         super.emit("activated", payload?.applicationActivation);
       }
       if (prevState === AppState.ACTIVE) {
+        this._sessionStartedAt = undefined;
         super.emit("deactivated", currentState as AppState);
       }
     }

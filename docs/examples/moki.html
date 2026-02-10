@@ -111,6 +111,11 @@
                                         :pending="!!pendingToggles['inserted-' + component.componentID]"
                                         @toggle-inserted="handleHeadsetInserted"></headset-ui>
 
+                            <!-- Announcement UI -->
+                            <announcement-ui v-else-if="isAnnouncement(component)"
+                                             :component-id="component.componentID"
+                                             :logs="getAnnouncementLogs(component.componentID)"></announcement-ui>
+
                             <!-- Standard Actions -->
                             <template v-else-if="hasNonPowerActions(component)">
                                 <template v-for="(params, actionName) in component.actions" :key="actionName">

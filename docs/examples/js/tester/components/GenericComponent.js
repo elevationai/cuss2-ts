@@ -27,6 +27,25 @@ export default {
       return this.buttonStates[key] === 'loading';
     },
 
+    generateTestData() {
+      const deviceType = this.component.deviceType;
+
+      if (deviceType === 'BAG_TAG_PRINTER') {
+        this.inputs.setupText = 'BTT0801~J 500262=#01C0M5493450304#02C0M5493450304#03B1MA020250541=06#04B1MK200464141=06#05L0 A258250000#';
+        this.inputs.sendText = 'BTP080101#01THIS IS A#02BAG TAG#03123#04456#';
+        this.$emit('log', { message: 'Generated test data for Bag Tag Printer', type: 'info' });
+      } else if (deviceType === 'BOARDING_PASS_PRINTER') {
+        this.inputs.setupText = 'PT##$S6A#@;#TICK#CHEC#BOAR#0101110112011301210122012301C#0201A34#03BRB061661#0430G25F';
+        this.inputs.sendText = 'CP#A#01S#CP#C01#02 #03M1THIS IS A BARCODE#04THIS IS A BOARDING PASS#';
+        this.$emit('log', { message: 'Generated test data for Boarding Pass Printer', type: 'info' });
+      }
+    },
+
+    showGenerateTestButton() {
+      return this.component.deviceType === 'BAG_TAG_PRINTER' ||
+             this.component.deviceType === 'BOARDING_PASS_PRINTER';
+    },
+
     async handleAction(action, buttonKey) {
       this.buttonStates[buttonKey] = 'loading';
       const name = this.component.deviceType;
@@ -126,7 +145,15 @@ export default {
       <div class="component-action-column left-column">
         <!-- Setup Section -->
         <template v-if="hasCap('setup')">
-          <label class="component-action-label">Setup</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label class="component-action-label" style="margin: 0;">Setup</label>
+            <button v-if="showGenerateTestButton()"
+                    class="component-action-btn"
+                    style="padding: 4px 12px; font-size: 12px; min-width: auto; margin: 0;"
+                    @click="generateTestData()">
+              Generate Test
+            </button>
+          </div>
           <textarea class="component-action-textarea"
                     placeholder="Setup data" rows="5"
                     v-model="inputs.setupText"></textarea>

@@ -981,3 +981,54 @@ button.secondary:hover:not(:disabled) {
     color: #64ffda;
     font-weight: 600;
 }
+
+/* Announcement UI Styles */
+.announcement-ui {
+    padding: 8px;
+}
+
+.announcement-label {
+    font-size: 0.9rem;
+    color: #64ffda;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.announcement-log {
+    max-height: 150px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    padding: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.announcement-empty {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    padding: 10px;
+}
+
+.announcement-entry {
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    background: rgba(100, 255, 218, 0.08);
+    border-left: 2px solid #64ffda;
+    border-radius: 0 4px 4px 0;
+}
+
+.announcement-entry:last-child {
+    margin-bottom: 0;
+}
+
+.announcement-time {
+    color: #666;
+    font-size: 0.75rem;
+    margin-right: 8px;
+}
+
+.announcement-text {
+    color: #e0e0e0;
+}

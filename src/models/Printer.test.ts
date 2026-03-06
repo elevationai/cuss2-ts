@@ -37,11 +37,11 @@ const createMeta = (
   applicationID: "test-application",
   componentID,
   componentState,
-  currentApplicationState: ({
+  currentApplicationState: {
     applicationStateCode: ApplicationStateCodes.ACTIVE,
     accessibleMode: false,
     applicationStateChangeReasonCode: ApplicationStateChangeReasonCodes.NOT_APPLICABLE,
-  } as ApplicationState),
+  } as ApplicationState,
   messageCode,
   platformDirective,
 } as PlatformDataMeta);

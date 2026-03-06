@@ -5,6 +5,7 @@ import ToggleSwitch from './components/ToggleSwitch.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';
 import GenericComponent from './components/GenericComponent.js';
+import PrinterComponent from './components/PrinterComponent.js';
 import DocumentReader from './components/DocumentReader.js';
 import BarcodeReader from './components/BarcodeReader.js';
 import EventLog from './components/EventLog.js';
@@ -771,6 +772,15 @@ const app = createApp({
       }
       this.components = comps;
       this.componentStatuses = statuses;
+
+      const collapseByDefault = ['BAG_TAG_FEEDER', 'BAG_TAG_DISPENSER', 'BOARDING_PASS_FEEDER', 'BOARDING_PASS_DISPENSER', 'FEEDER', 'DISPENSER'];
+      const collapsed = {};
+      for (const [id, component] of Object.entries(comps)) {
+        if (collapseByDefault.includes(component.deviceType)) {
+          collapsed[id] = true;
+        }
+      }
+      this.collapsedComponents = collapsed;
     },
 
     refreshComponent(id) {
@@ -1126,6 +1136,7 @@ app.component('toggle-switch', ToggleSwitch);
 app.component('keypad-component', Keypad);
 app.component('headset-component', Headset);
 app.component('generic-component', GenericComponent);
+app.component('printer-component', PrinterComponent);
 app.component('document-reader-component', DocumentReader);
 app.component('barcode-reader-component', BarcodeReader);
 app.component('event-log', EventLog);

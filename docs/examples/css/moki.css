@@ -896,6 +896,21 @@ button.secondary:hover:not(:disabled) {
     display: none; /* Hide the redundant state text since color shows it */
 }
 
+.desktop-switch-button {
+    background: rgba(90, 200, 250, 0.1) !important;
+    border: 1px solid rgba(90, 200, 250, 0.4) !important;
+    color: #5AC8FA !important;
+    font-size: 0.85rem !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+}
+
+.desktop-switch-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(90, 200, 250, 0.3);
+    background: rgba(90, 200, 250, 0.25) !important;
+}
+
 /* Data Reader (Barcode/Document) Styles */
 .data-reader-container {
     display: flex;

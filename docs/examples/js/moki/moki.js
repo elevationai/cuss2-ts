@@ -22,6 +22,7 @@ const app = createApp({
       componentStates: {},
       pendingToggles: {},
       tenants: {},
+      tenantDesktops: {},
       announcementLogs: {},
     };
   },
@@ -31,7 +32,13 @@ const app = createApp({
       const list = [];
       for (const [tenantId, brands] of Object.entries(this.tenants)) {
         for (const [brandId, state] of Object.entries(brands)) {
-          list.push({ id: `${tenantId}-${brandId}`, tenant: tenantId, brand: brandId, state });
+          list.push({
+            id: `${tenantId}-${brandId}`,
+            tenant: tenantId,
+            brand: brandId,
+            state,
+            desktop: this.tenantDesktops[tenantId] || brandId,
+          });
         }
       }
       return list;
@@ -219,7 +226,9 @@ const app = createApp({
       }
 
       try {
-        this.tenants = await client.listTenants();
+        const response = await client.sendWithResponse({ action: 'list_tenants' });
+        if (response.tenants) this.tenants = response.tenants;
+        if (response.desktops) this.tenantDesktops = response.desktops;
         this.addLogEntry('sent', 'Requested tenant list - OK');
       } catch (error) {
         this.addLogEntry('error', `Failed to get tenants: ${error.message}`);
@@ -238,6 +247,20 @@ const app = createApp({
         setTimeout(() => this.fetchTenants(), 500);
       } catch (error) {
         this.addLogEntry('error', `Failed to activate brand: ${error.message}`);
+      }
+    },
+
+    async switchDesktop(desktopName) {
+      if (!client || !client.isConnected()) {
+        this.addLogEntry('error', 'Not connected');
+        return;
+      }
+
+      try {
+        await client.sendWithResponse({ action: 'switch_desktop', desktop: desktopName });
+        this.addLogEntry('sent', `Switched to desktop: ${desktopName} - OK`);
+      } catch (error) {
+        this.addLogEntry('error', `Failed to switch desktop: ${error.message}`);
       }
     },
 

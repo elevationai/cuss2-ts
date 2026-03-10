@@ -952,6 +952,9 @@ const app = createApp({
           const ref = this.$refs['docreader-' + docReaderId];
           const docReader = Array.isArray(ref) ? ref[0] : ref;
           docReader?.updateData(dataRecords);
+          // Flash DATA_PRESENT on the status badge, then restore actual status
+          this.updateComponentStatus(docReaderId, 'DATA_PRESENT');
+          setTimeout(() => this.updateComponentStatus(docReaderId, cuss2.documentReader?.status), 1500);
         });
       }
 

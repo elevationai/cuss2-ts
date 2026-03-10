@@ -43,6 +43,18 @@
                         <br>
                         <span style="font-size: 0.85rem; font-weight: 600;">{{ tb.state }}</span>
                     </button>
+                    <button v-for="tb in tenantBrandList" :key="'desk-' + tb.id"
+                            v-if="tb.desktop"
+                            class="tenant-button desktop-switch-button"
+                            @click="switchDesktop(tb.desktop)"
+                            :title="'Switch to desktop: ' + tb.desktop">
+                        {{ tb.desktop }}
+                    </button>
+                    <button class="tenant-button desktop-switch-button"
+                            @click="switchDesktop('Default')"
+                            title="Switch to home desktop">
+                        Default
+                    </button>
                 </div>
             </div>
 

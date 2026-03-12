@@ -1564,6 +1564,26 @@ input.field-problem {
   font-size: 14px;
 }
 
+.dismiss-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.dismiss-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -1630,100 +1650,6 @@ input.field-problem {
 .acknowledge-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.mixed-content-banner {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #f39c12, #e67e22);
-  color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(243, 156, 18, 0.4);
-  z-index: 1000;
-  max-width: 500px;
-  animation: slideDown 0.5s ease-out;
-}
-
-.mixed-content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.mixed-content-header strong {
-  font-size: 16px;
-}
-
-.dismiss-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s ease;
-}
-
-.dismiss-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.mixed-content-banner p {
-  margin: 8px 0;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.mixed-content-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  flex-wrap: wrap;
-}
-
-.suggested-url-btn {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  flex: 1;
-  min-width: 200px;
-}
-
-.suggested-url-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
-}
-
-.continue-anyway-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.continue-anyway-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
 }
 
 /* ===== TOKEN URL CONTAINER ===== */

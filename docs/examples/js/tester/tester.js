@@ -1,6 +1,6 @@
 import { Cuss2, Models, criticalErrors } from '../../../dist/cuss2.esm.js';
 import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES } from './data.js';
-import { extractStatusCodeFromError, validateURL, checkMixedContent, generateOAuthUrl } from './utils.js';
+import { extractStatusCodeFromError, validateURL, generateOAuthUrl } from './utils.js';
 import ToggleSwitch from './components/ToggleSwitch.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';
@@ -92,7 +92,6 @@ const app = createApp({
       accessibleModeBanner: { visible: false, seconds: 0 },
       reconnectionBanner: { visible: false, attempts: 0 },
       reconnectionSuccess: { visible: false },
-      mixedContentBanner: { visible: false, currentProtocol: '', targetProtocol: '', suggestedUrl: '' },
 
       // Bottom panel
       logPanelHeight: Math.round(window.innerHeight * 0.25),
@@ -349,18 +348,6 @@ const app = createApp({
 
     async connect(config) {
       try {
-        const mixedContentCheck = checkMixedContent(config.wss);
-        if (mixedContentCheck.hasMixedContent) {
-          this.logInfo('Mixed content detected, showing warning...');
-          try {
-            const userChoice = await this.showMixedContentWarning(mixedContentCheck);
-            if (userChoice === 'suggested') return;
-          } catch {
-            this.logInfo('Connection cancelled by user');
-            this.connectionState = 'disconnected';
-            return;
-          }
-        }
         await this.performConnection(config);
       } catch (error) {
         this.logError(`Connection failed: ${error.message}`);
@@ -437,7 +424,6 @@ const app = createApp({
     resetUI() {
       this.dismissTimeoutWarning();
       this.dismissAccessibleModeToast();
-      this.mixedContentBanner.visible = false;
       this.connectionState = 'disconnected';
       this.components = {};
       this.componentStatuses = {};
@@ -1030,35 +1016,6 @@ const app = createApp({
       } catch (error) {
         this.logError(`Failed to acknowledge accessible mode: ${error.message}`);
       }
-    },
-
-    showMixedContentWarning(info) {
-      this.mixedContentBanner = {
-        visible: true,
-        currentProtocol: info.currentProtocol.replace(':', '').toUpperCase(),
-        targetProtocol: info.targetProtocol.replace(':', '').toUpperCase(),
-        suggestedUrl: info.suggestedUrl,
-      };
-      return new Promise((resolve, reject) => {
-        this._mixedContentResolve = resolve;
-        this._mixedContentReject = reject;
-      });
-    },
-
-    handleMixedContentChoice(choice) {
-      const suggestedUrl = this.mixedContentBanner.suggestedUrl;
-      this.mixedContentBanner.visible = false;
-      if (choice === 'dismiss') {
-        this._mixedContentReject?.(new Error('User cancelled connection'));
-      } else if (choice === 'suggested') {
-        this.form.wss = suggestedUrl;
-        this.logInfo(`Switched to secure URL: ${suggestedUrl}`);
-        this._mixedContentResolve?.('suggested');
-      } else {
-        this._mixedContentResolve?.('continue');
-      }
-      this._mixedContentResolve = null;
-      this._mixedContentReject = null;
     },
 
     // ── Button State Management ───────────────────────────────────────

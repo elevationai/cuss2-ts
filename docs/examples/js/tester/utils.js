@@ -26,24 +26,6 @@ export function validateURL(url, urlType = 'URL') {
   }
 }
 
-export function checkMixedContent(targetUrl) {
-  if (location.protocol !== 'https:') return { hasMixedContent: false };
-  try {
-    const url = new URL(targetUrl);
-    const isHttpTarget = url.protocol === 'http:' || url.protocol === 'ws:';
-    return {
-      hasMixedContent: isHttpTarget,
-      currentProtocol: location.protocol,
-      targetProtocol: url.protocol,
-      suggestedUrl: isHttpTarget
-        ? targetUrl.replace(/^(ws|http):/, url.protocol === 'ws:' ? 'wss:' : 'https:')
-        : targetUrl,
-    };
-  } catch {
-    return { hasMixedContent: false };
-  }
-}
-
 export function generateOAuthUrl(wsUrl) {
   if (!wsUrl) return '';
   try {

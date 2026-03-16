@@ -597,9 +597,7 @@ export class Cuss2 extends EventEmitter {
   async requestActiveState(brand?: string): Promise<PlatformData | undefined> {
     this._ensureConnected();
     const okToChange = this.state === AppState.AVAILABLE || this.state === AppState.ACTIVE;
-    return await (okToChange
-      ? this.api.staterequest(AppState.ACTIVE, ChangeReason.NOT_APPLICABLE, "", brand)
-      : Promise.resolve(undefined));
+    return await (okToChange ? this.api.staterequest(AppState.ACTIVE, ChangeReason.NOT_APPLICABLE, "", brand) : Promise.resolve(undefined));
   }
 
   async requestStoppedState(): Promise<PlatformData | undefined> {

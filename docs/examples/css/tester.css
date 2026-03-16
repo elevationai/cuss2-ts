@@ -1120,13 +1120,33 @@ input.field-problem {
 
 .dr-read-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 6px;
+}
+
+.data-present-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: rgba(255, 193, 7, 0.25);
+  color: #ffc107;
+  border: 1px solid #ffc107;
+  animation: dataPresentFade 2s ease forwards;
+}
+
+@keyframes dataPresentFade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .dr-read-time {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.4);
+  margin-left: auto;
 }
 
 .dr-selection-summary {

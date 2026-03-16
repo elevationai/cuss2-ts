@@ -12,6 +12,8 @@ export default {
       buttonStates: {},
       inputs: { setupText: '', sendText: '', playText: '' },
       dataDisplay: '',
+      _dataPresentTimeout: null,
+      showDataPresent: false,
     };
   },
   methods: {
@@ -117,7 +119,17 @@ export default {
         displayText = JSON.stringify(dataRecords, null, 2);
       }
       this.dataDisplay = displayText;
+      this.showDataPresent = true;
+      if (this._dataPresentTimeout) clearTimeout(this._dataPresentTimeout);
+      this._dataPresentTimeout = setTimeout(() => { this.showDataPresent = false; }, 2000);
     },
+  },
+
+  beforeUnmount() {
+    if (this._dataPresentTimeout) {
+      clearTimeout(this._dataPresentTimeout);
+      this._dataPresentTimeout = null;
+    }
   },
 
   template: `
@@ -228,7 +240,10 @@ export default {
       <div class="component-action-column right-column">
         <!-- Read Section -->
         <template v-if="hasCap('read')">
-          <label class="component-action-label">Read</label>
+          <div class="dr-read-header">
+            <label class="component-action-label">Data</label>
+            <span v-if="showDataPresent" class="data-present-pill" :key="Date.now()">DATA_PRESENT</span>
+          </div>
           <div class="data-display-container">
             <div class="data-display-box">
               <template v-if="dataDisplay">{{ dataDisplay }}</template>

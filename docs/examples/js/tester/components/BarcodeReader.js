@@ -16,6 +16,8 @@ export default {
       lastReadTimestamp: '',
       lastReadAgo: '',
       _agoInterval: null,
+      _dataPresentTimeout: null,
+      showDataPresent: false,
       buttonStates: {},
     };
   },
@@ -98,6 +100,9 @@ export default {
       if (!this._agoInterval) {
         this._agoInterval = setInterval(() => this.updateAgo(), 1000);
       }
+      this.showDataPresent = true;
+      if (this._dataPresentTimeout) clearTimeout(this._dataPresentTimeout);
+      this._dataPresentTimeout = setTimeout(() => { this.showDataPresent = false; }, 2000);
     },
 
     updateAgo() {
@@ -126,6 +131,10 @@ export default {
       clearInterval(this._agoInterval);
       this._agoInterval = null;
     }
+    if (this._dataPresentTimeout) {
+      clearTimeout(this._dataPresentTimeout);
+      this._dataPresentTimeout = null;
+    }
   },
 
   template: `
@@ -153,7 +162,8 @@ export default {
       <!-- Right Column: Incoming data display -->
       <div class="component-action-column right-column">
         <div class="dr-read-header">
-          <label class="component-action-label">Read</label>
+          <label class="component-action-label">Data</label>
+          <span v-if="showDataPresent" class="data-present-pill" :key="lastReadAt">DATA_PRESENT</span>
           <span v-if="lastReadAgo" class="dr-read-time">{{ lastReadTimestamp }} ({{ lastReadAgo }})</span>
         </div>
         <div class="data-display-container">

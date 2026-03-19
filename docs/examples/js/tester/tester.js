@@ -544,10 +544,10 @@ const app = createApp({
         }
       });
 
-      cuss2.on('activated', () => {
+      cuss2.on('activated', (activation) => {
         this.logEvent('Application activated');
         if (cuss2) {
-          this.appInfo.brand = cuss2.brand || '-';
+          this.appInfo.brand = activation?.applicationBrand || '-';
           this.appInfo.multiTenant = cuss2.multiTenant ? 'Yes' : 'No';
           this.appInfo.accessibleMode = cuss2.accessibleMode ? 'Yes' : 'No';
           this.appInfo.language = cuss2.language || '-';

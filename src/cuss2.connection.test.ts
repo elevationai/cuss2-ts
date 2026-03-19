@@ -109,7 +109,7 @@ Deno.test("1.3 - Connection not established error should throw when API calls ma
     () => cuss2.requestInitializeState(),
     () => cuss2.requestUnavailableState(),
     () => cuss2.requestAvailableState(),
-    () => cuss2.requestActiveState(),
+    () => cuss2.requestActiveState("TST"),
     () => cuss2.requestStoppedState(),
     () => cuss2.requestReload(),
   ];

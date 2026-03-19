@@ -77,6 +77,7 @@ export interface ComponentAPI {
     state: ApplicationStateCodes,
     reasonCode?: ApplicationStateChangeReasonCodes,
     reason?: string,
+    brand?: string,
   ) => Promise<PlatformData | undefined>;
 
   /**

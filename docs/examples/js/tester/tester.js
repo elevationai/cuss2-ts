@@ -390,6 +390,22 @@ const app = createApp({
       await cuss2.connected;
 
       this.lastConfig = config;
+
+      // Parse brands from form field, fall back to clientId
+      const brandsStr = config.brands?.trim();
+      this.brands = brandsStr
+        ? brandsStr.split(',').map(b => b.trim()).filter(Boolean)
+        : [config.clientId];
+      this.selectedBrand = this.brands[0];
+
+      // One-time override from BRAND URL param (initial connection only)
+      if (!this.wasEverConnected && queryConfig.brand) {
+        const trimmedBrand = queryConfig.brand.trim();
+        if (this.brands.includes(trimmedBrand)) {
+          this.selectedBrand = trimmedBrand;
+        }
+      }
+
       this.logSuccess('Connected successfully!');
       this.updateUrlWithConnectionParams(config);
 
@@ -441,6 +457,8 @@ const app = createApp({
       this.appInfo = { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' };
       this.environment = null;
       this.isOnline = false;
+      this.brands = [];
+      this.selectedBrand = null;
     },
 
     updateUrlWithConnectionParams(formData) {
@@ -450,6 +468,7 @@ const app = createApp({
       params.set('CUSS-WSS', formData.wss);
       if (formData.tokenUrl?.trim()) params.set('OAUTH-URL', formData.tokenUrl);
       if (formData.deviceId?.trim()) params.set('DEVICE-ID', formData.deviceId);
+      if (formData.brands?.trim()) params.set('BRANDS', formData.brands);
       if (queryConfig.go) params.set('go', queryConfig.go);
       window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
       this.logInfo('URL updated with connection parameters');

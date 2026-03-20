@@ -403,6 +403,8 @@ const app = createApp({
         const trimmedBrand = queryConfig.brand.trim();
         if (this.brands.includes(trimmedBrand)) {
           this.selectedBrand = trimmedBrand;
+        } else {
+          this.logInfo(`BRAND param "${trimmedBrand}" not in configured brands [${this.brands.join(', ')}], ignoring`);
         }
       }
 

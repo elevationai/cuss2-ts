@@ -689,7 +689,7 @@ const app = createApp({
         }
 
         if (action === 'active') {
-          await cuss2.requestActiveState(this.appInfo.brand !== '-' ? this.appInfo.brand : cuss2.brand);
+          await cuss2.requestActiveState(this.selectedBrand);
         } else {
           await cuss2[request.method]();
         }
@@ -722,7 +722,7 @@ const app = createApp({
       if (s1 !== ApplicationStateCodes.UNAVAILABLE || targetIndex === 0) return;
       const s2 = (await cuss2.requestAvailableState())?.meta.currentApplicationState.applicationStateCode;
       if (s2 !== ApplicationStateCodes.AVAILABLE || targetIndex === 1) return;
-      await cuss2.requestActiveState(this.appInfo.brand !== '-' ? this.appInfo.brand : cuss2.brand);
+      await cuss2.requestActiveState(this.selectedBrand);
     },
 
     // ── Component Helpers ─────────────────────────────────────────────

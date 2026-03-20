@@ -25,6 +25,8 @@ const queryConfig = {
   tokenUrl: urlParams.get('OAUTH-URL'),
   deviceId: urlParams.get('DEVICE-ID'),
   go: urlParams.get('go'),
+  brands: urlParams.get('BRANDS'),
+  brand: urlParams.get('BRAND'),
 };
 
 const STATE_REQUESTS = {
@@ -60,6 +62,7 @@ const app = createApp({
         clientSecret: 'secret',
         deviceId: '',
         tokenUrl: '',
+        brands: '',
       },
       fieldErrors: {},
       fieldProblem: null,
@@ -78,6 +81,10 @@ const app = createApp({
       appState: 'STOPPED',
       appInfo: { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' },
       isOnline: false,
+
+      // Brand selection
+      brands: [],
+      selectedBrand: null,
 
       // Environment
       environment: null,
@@ -1074,6 +1081,7 @@ const app = createApp({
     if (queryConfig.wss) this.form.wss = queryConfig.wss;
     if (queryConfig.tokenUrl) this.form.tokenUrl = queryConfig.tokenUrl;
     if (queryConfig.deviceId) this.form.deviceId = queryConfig.deviceId;
+    if (queryConfig.brands) this.form.brands = queryConfig.brands;
 
     this.logInfo('CUSS2 Browser Client Demo ready');
 

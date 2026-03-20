@@ -102,6 +102,14 @@
               <span class="state-badge" :class="appState">{{ appState }}</span>
             </div>
 
+            <div class="brand-selector env-item" v-if="brands.length > 0">
+              <span class="env-label">Selected Brand:</span>
+              <span v-if="brands.length === 1" class="env-value">{{ selectedBrand }}</span>
+              <select v-else v-model="selectedBrand" class="env-value">
+                <option v-for="b in brands" :key="b" :value="b">{{ b }}</option>
+              </select>
+            </div>
+
             <div v-if="showUnavailableWarning" class="availability-reasons-warning">
               <strong>Application forced to UNAVAILABLE</strong> because 1 or more required devices are unhealthy.
             </div>

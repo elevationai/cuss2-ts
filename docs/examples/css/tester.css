@@ -556,6 +556,22 @@ input.field-problem {
   border: 1px solid #dc3545;
 }
 
+.brand-selector {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-selector select {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 6px;
+  color: #e0e0e0;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
 /* ===== COMPONENT LIST ===== */
 .component-list {
   border: 1px solid rgba(100, 255, 218, 0.2);

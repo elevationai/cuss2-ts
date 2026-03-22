@@ -227,17 +227,22 @@ export class Cuss2 extends EventEmitter {
       }
       else if (currentState === AppState.ACTIVE) {
         this._sessionStartedAt = Date.now();
-        this.brand = meta.currentApplicationState.applicationBrand;
-        this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
-        this.accessibleMode = payload?.applicationActivation?.accessibleMode || false;
-        this.language = payload?.applicationActivation?.languageID || "en-US";
-        super.emit("activated", payload?.applicationActivation);
       }
       if (prevState === AppState.ACTIVE) {
         this._sessionStartedAt = undefined;
         this.brand = undefined;
         super.emit("deactivated", currentState as AppState);
       }
+    }
+
+    // Emit activated when we receive the applicationActivation payload
+    // (from the solicited response, not the unsolicited APPLICATION_UPDATE)
+    if (currentState === AppState.ACTIVE && payload?.applicationActivation) {
+      this.brand = meta.currentApplicationState.applicationBrand;
+      this.multiTenant = payload.applicationActivation.executionMode === "MAM";
+      this.accessibleMode = payload.applicationActivation.accessibleMode || false;
+      this.language = payload.applicationActivation.languageID || "en-US";
+      super.emit("activated", payload.applicationActivation);
     }
 
     if (typeof meta.componentID === "number" && this.components) {

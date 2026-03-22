@@ -62,7 +62,7 @@ const app = createApp({
         clientSecret: 'secret',
         deviceId: '',
         tokenUrl: '',
-        brands: '',
+        brands: 'EAI',
       },
       fieldErrors: {},
       fieldProblem: null,

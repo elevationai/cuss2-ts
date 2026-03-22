@@ -50,7 +50,7 @@
                          :placeholder="brandTags.length ? '' : 'Type brand and press Enter'"
                          @keydown.enter.prevent="addBrandTag"
                          @keydown.tab.prevent="addBrandTag"
-                         @keydown.,="addBrandTag"
+                         @keydown="$event.key === ',' && addBrandTag()"
                          @keydown.backspace="!brandInputValue && removeBrandTag(brandTags.length - 1)">
                 </div>
                 <div v-if="!brandTags.length" class="field-hint">Defaults to {{ form.clientId }}</div>

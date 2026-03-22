@@ -40,9 +40,20 @@
                 <input type="password" id="clientSecret" v-model="form.clientSecret" required>
               </div>
               <div class="form-group">
-                <label for="brands">Brands (optional)</label>
-                <input type="text" id="brands" v-model="form.brands"
-                       :placeholder="'Defaults to ' + form.clientId">
+                <label>Brands (optional)</label>
+                <div class="tag-input" @click="$refs.brandInput.focus()">
+                  <span v-for="(tag, i) in brandTags" :key="i" class="tag-chip">
+                    {{ tag }}
+                    <span class="tag-chip-remove" @click.stop="removeBrandTag(i)">&times;</span>
+                  </span>
+                  <input ref="brandInput" type="text" v-model="brandInputValue"
+                         :placeholder="brandTags.length ? '' : 'Type brand and press Enter'"
+                         @keydown.enter.prevent="addBrandTag"
+                         @keydown.tab.prevent="addBrandTag"
+                         @keydown.,="addBrandTag"
+                         @keydown.backspace="!brandInputValue && removeBrandTag(brandTags.length - 1)">
+                </div>
+                <div v-if="!brandTags.length" class="field-hint">Defaults to {{ form.clientId }}</div>
               </div>
               <div class="form-group">
                 <label for="deviceId">Device ID (optional)</label>
@@ -104,8 +115,7 @@
 
             <div class="brand-selector env-item" v-if="brands.length > 0">
               <span class="env-label">Selected Brand:</span>
-              <span v-if="brands.length === 1" class="env-value">{{ selectedBrand }}</span>
-              <select v-else v-model="selectedBrand" class="env-value">
+              <select v-model="selectedBrand" class="env-value">
                 <option v-for="b in brands" :key="b" :value="b">{{ b }}</option>
               </select>
             </div>

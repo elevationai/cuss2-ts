@@ -85,6 +85,7 @@ const app = createApp({
       // Brand selection
       brands: [],
       selectedBrand: null,
+      brandInputValue: '',
 
       // Environment
       environment: null,
@@ -127,6 +128,10 @@ const app = createApp({
   computed: {
     isConnected() { return this.connectionState === 'connected'; },
     isConnecting() { return this.connectionState === 'connecting'; },
+
+    brandTags() {
+      return this.form.brands ? this.form.brands.split(',').map(b => b.trim()).filter(Boolean) : [];
+    },
 
     componentList() {
       return Object.entries(this.components);
@@ -224,6 +229,21 @@ const app = createApp({
   },
 
   methods: {
+    // ── Brand Tag Input ───────────────────────────────────────────────
+    addBrandTag() {
+      const val = this.brandInputValue.replace(',', '').trim();
+      if (val && !this.brandTags.includes(val)) {
+        this.form.brands = [...this.brandTags, val].join(',');
+      }
+      this.brandInputValue = '';
+    },
+    removeBrandTag(index) {
+      if (index < 0 || index >= this.brandTags.length) return;
+      const tags = [...this.brandTags];
+      tags.splice(index, 1);
+      this.form.brands = tags.join(',');
+    },
+
     // ── Logging ────────────────────────────────────────────────────────
     log(message, type = 'info') {
       this.$refs.eventLog?.log(message, type);

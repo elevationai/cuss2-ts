@@ -114,7 +114,7 @@
 
             <div class="brand-selector env-item" v-if="brands.length > 0">
               <span class="env-label">Selected Brand:</span>
-              <select v-model="selectedBrand" class="env-value">
+              <select v-model="selectedBrand" class="env-value" :disabled="appState === 'ACTIVE'">
                 <option v-for="b in brands" :key="b" :value="b">{{ b }}</option>
               </select>
             </div>

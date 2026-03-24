@@ -61,7 +61,7 @@ Deno.test("2.2 - State transitions should handle valid state transitions correct
   await testStateTransition(AppState.UNAVAILABLE, AppState.AVAILABLE, () => cuss2.requestAvailableState(), 2);
 
   // Test AVAILABLE → ACTIVE
-  await testStateTransition(AppState.AVAILABLE, AppState.ACTIVE, () => cuss2.requestActiveState(), 3, {
+  await testStateTransition(AppState.AVAILABLE, AppState.ACTIVE, () => cuss2.requestActiveState("TST"), 3, {
     applicationActivation: {
       executionMode: "SAM",
       accessibleMode: false,
@@ -80,10 +80,10 @@ Deno.test("2.3 - Invalid state transitions should not allow invalid state transi
   await testInvalidStateTransition(cuss2, AppState.STOPPED, () => cuss2.requestAvailableState());
 
   // Test INITIALIZE → ACTIVE (invalid)
-  await testInvalidStateTransition(cuss2, AppState.INITIALIZE, () => cuss2.requestActiveState());
+  await testInvalidStateTransition(cuss2, AppState.INITIALIZE, () => cuss2.requestActiveState("TST"));
 
   // Test UNAVAILABLE → ACTIVE (invalid, must go through AVAILABLE)
-  await testInvalidStateTransition(cuss2, AppState.UNAVAILABLE, () => cuss2.requestActiveState());
+  await testInvalidStateTransition(cuss2, AppState.UNAVAILABLE, () => cuss2.requestActiveState("TST"));
 });
 
 Deno.test("2.4 - State change events should emit stateChange events with proper StateChange objects", async () => {

@@ -25,6 +25,8 @@ const queryConfig = {
   tokenUrl: urlParams.get('OAUTH-URL'),
   deviceId: urlParams.get('DEVICE-ID'),
   go: urlParams.get('go'),
+  brands: urlParams.get('BRANDS'),
+  brand: urlParams.get('BRAND'),
 };
 
 const STATE_REQUESTS = {
@@ -60,6 +62,7 @@ const app = createApp({
         clientSecret: 'secret',
         deviceId: '',
         tokenUrl: '',
+        brands: 'EAI',
       },
       fieldErrors: {},
       fieldProblem: null,
@@ -78,6 +81,11 @@ const app = createApp({
       appState: 'STOPPED',
       appInfo: { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' },
       isOnline: false,
+
+      // Brand selection
+      brands: [],
+      selectedBrand: null,
+      brandInputValue: '',
 
       // Environment
       environment: null,
@@ -120,6 +128,10 @@ const app = createApp({
   computed: {
     isConnected() { return this.connectionState === 'connected'; },
     isConnecting() { return this.connectionState === 'connecting'; },
+
+    brandTags() {
+      return this.form.brands ? this.form.brands.split(',').map(b => b.trim()).filter(Boolean) : [];
+    },
 
     componentList() {
       return Object.entries(this.components);
@@ -217,6 +229,21 @@ const app = createApp({
   },
 
   methods: {
+    // ── Brand Tag Input ───────────────────────────────────────────────
+    addBrandTag() {
+      const val = this.brandInputValue.replace(',', '').trim();
+      if (val && !this.brandTags.includes(val)) {
+        this.form.brands = [...this.brandTags, val].join(',');
+      }
+      this.brandInputValue = '';
+    },
+    removeBrandTag(index) {
+      if (index < 0 || index >= this.brandTags.length) return;
+      const tags = [...this.brandTags];
+      tags.splice(index, 1);
+      this.form.brands = tags.join(',');
+    },
+
     // ── Logging ────────────────────────────────────────────────────────
     log(message, type = 'info') {
       this.$refs.eventLog?.log(message, type);
@@ -383,6 +410,24 @@ const app = createApp({
       await cuss2.connected;
 
       this.lastConfig = config;
+
+      // Parse brands from form field, fall back to clientId
+      const brandsStr = config.brands?.trim();
+      this.brands = brandsStr
+        ? brandsStr.split(',').map(b => b.trim()).filter(Boolean)
+        : [config.clientId];
+      this.selectedBrand = this.brands[0];
+
+      // One-time override from BRAND URL param (initial connection only)
+      if (!this.wasEverConnected && queryConfig.brand) {
+        const trimmedBrand = queryConfig.brand.trim();
+        if (this.brands.includes(trimmedBrand)) {
+          this.selectedBrand = trimmedBrand;
+        } else {
+          this.logInfo(`BRAND param "${trimmedBrand}" not in configured brands [${this.brands.join(', ')}], ignoring`);
+        }
+      }
+
       this.logSuccess('Connected successfully!');
       this.updateUrlWithConnectionParams(config);
 
@@ -434,6 +479,8 @@ const app = createApp({
       this.appInfo = { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' };
       this.environment = null;
       this.isOnline = false;
+      this.brands = [];
+      this.selectedBrand = null;
     },
 
     updateUrlWithConnectionParams(formData) {
@@ -443,6 +490,7 @@ const app = createApp({
       params.set('CUSS-WSS', formData.wss);
       if (formData.tokenUrl?.trim()) params.set('OAUTH-URL', formData.tokenUrl);
       if (formData.deviceId?.trim()) params.set('DEVICE-ID', formData.deviceId);
+      if (formData.brands?.trim()) params.set('BRANDS', formData.brands);
       if (queryConfig.go) params.set('go', queryConfig.go);
       window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
       this.logInfo('URL updated with connection parameters');
@@ -546,8 +594,8 @@ const app = createApp({
 
       cuss2.on('activated', (activation) => {
         this.logEvent('Application activated');
-        this.appInfo.brand = activation?.applicationBrand || '-';
         if (cuss2) {
+          this.appInfo.brand = activation?.applicationBrand || '-';
           this.appInfo.multiTenant = cuss2.multiTenant ? 'Yes' : 'No';
           this.appInfo.accessibleMode = cuss2.accessibleMode ? 'Yes' : 'No';
           this.appInfo.language = cuss2.language || '-';
@@ -662,7 +710,11 @@ const app = createApp({
           return;
         }
 
-        await cuss2[request.method]();
+        if (action === 'active') {
+          await cuss2.requestActiveState(this.selectedBrand);
+        } else {
+          await cuss2[request.method]();
+        }
         this.logSuccess(`Requested ${request.state} state`);
       } catch (error) {
         this.logError(`Failed to request ${request.state}: ${error.message}`);
@@ -692,7 +744,7 @@ const app = createApp({
       if (s1 !== ApplicationStateCodes.UNAVAILABLE || targetIndex === 0) return;
       const s2 = (await cuss2.requestAvailableState())?.meta.currentApplicationState.applicationStateCode;
       if (s2 !== ApplicationStateCodes.AVAILABLE || targetIndex === 1) return;
-      await cuss2.requestActiveState();
+      await cuss2.requestActiveState(this.selectedBrand);
     },
 
     // ── Component Helpers ─────────────────────────────────────────────
@@ -1070,6 +1122,7 @@ const app = createApp({
     if (queryConfig.wss) this.form.wss = queryConfig.wss;
     if (queryConfig.tokenUrl) this.form.tokenUrl = queryConfig.tokenUrl;
     if (queryConfig.deviceId) this.form.deviceId = queryConfig.deviceId;
+    if (queryConfig.brands) this.form.brands = queryConfig.brands;
 
     this.logInfo('CUSS2 Browser Client Demo ready');
 

@@ -249,10 +249,11 @@ Deno.test("Section 6.4: requestActiveState - should transition from AVAILABLE", 
 
   const staterequestStub = stub(cuss2.api, "staterequest", () => Promise.resolve(mockResponse));
 
-  const result = await cuss2.requestActiveState();
+  const result = await cuss2.requestActiveState("TST");
 
   assertEquals(staterequestStub.calls.length, 1);
   assertEquals(staterequestStub.calls[0].args[0], AppState.ACTIVE);
+  assertEquals(staterequestStub.calls[0].args[3], "TST");
   assertEquals(result, mockResponse);
 
   staterequestStub.restore();
@@ -270,7 +271,7 @@ Deno.test("Section 6.4: requestActiveState - should allow transition from ACTIVE
 
   const staterequestStub = stub(cuss2.api, "staterequest", () => Promise.resolve(mockResponse));
 
-  const result = await cuss2.requestActiveState();
+  const result = await cuss2.requestActiveState("TST");
 
   assertEquals(staterequestStub.calls.length, 1);
   assertEquals(staterequestStub.calls[0].args[0], AppState.ACTIVE);
@@ -286,7 +287,7 @@ Deno.test("Section 6.4: requestActiveState - should return undefined from invali
 
   const staterequestSpy = spy(cuss2.api, "staterequest");
 
-  const result = await cuss2.requestActiveState();
+  const result = await cuss2.requestActiveState("TST");
 
   assertEquals(staterequestSpy.calls.length, 0);
   assertEquals(result, undefined);

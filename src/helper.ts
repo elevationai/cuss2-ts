@@ -180,7 +180,7 @@ export const Build = {
     desiredState: string | number,
     reasonCode: string | number,
     reason: string,
-    brand: string | undefined = undefined,
+    brand?: string,
   ): ApplicationData => {
     return Build.applicationData(
       PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,

@@ -97,6 +97,7 @@ export class Cuss2 extends EventEmitter {
   aeasbd?: AEASBD;
 
   pendingStateChange?: AppState;
+  brand?: string;
   multiTenant?: boolean;
   accessibleMode: boolean = false;
   language?: string;
@@ -226,15 +227,22 @@ export class Cuss2 extends EventEmitter {
       }
       else if (currentState === AppState.ACTIVE) {
         this._sessionStartedAt = Date.now();
-        this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
-        this.accessibleMode = payload?.applicationActivation?.accessibleMode || false;
-        this.language = payload?.applicationActivation?.languageID || "en-US";
-        super.emit("activated", payload?.applicationActivation);
       }
       if (prevState === AppState.ACTIVE) {
         this._sessionStartedAt = undefined;
+        this.brand = undefined;
         super.emit("deactivated", currentState as AppState);
       }
+    }
+
+    // Emit activated when we receive the applicationActivation payload
+    // (from the solicited response, not the unsolicited APPLICATION_UPDATE)
+    if (currentState === AppState.ACTIVE && payload?.applicationActivation) {
+      this.brand = meta.currentApplicationState.applicationBrand;
+      this.multiTenant = payload.applicationActivation.executionMode === "MAM";
+      this.accessibleMode = payload.applicationActivation.accessibleMode || false;
+      this.language = payload.applicationActivation.languageID || "en-US";
+      super.emit("activated", payload.applicationActivation);
     }
 
     if (typeof meta.componentID === "number" && this.components) {
@@ -444,6 +452,7 @@ export class Cuss2 extends EventEmitter {
       state: AppState,
       reasonCode = ChangeReason.NOT_APPLICABLE,
       reason = "",
+      brand?: string,
     ): Promise<PlatformData | undefined> => {
       this._ensureConnected();
       if (this.pendingStateChange) {
@@ -453,7 +462,7 @@ export class Cuss2 extends EventEmitter {
       this.pendingStateChange = state;
       let response: PlatformData | undefined;
       try {
-        const ad = Build.stateChange(state, reasonCode, reason);
+        const ad = Build.stateChange(state, reasonCode, reason, brand);
         response = await this.connection.sendAndGetResponse(ad);
         return response;
       }
@@ -590,10 +599,10 @@ export class Cuss2 extends EventEmitter {
     return okToChange ? this.api.staterequest(AppState.AVAILABLE) : Promise.resolve(undefined);
   }
 
-  async requestActiveState(): Promise<PlatformData | undefined> {
+  async requestActiveState(brand: string): Promise<PlatformData | undefined> {
     this._ensureConnected();
     const okToChange = this.state === AppState.AVAILABLE || this.state === AppState.ACTIVE;
-    return await (okToChange ? this.api.staterequest(AppState.ACTIVE) : Promise.resolve(undefined));
+    return await (okToChange ? this.api.staterequest(AppState.ACTIVE, ChangeReason.NOT_APPLICABLE, "", brand) : Promise.resolve(undefined));
   }
 
   async requestStoppedState(): Promise<PlatformData | undefined> {

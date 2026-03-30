@@ -5,6 +5,7 @@ import KeypadUI from './components/KeypadUI.js';
 import DataReaderUI from './components/DataReaderUI.js';
 import HeadsetUI from './components/HeadsetUI.js';
 import AnnouncementUI from './components/AnnouncementUI.js';
+import PrinterUI from './components/PrinterUI.js';
 
 const { createApp } = Vue;
 
@@ -75,6 +76,13 @@ const app = createApp({
         ...component,
         componentType: component.type,
       });
+    },
+
+    isPrinter(component) {
+      return component.actions && (
+        ComponentInterrogation.isBoardingPassPrinter(component) ||
+        ComponentInterrogation.isBagTagPrinter(component)
+      );
     },
 
     getAnnouncementLogs(componentId) {
@@ -393,6 +401,16 @@ const app = createApp({
       }
     },
 
+    async handlePrinterAction({ componentId, action }) {
+      try {
+        await client.cmd(componentId, action, {});
+        this.addLogEntry('sent', `${action} on printer #${componentId} - OK`);
+        await this.refreshState();
+      } catch (error) {
+        this.addLogEntry('error', `${action} failed for printer #${componentId}: ${error.message}`);
+      }
+    },
+
     async handleKeyAction({ type, key, componentId }) {
       try {
         await client.cmd(componentId, type, { keyname: key });
@@ -457,4 +475,5 @@ app.component('keypad-ui', KeypadUI);
 app.component('data-reader-ui', DataReaderUI);
 app.component('headset-ui', HeadsetUI);
 app.component('announcement-ui', AnnouncementUI);
+app.component('printer-ui', PrinterUI);
 app.mount('#app');

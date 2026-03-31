@@ -191,7 +191,7 @@ Deno.test("ComponentInterrogation - isCardReader", () => {
   const cardReader = createMockComponent({
     componentCharacteristics: [
       createMockCharacteristics({
-        mediaTypesList: ["MAGCARD" as MediaTypes],
+        mediaTypesList: [MediaTypes.CHIP],
       }),
     ],
   });

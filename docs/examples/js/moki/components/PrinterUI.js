@@ -7,14 +7,14 @@ export default {
   data() {
     return {
       actions: [
-        { name: 'ready', label: 'Ready', group: 'status', style: 'success' },
-        { name: 'paperlow', label: 'Paper Low', group: 'paper', style: 'warning' },
-        { name: 'paperempty', label: 'Paper Empty', group: 'paper', style: 'error' },
-        { name: 'paperfull', label: 'Paper Full', group: 'paper', style: 'warning' },
-        { name: 'paperjam', label: 'Paper Jam', group: 'paper', style: 'error' },
-        { name: 'cutterjam', label: 'Cutter Jam', group: 'paper', style: 'critical' },
-        { name: 'mediapresent', label: 'Media Present', group: 'workflow', style: 'info' },
-        { name: 'mediataken', label: 'Media Taken', group: 'workflow', style: 'info' },
+        { name: 'ready', label: 'Ready' },
+        { name: 'paperlow', label: 'Paper Low' },
+        { name: 'paperempty', label: 'Paper Empty' },
+        { name: 'paperfull', label: 'Paper Full' },
+        { name: 'paperjam', label: 'Paper Jam' },
+        { name: 'cutterjam', label: 'Cutter Jam' },
+        { name: 'mediapresent', label: 'Media Present' },
+        { name: 'mediataken', label: 'Media Taken' },
       ],
     };
   },
@@ -28,8 +28,7 @@ export default {
       <div class="printer-actions">
         <button v-for="action in actions"
                 :key="action.name"
-                class="printer-action-btn"
-                :class="'printer-' + action.style"
+                class="action-button"
                 @click="exec(action.name)">
           {{ action.label }}
         </button>

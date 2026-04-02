@@ -22,7 +22,7 @@ Deno.test("Section 4.1: Platform data message processing - should process platfo
   const platformData: PlatformData = {
     meta: {
       currentApplicationState: { applicationStateCode: AppState.AVAILABLE },
-      platformDirective: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      platformDirective: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
       messageCode: MessageCodes.OK,
     },
     payload: {},
@@ -212,7 +212,7 @@ Deno.test("Section 4.1: Platform data message - activated event on ACTIVE state"
   const platformData: PlatformData = {
     meta: {
       currentApplicationState: { applicationStateCode: AppState.ACTIVE },
-      platformDirective: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      platformDirective: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
       messageCode: MessageCodes.OK,
     },
     payload: {

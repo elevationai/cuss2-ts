@@ -901,7 +901,7 @@ Deno.test("send should add missing oauthToken and deviceID to data", async () =>
   const testData = {
     meta: {
       requestID: "test-request-id",
-      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
     },
     payload: { test: true },
   };
@@ -953,7 +953,7 @@ Deno.test("send should not override existing oauthToken and deviceID", async () 
   const testData = {
     meta: {
       requestID: "test-request-id",
-      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
       oauthToken: customToken,
       deviceID: customDeviceId,
     },
@@ -999,7 +999,7 @@ Deno.test("sendAndGetResponse should throw error if socket is not connected", as
   const testData = {
     meta: {
       requestID: "test-request-id",
-      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
     },
     payload: { test: true },
   };
@@ -1065,7 +1065,7 @@ Deno.test("sendAndGetResponse should send data and wait for response", async () 
   const testData = {
     meta: {
       requestID: requestId,
-      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
     },
     payload: { test: true },
   };
@@ -1130,7 +1130,7 @@ Deno.test("sendAndGetResponse should throw PlatformResponseError for critical er
   const testData = {
     meta: {
       requestID: "test-request-id",
-      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
     },
     payload: { test: true },
   };
@@ -1223,7 +1223,7 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
   const testData1 = {
     meta: {
       requestID: "test-request-id",
-      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
       deviceID: "00000000-0000-0000-0000-000000000000",
     },
     payload: { test: true },
@@ -1252,7 +1252,7 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
   const testData2 = {
     meta: {
       requestID: "test-request-id-2",
-      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      directive: PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
       deviceID: null,
     },
     payload: { test: true },

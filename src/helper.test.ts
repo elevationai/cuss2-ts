@@ -102,12 +102,12 @@ Deno.test("Build.applicationData should build correct structure for ApplicationS
   } as ApplicationState;
 
   const result = Build.applicationData(
-    PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+    PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
     { dataObj: applicationState },
   );
 
   // Check meta properties
-  assertEquals(result.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST);
+  assertEquals(result.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST);
   assertExists(result.meta.requestID);
   assertEquals(result.meta.deviceID, "00000000-0000-0000-0000-000000000000");
 
@@ -125,7 +125,7 @@ Deno.test("Build.applicationData should build correct structure for ApplicationT
   } as ApplicationTransfer;
 
   const result = Build.applicationData(
-    PlatformDirectives.PLATFORM_APPLICATIONS_TRANSFERREQUEST,
+    PlatformDirectives.PLATFORM_APPLICATIONS_TRANSFER_REQUEST,
     {
       dataObj: applicationTransfer,
       componentID: 999,
@@ -134,7 +134,7 @@ Deno.test("Build.applicationData should build correct structure for ApplicationT
   );
 
   // Check meta properties
-  assertEquals(result.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_TRANSFERREQUEST);
+  assertEquals(result.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_TRANSFER_REQUEST);
   assertEquals(result.meta.componentID, 999);
   assertEquals(result.meta.deviceID, "device-456");
 
@@ -153,7 +153,7 @@ Deno.test("Build.stateChange should build correct state change request", () => {
   );
 
   // Check meta
-  assertEquals(result.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST);
+  assertEquals(result.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST);
 
   // Check payload
   if (result.payload && result.payload.applicationState) {

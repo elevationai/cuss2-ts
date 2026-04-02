@@ -20,7 +20,7 @@
   "imports": {
     "@cuss/cuss2-ts": "./mod.ts",
     "@types/node": "npm:@types/node@^22.15.17",
-    "cuss2-typescript-models": "jsr:@cuss/cuss2-typescript-models@2.0.1",
+    "cuss2-typescript-models": "jsr:@cuss/cuss2-typescript-models@2.4.0-nobrand",
     "events": "./vendor/node-events-fixed.ts",
     "async/retry": "jsr:@std/async@^1.0.0/retry",
     "ws": "npm:ws@8",

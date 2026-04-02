@@ -183,7 +183,7 @@ export const Build = {
     brand: string | undefined = undefined,
   ): ApplicationData => {
     return Build.applicationData(
-      PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST,
+      PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
       {
         dataObj: {
           applicationStateCode: desiredState,

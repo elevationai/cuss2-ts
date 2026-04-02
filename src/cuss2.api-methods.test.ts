@@ -495,7 +495,7 @@ Deno.test("Section 5: staterequest - should handle state change requests", async
   // Verify state change was sent
   assertEquals(sendAndGetResponseStub.calls.length, 1);
   const sentData = sendAndGetResponseStub.calls[0].args[0] as ApplicationData;
-  assertEquals(sentData.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_STATEREQUEST);
+  assertEquals(sentData.meta.directive, PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST);
   assertEquals(sentData.payload?.applicationState?.applicationStateCode, AppState.AVAILABLE);
 
   assertEquals(result, mockResponse);

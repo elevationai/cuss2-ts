@@ -130,7 +130,7 @@ export async function simulateStateChange(
   await cuss2._handleWebSocketMessage({
     meta: {
       currentApplicationState: { applicationStateCode: newState },
-      platformDirective: "PLATFORM_APPLICATIONS_STATEREQUEST",
+      platformDirective: "PLATFORM_APPLICATIONS_STATE_REQUEST",
     },
     payload: payload || {},
   } as unknown as PlatformData);

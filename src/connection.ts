@@ -2,7 +2,7 @@ import { EventEmitter } from "./models/EventEmitter.ts";
 import { helpers } from "./helper.ts";
 import { PlatformResponseError } from "./models/index.ts";
 import { AuthenticationError } from "./models/Errors.ts";
-import type { ApplicationData, PlatformData, UniqueId } from "cuss2-typescript-models";
+import type { ApplicationData, DeviceId, PlatformData } from "cuss2-typescript-models";
 import type { AuthResponse } from "./models/authResponse.ts";
 import { retry } from "async/retry";
 import "./WebSocket.ts";
@@ -47,7 +47,7 @@ export class Connection extends EventEmitter {
   _refresher: ReturnType<typeof setTimeout> | null = null;
   _abortController?: AbortController;
   _isClosed: boolean = false;
-  deviceID: UniqueId;
+  deviceID: DeviceId;
   access_token = "";
   _retryOptions: {
     maxAttempts?: number;
@@ -65,7 +65,7 @@ export class Connection extends EventEmitter {
     wssURL: string,
     client_id: string,
     client_secret: string,
-    deviceID: UniqueId,
+    deviceID: DeviceId,
     tokenURL?: string,
     retryOptions?: typeof Connection.prototype._retryOptions,
   ) {

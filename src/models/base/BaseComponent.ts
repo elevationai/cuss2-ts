@@ -67,7 +67,7 @@ export abstract class BaseComponent extends EventEmitter {
     this.parent = null;
 
     // Get required from componentCharacteristics
-    const characteristics = component.componentCharacteristics?.[0];
+    const characteristics = component.componentCharacteristics[0];
     this.required = (characteristics as unknown as { required?: boolean })?.required || false;
 
     // Initialize state - these may not exist on initial component

@@ -218,7 +218,6 @@ Deno.test("Section 4.1: Platform data message - activated event on ACTIVE state"
     payload: {
       applicationActivation: {
         executionMode: "MAM",
-        accessibleMode: true,
         languageID: "fr-FR",
       },
     },
@@ -230,7 +229,6 @@ Deno.test("Section 4.1: Platform data message - activated event on ACTIVE state"
   // Verify state and activation properties
   assertEquals(cuss2.state, AppState.ACTIVE);
   assertEquals(cuss2.multiTenant, true);
-  assertEquals(cuss2.accessibleMode, true);
   assertEquals(cuss2.language, "fr-FR");
 
   // Verify activated event

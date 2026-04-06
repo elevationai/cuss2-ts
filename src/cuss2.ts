@@ -98,7 +98,7 @@ export class Cuss2 extends EventEmitter {
 
   pendingStateChange?: AppState;
   multiTenant?: boolean;
-  accessibleMode: boolean = false;
+
   language?: string;
 
   get state(): AppState {
@@ -227,7 +227,7 @@ export class Cuss2 extends EventEmitter {
       else if (currentState === AppState.ACTIVE) {
         this._sessionStartedAt = Date.now();
         this.multiTenant = payload?.applicationActivation?.executionMode === "MAM";
-        this.accessibleMode = payload?.applicationActivation?.accessibleMode || false;
+
         this.language = payload?.applicationActivation?.languageID || "en-US";
         super.emit("activated", payload?.applicationActivation);
       }
@@ -462,21 +462,6 @@ export class Cuss2 extends EventEmitter {
       }
     },
 
-    acknowledgeAccessible: async (): Promise<PlatformData> => {
-      this._ensureConnected();
-      const ad = Build.applicationData(
-        PlatformDirectives.PLATFORM_APPLICATIONS_ACKNOWLEDGE_ACCESSIBLE,
-        {
-          dataObj: {
-            applicationStateCode: this.state,
-            accessibleMode: this.accessibleMode,
-            applicationStateChangeReasonCode: ChangeReason.NOT_APPLICABLE,
-          },
-        },
-      );
-      return await this.connection.sendAndGetResponse(ad);
-    },
-
     announcement: {
       play: async (
         componentID: number,
@@ -614,43 +599,6 @@ export class Cuss2 extends EventEmitter {
     // directly close the socket so reconnect will still happen
     this.connection._socket?.close(1001, "Reloading");
     return true;
-  }
-
-  /**
-   * Acknowledge accessible mode activation.
-   * Should be called after receiving the 'activated' event when accessibleMode is true.
-   * Per CUSS2 spec, this confirms the application has processed the accessible mode request
-   * and is ready to operate in accessible mode.
-   *
-   * @returns Promise<PlatformData | undefined> - Platform response, or undefined if conditions not met
-   *
-   * @example
-   * ```typescript
-   * cuss2.on("activated", async (activationData) => {
-   *   if (cuss2.accessibleMode) {
-   *     // Configure UI for accessibility
-   *     await setupAccessibleUI();
-   *
-   *     // Acknowledge to platform
-   *     await cuss2.acknowledgeAccessibleMode();
-   *   }
-   * });
-   * ```
-   */
-  async acknowledgeAccessibleMode(): Promise<PlatformData> {
-    this._ensureConnected();
-
-    // Only acknowledge if we're actually in accessible mode and in ACTIVE state
-    if (!this.accessibleMode || this.state !== AppState.ACTIVE) {
-      throw new Error(
-        !this.accessibleMode
-          ? "acknowledgeAccessibleMode called but accessibleMode is false"
-          : `acknowledgeAccessibleMode called in wrong state: ${this.state}`,
-      );
-    }
-
-    log("info", "Acknowledging accessible mode");
-    return await this.api.acknowledgeAccessible();
   }
 
   async queryComponents(): Promise<boolean> {

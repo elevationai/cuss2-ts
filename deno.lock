@@ -1,8 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@cuss/cuss2-ts@1.0.12": "1.0.12",
-    "jsr:@cuss/cuss2-typescript-models@2.0.1": "2.0.1",
+    "jsr:@cuss/cuss2-typescript-models@2.4.0-nobrand": "2.4.0-nobrand",
     "jsr:@deno/cache-dir@0.13.2": "0.13.2",
     "jsr:@deno/cache-dir@0.8": "0.8.0",
     "jsr:@deno/emit@*": "0.46.0",
@@ -11,7 +10,7 @@
     "jsr:@std/assert@1": "1.0.14",
     "jsr:@std/assert@^1.0.13": "1.0.14",
     "jsr:@std/assert@~0.218.2": "0.218.2",
-    "jsr:@std/async@1": "1.0.14",
+    "jsr:@std/async@1": "1.2.0",
     "jsr:@std/bytes@0.223": "0.223.0",
     "jsr:@std/bytes@^1.0.2": "1.0.6",
     "jsr:@std/bytes@~0.218.2": "0.218.2",
@@ -34,23 +33,15 @@
     "jsr:@std/path@^1.1.1": "1.1.2",
     "jsr:@std/path@~0.218.2": "0.218.2",
     "jsr:@std/testing@1": "1.0.15",
-    "npm:@types/node@*": "22.12.0",
+    "npm:@types/node@*": "22.15.17",
     "npm:@types/node@^22.15.17": "22.15.17",
     "npm:esbuild@0.19.11": "0.19.11",
     "npm:esbuild@0.20.2": "0.20.2",
-    "npm:ws@8": "8.18.2"
+    "npm:ws@8": "8.20.0"
   },
   "jsr": {
-    "@cuss/cuss2-ts@1.0.12": {
-      "integrity": "8e17f5d80ebf5d9a1ae5472f6b67dd4a055f2560a660eb11552dc2d14381557e",
-      "dependencies": [
-        "jsr:@cuss/cuss2-typescript-models",
-        "jsr:@std/async",
-        "npm:ws"
-      ]
-    },
-    "@cuss/cuss2-typescript-models@2.0.1": {
-      "integrity": "ee82abef1991c298a3fac1ed9b41d5f37b6732db98c172c5c6d4507ecdcb66b5"
+    "@cuss/cuss2-typescript-models@2.4.0-nobrand": {
+      "integrity": "c42cc48f150dda6a743642d81b03aba7fdddad0e0ac0a29a6dc72f466d46b859"
     },
     "@deno/cache-dir@0.8.0": {
       "integrity": "e87e80a404958f6350d903e6238b72afb92468378b0b32111f7a1e4916ac7fe7",
@@ -97,8 +88,8 @@
         "jsr:@std/internal@^1.0.10"
       ]
     },
-    "@std/async@1.0.14": {
-      "integrity": "62e954a418652c704d37563a3e54a37d4cf0268a9dcaeac1660cc652880b5326"
+    "@std/async@1.2.0": {
+      "integrity": "c059c6f6d95ca7cc012ae8e8d7164d1697113d54b0b679e4372b354b11c2dee5"
     },
     "@std/bytes@0.218.2": {
       "integrity": "91fe54b232dcca73856b79a817247f4a651dbb60d51baafafb6408c137241670"
@@ -416,16 +407,10 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "@types/node@22.12.0": {
-      "integrity": "sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA==",
-      "dependencies": [
-        "undici-types@6.20.0"
-      ]
-    },
     "@types/node@22.15.17": {
       "integrity": "sha512-wIX2aSZL5FE+MR0JlvF87BNVrtFWf6AE6rxSE9X7OwnVvoyCQjpzSRJ+M87se/4QCkCiebQAqrJ0y6fwIyi7nw==",
       "dependencies": [
-        "undici-types@6.21.0"
+        "undici-types"
       ]
     },
     "esbuild@0.19.11": {
@@ -488,14 +473,11 @@
       "scripts": true,
       "bin": true
     },
-    "undici-types@6.20.0": {
-      "integrity": "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="
-    },
     "undici-types@6.21.0": {
       "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="
     },
-    "ws@8.18.2": {
-      "integrity": "sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ=="
+    "ws@8.20.0": {
+      "integrity": "sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA=="
     }
   },
   "redirects": {
@@ -818,7 +800,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@cuss/cuss2-typescript-models@2.0.1",
+      "jsr:@cuss/cuss2-typescript-models@2.4.0-nobrand",
       "jsr:@luca/esbuild-deno-loader@~0.11.1",
       "jsr:@std/assert@1",
       "jsr:@std/async@1",

@@ -120,7 +120,7 @@
             <div style="font-size: 14px">
               <div>Brand: <span>{{ appInfo.brand }}</span></div>
               <div>Multi-tenant: <span>{{ appInfo.multiTenant }}</span></div>
-              <div>Accessible Mode: <span>{{ appInfo.accessibleMode }}</span></div>
+
               <div>Language: <span>{{ appInfo.language }}</span></div>
             </div>
 
@@ -332,14 +332,6 @@
         <p>Application will be terminated in <span>{{ timeoutBanner.seconds }}</span> seconds</p>
       </div>
 
-      <!-- Accessible Mode Banner -->
-      <div v-if="accessibleModeBanner.visible" class="accessible-mode-banner">
-        <div class="accessible-mode-header">
-          <strong>Accessible Mode Activated</strong>
-        </div>
-        <p>Please acknowledge accessible mode within <span>{{ accessibleModeBanner.seconds }}</span> seconds</p>
-        <button class="acknowledge-btn" @click="acknowledgeAccessibleMode">Acknowledge</button>
-      </div>
 
       <!-- Reconnection Banner -->
       <div v-if="reconnectionBanner.visible" class="reconnection-banner">

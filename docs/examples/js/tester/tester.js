@@ -76,7 +76,7 @@ const app = createApp({
 
       // App state
       appState: 'STOPPED',
-      appInfo: { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' },
+      appInfo: { brand: '-', multiTenant: '-', language: '-' },
       isOnline: false,
 
       // Environment
@@ -89,7 +89,7 @@ const app = createApp({
 
       // Banners
       timeoutBanner: { visible: false, seconds: 0 },
-      accessibleModeBanner: { visible: false, seconds: 0 },
+
       reconnectionBanner: { visible: false, attempts: 0 },
       reconnectionSuccess: { visible: false },
 
@@ -423,7 +423,6 @@ const app = createApp({
 
     resetUI() {
       this.dismissTimeoutWarning();
-      this.dismissAccessibleModeToast();
       this.connectionState = 'disconnected';
       this.components = {};
       this.componentStatuses = {};
@@ -431,7 +430,7 @@ const app = createApp({
       this.buttonStates = {};
       this.pendingToggles = {};
       this.appState = 'STOPPED';
-      this.appInfo = { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' };
+      this.appInfo = { brand: '-', multiTenant: '-', language: '-' };
       this.environment = null;
       this.isOnline = false;
     },
@@ -549,23 +548,16 @@ const app = createApp({
         this.appInfo.brand = activation?.applicationBrand || '-';
         if (cuss2) {
           this.appInfo.multiTenant = cuss2.multiTenant ? 'Yes' : 'No';
-          this.appInfo.accessibleMode = cuss2.accessibleMode ? 'Yes' : 'No';
           this.appInfo.language = cuss2.language || '-';
         }
         this.dismissTimeoutWarning();
-        if (cuss2.accessibleMode) {
-          const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
-          this.logInfo(`Accessible mode activated - showing acknowledgement prompt (${killTimeoutSeconds}s timeout)`);
-          this.showAccessibleModeToast(killTimeoutSeconds);
-        }
       });
 
       cuss2.on('deactivated', (newState) => {
         this.logEvent(`Application deactivated, new state: ${newState}`);
-        this.appInfo = { brand: '-', multiTenant: '-', accessibleMode: '-', language: '-' };
+        this.appInfo = { brand: '-', multiTenant: '-', language: '-' };
         this.appState = newState;
         this.dismissTimeoutWarning();
-        this.dismissAccessibleModeToast();
       });
 
       cuss2.on('componentStateChange', (component) => {
@@ -987,36 +979,6 @@ const app = createApp({
       this.timeoutBanner.visible = false;
     },
 
-    showAccessibleModeToast(seconds) {
-      this.dismissAccessibleModeToast();
-      this.accessibleModeBanner = { visible: true, seconds };
-      this._accessibleModeInterval = setInterval(() => {
-        this.accessibleModeBanner.seconds--;
-        if (this.accessibleModeBanner.seconds <= 0) {
-          clearInterval(this._accessibleModeInterval);
-          this._accessibleModeInterval = null;
-        }
-      }, 1000);
-    },
-
-    dismissAccessibleModeToast() {
-      if (this._accessibleModeInterval) {
-        clearInterval(this._accessibleModeInterval);
-        this._accessibleModeInterval = null;
-      }
-      this.accessibleModeBanner.visible = false;
-    },
-
-    async acknowledgeAccessibleMode() {
-      try {
-        this.logInfo('Acknowledging accessible mode...');
-        await cuss2.acknowledgeAccessibleMode();
-        this.logSuccess('Accessible mode acknowledged');
-        this.dismissAccessibleModeToast();
-      } catch (error) {
-        this.logError(`Failed to acknowledge accessible mode: ${error.message}`);
-      }
-    },
 
     // ── Button State Management ───────────────────────────────────────
     btnClasses(key) {
@@ -1081,7 +1043,6 @@ const app = createApp({
 
   beforeUnmount() {
     this.dismissTimeoutWarning();
-    this.dismissAccessibleModeToast();
     if (cuss2) {
       cuss2.connection.close(1000, 'App unmounting');
       cuss2 = null;

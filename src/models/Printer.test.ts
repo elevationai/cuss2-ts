@@ -14,6 +14,7 @@ import {
   ApplicationStateCodes,
   type ComponentList,
   ComponentState,
+  ComponentTypes,
   CussDataTypes,
   type DataRecordList,
   type EnvironmentComponent,
@@ -39,7 +40,6 @@ const createMeta = (
   componentState,
   currentApplicationState: {
     applicationStateCode: ApplicationStateCodes.ACTIVE,
-    accessibleMode: false,
     applicationStateChangeReasonCode: ApplicationStateChangeReasonCodes.NOT_APPLICABLE,
   } as ApplicationState,
   messageCode,
@@ -135,13 +135,6 @@ class MockComponentAPI implements ComponentAPI {
     return Promise.resolve({} as PlatformData);
   }
 
-  acknowledgeAccessible(): Promise<PlatformData> {
-    this.calls.push({ method: "acknowledgeAccessible", componentID: -1 });
-    return Promise.resolve({
-      meta: { messageCode: "OK" },
-    } as PlatformData);
-  }
-
   announcement = {
     play: (componentID: number, rawData: string): Promise<PlatformData> => {
       this.calls.push({ method: "announcement.play", componentID, args: rawData });
@@ -173,6 +166,8 @@ function createTestPrinter(
   // Create feeder component
   const feederEnvComponent: EnvironmentComponent = {
     componentID: feederID,
+    componentType: ComponentTypes.FEEDER,
+    componentCharacteristics: [],
   } as EnvironmentComponent;
   const feeder = new Feeder(feederEnvComponent, cuss2);
   cuss2.components[feederID] = feeder;
@@ -180,6 +175,8 @@ function createTestPrinter(
   // Create dispenser component
   const dispenserEnvComponent: EnvironmentComponent = {
     componentID: dispenserID,
+    componentType: ComponentTypes.DISPENSER,
+    componentCharacteristics: [],
   } as EnvironmentComponent;
   const dispenser = new Dispenser(dispenserEnvComponent, cuss2);
   cuss2.components[dispenserID] = dispenser;
@@ -187,6 +184,8 @@ function createTestPrinter(
   // Create printer component with linked components
   const printerEnvComponent: EnvironmentComponent = {
     componentID: printerID,
+    componentType: ComponentTypes.MEDIA_OUTPUT,
+    componentCharacteristics: [],
     linkedComponentIDs: [feederID, dispenserID],
   } as EnvironmentComponent;
   const printer = new Printer(printerEnvComponent, cuss2, DeviceType.BAG_TAG_PRINTER);
@@ -221,12 +220,16 @@ Deno.test("Printer constructor should throw error if feeder is missing", () => {
   // Create printer without linked feeder
   const printerEnvComponent: EnvironmentComponent = {
     componentID: 1,
+    componentType: ComponentTypes.MEDIA_OUTPUT,
+    componentCharacteristics: [],
     linkedComponentIDs: [3], // Only dispenser, no feeder
   } as EnvironmentComponent;
 
   // Create dispenser
   const dispenserEnvComponent: EnvironmentComponent = {
     componentID: 3,
+    componentType: ComponentTypes.DISPENSER,
+    componentCharacteristics: [],
   } as EnvironmentComponent;
   cuss2.components[3] = new Dispenser(dispenserEnvComponent, cuss2);
 
@@ -243,12 +246,16 @@ Deno.test("Printer constructor should throw error if dispenser is missing", () =
   // Create printer without linked dispenser
   const printerEnvComponent: EnvironmentComponent = {
     componentID: 1,
+    componentType: ComponentTypes.MEDIA_OUTPUT,
+    componentCharacteristics: [],
     linkedComponentIDs: [2], // Only feeder, no dispenser
   } as EnvironmentComponent;
 
   // Create feeder
   const feederEnvComponent: EnvironmentComponent = {
     componentID: 2,
+    componentType: ComponentTypes.FEEDER,
+    componentCharacteristics: [],
   } as EnvironmentComponent;
   cuss2.components[2] = new Feeder(feederEnvComponent, cuss2);
 

@@ -12,7 +12,7 @@ export class CardReader extends MediaInputComponent {
     await this.setup([{
       data: "",
       dsTypes: [
-        yes ? "DS_TYPES_PAYMENT_ISO" as CussDataTypes : CussDataTypes.DS_TYPES_ISO,
+        yes ? CussDataTypes.DS_TYPES_PAYMENT_ISO : CussDataTypes.DS_TYPES_ISO,
       ],
     }]);
   }

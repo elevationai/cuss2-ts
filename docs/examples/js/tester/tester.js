@@ -89,6 +89,7 @@ const app = createApp({
 
       // Banners
       timeoutBanner: { visible: false, seconds: 0, type: null },
+      sessionExtensionCount: 0,
 
       reconnectionBanner: { visible: false, attempts: 0 },
       reconnectionSuccess: { visible: false },
@@ -213,6 +214,16 @@ const app = createApp({
     showUnavailableWarning() {
       return this.appState === ApplicationStateCodes.UNAVAILABLE &&
         this.computedRequiredDeviceItems.some(d => !d.isHealthy);
+    },
+
+    canExtendSession() {
+      const max = this.environment?.maxSessionExtensions;
+      return max != null && max > 0 && this.sessionExtensionCount < max;
+    },
+
+    extensionsRemaining() {
+      const max = this.environment?.maxSessionExtensions ?? 0;
+      return Math.max(0, max - this.sessionExtensionCount);
     },
   },
 
@@ -426,6 +437,7 @@ const app = createApp({
 
     resetUI() {
       this.dismissTimeoutWarning();
+      this.sessionExtensionCount = 0;
       this.connectionState = 'disconnected';
       this.components = {};
       this.componentStatuses = {};
@@ -552,6 +564,7 @@ const app = createApp({
 
       cuss2.on('activated', (activation) => {
         this.logEvent('Application activated');
+        this.sessionExtensionCount = 0;
         this.appInfo.brand = activation?.applicationBrand || '-';
         if (cuss2) {
           this.appInfo.multiTenant = cuss2.multiTenant ? 'Yes' : 'No';
@@ -979,6 +992,21 @@ const app = createApp({
         await this.requestState('unavailable');
       } else if (type === 'session') {
         await this.requestState('available');
+      } else if (type === 'kill') {
+        try {
+          await cuss2.requestSessionExtension();
+          this.sessionExtensionCount++;
+          const remaining = this.extensionsRemaining;
+          this.logSuccess(`Session extension granted (${remaining} remaining)`);
+          const duration = this.environment?.sessionExtensionDuration || this.environment?.sessionTimeout;
+          if (duration) {
+            this.showTimeoutWarning(Math.floor(duration / 1000), 'session');
+          } else {
+            this.dismissTimeoutWarning();
+          }
+        } catch (e) {
+          this.logError(`Session extension denied: ${e.message}`);
+        }
       }
     },
 

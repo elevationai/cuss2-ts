@@ -130,6 +130,11 @@ class MockComponentAPI implements ComponentAPI {
     } as PlatformData);
   }
 
+  extendSession(): Promise<PlatformData> {
+    this.calls.push({ method: "extendSession", componentID: -1 });
+    return Promise.resolve({} as PlatformData);
+  }
+
   staterequest(): Promise<PlatformData | undefined> {
     this.calls.push({ method: "staterequest", componentID: -1 });
     return Promise.resolve({} as PlatformData);

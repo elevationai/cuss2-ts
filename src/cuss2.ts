@@ -440,6 +440,12 @@ export class Cuss2 extends EventEmitter {
       return await this.connection.sendAndGetResponse(ad);
     },
 
+    extendSession: async (): Promise<PlatformData> => {
+      this._ensureConnected();
+      const ad = Build.applicationData(PlatformDirectives.PLATFORM_APPLICATIONS_EXTEND_SESSION_REQUEST);
+      return await this.connection.sendAndGetResponse(ad);
+    },
+
     staterequest: async (
       state: AppState,
       reasonCode = ChangeReason.NOT_APPLICABLE,
@@ -584,6 +590,12 @@ export class Cuss2 extends EventEmitter {
   async requestStoppedState(): Promise<PlatformData | undefined> {
     this._ensureConnected();
     return await this.api.staterequest(AppState.STOPPED);
+  }
+
+  async requestSessionExtension(): Promise<PlatformData | undefined> {
+    this._ensureConnected();
+    if (this.state !== AppState.ACTIVE) return undefined;
+    return await this.api.extendSession();
   }
 
   async requestReload(): Promise<boolean> {

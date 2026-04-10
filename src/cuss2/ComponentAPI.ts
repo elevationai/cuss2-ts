@@ -71,6 +71,11 @@ export interface ComponentAPI {
   offer: (componentID: number) => Promise<PlatformData>;
 
   /**
+   * Request a session extension during the kill timer period
+   */
+  extendSession: () => Promise<PlatformData>;
+
+  /**
    * Request a state change for the application
    */
   staterequest: (

@@ -161,6 +161,8 @@
             <div class="env-item"><span class="env-label">Session Timeout:</span> <span class="env-value">{{ fmtMs(environment.sessionTimeout) }}</span></div>
             <div class="env-item"><span class="env-label">Kill Timeout:</span> <span class="env-value">{{ fmtMs(environment.killTimeout) }}</span></div>
             <div class="env-item"><span class="env-label">Init Timeout:</span> <span class="env-value">{{ fmtMs(environment.initTimeout) }}</span></div>
+            <div class="env-item"><span class="env-label">Extension Duration:</span> <span class="env-value">{{ fmtMs(environment.sessionExtensionDuration) }}</span></div>
+            <div class="env-item"><span class="env-label">Max Extensions:</span> <span class="env-value">{{ fmtValue(environment.maxSessionExtensions) }}</span></div>
             <div class="env-item"><span class="env-label">Expected ACK Time:</span> <span class="env-value">{{ fmtMs(environment.expectedAckTime) }}</span></div>
             <div class="env-item"><span class="env-label">Max Cache Time:</span> <span class="env-value">{{ fmtMs(environment.maxCacheTime) }}</span></div>
           </div>
@@ -329,10 +331,10 @@
         <span v-if="timeoutBanner.type === 'init'">Initialize within {{ timeoutBanner.seconds }}s</span>
         <span v-else-if="timeoutBanner.type === 'session'">Session expires in {{ timeoutBanner.seconds }}s</span>
         <span v-else>Terminating in {{ timeoutBanner.seconds }}s</span>
-        <button class="timeout-action-btn" @click="timeoutBannerAction">
+        <button v-if="timeoutBanner.type !== 'kill' || canExtendSession" class="timeout-action-btn" @click="timeoutBannerAction">
           <span v-if="timeoutBanner.type === 'init'">Go Unavailable</span>
           <span v-else-if="timeoutBanner.type === 'session'">Go Available</span>
-          <span v-else>Extend Session</span>
+          <span v-else>Extend Session ({{ extensionsRemaining }})</span>
         </button>
       </div>
 

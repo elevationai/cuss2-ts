@@ -49,7 +49,7 @@ const app = createApp({
       const state = this.getState(componentId);
       return Object.entries(state)
       .filter(([key, value]) =>
-        !['enabled', 'status', 'power'].includes(key) && typeof value !== 'boolean')
+        !['enabled', 'status', 'power', 'media'].includes(key) && typeof value !== 'boolean')
       .map(([key, value]) => ({ key: key.replace(/_/g, ' '), value }));
     },
 
@@ -161,6 +161,12 @@ const app = createApp({
           // Announcement play event
           if (msg.event === 'announcement_play' && msg.componentID != null) {
             this.handleAnnouncementPlay(msg);
+            return;
+          }
+
+          // Printed media event
+          if (msg.event === 'printed' && msg.componentID != null) {
+            this.handlePrinted(msg);
             return;
           }
 
@@ -310,6 +316,16 @@ const app = createApp({
       this.announcementLogs[id].push(entry);
       this.announcementLogs = { ...this.announcementLogs };
       this.addLogEntry('received', `Announcement #${id}: "${text}"`);
+    },
+
+    handlePrinted(msg) {
+      const id = msg.componentID;
+      if (!this.componentStates[id]) {
+        this.componentStates[id] = {};
+      }
+      this.componentStates[id].media = msg.media;
+      this.componentStates = { ...this.componentStates };
+      this.addLogEntry('received', `Print output received for component #${id}`);
     },
 
     // ── Actions ──────────────────────────────────────────────────────

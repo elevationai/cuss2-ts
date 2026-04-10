@@ -119,6 +119,8 @@
                             <!-- Printer UI (BPP/BTP) -->
                             <printer-ui v-else-if="isPrinter(component)"
                                         :component-id="component.componentID"
+                                        :status="getState(component.componentID).status"
+                                        :media="getState(component.componentID).media"
                                         @printer-action="handlePrinterAction"></printer-ui>
 
                             <!-- Standard Actions -->

@@ -88,7 +88,7 @@ const app = createApp({
       collapsedComponents: {},
 
       // Banners
-      timeoutBanner: { visible: false, seconds: 0 },
+      timeoutBanner: { visible: false, seconds: 0, type: null },
 
       reconnectionBanner: { visible: false, attempts: 0 },
       reconnectionSuccess: { visible: false },
@@ -388,6 +388,9 @@ const app = createApp({
 
       this.connectionState = 'connected';
       this.environment = cuss2.environment;
+      if (this.environment.initTimeout) {
+        this.showTimeoutWarning(Math.floor(this.environment.initTimeout / 1000), 'init');
+      }
       this.initComponents();
       this.appState = cuss2.state;
       this.isOnline = cuss2.applicationOnline;
@@ -528,6 +531,10 @@ const app = createApp({
         this.logEvent(`State changed: ${stateChange.previous} \u2192 ${stateChange.current}`);
         this.appState = stateChange.current;
 
+        if (stateChange.previous === ApplicationStateCodes.INITIALIZE && this.timeoutBanner.type === 'init') {
+          this.dismissTimeoutWarning();
+        }
+
         if (cuss2) {
           if (stateChange.current === ApplicationStateCodes.AVAILABLE ||
               stateChange.current === ApplicationStateCodes.ACTIVE) {
@@ -550,7 +557,11 @@ const app = createApp({
           this.appInfo.multiTenant = cuss2.multiTenant ? 'Yes' : 'No';
           this.appInfo.language = cuss2.language || '-';
         }
-        this.dismissTimeoutWarning();
+        if (this.environment?.sessionTimeout) {
+          this.showTimeoutWarning(Math.floor(this.environment.sessionTimeout / 1000), 'session');
+        } else {
+          this.dismissTimeoutWarning();
+        }
       });
 
       cuss2.on('deactivated', (newState) => {
@@ -568,7 +579,7 @@ const app = createApp({
       cuss2.on('sessionTimeout', () => {
         const killTimeoutSeconds = Math.floor(cuss2.environment.killTimeout / 1000);
         this.logError(`Session timeout warning - Application will be terminated in ${killTimeoutSeconds} seconds`);
-        this.showTimeoutWarning(killTimeoutSeconds);
+        this.showTimeoutWarning(killTimeoutSeconds, 'kill');
       });
     },
 
@@ -962,9 +973,18 @@ const app = createApp({
     },
 
     // ── Banner/Toast Management ───────────────────────────────────────
-    showTimeoutWarning(seconds) {
+    async timeoutBannerAction() {
+      const type = this.timeoutBanner.type;
+      if (type === 'init') {
+        await this.requestState('unavailable');
+      } else if (type === 'session') {
+        await this.requestState('available');
+      }
+    },
+
+    showTimeoutWarning(seconds, type = 'kill') {
       this.dismissTimeoutWarning();
-      this.timeoutBanner = { visible: true, seconds };
+      this.timeoutBanner = { visible: true, seconds, type };
       this._timeoutInterval = setInterval(() => {
         this.timeoutBanner.seconds--;
         if (this.timeoutBanner.seconds <= 0) this.dismissTimeoutWarning();

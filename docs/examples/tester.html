@@ -160,6 +160,7 @@
             <div class="env-group"><strong>Session Timeouts</strong></div>
             <div class="env-item"><span class="env-label">Session Timeout:</span> <span class="env-value">{{ fmtMs(environment.sessionTimeout) }}</span></div>
             <div class="env-item"><span class="env-label">Kill Timeout:</span> <span class="env-value">{{ fmtMs(environment.killTimeout) }}</span></div>
+            <div class="env-item"><span class="env-label">Init Timeout:</span> <span class="env-value">{{ fmtMs(environment.initTimeout) }}</span></div>
             <div class="env-item"><span class="env-label">Expected ACK Time:</span> <span class="env-value">{{ fmtMs(environment.expectedAckTime) }}</span></div>
             <div class="env-item"><span class="env-label">Max Cache Time:</span> <span class="env-value">{{ fmtMs(environment.maxCacheTime) }}</span></div>
           </div>
@@ -324,12 +325,15 @@
       </div>
 
       <!-- Timeout Warning Banner -->
-      <div v-if="timeoutBanner.visible" class="timeout-banner">
-        <div class="timeout-header">
-          <strong>&#9888;&#65039; Session Timeout Warning</strong>
-          <button class="dismiss-btn" @click="dismissTimeoutWarning">&times;</button>
-        </div>
-        <p>Application will be terminated in <span>{{ timeoutBanner.seconds }}</span> seconds</p>
+      <div v-if="timeoutBanner.visible" class="timeout-banner" :class="timeoutBanner.type">
+        <span v-if="timeoutBanner.type === 'init'">Initialize within {{ timeoutBanner.seconds }}s</span>
+        <span v-else-if="timeoutBanner.type === 'session'">Session expires in {{ timeoutBanner.seconds }}s</span>
+        <span v-else>Terminating in {{ timeoutBanner.seconds }}s</span>
+        <button class="timeout-action-btn" @click="timeoutBannerAction">
+          <span v-if="timeoutBanner.type === 'init'">Go Unavailable</span>
+          <span v-else-if="timeoutBanner.type === 'session'">Go Available</span>
+          <span v-else>Extend Session</span>
+        </button>
       </div>
 
 

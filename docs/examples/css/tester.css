@@ -1554,60 +1554,59 @@ input.field-problem {
 /* ===== BANNERS ===== */
 .timeout-banner {
   position: fixed;
-  top: 20px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, #ff6b6b, #ee5a24);
   color: white;
-  padding: 15px 25px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+  padding: 6px 16px;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  text-align: center;
-  min-width: 300px;
-  animation: slideDown 0.5s ease-out;
-}
-
-.timeout-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 12px;
+  font-size: 13px;
+  white-space: nowrap;
+  animation: bannerSlideDown 0.3s ease-out;
 }
 
-.timeout-header strong {
-  font-size: 16px;
+.timeout-banner.init {
+  background: linear-gradient(135deg, #667eea, #3b49df);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
 }
 
-.timeout-banner p {
-  margin: 0;
-  font-size: 14px;
+.timeout-banner.session {
+  background: linear-gradient(135deg, #f0932b, #e17a00);
+  box-shadow: 0 10px 30px rgba(240, 147, 43, 0.4);
 }
 
-.dismiss-btn {
-  background: none;
-  border: none;
+.timeout-banner.kill {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+}
+
+
+.timeout-action-btn {
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
   transition: background 0.2s ease;
 }
 
-.dismiss-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+.timeout-action-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
-@keyframes slideDown {
+@keyframes bannerSlideDown {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
+    transform: translateX(-50%) translateY(-100%);
   }
   to {
     opacity: 1;

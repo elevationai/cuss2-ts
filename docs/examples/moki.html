@@ -116,6 +116,13 @@
                                              :component-id="component.componentID"
                                              :logs="getAnnouncementLogs(component.componentID)"></announcement-ui>
 
+                            <!-- Printer UI (BPP/BTP) -->
+                            <printer-ui v-else-if="isPrinter(component)"
+                                        :component-id="component.componentID"
+                                        :status="getState(component.componentID).status"
+                                        :media="getState(component.componentID).media"
+                                        @printer-action="handlePrinterAction"></printer-ui>
+
                             <!-- Standard Actions -->
                             <template v-else-if="hasNonPowerActions(component)">
                                 <template v-for="(params, actionName) in component.actions" :key="actionName">

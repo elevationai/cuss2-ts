@@ -67,7 +67,7 @@ export class ComponentInterrogation {
     const charac0 = component.componentCharacteristics[0];
     if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
-    return !!mediaTypesHas(mediaTypes, "MAGCARD");
+    return !!mediaTypesHas(mediaTypes, MediaTypes.CHIP);
   };
 
   static isKeypad = (component: EnvironmentComponent): boolean => {

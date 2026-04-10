@@ -5,6 +5,7 @@ import KeypadUI from './components/KeypadUI.js';
 import DataReaderUI from './components/DataReaderUI.js';
 import HeadsetUI from './components/HeadsetUI.js';
 import AnnouncementUI from './components/AnnouncementUI.js';
+import PrinterUI from './components/PrinterUI.js';
 
 const { createApp } = Vue;
 
@@ -48,7 +49,7 @@ const app = createApp({
       const state = this.getState(componentId);
       return Object.entries(state)
       .filter(([key, value]) =>
-        !['enabled', 'status', 'power'].includes(key) && typeof value !== 'boolean')
+        !['enabled', 'status', 'power', 'media'].includes(key) && typeof value !== 'boolean')
       .map(([key, value]) => ({ key: key.replace(/_/g, ' '), value }));
     },
 
@@ -75,6 +76,13 @@ const app = createApp({
         ...component,
         componentType: component.type,
       });
+    },
+
+    isPrinter(component) {
+      return component.actions && (
+        ComponentInterrogation.isBoardingPassPrinter(component) ||
+        ComponentInterrogation.isBagTagPrinter(component)
+      );
     },
 
     getAnnouncementLogs(componentId) {
@@ -153,6 +161,12 @@ const app = createApp({
           // Announcement play event
           if (msg.event === 'announcement_play' && msg.componentID != null) {
             this.handleAnnouncementPlay(msg);
+            return;
+          }
+
+          // Printed media event
+          if (msg.event === 'printed' && msg.componentID != null) {
+            this.handlePrinted(msg);
             return;
           }
 
@@ -304,6 +318,16 @@ const app = createApp({
       this.addLogEntry('received', `Announcement #${id}: "${text}"`);
     },
 
+    handlePrinted(msg) {
+      const id = msg.componentID;
+      if (!this.componentStates[id]) {
+        this.componentStates[id] = {};
+      }
+      this.componentStates[id].media = msg.media;
+      this.componentStates = { ...this.componentStates };
+      this.addLogEntry('received', `Print output received for component #${id}`);
+    },
+
     // ── Actions ──────────────────────────────────────────────────────
     async sendPower(componentId) {
       const key = `power-${componentId}`;
@@ -393,6 +417,16 @@ const app = createApp({
       }
     },
 
+    async handlePrinterAction({ componentId, action }) {
+      try {
+        await client.cmd(componentId, action, {});
+        this.addLogEntry('sent', `${action} on printer #${componentId} - OK`);
+        await this.refreshState();
+      } catch (error) {
+        this.addLogEntry('error', `${action} failed for printer #${componentId}: ${error.message}`);
+      }
+    },
+
     async handleKeyAction({ type, key, componentId }) {
       try {
         await client.cmd(componentId, type, { keyname: key });
@@ -457,4 +491,5 @@ app.component('keypad-ui', KeypadUI);
 app.component('data-reader-ui', DataReaderUI);
 app.component('headset-ui', HeadsetUI);
 app.component('announcement-ui', AnnouncementUI);
+app.component('printer-ui', PrinterUI);
 app.mount('#app');

@@ -253,7 +253,7 @@ export const mockDevice = {
       componentID,
       componentCharacteristics: [{
         dsTypesList: [],
-        mediaTypesList: ["MAGCARD"],
+        mediaTypesList: ["CHIP"],
         deviceTypesList: [],
       } as unknown as ComponentCharacteristics],
     });

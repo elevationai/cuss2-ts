@@ -1032,3 +1032,54 @@ button.secondary:hover:not(:disabled) {
 .announcement-text {
     color: #e0e0e0;
 }
+
+/* Printer UI Styles */
+.printer-ui {
+    padding: 8px;
+    display: flex;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.printer-toggles {
+    flex: 0 0 auto;
+}
+
+.printer-media {
+    flex: 1;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+
+.printer-media img {
+    display: block;
+    max-height: 250px;
+    max-width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    transition: border-color 0.2s ease;
+}
+
+.printer-media.rotated {
+    position: relative;
+    height: 50px;
+}
+
+.printer-media.rotated img {
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-height: none;
+    max-width: none;
+    width: 50px;
+    height: auto;
+}
+
+.printer-media:hover img {
+    border-color: rgba(100, 255, 218, 0.5);
+}

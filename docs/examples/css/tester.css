@@ -1878,3 +1878,82 @@ input.field-problem {
   border-color: rgba(211, 47, 47, 0.6);
   color: #fff;
 }
+
+/* ===== HEADSET ===== */
+.headset-jack-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.headset-jack-indicator.headset-jack-present {
+  background: rgba(100, 255, 218, 0.12);
+  border-color: rgba(100, 255, 218, 0.5);
+  color: #64ffda;
+}
+
+.headset-jack-indicator.headset-jack-absent {
+  background: rgba(160, 160, 160, 0.08);
+  border-color: rgba(160, 160, 160, 0.3);
+  color: #a0a0a0;
+}
+
+.headset-jack-indicator.headset-jack-unknown {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.4);
+  color: #ffc107;
+}
+
+.headset-jack-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.headset-jack-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.headset-jack-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.headset-jack-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.headset-help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.headset-help-entry {
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+
+.headset-help-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(100, 255, 218, 0.7);
+  margin-bottom: 2px;
+}
+
+.headset-help-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.4;
+}

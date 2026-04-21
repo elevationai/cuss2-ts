@@ -898,6 +898,112 @@ input.field-problem {
   letter-spacing: 0.5px;
 }
 
+/* ─── HelpTooltip component ──────────────────────────────────────────────
+   Hover-triggered popover showing a component's deviceHelpInstruction SSML
+   as descriptive ADA text. Mirrors the char-popover hover pattern used by
+   the device-name tooltip (tester.js:startCharHover) — 500ms open delay,
+   200ms close-delay grace so the cursor can travel into the popover. */
+
+.help-tooltip-container {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+/* Round "?" badge inline with the label. */
+.device-help-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #0b0d17;
+  background: rgba(100, 255, 218, 0.75);
+  border-radius: 50%;
+  cursor: help;
+  text-transform: none;
+  letter-spacing: 0;
+  user-select: none;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.device-help-tip:hover,
+.device-help-tip.active {
+  background: #64ffda;
+  transform: scale(1.08);
+}
+
+/* Popover anchored beneath the ? badge. Matches .char-popover aesthetic. */
+.help-tooltip-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 420px;
+  overflow-y: auto;
+  background: #1a1a2e;
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 6px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  /* Reset inherited label styling so popover contents read naturally. */
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: #e0e0e0;
+  text-align: left;
+}
+
+.help-tooltip-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64ffda;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+}
+
+.help-tooltip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.help-tooltip-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.help-tooltip-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(100, 255, 218, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.help-tooltip-text {
+  font-size: 13px;
+  color: #e0e0e0;
+  line-height: 1.5;
+}
+
+.help-tooltip-empty {
+  font-size: 12px;
+  color: rgba(224, 224, 224, 0.6);
+  font-style: italic;
+  line-height: 1.5;
+}
+
 .component-action-controls {
   display: flex;
   gap: 8px;

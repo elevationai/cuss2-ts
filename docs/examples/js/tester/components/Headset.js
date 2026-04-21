@@ -2,7 +2,7 @@ export default {
   name: 'Headset',
   props: {
     component: { type: Object, required: true },
-    componentId: { type: [Number, String], required: true },
+    componentId: { type: String, required: true },
   },
   emits: ['log'],
   data() {

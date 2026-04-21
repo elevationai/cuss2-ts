@@ -127,8 +127,7 @@ const app = createApp({
     },
 
     allCollapsed() {
-      const collapsible = this.componentList.filter(([, c]) => !this.isHeaderOnly(c));
-      return collapsible.length > 0 && collapsible.every(([id]) => this.collapsedComponents[id]);
+      return this.componentList.length > 0 && this.componentList.every(([id]) => this.collapsedComponents[id]);
     },
 
     allowedTransitions() {
@@ -764,11 +763,6 @@ const app = createApp({
       }
     },
 
-    isHeaderOnly(component) {
-      const headerOnlyTypes = [];
-      return headerOnlyTypes.includes(component.deviceType);
-    },
-
     initComponents() {
       if (!cuss2?.components) return;
       const comps = {};
@@ -913,10 +907,8 @@ const app = createApp({
     },
 
     collapseAll() {
-      for (const [id, component] of this.componentList) {
-        if (!this.isHeaderOnly(component)) {
-          this.collapsedComponents[id] = true;
-        }
+      for (const [id] of this.componentList) {
+        this.collapsedComponents[id] = true;
       }
       this.collapsedComponents = { ...this.collapsedComponents };
     },

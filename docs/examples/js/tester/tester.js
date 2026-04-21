@@ -2,6 +2,7 @@ import { Cuss2, Models, criticalErrors } from '../../../dist/cuss2.esm.js';
 import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES } from './data.js';
 import { extractStatusCodeFromError, validateURL, generateOAuthUrl } from './utils.js';
 import ToggleSwitch from './components/ToggleSwitch.js';
+import HelpTooltip from './components/HelpTooltip.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';
 import GenericComponent from './components/GenericComponent.js';
@@ -1163,6 +1164,7 @@ const app = createApp({
 });
 
 app.component('toggle-switch', ToggleSwitch);
+app.component('help-tooltip', HelpTooltip);
 app.component('keypad-component', Keypad);
 app.component('headset-component', Headset);
 app.component('generic-component', GenericComponent);

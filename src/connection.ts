@@ -16,7 +16,7 @@ interface ConnectionEvents {
   open: [];
   authenticating: [number];
   connecting: [number];
-  authenticated: [typeof Connection.prototype._auth];
+  authenticated: [AuthResponse];
   messageError: [unknown];
   socketError: [unknown];
   authenticationError: [AuthenticationError];

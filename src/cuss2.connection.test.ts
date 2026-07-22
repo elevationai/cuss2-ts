@@ -20,9 +20,9 @@ Deno.test("1.1 - Static connect() method should create a new Cuss2 instance with
   const originalConnect = Connection.connect;
   const mockConnection = new MockConnection();
   // Add Symbol.dispose to mock connection
-  // @ts-ignore - adding dispose for test
+  // @ts-expect-error - adding dispose for test
   mockConnection[Symbol.dispose] = () => {};
-  // @ts-ignore - mocking for test
+  // @ts-expect-error - mocking for test
   Connection.connect = () => mockConnection;
 
   try {
@@ -38,13 +38,11 @@ Deno.test("1.1 - Static connect() method should create a new Cuss2 instance with
     // Verify instance created
     assertEquals(cuss2 instanceof Cuss2, true);
 
-    // @ts-ignore - accessing private property for testing
+    // @ts-expect-error - accessing private property for testing
     assertEquals(cuss2.connection, mockConnection);
 
     // Verify event listeners attached
-    // @ts-ignore - accessing private property for testing
     assertEquals(mockConnection.listenerCount("message"), 1);
-    // @ts-ignore - accessing private property for testing
     assertEquals(mockConnection.listenerCount("open"), 1);
   }
   finally {
@@ -91,7 +89,7 @@ Deno.test("1.3 - Connection not established error should throw when API calls ma
   const mockConnection = new MockConnection();
   mockConnection.isOpen = false;
 
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Test various API methods
@@ -130,7 +128,6 @@ Deno.test("1.4 - Device ID hydration should update deviceID from environment whe
   cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment({ deviceID: testDeviceId }));
 
   // Trigger initialization
-  // @ts-ignore - accessing private method for testing
   await cuss2._initialize();
 
   // Verify device ID was updated
@@ -147,7 +144,6 @@ Deno.test("1.4 - Device ID hydration should not update deviceID when non-default
   cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment({ deviceID: "platform-device-id-789" }));
 
   // Trigger initialization
-  // @ts-ignore - accessing private method for testing
   await cuss2._initialize();
 
   // Verify device ID was NOT updated
@@ -156,7 +152,7 @@ Deno.test("1.4 - Device ID hydration should not update deviceID when non-default
 
 Deno.test("1.4 - Device ID hydration should handle null deviceID", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - setting to null for testing
+  // @ts-expect-error - setting to null for testing
   mockConnection.deviceID = null;
   const { cuss2 } = createMockCuss2(mockConnection);
 
@@ -166,7 +162,6 @@ Deno.test("1.4 - Device ID hydration should handle null deviceID", async () => {
   cuss2.api.getEnvironment = () => Promise.resolve(createMockEnvironment({ deviceID: testDeviceId }));
 
   // Trigger initialization
-  // @ts-ignore - accessing private method for testing
   await cuss2._initialize();
 
   // Verify device ID was updated
@@ -177,12 +172,10 @@ Deno.test("1.2 - Initialization should throw error when platform is in abnormal 
   const { cuss2 } = createMockCuss2();
 
   // Set state to undefined to simulate abnormal state
-  // @ts-ignore - accessing private property for testing
   cuss2._currentState = undefined;
 
   // Trigger initialization and expect error
   await assertRejects(
-    // @ts-ignore - accessing private method for testing
     () => cuss2._initialize(),
     Error,
     "Cannot read properties of undefined",
@@ -214,7 +207,6 @@ Deno.test("1.2 - Initialization should emit queryError when component query fail
   cuss2.queryComponents = () => Promise.reject(testError);
 
   // Trigger initialization
-  // @ts-ignore - accessing private method for testing
   await cuss2._initialize();
 
   // Verify queryError was emitted
@@ -235,7 +227,6 @@ Deno.test("1.2 - Initialization should emit connected event after successful ini
   });
 
   // Trigger initialization
-  // @ts-ignore - accessing private method for testing
   await cuss2._initialize();
 
   // Verify connected event was emitted with cuss2 instance
@@ -247,11 +238,10 @@ Deno.test("1.1 - Connected getter should resolve immediately when connection is 
   const mockConnection = new MockConnection();
   mockConnection.isOpen = true;
 
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Set components to indicate initialization is complete
-  // @ts-ignore - accessing private property for testing
   cuss2.components = { "1": {} };
 
   // Should resolve immediately
@@ -267,7 +257,7 @@ Deno.test("1.1 - Connected getter should wait for connected event when connectio
   const mockConnection = new MockConnection();
   mockConnection.isOpen = false;
 
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   let resolved = false;
@@ -293,7 +283,7 @@ Deno.test("1.1 - Connected getter should reject on authentication error", async 
   const mockConnection = new MockConnection();
   mockConnection.isOpen = false;
 
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Start waiting for connected

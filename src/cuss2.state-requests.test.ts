@@ -9,7 +9,7 @@ import type { InteractiveComponent } from "./models/index.ts";
 
 Deno.test("Section 6.1: requestInitializeState - should transition from STOPPED to INITIALIZE", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Set initial state to STOPPED
@@ -116,7 +116,6 @@ Deno.test("Section 6.2: requestUnavailableState - should disable components when
     disable: () => Promise.resolve(),
   } as unknown as InteractiveComponent;
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = {
     "1": mockComponent1,
     "2": mockComponent2,
@@ -197,7 +196,6 @@ Deno.test("Section 6.3: requestAvailableState - should disable components when t
     disable: () => Promise.resolve(),
   } as unknown as InteractiveComponent;
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = { "1": mockComponent };
 
   const disableSpy = spy(mockComponent, "disable");
@@ -436,7 +434,6 @@ Deno.test("Section 6: _disableAllComponents - should disable all enabled compone
     { enabled: true, disable: () => Promise.resolve() },
   ];
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = {
     "1": components[0],
     "2": components[1],
@@ -445,7 +442,6 @@ Deno.test("Section 6: _disableAllComponents - should disable all enabled compone
 
   const disableSpies = components.map((c) => spy(c, "disable"));
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._disableAllComponents();
 
   // Verify only enabled components were disabled

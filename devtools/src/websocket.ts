@@ -84,7 +84,7 @@ export class WebSocketManager {
         options = { headers: { Origin: baseURL } };
       }
 
-      // @ts-ignore - ws library accepts options as third parameter, browser ignores extra params
+      // @ts-expect-error - ws library accepts options as third parameter, browser ignores extra params
       this.ws = new globalThis.WebSocket(url.toString(), undefined, options);
 
       this.ws.onopen = () => {

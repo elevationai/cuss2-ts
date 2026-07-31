@@ -23,7 +23,7 @@ import { Cuss2 } from "./cuss2.ts";
 
 Deno.test("Section 5.1: getEnvironment - should fetch and store environment data", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Mock environment response
@@ -51,7 +51,7 @@ Deno.test("Section 5.1: getEnvironment - should fetch and store environment data
 Deno.test("Section 5.1: getEnvironment - should throw when not connected", async () => {
   const mockConnection = new MockConnection();
   mockConnection.isOpen = false;
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   await assertRejects(
@@ -63,7 +63,7 @@ Deno.test("Section 5.1: getEnvironment - should throw when not connected", async
 
 Deno.test("Section 5.2: getComponents - should fetch component list and create instances", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Create mock component list with various types
@@ -118,7 +118,6 @@ Deno.test("Section 5.2: getComponents - should return existing list if component
   const { cuss2, mockConnection } = createMockCuss2();
 
   // Pre-populate components
-  // @ts-ignore - mocking components for testing
   cuss2.components = { "1": {} };
 
   const mockComponentList = createMockComponentList();
@@ -237,7 +236,6 @@ Deno.test("Section 5.5: setup - should validate componentID", async () => {
   const { cuss2 } = createMockCuss2();
 
   await assertRejects(
-    // @ts-ignore - testing invalid input
     () => cuss2.api.setup("invalid", []),
     TypeError,
     "Invalid componentID: invalid",
@@ -271,7 +269,6 @@ Deno.test("Section 5.6: cancel - should validate componentID", async () => {
   const { cuss2 } = createMockCuss2();
 
   await assertRejects(
-    // @ts-ignore - testing invalid input
     () => cuss2.api.cancel(null),
     TypeError,
     "Invalid componentID: null",
@@ -448,28 +445,24 @@ Deno.test("Section 5.8: announcement methods - should validate componentID", asy
   const { cuss2 } = createMockCuss2();
 
   await assertRejects(
-    // @ts-ignore - testing invalid input
     () => cuss2.api.announcement.play(undefined, "data"),
     TypeError,
     "Invalid componentID: undefined",
   );
 
   await assertRejects(
-    // @ts-ignore - testing invalid input
     () => cuss2.api.announcement.pause("123"),
     TypeError,
     "Invalid componentID: 123",
   );
 
   await assertRejects(
-    // @ts-ignore - testing invalid input
     () => cuss2.api.announcement.resume(false),
     TypeError,
     "Invalid componentID: false",
   );
 
   await assertRejects(
-    // @ts-ignore - testing invalid input
     () => cuss2.api.announcement.stop({}),
     TypeError,
     "Invalid componentID: [object Object]",
@@ -507,7 +500,6 @@ Deno.test("Section 5: staterequest - should return undefined if pending state ch
   const { cuss2 } = createMockCuss2();
 
   // Set pending state change
-  // @ts-ignore - accessing private property for testing
   cuss2.pendingStateChange = AppState.AVAILABLE;
 
   const result = await cuss2.api.staterequest(AppState.ACTIVE);

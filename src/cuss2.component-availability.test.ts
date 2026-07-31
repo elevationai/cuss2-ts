@@ -17,7 +17,6 @@ Deno.test("Section 7.1: unavailableComponents getter - should return components 
     "4": { id: 4, ready: true, required: false } as unknown as BaseComponent,
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   const unavailable = cuss2.unavailableComponents;
@@ -33,7 +32,6 @@ Deno.test("Section 7.1: unavailableComponents getter - should return components 
 Deno.test("Section 7.1: unavailableComponents getter - should return empty array when no components", () => {
   const { cuss2 } = createMockCuss2();
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = undefined;
 
   const unavailable = cuss2.unavailableComponents;
@@ -54,7 +52,6 @@ Deno.test("Section 7.2: unavailableRequiredComponents getter - should return req
     "5": { id: 5, ready: false, required: true } as unknown as BaseComponent,
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   const unavailableRequired = cuss2.unavailableRequiredComponents;
@@ -81,11 +78,9 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - all required compo
     "3": { id: 3, ready: false, required: false } as unknown as BaseComponent, // Not required, so doesn't matter
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   // Set online status directly to avoid triggering checkRequiredComponentsAndSyncState early
-  // @ts-ignore - accessing private property for testing
   cuss2._online = true;
 
   // Spy on requestAvailableState
@@ -106,7 +101,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - some required comp
   setCurrentState(cuss2, AppState.AVAILABLE);
 
   // Set online status directly to avoid triggering checkRequiredComponentsAndSyncState early
-  // @ts-ignore - accessing private property for testing
   cuss2._online = true;
 
   // Create mock components - some required components are not ready
@@ -116,7 +110,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - some required comp
     "3": { id: 3, ready: true, required: false } as unknown as BaseComponent,
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   // Spy on requestUnavailableState
@@ -137,7 +130,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - offline → reques
   setCurrentState(cuss2, AppState.AVAILABLE);
 
   // Set offline status directly
-  // @ts-ignore - accessing private property for testing
   cuss2._online = false;
 
   // Create mock components - all ready but we're offline
@@ -146,7 +138,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - offline → reques
     "2": { id: 2, ready: true, required: true } as unknown as BaseComponent,
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   // Spy on requestUnavailableState
@@ -164,7 +155,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - should not trigger
   const { cuss2 } = createMockCuss2();
 
   // Set pending state change
-  // @ts-ignore - accessing private property for testing
   cuss2.pendingStateChange = AppState.AVAILABLE;
 
   // Set up conditions that would normally trigger a state change
@@ -176,7 +166,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - should not trigger
     "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   // Spy on state request methods
@@ -200,7 +189,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - should not change 
   setCurrentState(cuss2, AppState.AVAILABLE);
 
   // Set online status directly to avoid triggering checkRequiredComponentsAndSyncState early
-  // @ts-ignore - accessing private property for testing
   cuss2._online = true;
 
   // Create mock components - all required components are ready
@@ -208,7 +196,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - should not change 
     "1": { id: 1, ready: true, required: true } as unknown as BaseComponent,
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   // Spy on requestAvailableState
@@ -229,11 +216,9 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - should handle empt
   setCurrentState(cuss2, AppState.UNAVAILABLE);
 
   // Set online status directly to avoid triggering checkRequiredComponentsAndSyncState early
-  // @ts-ignore - accessing private property for testing
   cuss2._online = true;
 
   // Set empty components
-  // @ts-ignore - accessing private property for testing
   cuss2.components = {};
 
   // Spy on requestAvailableState
@@ -254,11 +239,9 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - offline with no co
   setCurrentState(cuss2, AppState.AVAILABLE);
 
   // Set offline status directly
-  // @ts-ignore - accessing private property for testing
   cuss2._online = false;
 
   // No components set (undefined)
-  // @ts-ignore - accessing private property for testing
   cuss2.components = undefined;
 
   // Spy on requestUnavailableState
@@ -284,7 +267,6 @@ Deno.test("Section 7.1: unavailableComponents getter - should handle mixed compo
     "3": { id: 3 } as unknown as BaseComponent, // ready is undefined, should be treated as not ready
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   const unavailable = cuss2.unavailableComponents;
@@ -302,7 +284,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - logs required unav
   setCurrentState(cuss2, AppState.AVAILABLE);
 
   // Set online status directly to avoid triggering checkRequiredComponentsAndSyncState early
-  // @ts-ignore - accessing private property for testing
   cuss2._online = true;
 
   // Mock console log to verify logging
@@ -332,7 +313,6 @@ Deno.test("Section 7.3: checkRequiredComponentsAndSyncState - logs required unav
     "2": mockComponent2,
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = mockComponents;
 
   // Mock requestUnavailableState to prevent actual state change

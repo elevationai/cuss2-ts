@@ -64,7 +64,6 @@ Deno.test("Connection URL handling - extracts base URL correctly", () => {
     );
 
     // Access private property for testing
-    // @ts-ignore: Accessing private _auth property to verify token URL generation
     const actualTokenUrl = connection._auth.url;
 
     assertEquals(
@@ -86,7 +85,6 @@ Deno.test("Connection URL handling - respects explicit token URL", () => {
   );
 
   // Access private property for testing
-  // @ts-ignore: Accessing private _auth property to verify token URL generation
   const actualTokenUrl = connection._auth.url;
 
   assertEquals(
@@ -129,7 +127,6 @@ Deno.test("Connection URL handling - WebSocket URL construction", () => {
     );
 
     // Access private property for testing
-    // @ts-ignore: Accessing private _socketURL property to verify WebSocket URL generation
     const actualWsUrl = connection._socketURL;
 
     assertEquals(

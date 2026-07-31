@@ -285,7 +285,7 @@ export class Connection extends EventEmitter {
           options = { headers: { Origin: origin } };
         }
 
-        // @ts-ignore - ws library accepts options as third parameter, browser ignores extra params
+        // @ts-expect-error - ws library accepts options as third parameter, browser ignores extra params
         const socket = new global.WebSocket(this._socketURL, undefined, options);
 
         socket.onopen = () => {

@@ -39,11 +39,8 @@ function buildDataPresentMessage(
 
 // Helper: set up a component in a mock cuss2 for end-to-end testing
 function setupComponent(cuss2: ReturnType<typeof createMockCuss2>["cuss2"], component: { id: number }) {
-  // @ts-ignore: accessing private for testing
   if (!cuss2.components) cuss2.components = {};
-  // @ts-ignore: accessing private for testing
   cuss2.components[String(component.id)] = component;
-  // @ts-ignore: accessing private for testing
   cuss2._currentState = new StateChange(AppState.ACTIVE, AppState.ACTIVE);
 }
 
@@ -99,7 +96,6 @@ Deno.test("DATA_PRESENT - full pipeline via _handleWebSocketMessage", () => {
 
   const msg = buildDataPresentMessage(5, records, AppState.ACTIVE);
 
-  // @ts-ignore: accessing private method for testing
   cuss2._handleWebSocketMessage(msg);
 
   assertEquals(messageSpy.calls.length >= 1, true, "cuss2 'message' event should have fired");
@@ -126,9 +122,7 @@ Deno.test("DATA_PRESENT - second scan also triggers data event", () => {
     { data: "SCAN_2", dsTypes: ["DS_TYPES_BARCODE"] },
   ] as unknown as DataRecord[];
 
-  // @ts-ignore: accessing private method for testing
   cuss2._handleWebSocketMessage(buildDataPresentMessage(5, records1, AppState.ACTIVE));
-  // @ts-ignore: accessing private method for testing
   cuss2._handleWebSocketMessage(buildDataPresentMessage(5, records2, AppState.ACTIVE));
 
   assertEquals(dataSpy.calls.length, 2, "data event should have fired twice (once per scan)");
@@ -157,7 +151,6 @@ Deno.test("DATA_PRESENT - does NOT emit data event without dataRecords", () => {
     payload: {},
   } as unknown as PlatformData;
 
-  // @ts-ignore: accessing private method for testing
   cuss2._handleWebSocketMessage(msg);
 
   assertEquals(dataSpy.calls.length, 0, "data event should NOT fire without dataRecords");
@@ -178,7 +171,6 @@ Deno.test("DATA_PRESENT - Keypad emits 'data' event with parsed key data", () =>
     { data: "NAVNEXT", dsTypes: ["DS_TYPES_KEY"], dataStatus: "DS_OK" },
   ] as unknown as DataRecord[];
 
-  // @ts-ignore: accessing private method for testing
   cuss2._handleWebSocketMessage(buildDataPresentMessage(0, records, AppState.ACTIVE));
 
   assertEquals(dataSpy.calls.length, 1, "Keypad 'data' event should have fired");

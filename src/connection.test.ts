@@ -4,7 +4,7 @@ import { delay } from "@std/async/delay";
 import { Connection, global } from "./connection.ts";
 import { AuthenticationError } from "./models/Errors.ts";
 import { PlatformResponseError } from "./models/platformResponseError.ts";
-import { MessageCodes, PlatformDirectives } from "cuss2-typescript-models";
+import { type ApplicationData, MessageCodes, PlatformDirectives } from "cuss2-typescript-models";
 
 // Mock for the WebSocket class
 class MockWebSocket {
@@ -136,8 +136,7 @@ Deno.test(
     let authenticatingEmitted = false;
     let authenticatingAttempt = 0;
     let authenticatedEmitted = false;
-    // deno-lint-ignore no-explicit-any
-    let authenticatedData: any = null;
+    let authenticatedData!: { access_token: string; expires_in: number; token_type: string };
 
     global.fetch = (url: string | URL | Request, options?: RequestInit) => {
       fetchCalled = true;
@@ -182,7 +181,7 @@ Deno.test(
 
     connection.on("authenticated", (data) => {
       authenticatedEmitted = true;
-      authenticatedData = data;
+      authenticatedData = data as unknown as typeof authenticatedData;
     });
 
     // @ts-ignore - Accessing private method for testing
@@ -1532,8 +1531,7 @@ Deno.test("waitFor should reject when close event is emitted before target event
 Deno.test(
   "Connection flow should emit events in correct order",
   mockGlobal(async () => {
-    // deno-lint-ignore no-explicit-any
-    const events: { event: string; data?: any }[] = [];
+    const events: { event: string; data?: unknown }[] = [];
     let authAttempts = 0;
     let connectAttempts = 0;
 
@@ -1591,8 +1589,7 @@ Deno.test(
     // Verify authenticated event has token
     const authenticatedEvent = events.find((e) => e.event === "authenticated");
     assertExists(authenticatedEvent?.data);
-    // deno-lint-ignore no-explicit-any
-    assertExists((authenticatedEvent?.data as any).access_token);
+    assertExists((authenticatedEvent?.data as { access_token?: unknown }).access_token);
 
     // Verify connecting event has attempt number
     const connectingEvent = events.find((e) => e.event === "connecting");
@@ -1723,8 +1720,7 @@ Deno.test(
         directive: PlatformDirectives.PLATFORM_COMPONENTS,
       },
       payload: {},
-      // deno-lint-ignore no-explicit-any
-    } as any);
+    } as unknown as ApplicationData);
 
     // Wait a bit for the message to be sent
     await delay(10);

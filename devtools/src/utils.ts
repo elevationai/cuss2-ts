@@ -53,8 +53,7 @@ export function isValidUrl(url: string): boolean {
 
 export function sanitizeInput(input: unknown): unknown {
   if (typeof input === "string") {
-    // deno-lint-ignore no-control-regex
-    return input.replace(/[\x00-\x1F\x7F]/g, "");
+    return input.replace(/\p{Cc}/gu, (ch) => (ch.charCodeAt(0) <= 0x1f || ch.charCodeAt(0) === 0x7f ? "" : ch));
   }
   if (Array.isArray(input)) {
     return input.map(sanitizeInput);

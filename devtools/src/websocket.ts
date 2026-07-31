@@ -14,8 +14,7 @@ export class WebSocketManager {
   private reconnectTimer: number | null = null;
   private isClosing = false;
   private messageBuffer: unknown[] = [];
-  // deno-lint-ignore ban-types
-  private eventHandlers: Map<keyof WebSocketManagerEvents, Set<Function>> = new Map();
+  private eventHandlers: Map<keyof WebSocketManagerEvents, Set<(...args: never[]) => void>> = new Map();
 
   constructor(private options: ConnectionOptions) {
     this.options.reconnectInterval = options.reconnectInterval ?? 2000;
@@ -48,7 +47,7 @@ export class WebSocketManager {
     if (handlers) {
       for (const handler of handlers) {
         try {
-          handler(...args);
+          (handler as (...args: unknown[]) => void)(...args);
         }
         catch (error) {
           console.error(`Error in event handler for ${event}:`, error);

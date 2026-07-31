@@ -32,32 +32,32 @@ Get started with CUSS2-ts in your browser in under 5 minutes:
 
     <!-- Load CUSS2-ts from JSR (via esm.sh) -->
     <script type="module">
-      import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
+    import { Cuss2 } from "https://esm.sh/jsr/@cuss/cuss2-ts@latest";
 
-      document.getElementById("connect").addEventListener("click", async () => {
-        const status = document.getElementById("status");
-        status.textContent = "Connecting...";
+    document.getElementById("connect").addEventListener("click", async () => {
+      const status = document.getElementById("status");
+      status.textContent = "Connecting...";
 
-        // Connect to your CUSS2 platform (uses default URL http://localhost:22222)
-        const cuss2 = Cuss2.connect(
-          "your-client-id", // Replace with your client ID
-          "your-client-secret", // Replace with your client secret
-          // Optional: provide custom WebSocket URL as 3rd parameter
-          // "wss://your-platform.example.com"
-        );
+      // Connect to your CUSS2 platform (uses default URL http://localhost:22222)
+      const cuss2 = Cuss2.connect(
+        "your-client-id", // Replace with your client ID
+        "your-client-secret", // Replace with your client secret
+        // Optional: provide custom WebSocket URL as 3rd parameter
+        // "wss://your-platform.example.com"
+      );
 
-        // Wait for connection
-        await cuss2.connected;
-        status.textContent = `Connected! State: ${cuss2.state}`;
+      // Wait for connection
+      await cuss2.connected;
+      status.textContent = `Connected! State: ${cuss2.state}`;
 
-        // List available components
-        console.log("Available components:", Object.keys(cuss2.components));
+      // List available components
+      console.log("Available components:", Object.keys(cuss2.components));
 
-        // Request state transitions
-        await cuss2.requestInitializeState();
-        await cuss2.requestUnavailableState();
-        status.textContent = `State: ${cuss2.state}`;
-      });
+      // Request state transitions
+      await cuss2.requestInitializeState();
+      await cuss2.requestUnavailableState();
+      status.textContent = `State: ${cuss2.state}`;
+    });
     </script>
   </body>
 </html>
@@ -82,28 +82,28 @@ curl -O https://jsr.io/@cuss/cuss2-ts/latest/dist/cuss2.min.js
   <body>
     <script src="cuss2.min.js"></script>
     <script>
-      // Connect to the platform (uses default URL http://localhost:22222)
-      const cuss2 = Cuss2.connect(
-        "your-client-id", // Replace with your client ID
-        "your-client-secret", // Replace with your client secret
-        // Optional: provide custom WebSocket URL as 3rd parameter
-        // "wss://your-platform.example.com"
-      );
+    // Connect to the platform (uses default URL http://localhost:22222)
+    const cuss2 = Cuss2.connect(
+      "your-client-id", // Replace with your client ID
+      "your-client-secret", // Replace with your client secret
+      // Optional: provide custom WebSocket URL as 3rd parameter
+      // "wss://your-platform.example.com"
+    );
 
-      // Wait for connection and interact
-      cuss2.connected.then(async () => {
-        console.log("Connected to CUSS2 platform!");
-        console.log("Environment:", cuss2.environment);
-        console.log("Components:", cuss2.components);
+    // Wait for connection and interact
+    cuss2.connected.then(async () => {
+      console.log("Connected to CUSS2 platform!");
+      console.log("Environment:", cuss2.environment);
+      console.log("Components:", cuss2.components);
 
-        // Work with components
-        if (cuss2.barcodeReader) {
-          await cuss2.barcodeReader.enable();
-          cuss2.barcodeReader.on("data", (data) => {
-            console.log("Barcode scanned:", data);
-          });
-        }
-      });
+      // Work with components
+      if (cuss2.barcodeReader) {
+        await cuss2.barcodeReader.enable();
+        cuss2.barcodeReader.on("data", (data) => {
+          console.log("Barcode scanned:", data);
+        });
+      }
+    });
     </script>
   </body>
 </html>
@@ -551,21 +551,21 @@ This creates:
 ```html
 <script src="dist/cuss2.js"></script>
 <script>
-  // The global Cuss2 object contains all exports
-  const cuss2 = Cuss2.connect(
-    "client-id",
-    "client-secret",
-    // Optional: custom WebSocket URL as 3rd parameter
-    // "wss://platform.example.com"
-  );
+// The global Cuss2 object contains all exports
+const cuss2 = Cuss2.connect(
+  "client-id",
+  "client-secret",
+  // Optional: custom WebSocket URL as 3rd parameter
+  // "wss://platform.example.com"
+);
 
-  // All models are available under Cuss2.Models
-  const { ApplicationStateCodes, MessageCodes } = Cuss2.Models;
+// All models are available under Cuss2.Models
+const { ApplicationStateCodes, MessageCodes } = Cuss2.Models;
 
-  // Wait for connection
-  cuss2.connected.then(() => {
-    console.log("Connected!");
-  });
+// Wait for connection
+cuss2.connected.then(() => {
+  console.log("Connected!");
+});
 </script>
 ```
 

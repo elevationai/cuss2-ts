@@ -18,6 +18,7 @@ import {
 } from "cuss2-typescript-models";
 import { DeviceType } from "../deviceType.ts";
 import type { ComponentAPI } from "../../cuss2/ComponentAPI.ts";
+import { resolveStatusCode } from "./componentUtils.ts";
 
 export abstract class BaseComponent extends EventEmitter {
   protected _component: EnvironmentComponent;
@@ -117,7 +118,11 @@ export abstract class BaseComponent extends EventEmitter {
   }
 
   stateIsDifferent(msg: PlatformData): boolean {
-    return this.status !== msg.meta.messageCode || this._componentState !== msg.meta.componentState;
+    // Compare against the RESOLVED status (currentComponentState.status on the new bridge, else
+    // messageCode). Using messageCode directly here would miss every out-of-media/fault transition
+    // on the new bridge, where messageCode is pinned to "OK" — the change would be dropped by the
+    // caller's `stateIsDifferent` gate before updateState ever runs.
+    return this.status !== resolveStatusCode(msg.meta) || this._componentState !== msg.meta.componentState;
   }
 
   updateState(msg: PlatformData): void {
@@ -146,9 +151,12 @@ export abstract class BaseComponent extends EventEmitter {
       !meta.platformDirective ||
       meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY
     ) {
-      // Handle message code (status) changes
-      if (meta?.messageCode !== undefined && this._status !== meta.messageCode) {
-        this._status = meta.messageCode as MessageCodes;
+      // Handle message code (status) changes. Source the status through resolveStatusCode so the new
+      // bridge's relocated `currentComponentState.status` is honored when present, with the legacy
+      // `meta.messageCode` as the fallback for the older bridge.
+      const statusCode = resolveStatusCode(meta);
+      if (statusCode !== undefined && this._status !== statusCode) {
+        this._status = statusCode as MessageCodes;
         this.emit("statusChange", this._status);
       }
     }

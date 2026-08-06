@@ -288,22 +288,15 @@ Deno.test("Component status updates - multiple unsolicited messages should updat
   assertEquals(component.status, MessageCodes.OK);
 });
 
-// --- bridge2to1: status relocated to meta.currentComponentState.status --------------------------
-// The newer bridge pins meta.messageCode to "OK" and reports the real status in
-// meta.currentComponentState.status. cuss2-ts must read the status from there when that object is
-// present, and fall back to messageCode when it is not (legacy airport bridge). This is the exact
-// message shape captured from the new bridge for an out-of-paper bag tag printer.
-
 Deno.test("Component status (new bridge) - reads status from currentComponentState.status, ignoring messageCode=OK", () => {
   const { cuss2 } = createMockCuss2();
   const component = new BarcodeReader(mockDevice.createBarcodeReader(100), cuss2);
-  // @ts-ignore - seed initial status for the test
+  // @ts-ignore
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();
   component.on("statusChange", statusChangeSpy);
 
-  // New-bridge peripherals_query response: messageCode pinned "OK", real status MEDIA_EMPTY nested.
   const newBridgeMsg = {
     meta: {
       currentApplicationState: { applicationStateCode: AppState.ACTIVE },
@@ -316,7 +309,6 @@ Deno.test("Component status (new bridge) - reads status from currentComponentSta
     payload: {},
   } as unknown as PlatformData;
 
-  // The change must be DETECTED (messageCode/componentState are unchanged — only the nested status moved).
   assertEquals(component.stateIsDifferent(newBridgeMsg), true);
 
   component.updateState(newBridgeMsg);
@@ -329,14 +321,12 @@ Deno.test("Component status (new bridge) - reads status from currentComponentSta
 Deno.test("Component status (new bridge) - currentComponentState wins even when messageCode disagrees", () => {
   const { cuss2 } = createMockCuss2();
   const component = new BarcodeReader(mockDevice.createBarcodeReader(100), cuss2);
-  // @ts-ignore - seed initial status for the test
+  // @ts-ignore
   component._status = MessageCodes.MEDIA_EMPTY;
 
   const statusChangeSpy = spy();
   component.on("statusChange", statusChangeSpy);
 
-  // messageCode says HARDWARE_ERROR but the authoritative nested status says OK (recovered) —
-  // currentComponentState.status must win when present.
   component.updateState({
     meta: {
       currentApplicationState: { applicationStateCode: AppState.ACTIVE },
@@ -357,13 +347,12 @@ Deno.test("Component status (new bridge) - currentComponentState wins even when 
 Deno.test("Component status (legacy bridge) - no currentComponentState falls back to messageCode", () => {
   const { cuss2 } = createMockCuss2();
   const component = new BarcodeReader(mockDevice.createBarcodeReader(100), cuss2);
-  // @ts-ignore - seed initial status for the test
+  // @ts-ignore
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();
   component.on("statusChange", statusChangeSpy);
 
-  // Legacy unsolicited message: status lives in messageCode, no currentComponentState object.
   const legacyMsg = {
     meta: {
       currentApplicationState: { applicationStateCode: AppState.ACTIVE },

@@ -118,10 +118,6 @@ export abstract class BaseComponent extends EventEmitter {
   }
 
   stateIsDifferent(msg: PlatformData): boolean {
-    // Compare against the RESOLVED status (currentComponentState.status on the new bridge, else
-    // messageCode). Using messageCode directly here would miss every out-of-media/fault transition
-    // on the new bridge, where messageCode is pinned to "OK" — the change would be dropped by the
-    // caller's `stateIsDifferent` gate before updateState ever runs.
     return this.status !== resolveStatusCode(msg.meta) || this._componentState !== msg.meta.componentState;
   }
 
@@ -151,9 +147,7 @@ export abstract class BaseComponent extends EventEmitter {
       !meta.platformDirective ||
       meta.platformDirective === PlatformDirectives.PERIPHERALS_QUERY
     ) {
-      // Handle message code (status) changes. Source the status through resolveStatusCode so the new
-      // bridge's relocated `currentComponentState.status` is honored when present, with the legacy
-      // `meta.messageCode` as the fallback for the older bridge.
+      // Handle message code (status) changes
       const statusCode = resolveStatusCode(meta);
       if (statusCode !== undefined && this._status !== statusCode) {
         this._status = statusCode as MessageCodes;

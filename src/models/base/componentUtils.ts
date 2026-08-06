@@ -15,18 +15,6 @@ import type {
 } from "cuss2-typescript-models";
 import type { PlatformDataMetaWithCurrent } from "../../types/modelExtensions.ts";
 
-/**
- * Resolve a component's authoritative status code from a platform message.
- *
- * The newer `bridge2to1` platform moved the live component status out of `meta.messageCode` (which
- * it now pins to `"OK"`) and into `meta.currentComponentState.status`. When that object is present
- * we trust it exclusively — `messageCode` is no longer meaningful there. When it is ABSENT (the
- * legacy bridge still running at the airports) we fall back to `meta.messageCode`, so component
- * status tracking is byte-for-byte unchanged against the old bridge and any other consumer.
- *
- * This is the single seam through which BOTH `stateIsDifferent` (change detection) and
- * `updateState` (assignment) read status, so the two can never disagree about the source field.
- */
 export function resolveStatusCode(meta: PlatformData["meta"]): MessageCodes | undefined {
   const current = (meta as PlatformDataMetaWithCurrent).currentComponentState;
   if (current) return current.status;

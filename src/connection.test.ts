@@ -384,12 +384,12 @@ Deno.test(
       return Promise.resolve(new MockResponse(200, tokenResponse) as unknown as Response);
     };
 
-    global.setTimeout = (callback: TimerHandler, timeout?: number): number => {
+    global.setTimeout = ((callback: TimerHandler, timeout?: number) => {
       timeoutCallback = callback;
       timeoutDuration = timeout;
 
-      return 1 as ReturnType<typeof setTimeout>; // Explicitly match the expected return type
-    };
+      return 1 as unknown as ReturnType<typeof setTimeout>; // Explicitly match the expected return type
+    }) as unknown as typeof globalThis.setTimeout;
 
     const connection = new Connection(
       testBaseUrl,
@@ -506,15 +506,15 @@ Deno.test(
       );
     };
 
-    global.setTimeout = () => {
+    global.setTimeout = (() => {
       return mockTimeoutId as unknown as ReturnType<typeof setTimeout>;
-    };
+    }) as unknown as typeof globalThis.setTimeout;
 
-    global.clearTimeout = (id: number | undefined) => {
+    global.clearTimeout = ((id?: number) => {
       if (id === mockTimeoutId) {
         timeoutCleared = true;
       }
-    };
+    }) as typeof globalThis.clearTimeout;
 
     const connection = new Connection(
       testBaseUrl,
@@ -826,7 +826,7 @@ Deno.test(
 
     // Mock setTimeout to catch the error
     const timeouts: ReturnType<typeof setTimeout>[] = [];
-    global.setTimeout = (callback: TimerHandler, timeout?: number) => {
+    global.setTimeout = ((callback: TimerHandler, timeout?: number) => {
       const id = globalThis.setTimeout(() => {
         try {
           if (typeof callback === "function") {
@@ -840,7 +840,7 @@ Deno.test(
       }, Math.min(timeout || 0, 10));
       timeouts.push(id);
       return id as unknown as ReturnType<typeof setTimeout>;
-    };
+    }) as unknown as typeof globalThis.setTimeout;
 
     // Create connection - this should not throw immediately
     using connection = Connection.connect(
@@ -1308,12 +1308,12 @@ Deno.test(
     // @ts-ignore - Accessing private property for testing
     const mockTimeoutId = connection._refresher;
     // Set up clearTimeout mock
-    global.clearTimeout = ((id?: number) => {
+    global.clearTimeout = ((id?: Parameters<typeof globalThis.clearTimeout>[0]) => {
       if (id === mockTimeoutId) {
         timeoutCleared = true;
       }
       clearTimeout(id);
-    }) as typeof clearTimeout;
+    }) as typeof globalThis.clearTimeout;
 
     let closeEventTriggered = false;
     connection.once("close", () => closeEventTriggered = true);

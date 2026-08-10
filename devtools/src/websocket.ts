@@ -11,7 +11,7 @@ export interface WebSocketManagerEvents {
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private reconnectTimer: number | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isClosing = false;
   private messageBuffer: unknown[] = [];
   // deno-lint-ignore ban-types

@@ -20,7 +20,7 @@ export class CUSS2DevToolsClient {
   private pendingRequests = new Map<string, {
     resolve: (response: PlatformMessage) => void;
     reject: (error: Error) => void;
-    timer: number;
+    timer: ReturnType<typeof setTimeout>;
     command: DeviceCommand;
   }>();
 

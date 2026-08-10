@@ -1,4 +1,4 @@
-import { Build, log } from "./helper.ts";
+import { Build, highestCussVersion, log, STATE_REQUEST_PRE_2_4, supportsAtLeast } from "./helper.ts";
 import { EventEmitter } from "./models/EventEmitter.ts";
 
 import { Connection } from "./connection.ts";
@@ -80,6 +80,10 @@ export class Cuss2 extends EventEmitter {
   private _currentState: StateChange = new StateChange(AppState.STOPPED, AppState.STOPPED);
   private _sessionStartedAt: number | undefined = undefined;
 
+  // Directives whose name depends on the platform version, resolved once the environment
+  // arrives. Defaults to the targeted spec until then.
+  private _stateRequestDirective: PlatformDirectives = PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST;
+
   bagTagPrinter?: BagTagPrinter;
   boardingPassPrinter?: BoardingPassPrinter;
   documentReader?: DocumentReader;
@@ -103,6 +107,22 @@ export class Cuss2 extends EventEmitter {
 
   get state(): AppState {
     return this._currentState.current;
+  }
+
+  /**
+   * The highest CUSS version the connected platform reports supporting, or undefined
+   * before the environment has been fetched.
+   */
+  get platformVersion(): string | undefined {
+    return highestCussVersion(this.environment?.cussVersions);
+  }
+
+  /**
+   * Whether the platform implements at least the given CUSS version, e.g. `supportsAtLeast("2.4")`.
+   * Breaking changes land in the minor version, so gate on a `major.minor`.
+   */
+  supportsAtLeast(version: string): boolean {
+    return supportsAtLeast(this.environment?.cussVersions, version);
   }
 
   /**
@@ -156,6 +176,22 @@ export class Cuss2 extends EventEmitter {
   ): Cuss2 {
     using connection = Connection.connect(wss, client_id, client_secret, deviceID, tokenURL);
     return new Cuss2(connection);
+  }
+
+  /**
+   * Pins the directive names this connection will use. Called whenever the environment is
+   * fetched, so a reconnect to a different platform re-resolves them.
+   */
+  private _resolveVersionedDirectives(): void {
+    const supports24 = this.supportsAtLeast("2.4");
+    this._stateRequestDirective = supports24 ? PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST : STATE_REQUEST_PRE_2_4;
+
+    if (!this.platformVersion) {
+      log("info", "[getEnvironment()] platform reported no usable cussVersions; assuming the targeted spec version");
+    }
+    else if (!supports24) {
+      log("info", `[getEnvironment()] platform reports CUSS ${this.platformVersion}; using pre-2.4 directive names`);
+    }
   }
 
   private _ensureConnected(): void {
@@ -267,6 +303,7 @@ export class Cuss2 extends EventEmitter {
       const response = await this.connection.sendAndGetResponse(ad);
       log("verbose", "[getEnvironment()] response", response);
       this.environment = response.payload?.environmentLevel as EnvironmentLevel;
+      this._resolveVersionedDirectives();
       return this.environment;
     },
 
@@ -442,6 +479,11 @@ export class Cuss2 extends EventEmitter {
 
     extendSession: async (): Promise<PlatformData> => {
       this._ensureConnected();
+      if (!this.supportsAtLeast("2.4")) {
+        throw new Error(
+          `Session extension requires CUSS 2.4; platform reports ${this.platformVersion}`,
+        );
+      }
       const ad = Build.applicationData(PlatformDirectives.PLATFORM_APPLICATIONS_EXTEND_SESSION_REQUEST);
       return await this.connection.sendAndGetResponse(ad);
     },
@@ -459,7 +501,13 @@ export class Cuss2 extends EventEmitter {
       this.pendingStateChange = state;
       let response: PlatformData | undefined;
       try {
-        const ad = Build.stateChange(state, reasonCode, reason);
+        const ad = Build.stateChange(
+          state,
+          reasonCode,
+          reason,
+          undefined,
+          this._stateRequestDirective,
+        );
         response = await this.connection.sendAndGetResponse(ad);
         return response;
       }

@@ -33,8 +33,22 @@ export type {
  */
 export interface CurrentComponentState {
   componentState: ComponentState;
-  status: MessageCodes;
+  /** The component's current state. */
+  state?: MessageCodes;
+  /**
+   * @deprecated Some platforms emit the state under this name. `state` is correct; read
+   * through {@link getComponentStateCode} so both shapes are handled.
+   */
+  status?: MessageCodes;
   enabled: boolean;
+}
+
+/**
+ * The component state from a `currentComponentState`, preferring the correct `state` property
+ * and falling back to the misnamed `status` that some platforms send.
+ */
+export function getComponentStateCode(ccs: CurrentComponentState): MessageCodes | undefined {
+  return ccs.state ?? ccs.status;
 }
 
 /**

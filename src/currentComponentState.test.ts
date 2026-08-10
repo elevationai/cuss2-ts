@@ -503,3 +503,80 @@ Deno.test("currentComponentState - stale COMPONENT_UPDATE after deactivation doe
   // Should still be false — app is not ACTIVE
   assertEquals(component.enabled, false);
 });
+
+// ─── state vs status property naming ─────────────────────────────────
+// `state` is the correct property. Some platforms emit it as `status`, so both are accepted.
+
+Deno.test("currentComponentState - reads the correct `state` property", () => {
+  const { cuss2 } = createMockCuss2();
+  const component = new BarcodeReader(mockDevice.createBarcodeReader(100), cuss2);
+  setComponentReady(component);
+
+  const statusChangeSpy = spy();
+  component.on("statusChange", statusChangeSpy);
+
+  const msg = buildCCSMessage(100, {
+    componentState: ComponentState.READY,
+    state: MessageCodes.MEDIA_EMPTY,
+    enabled: false,
+  });
+
+  assertEquals(component.stateIsDifferent(msg), true);
+  component.updateState(msg);
+
+  assertEquals(component.status, MessageCodes.MEDIA_EMPTY);
+  assertEquals(statusChangeSpy.calls.length, 1);
+});
+
+Deno.test("currentComponentState - still reads the misnamed `status` property", () => {
+  const { cuss2 } = createMockCuss2();
+  const component = new BarcodeReader(mockDevice.createBarcodeReader(100), cuss2);
+  setComponentReady(component);
+
+  const msg = buildCCSMessage(100, {
+    componentState: ComponentState.READY,
+    status: MessageCodes.MEDIA_EMPTY,
+    enabled: false,
+  });
+
+  assertEquals(component.stateIsDifferent(msg), true);
+  component.updateState(msg);
+
+  assertEquals(component.status, MessageCodes.MEDIA_EMPTY);
+});
+
+Deno.test("currentComponentState - `state` wins when a platform sends both", () => {
+  const { cuss2 } = createMockCuss2();
+  const component = new BarcodeReader(mockDevice.createBarcodeReader(100), cuss2);
+  setComponentReady(component);
+
+  component.updateState(buildCCSMessage(100, {
+    componentState: ComponentState.READY,
+    state: MessageCodes.MEDIA_EMPTY,
+    status: MessageCodes.HARDWARE_ERROR,
+    enabled: false,
+  }));
+
+  assertEquals(component.status, MessageCodes.MEDIA_EMPTY);
+});
+
+Deno.test("currentComponentState - neither property leaves status untouched", () => {
+  const { cuss2 } = createMockCuss2();
+  const component = new BarcodeReader(mockDevice.createBarcodeReader(100), cuss2);
+  setComponentReady(component);
+
+  const statusChangeSpy = spy();
+  component.on("statusChange", statusChangeSpy);
+
+  const msg = buildCCSMessage(100, {
+    componentState: ComponentState.READY,
+    enabled: false,
+  } as CurrentComponentState);
+
+  // stateIsDifferent must agree with updateState: neither sees a state change.
+  assertEquals(component.stateIsDifferent(msg), false);
+  component.updateState(msg);
+
+  assertEquals(component.status, MessageCodes.OK);
+  assertEquals(statusChangeSpy.calls.length, 0);
+});

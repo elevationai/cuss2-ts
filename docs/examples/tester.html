@@ -177,14 +177,14 @@
             </div>
             <div class="component-list">
               <div v-for="[id, component] in componentList" :key="id"
-                   class="component-item" :class="{ ready: component.ready, enabled: component.enabled, 'header-only': isHeaderOnly(component) || isCollapsed(id) }">
+                   class="component-item" :class="{ ready: component.ready, enabled: component.enabled, 'header-only': isCollapsed(id) }">
 
                 <!-- Title Row -->
                 <div class="component-title-row"
-                     :style="!isHeaderOnly(component) ? 'cursor: pointer' : ''"
-                     @click="!isHeaderOnly(component) && toggleCollapse(id)">
+                     style="cursor: pointer"
+                     @click="toggleCollapse(id)">
                   <div class="component-title-left">
-                    <span v-if="!isHeaderOnly(component)" class="collapse-chevron" :class="{ collapsed: isCollapsed(id) }">&#9660;</span>
+                    <span class="collapse-chevron" :class="{ collapsed: isCollapsed(id) }">&#9660;</span>
 
                     <div class="component-name"
                          @mouseenter="startCharHover($event, component)"

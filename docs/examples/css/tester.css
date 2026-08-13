@@ -902,6 +902,112 @@ input.field-problem {
   letter-spacing: 0.5px;
 }
 
+/* ─── HelpTooltip component ──────────────────────────────────────────────
+   Hover-triggered popover showing a component's deviceHelpInstruction SSML
+   as descriptive ADA text. Mirrors the char-popover hover pattern used by
+   the device-name tooltip (tester.js:startCharHover) — 500ms open delay,
+   200ms close-delay grace so the cursor can travel into the popover. */
+
+.help-tooltip-container {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+/* Round "?" badge inline with the label. */
+.device-help-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #0b0d17;
+  background: rgba(100, 255, 218, 0.75);
+  border-radius: 50%;
+  cursor: help;
+  text-transform: none;
+  letter-spacing: 0;
+  user-select: none;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.device-help-tip:hover,
+.device-help-tip.active {
+  background: #64ffda;
+  transform: scale(1.08);
+}
+
+/* Popover anchored beneath the ? badge. Matches .char-popover aesthetic. */
+.help-tooltip-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 420px;
+  overflow-y: auto;
+  background: #1a1a2e;
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 6px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  /* Reset inherited label styling so popover contents read naturally. */
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: #e0e0e0;
+  text-align: left;
+}
+
+.help-tooltip-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64ffda;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+}
+
+.help-tooltip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.help-tooltip-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.help-tooltip-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(100, 255, 218, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.help-tooltip-text {
+  font-size: 13px;
+  color: #e0e0e0;
+  line-height: 1.5;
+}
+
+.help-tooltip-empty {
+  font-size: 12px;
+  color: rgba(224, 224, 224, 0.6);
+  font-style: italic;
+  line-height: 1.5;
+}
+
 .component-action-controls {
   display: flex;
   gap: 8px;
@@ -1881,4 +1987,83 @@ input.field-problem {
   background: rgba(211, 47, 47, 0.9);
   border-color: rgba(211, 47, 47, 0.6);
   color: #fff;
+}
+
+/* ===== HEADSET ===== */
+.headset-jack-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.headset-jack-indicator.headset-jack-present {
+  background: rgba(100, 255, 218, 0.12);
+  border-color: rgba(100, 255, 218, 0.5);
+  color: #64ffda;
+}
+
+.headset-jack-indicator.headset-jack-absent {
+  background: rgba(160, 160, 160, 0.08);
+  border-color: rgba(160, 160, 160, 0.3);
+  color: #a0a0a0;
+}
+
+.headset-jack-indicator.headset-jack-unknown {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.4);
+  color: #ffc107;
+}
+
+.headset-jack-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.headset-jack-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.headset-jack-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.headset-jack-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.headset-help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.headset-help-entry {
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+
+.headset-help-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(100, 255, 218, 0.7);
+  margin-bottom: 2px;
+}
+
+.headset-help-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.4;
 }

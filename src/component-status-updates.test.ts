@@ -22,7 +22,7 @@ Deno.test("Component status updates - should NOT update status on ENABLE command
   const component = new BarcodeReader(componentData, cuss2);
 
   // Set initial status
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._status = MessageCodes.OK;
 
   // Create spy for statusChange event
@@ -55,7 +55,7 @@ Deno.test("Component status updates - should NOT update status on DISABLE comman
   const component = new BarcodeReader(componentData, cuss2);
 
   // Set initial status
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();
@@ -86,7 +86,7 @@ Deno.test("Component status updates - should NOT update status on SETUP command 
   const componentData = mockDevice.createBarcodeReader(100);
   const component = new BarcodeReader(componentData, cuss2);
 
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();
@@ -116,7 +116,7 @@ Deno.test("Component status updates - should NOT update status on SEND command r
   const componentData = mockDevice.createBarcodeReader(100);
   const component = new BarcodeReader(componentData, cuss2);
 
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();
@@ -146,7 +146,7 @@ Deno.test("Component status updates - SHOULD update status on QUERY response", (
   const componentData = mockDevice.createBarcodeReader(100);
   const component = new BarcodeReader(componentData, cuss2);
 
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();
@@ -181,7 +181,7 @@ Deno.test("Component status updates - SHOULD update status on unsolicited messag
   const componentData = mockDevice.createBarcodeReader(100);
   const component = new BarcodeReader(componentData, cuss2);
 
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();
@@ -212,7 +212,7 @@ Deno.test("Component status updates - component state changes should still work 
   const componentData = mockDevice.createBarcodeReader(100);
   const component = new BarcodeReader(componentData, cuss2);
 
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._componentState = ComponentState.READY;
 
   const readyStateChangeSpy = spy();
@@ -244,7 +244,7 @@ Deno.test("Component status updates - multiple unsolicited messages should updat
   const componentData = mockDevice.createBarcodeReader(100);
   const component = new BarcodeReader(componentData, cuss2);
 
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   component._status = MessageCodes.OK;
 
   const statusChangeSpy = spy();

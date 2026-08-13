@@ -15,7 +15,7 @@ import {
 
 Deno.test("2.1 - Initial state should be STOPPED", () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Verify initial state
@@ -48,7 +48,6 @@ Deno.test("2.2 - State transitions should handle valid state transitions correct
   }
 
   // Mock disable for components
-  // @ts-ignore - accessing private method for testing
   cuss2._disableAllComponents = () => Promise.resolve();
 
   // Test STOPPED → INITIALIZE
@@ -117,7 +116,6 @@ Deno.test("2.5 - Pending state changes should prevent concurrent state change re
   };
 
   // Set state to allow transition
-  // @ts-ignore - accessing private property for testing
   cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
 
   // Make two concurrent requests
@@ -198,7 +196,6 @@ Deno.test("2.2 - State transitions should disable all components when transition
 
   // Track if _disableAllComponents was called
   let disableAllCalled = false;
-  // @ts-ignore - accessing private method for testing
   cuss2._disableAllComponents = () => {
     disableAllCalled = true;
     return Promise.resolve();
@@ -232,7 +229,6 @@ Deno.test("2.6 - State transitions should proceed even when individual component
   };
 
   // Add the mock component to the components list
-  // @ts-ignore - accessing private property for testing
   cuss2.components = { "123": mockComponent };
 
   // Test ACTIVE → AVAILABLE with component disable failure

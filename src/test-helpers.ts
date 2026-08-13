@@ -105,7 +105,7 @@ export function createMockComponentList(): ComponentList {
 // Helper to create a Cuss2 instance with mocked dependencies
 export function createMockCuss2(connection?: MockConnection) {
   const mockConnection = connection || new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Mock the api methods
@@ -114,7 +114,6 @@ export function createMockCuss2(connection?: MockConnection) {
   cuss2.queryComponents = () => Promise.resolve(true);
 
   // Set initial state
-  // @ts-ignore - accessing private property for testing
   cuss2._currentState = new StateChange(AppState.UNAVAILABLE, AppState.UNAVAILABLE);
 
   return { cuss2, mockConnection };
@@ -126,7 +125,7 @@ export async function simulateStateChange(
   newState: AppState,
   payload?: unknown,
 ): Promise<void> {
-  // @ts-ignore - accessing private method for testing
+  // @ts-expect-error - accessing private method for testing
   await cuss2._handleWebSocketMessage({
     meta: {
       currentApplicationState: { applicationStateCode: newState },
@@ -138,7 +137,7 @@ export async function simulateStateChange(
 
 // Helper to set current state
 export function setCurrentState(cuss2: Cuss2, state: AppState): void {
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   cuss2._currentState = new StateChange(state, state);
 }
 
@@ -183,12 +182,10 @@ export async function testInitializationThrowsForState(state: AppState) {
   const { cuss2 } = createMockCuss2();
 
   // Set state
-  // @ts-ignore - accessing private property for testing
   cuss2._currentState = new StateChange(state, state);
 
   // Trigger initialization and expect error
   await assertRejects(
-    // @ts-ignore - accessing private method for testing
     () => cuss2._initialize(),
     Error,
     `Platform has ${state} the application`,

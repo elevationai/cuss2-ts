@@ -307,7 +307,7 @@ Deno.test("Printer updateState should handle CUT n HOLD timeout correctly", () =
   printer.updateState(timeoutMessage);
 
   // Component state should be READY, not UNAVAILABLE
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   assertEquals(printer._componentState, ComponentState.READY);
   assert(readyStateChangeEmitted);
 });
@@ -330,7 +330,7 @@ Deno.test("Printer updateState should query linked components when becoming read
   };
 
   // Start with printer not ready
-  // @ts-ignore - accessing private property for testing
+  // @ts-expect-error - accessing private property for testing
   printer._componentState = ComponentState.UNAVAILABLE;
 
   // Update to ready state
@@ -471,7 +471,7 @@ Deno.test("Printer getPairedResponse should split response correctly", async () 
     payload: [{ data: "LSOK123456789ABC" }] as DataRecordList,
   } as PlatformData;
 
-  // @ts-ignore - accessing protected method for testing
+  // @ts-expect-error - accessing protected method for testing
   const pairs = await printer.getPairedResponse("LS", 2);
 
   // Should split after "OK" into pairs of 2

@@ -8,7 +8,7 @@ import { createMockCharacteristics, createMockComponent, MockConnection, mockDev
 
 Deno.test("3.1 - Component discovery should properly create component instances from component list", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Mock sendAndGetResponse to return component list
@@ -61,7 +61,7 @@ Deno.test("3.1 - Component discovery should properly create component instances 
 
 Deno.test("3.2 - Component type mapping should create correct component class for each type", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Import component classes for instanceof checks
@@ -157,7 +157,6 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
 
     // Verify property assignment if applicable
     if (ct.property) {
-      // @ts-ignore - accessing dynamic property
       assertEquals(
         cuss2[ct.property] === component,
         true,
@@ -169,7 +168,7 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
 
 Deno.test("3.3 - Feeder/Dispenser linking should create feeders/dispensers before printers for proper linking", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   const { Feeder, Dispenser } = await import("./models/index.ts");
@@ -224,7 +223,7 @@ Deno.test("3.3 - Feeder/Dispenser linking should create feeders/dispensers befor
 
 Deno.test("3.4 - Component querying should query all components successfully", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Import UnknownComponent class
@@ -264,7 +263,7 @@ Deno.test("3.4 - Component querying should query all components successfully", a
 
 Deno.test("3.5 - Component query error handling should handle component query errors gracefully", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Import UnknownComponent class
@@ -315,7 +314,7 @@ Deno.test("3.5 - Component query error handling should handle component query er
 
 Deno.test("3.1 - Component discovery should handle empty component list", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   // Mock empty component list
@@ -337,7 +336,7 @@ Deno.test("3.1 - Component discovery should handle empty component list", async 
 
 Deno.test("3.2 - Component type mapping should create generic UnknownComponent for unknown types", async () => {
   const mockConnection = new MockConnection();
-  // @ts-ignore - accessing private constructor for testing
+  // @ts-expect-error - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
   const { UnknownComponent } = await import("./models/index.ts");

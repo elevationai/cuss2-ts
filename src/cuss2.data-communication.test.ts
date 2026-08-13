@@ -28,7 +28,6 @@ Deno.test("Section 4.1: Platform data message processing - should process platfo
     payload: {},
   } as unknown as PlatformData;
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify state was updated
@@ -59,7 +58,6 @@ Deno.test("Section 4.2: Session timeout handling - should emit sessionTimeout ev
     payload: {},
   } as unknown as PlatformData;
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify sessionTimeout event was emitted
@@ -84,7 +82,6 @@ Deno.test("Section 4.3: Invalid state handling - should close connection on inva
 
   // Should throw error synchronously
   assertThrows(
-    // @ts-ignore - accessing private method for testing
     () => cuss2._handleWebSocketMessage(platformData),
     Error,
     "Platform in invalid state. Cannot continue.",
@@ -105,7 +102,6 @@ Deno.test("Section 4.4: Component state updates - should update component states
     updateState: () => {},
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = { "1": mockComponent };
 
   // Create spy for component state change event
@@ -132,13 +128,12 @@ Deno.test("Section 4.4: Component state updates - should update component states
     },
   } as unknown as PlatformData;
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify component methods were called
   assertEquals(stateIsDifferentStub.calls.length, 1);
   assertEquals(updateStateSpy.calls.length, 1);
-  // @ts-ignore - spy type issue
+  // @ts-expect-error - spy type issue
   assertEquals(updateStateSpy.calls[0]?.args?.[0], platformData);
 
   // Verify componentStateChange event was emitted
@@ -164,7 +159,6 @@ Deno.test("Section 4.5: Unsolicited messages - should handle unsolicited compone
     updateState: () => {},
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = { "1": mockComponent };
 
   // Mock component stateIsDifferent to return true
@@ -188,7 +182,6 @@ Deno.test("Section 4.5: Unsolicited messages - should handle unsolicited compone
     },
   } as unknown as PlatformData;
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify checkRequiredComponentsAndSyncState was called for unsolicited message
@@ -223,7 +216,6 @@ Deno.test("Section 4.1: Platform data message - activated event on ACTIVE state"
     },
   } as unknown as PlatformData;
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify state and activation properties
@@ -306,7 +298,6 @@ Deno.test("Section 4.4: Component state updates - should check sync state for QU
     updateState: () => {},
   };
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = { "1": mockComponent };
 
   // Mock component stateIsDifferent to return true
@@ -333,7 +324,6 @@ Deno.test("Section 4.4: Component state updates - should check sync state for QU
     },
   } as unknown as PlatformData;
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Verify checkRequiredComponentsAndSyncState was called
@@ -350,7 +340,6 @@ Deno.test("Section 4: Edge case - handle null platform data gracefully", async (
   cuss2.on("message", messageSpy);
 
   // Send null platform data
-  // @ts-ignore - testing null input
   await cuss2._handleWebSocketMessage(null);
 
   // Should return early without emitting any events
@@ -360,7 +349,6 @@ Deno.test("Section 4: Edge case - handle null platform data gracefully", async (
 Deno.test("Section 4: Edge case - handle missing component gracefully", async () => {
   const { cuss2 } = createMockCuss2();
 
-  // @ts-ignore - accessing private property for testing
   cuss2.components = {};
 
   const componentStateChangeSpy = spy();
@@ -376,7 +364,6 @@ Deno.test("Section 4: Edge case - handle missing component gracefully", async ()
     payload: {},
   } as unknown as PlatformData;
 
-  // @ts-ignore - accessing private method for testing
   await cuss2._handleWebSocketMessage(platformData);
 
   // Should not emit componentStateChange for missing component

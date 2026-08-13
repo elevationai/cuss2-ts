@@ -86,7 +86,6 @@ function mockGlobal(fn: () => Promise<unknown>): () => Promise<void> {
     }
     finally {
       // Restore original WebSocket
-      // @ts-ignore - restore for tests
       globalThis.WebSocket = originalWebSocket;
       global.fetch = globalThis.fetch;
       global.setTimeout = globalThis.setTimeout.bind(globalThis);
@@ -106,7 +105,7 @@ function mockWebSocket(action?: (ws: MockWebSocket) => (() => void) | undefined)
   }
   creator.prototype = MockWebSocket.prototype;
 
-  //@ts-ignore - Mock WebSocket for testing
+  //@ts-expect-error - Mock WebSocket for testing
   globalThis.WebSocket = creator;
   return mockWs;
 }
@@ -185,7 +184,7 @@ Deno.test(
       authenticatedData = data;
     });
 
-    // @ts-ignore - Accessing private method for testing
+    // @ts-expect-error - Accessing private method for testing
     const result = await connection.authorize();
 
     assertEquals(fetchCalled, true);
@@ -219,7 +218,7 @@ Deno.test(
     // Verify that calling the method throws the expected error
     await assertRejects(
       async () => {
-        // @ts-ignore - Accessing private method for testing
+        // @ts-expect-error - Accessing private method for testing
         await connection.authorize();
       },
       AuthenticationError,
@@ -266,7 +265,7 @@ Deno.test(
       authenticatingEvents.push(attempt);
     });
 
-    // @ts-ignore - Accessing private method for testing
+    // @ts-expect-error - Accessing private method for testing
     const result = await connection.authorize();
 
     assertEquals(fetchCallCount, 3);
@@ -285,9 +284,7 @@ Deno.test("Connection constructor should set URLs correctly", () => {
   );
 
   // Check that internal state is set correctly - now extracts origin only
-  // @ts-ignore - Accessing private property for testing
   assertEquals(connection._baseURL, "https://example.com");
-  // @ts-ignore - Accessing private property for testing
   assertEquals(connection._socketURL, "wss://example.com/api/?param=value");
 
   // Test with WebSocket URL - base URL extracts origin only
@@ -299,10 +296,8 @@ Deno.test("Connection constructor should set URLs correctly", () => {
     testTokenUrl,
   );
 
-  // @ts-ignore - Accessing private property for testing
   // Base URL should extract origin only
   assertEquals(wsConnection._baseURL, "ws://example.com");
-  // @ts-ignore - Accessing private property for testing
   assertEquals(wsConnection._socketURL, "ws://example.com/api/");
   // Note: testTokenUrl is provided, so OAuth URL uses the provided token URL
 
@@ -315,10 +310,8 @@ Deno.test("Connection constructor should set URLs correctly", () => {
     testTokenUrl,
   );
 
-  // @ts-ignore - Accessing private property for testing
   // Base URL should extract origin only
   assertEquals(wssConnection._baseURL, "wss://example.com");
-  // @ts-ignore - Accessing private property for testing
   assertEquals(wssConnection._socketURL, "wss://example.com/api/");
 });
 
@@ -331,7 +324,6 @@ Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
     testDeviceId,
     undefined, // No token URL provided
   );
-  // @ts-ignore - Accessing private property for testing
   assertEquals(wsConnectionNoToken._auth.url, "http://example.com/oauth/token");
 
   // Test with wss:// base URL and no explicit token URL - extracts origin only
@@ -342,7 +334,6 @@ Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
     testDeviceId,
     undefined, // No token URL provided
   );
-  // @ts-ignore - Accessing private property for testing
   assertEquals(wssConnectionNoToken._auth.url, "https://example.com/oauth/token");
 
   // Test with ws:// token URL explicitly provided
@@ -353,7 +344,6 @@ Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
     testDeviceId,
     "ws://auth.example.com/token", // Explicitly provided ws:// token URL
   );
-  // @ts-ignore - Accessing private property for testing
   assertEquals(wsConnectionWithWsToken._auth.url, "http://auth.example.com/token");
 
   // Test with wss:// token URL explicitly provided
@@ -364,7 +354,6 @@ Deno.test("OAuth URL should always use HTTP/HTTPS protocol", () => {
     testDeviceId,
     "wss://auth.example.com/token", // Explicitly provided wss:// token URL
   );
-  // @ts-ignore - Accessing private property for testing
   assertEquals(wssConnectionWithWssToken._auth.url, "https://auth.example.com/token");
 });
 
@@ -399,7 +388,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    // @ts-ignore - Accessing private method for testing
+    // @ts-expect-error - Accessing private method for testing
     await connection._authenticateAndQueueTokenRefresh();
 
     assertEquals(connection.access_token, testToken);
@@ -407,11 +396,8 @@ Deno.test(
     assertEquals(timeoutDuration, 3599000); // (3600 - 1) * 1000
     assertExists(timeoutCallback);
 
-    // @ts-ignore - Accessing private property for testing
     assertEquals(connection._auth.url, testTokenUrl);
-    // @ts-ignore - Accessing private property for testing
     assertEquals(connection._auth.client_id, testClientId);
-    // @ts-ignore - Accessing private property for testing
     assertEquals(connection._auth.client_secret, testClientSecret);
   }),
 );
@@ -440,7 +426,7 @@ Deno.test(
     });
 
     // Call the method - it should not throw but emit an event
-    // @ts-ignore - Accessing private method for testing
+    // @ts-expect-error - Accessing private method for testing
     await connection._authenticateAndQueueTokenRefresh();
 
     // Verify the authenticationError event was emitted
@@ -475,7 +461,7 @@ Deno.test(
       testTokenUrl,
     );
 
-    // @ts-ignore - Accessing private method for testing
+    // @ts-expect-error - Accessing private method for testing
     await connection._authenticateAndQueueTokenRefresh();
 
     // Verify fetch was called
@@ -485,7 +471,6 @@ Deno.test(
     assertEquals(connection.access_token, "short-lived-token");
 
     // Verify no timeout is set due to expires_in being 0
-    // @ts-ignore - Accessing private property for testing
     assertEquals(connection._refresher, null);
   }),
 );
@@ -524,10 +509,9 @@ Deno.test(
       testTokenUrl,
     );
 
-    // @ts-ignore - Accessing private property for testing
     connection._refresher = mockTimeoutId as unknown as ReturnType<typeof setTimeout>;
 
-    // @ts-ignore - Accessing private method for testing
+    // @ts-expect-error - Accessing private method for testing
     await connection._authenticateAndQueueTokenRefresh();
 
     assertEquals(timeoutCleared, true);
@@ -573,7 +557,7 @@ Deno.test(
     // Wait for authentication and websocket creation
     await connection.waitFor("open");
 
-    // @ts-ignore - Accessing private property for testing
+    // @ts-expect-error - Accessing private property for testing
     assertEquals(connection._socket, mockWs);
     assertEquals(authenticateCalled, true);
     assertEquals(webSocketConstructorCalled, true);
@@ -640,7 +624,6 @@ Deno.test(
 
     assertEquals(connection.isOpen, true);
 
-    // @ts-ignore - Accessing private method for testing
     connection._createWebSocketAndAttachEventHandlers();
     // Give it a moment to check isOpen
     await delay(20);
@@ -667,17 +650,16 @@ Deno.test(
     // Track emitted events
     const emittedEvents: { event: string; data: unknown }[] = [];
 
-    // @ts-ignore - Event types are not properly defined for testing
     connection.on("message", (data) => {
       emittedEvents.push({ event: "message", data });
     });
 
-    // @ts-ignore - Event types are not properly defined for testing
+    // @ts-expect-error - Event types are not properly defined for testing
     connection.on("ping", (data) => {
       emittedEvents.push({ event: "ping", data });
     });
 
-    // @ts-ignore - Event types are not properly defined for testing
+    // @ts-expect-error - Event types are not properly defined for testing
     connection.on("ack", (data) => {
       emittedEvents.push({ event: "ack", data });
     });
@@ -782,7 +764,6 @@ Deno.test(
     let closeEventFired = false;
     let closeEventObj: CloseEvent | undefined;
 
-    // @ts-ignore - Event types are not properly defined for testing
     connection.once("close", (event) => {
       closeEventFired = true;
       closeEventObj = event;
@@ -871,7 +852,6 @@ Deno.test(
     // Authentication error occurs and is now surfaced via socketError
     assertEquals(authErrorOccurred, false); // Error is caught by our error handler
     assertEquals(errorEventEmitted, true); // Error event is now emitted
-    // @ts-ignore - Accessing private property for testing
     assertEquals(connection._socket, undefined); // Socket never created
     assertEquals(connection.access_token, ""); // Token never set
 
@@ -897,7 +877,6 @@ Deno.test("send should add missing oauthToken and deviceID to data", async () =>
   await connection.waitFor("open");
 
   // Create test data without oauthToken and deviceID
-  // @ts-ignore - Using simplified test data structure
   const testData = {
     meta: {
       requestID: "test-request-id",
@@ -906,7 +885,7 @@ Deno.test("send should add missing oauthToken and deviceID to data", async () =>
     payload: { test: true },
   };
 
-  // @ts-ignore - Testing with simplified data structure
+  // @ts-expect-error - Testing with simplified data structure
   connection.send(testData);
 
   // Verify data was sent with added fields
@@ -949,7 +928,6 @@ Deno.test("send should not override existing oauthToken and deviceID", async () 
   // Create test data with existing oauthToken and deviceID
   const customToken = "custom-token";
   const customDeviceId = "custom-device-id";
-  // @ts-ignore - Using simplified test data structure
   const testData = {
     meta: {
       requestID: "test-request-id",
@@ -961,7 +939,7 @@ Deno.test("send should not override existing oauthToken and deviceID", async () 
   };
 
   // Send the data
-  // @ts-ignore - Testing with simplified data structure
+  // @ts-expect-error - Testing with simplified data structure
   connection.send(testData);
 
   // Verify data was sent with original values
@@ -995,7 +973,6 @@ Deno.test("sendAndGetResponse should throw error if socket is not connected", as
   connection.access_token = testToken;
 
   // Create test data
-  // @ts-ignore - Using simplified test data structure
   const testData = {
     meta: {
       requestID: "test-request-id",
@@ -1007,7 +984,7 @@ Deno.test("sendAndGetResponse should throw error if socket is not connected", as
   // This should throw an error
   await assertRejects(
     async () => {
-      // @ts-ignore - Testing with simplified data structure
+      // @ts-expect-error - Testing with simplified data structure
       await connection.sendAndGetResponse(testData);
     },
     Error,
@@ -1034,7 +1011,7 @@ Deno.test("sendAndGetResponse should send data and wait for response", async () 
 
   // Create a mock WebSocket
   const mockWs = mockWebSocket();
-  // @ts-ignore - Accessing private property for testing
+  // @ts-expect-error - Accessing private property for testing
   connection._socket = mockWs;
   // Set the WebSocket to OPEN state
   mockWs.readyState = MockWebSocket.OPEN;
@@ -1061,7 +1038,6 @@ Deno.test("sendAndGetResponse should send data and wait for response", async () 
 
   // Create test data with a request ID
   const requestId = "test-request-id-" + Date.now();
-  // @ts-ignore - Using simplified test data structure
   const testData = {
     meta: {
       requestID: requestId,
@@ -1071,7 +1047,7 @@ Deno.test("sendAndGetResponse should send data and wait for response", async () 
   };
 
   // Call sendAndGetResponse
-  // @ts-ignore - Testing with simplified data structure
+  // @ts-expect-error - Testing with simplified data structure
   const response = await connection.sendAndGetResponse(testData);
 
   // Verify waitFor was called with correct event
@@ -1126,7 +1102,6 @@ Deno.test("sendAndGetResponse should throw PlatformResponseError for critical er
   };
 
   // Create test data
-  // @ts-ignore - Using simplified test data structure
   const testData = {
     meta: {
       requestID: "test-request-id",
@@ -1138,7 +1113,7 @@ Deno.test("sendAndGetResponse should throw PlatformResponseError for critical er
   // Should throw PlatformResponseError
   await assertRejects(
     async () => {
-      // @ts-ignore - Testing with simplified data structure
+      // @ts-expect-error - Testing with simplified data structure
       await connection.sendAndGetResponse(testData);
     },
     PlatformResponseError,
@@ -1203,7 +1178,7 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
 
   // Create a mock WebSocket
   const mockWs = mockWebSocket();
-  // @ts-ignore - Accessing private property for testing
+  // @ts-expect-error - Accessing private property for testing
   connection._socket = mockWs;
   // Set the WebSocket to OPEN state
   mockWs.readyState = MockWebSocket.OPEN;
@@ -1219,7 +1194,6 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
   };
 
   // Test with default UUID
-  // @ts-ignore - Using simplified test data structure
   const testData1 = {
     meta: {
       requestID: "test-request-id",
@@ -1229,7 +1203,7 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
     payload: { test: true },
   };
 
-  // @ts-ignore - Testing with simplified data structure
+  // @ts-expect-error - Testing with simplified data structure
   await connection.sendAndGetResponse(testData1);
 
   // Verify deviceID was set in sent data
@@ -1248,7 +1222,6 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
   mockWs.sentMessages.length = 0;
 
   // Test with null deviceID
-  // @ts-ignore - Using simplified test data structure
   const testData2 = {
     meta: {
       requestID: "test-request-id-2",
@@ -1258,7 +1231,7 @@ Deno.test("sendAndGetResponse should set deviceID if it's null or default", asyn
     payload: { test: true },
   };
 
-  // @ts-ignore - Testing with simplified data structure
+  // @ts-expect-error - Testing with simplified data structure
   await connection.sendAndGetResponse(testData2);
 
   // Verify deviceID was set in sent data
@@ -1305,7 +1278,6 @@ Deno.test(
     await connection.waitFor("open");
 
     // Set a fake refresher
-    // @ts-ignore - Accessing private property for testing
     const mockTimeoutId = connection._refresher;
     // Set up clearTimeout mock
     global.clearTimeout = ((id?: Parameters<typeof globalThis.clearTimeout>[0]) => {
@@ -1346,7 +1318,6 @@ Deno.test("close should handle missing socket gracefully", () => {
   );
 
   // Verify no socket exists
-  // @ts-ignore - Accessing private property for testing
   assertEquals(connection._socket, undefined);
 
   // This should not throw an error
@@ -1376,7 +1347,6 @@ Deno.test("Symbol.dispose should clear refresher timeout", () => {
       testTokenUrl,
     );
 
-    // @ts-ignore - Accessing private property for testing
     connection._refresher = mockTimeoutId as unknown as ReturnType<typeof setTimeout>;
 
     // Call Symbol.dispose
@@ -1463,7 +1433,7 @@ Deno.test(
     // Should fail after maxAttempts
     await assertRejects(
       async () => {
-        // @ts-ignore - Accessing private method for testing
+        // @ts-expect-error - Accessing private method for testing
         await connection.authorize();
       },
       Error,
@@ -1736,7 +1706,7 @@ Deno.test(
     const response = await responsePromise;
     assertEquals(response.meta.requestID, responseData.meta.requestID);
     assertEquals(response.meta.messageCode, responseData.meta.messageCode);
-    // @ts-ignore - Testing with simplified data structure
+    // @ts-expect-error - Testing with simplified data structure
     assertEquals(response.payload, responseData.payload);
 
     connection.close();

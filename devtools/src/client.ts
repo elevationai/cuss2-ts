@@ -20,6 +20,8 @@ export class CUSS2DevToolsClient {
   private pendingRequests = new Map<string, {
     resolve: (response: PlatformMessage) => void;
     reject: (error: Error) => void;
+    // ReturnType<typeof setTimeout>, not number: the ambient Node timer typings are in this
+    // graph, so setTimeout resolves to Timeout rather than the number Deno alone would give.
     timer: ReturnType<typeof setTimeout>;
     command: DeviceCommand;
   }>();

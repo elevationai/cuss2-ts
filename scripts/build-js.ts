@@ -16,11 +16,20 @@ interface DenoConfig {
 
 const denoConfig = parse(await Deno.readTextFile("./deno.jsonc")) as DenoConfig;
 
+const rawImports = {
+  ...denoConfig.imports,
+  events: "npm:events", // the plugin doesn't understand the node: prefix, so we just switch it to npm: here
+};
+
+// The import map is handed to the plugin as a data: URL, which relative addresses cannot resolve
+// against, so make them absolute file URLs first.
 const importMap = {
-  imports: {
-    ...denoConfig.imports,
-    events: "npm:events", // the plugin doesn't understand the node: prefix, so we just switch it to npm: here
-  },
+  imports: Object.fromEntries(
+    Object.entries(rawImports).map(([specifier, address]) => [
+      specifier,
+      address.startsWith("./") || address.startsWith("../") ? path.toFileUrl(path.resolve(address)).href : address,
+    ]),
+  ),
 };
 
 console.log("🔨 Building CUSS2 JavaScript browser bundle...");

@@ -51,7 +51,7 @@ export function createMockEnvironment(overrides?: Partial<EnvironmentLevel>): En
     sessionTimeout: 300,
     killTimeout: 60,
     deviceLocation: "TEST",
-    cussVersions: ["2.0"],
+    cussVersions: ["2.3", "2.4"],
     ...overrides,
   } as EnvironmentLevel;
 }

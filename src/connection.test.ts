@@ -384,15 +384,12 @@ Deno.test(
       return Promise.resolve(new MockResponse(200, tokenResponse) as unknown as Response);
     };
 
-    // Cast the whole stub rather than annotate its return: the real signature carries a
-    // `__promisify__` member that a plain function cannot reproduce, and the token this returns
-    // is never inspected — the test drives the captured callback directly.
     global.setTimeout = ((callback: TimerHandler, timeout?: number) => {
       timeoutCallback = callback;
       timeoutDuration = timeout;
 
-      return 1;
-    }) as unknown as typeof setTimeout;
+      return 1 as unknown as ReturnType<typeof setTimeout>; // Explicitly match the expected return type
+    }) as unknown as typeof globalThis.setTimeout;
 
     const connection = new Connection(
       testBaseUrl,
@@ -509,13 +506,15 @@ Deno.test(
       );
     };
 
-    global.setTimeout = (() => mockTimeoutId) as unknown as typeof setTimeout;
+    global.setTimeout = (() => {
+      return mockTimeoutId as unknown as ReturnType<typeof setTimeout>;
+    }) as unknown as typeof globalThis.setTimeout;
 
-    global.clearTimeout = ((id?: unknown) => {
+    global.clearTimeout = ((id?: number) => {
       if (id === mockTimeoutId) {
         timeoutCleared = true;
       }
-    }) as unknown as typeof clearTimeout;
+    }) as typeof globalThis.clearTimeout;
 
     const connection = new Connection(
       testBaseUrl,
@@ -840,8 +839,8 @@ Deno.test(
         }
       }, Math.min(timeout || 0, 10));
       timeouts.push(id);
-      return id;
-    }) as unknown as typeof setTimeout;
+      return id as unknown as ReturnType<typeof setTimeout>;
+    }) as unknown as typeof globalThis.setTimeout;
 
     // Create connection - this should not throw immediately
     using connection = Connection.connect(
@@ -1309,14 +1308,12 @@ Deno.test(
     // @ts-ignore - Accessing private property for testing
     const mockTimeoutId = connection._refresher;
     // Set up clearTimeout mock
-    global.clearTimeout = ((id?: number) => {
-      // Widened for the comparison only: `_refresher` holds whatever setTimeout returned, which
-      // the ambient Node typings make Timeout rather than number.
-      if ((id as unknown) === mockTimeoutId) {
+    global.clearTimeout = ((id?: Parameters<typeof globalThis.clearTimeout>[0]) => {
+      if (id === mockTimeoutId) {
         timeoutCleared = true;
       }
       clearTimeout(id);
-    }) as typeof clearTimeout;
+    }) as typeof globalThis.clearTimeout;
 
     let closeEventTriggered = false;
     connection.once("close", () => closeEventTriggered = true);

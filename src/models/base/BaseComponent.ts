@@ -19,7 +19,7 @@ import {
 } from "cuss2-typescript-models";
 import { DeviceType } from "../deviceType.ts";
 import type { ComponentAPI } from "../../cuss2/ComponentAPI.ts";
-import { getCurrentComponentState } from "../../types/modelExtensions.ts";
+import { getComponentStateCode, getCurrentComponentState } from "../../types/modelExtensions.ts";
 
 export abstract class BaseComponent extends EventEmitter {
   protected _component: EnvironmentComponent;
@@ -123,7 +123,9 @@ export abstract class BaseComponent extends EventEmitter {
   stateIsDifferent(msg: PlatformData): boolean {
     const ccs = getCurrentComponentState(msg.meta);
     if (ccs) {
-      return this._status !== ccs.status ||
+      // Only weigh the state code when one is present, so this stays in step with updateState.
+      const stateCode = getComponentStateCode(ccs);
+      return (stateCode !== undefined && this._status !== stateCode) ||
         this._componentState !== ccs.componentState ||
         (this.enabled !== undefined && this.enabled !== ccs.enabled);
     }
@@ -142,8 +144,9 @@ export abstract class BaseComponent extends EventEmitter {
       }
 
       // Status is always applied — the new format already separates response codes from status
-      if (ccs.status !== this._status) {
-        this._status = ccs.status;
+      const stateCode = getComponentStateCode(ccs);
+      if (stateCode !== undefined && stateCode !== this._status) {
+        this._status = stateCode;
         this.emit("statusChange", this._status);
       }
 

@@ -32,6 +32,63 @@ export const log = (level: string, action: string, data?: unknown): void => {
   logger.emit("log", new LogMessage(level, action, data));
 };
 
+// CUSS 2.4 renamed this directive. Platforms below 2.4 only understand the original name.
+export const STATE_REQUEST_PRE_2_4 = "platform_applications_staterequest" as PlatformDirectives;
+
+/**
+ * The version assumed when a platform reports no usable `cussVersions`, so an unlabelled
+ * platform is treated as implementing the spec this library targets. Bump alongside the
+ * spec version the library is written against.
+ */
+const ASSUMED_VERSION = "2.4";
+
+/** A CUSS version as [major, minor, patch]. */
+type Version = [number, number, number];
+
+/** Parses a semver-like version string; undefined when it has no major.minor. */
+const parseVersion = (version: string): Version | undefined => {
+  const match = version.trim().match(/^(\d+)\.(\d+)(?:\.(\d+))?/);
+  if (!match) return undefined;
+  return [Number(match[1]), Number(match[2]), Number(match[3] ?? 0)];
+};
+
+/** Orders two versions field by field, the way semver precedence is defined. */
+const compareVersions = (a: Version, b: Version): number => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+  }
+  return 0;
+};
+
+/** The highest version in `environmentLevel.cussVersions`, or undefined if none are usable. */
+export const highestCussVersion = (versions: string[] | undefined): string | undefined => {
+  if (!Array.isArray(versions)) return undefined;
+  let highest: string | undefined;
+  let highestParsed: Version | undefined;
+  for (const version of versions) {
+    if (typeof version !== "string") continue;
+    const parsed = parseVersion(version);
+    if (!parsed) continue;
+    if (highestParsed && compareVersions(parsed, highestParsed) <= 0) continue;
+    highest = version;
+    highestParsed = parsed;
+  }
+  return highest;
+};
+
+/**
+ * Whether the platform implements at least `minimum`, so callers can gate each workaround on
+ * the version that introduced it rather than on a single moving "old platform" flag. Breaking
+ * changes land in the minor, so gate on a `major.minor` such as "2.4". A platform that reports
+ * nothing usable is treated as implementing {@link ASSUMED_VERSION}.
+ */
+export const supportsAtLeast = (versions: string[] | undefined, minimum: string): boolean => {
+  const required = parseVersion(minimum);
+  if (!required) throw new TypeError(`Invalid version: ${minimum}`);
+  const parsed = parseVersion(highestCussVersion(versions) ?? ASSUMED_VERSION);
+  return parsed !== undefined && compareVersions(parsed, required) >= 0;
+};
+
 export const helpers = {
   splitAndFilter: (text: string, delimiter1 = "#"): string[] => {
     return text.split(delimiter1).filter((p) => !!p);
@@ -182,9 +239,10 @@ export const Build = {
     reasonCode: string | number,
     reason: string,
     brand: string | undefined = undefined,
+    directive: PlatformDirectives = PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
   ): ApplicationData => {
     return Build.applicationData(
-      PlatformDirectives.PLATFORM_APPLICATIONS_STATE_REQUEST,
+      directive,
       {
         dataObj: {
           applicationStateCode: desiredState,

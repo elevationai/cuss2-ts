@@ -196,6 +196,16 @@ Deno.test("ComponentInterrogation - isCardReader", () => {
     ],
   });
 
+  // Mag-stripe (MSR) readers advertise MAGCARD — CUSS1 platforms behind the bridge and the
+  // cloud sandbox still report it, and MSR remains supported in CUSS 2.4.
+  const msrCardReader = createMockComponent({
+    componentCharacteristics: [
+      createMockCharacteristics({
+        mediaTypesList: ["MAGCARD" as MediaTypes],
+      }),
+    ],
+  });
+
   const nonCardReader = createMockComponent({
     componentCharacteristics: [
       createMockCharacteristics({
@@ -207,6 +217,7 @@ Deno.test("ComponentInterrogation - isCardReader", () => {
   const noCharacteristics = createMockComponent();
 
   assertEquals(!!ComponentInterrogation.isCardReader(cardReader), true);
+  assertEquals(!!ComponentInterrogation.isCardReader(msrCardReader), true);
   assertEquals(!!ComponentInterrogation.isCardReader(nonCardReader), false);
   assertEquals(ComponentInterrogation.isCardReader(noCharacteristics), false);
 });

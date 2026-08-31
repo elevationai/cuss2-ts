@@ -70,10 +70,9 @@ export class ComponentInterrogation {
     // CHIP is the CUSS 2.4 payment-card media type; MAGCARD is what mag-stripe (MSR) readers
     // advertise — still in service on CUSS1 platforms behind the 2-to-1 bridge and on the cloud
     // sandbox. MSR is not gone from 2.4 (DS_TYPES_PAYMENT_* and the ePayment ENCRYPTED_MSR flow
-    // remain), so match either. String literal until models@2.4.1-nobrand (restores
-    // MediaTypes.MAGCARD) is published.
+    // remain), so match either.
     return !!mediaTypesHas(mediaTypes, MediaTypes.CHIP) ||
-      !!mediaTypesHas(mediaTypes, "MAGCARD" as MediaTypes);
+      !!mediaTypesHas(mediaTypes, MediaTypes.MAGCARD);
   };
 
   static isKeypad = (component: EnvironmentComponent): boolean => {

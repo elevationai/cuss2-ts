@@ -337,6 +337,14 @@ export class Cuss2 extends EventEmitter {
         if (id == null) return;
         let instance;
 
+        // Subcomponents FIRST: pass 1 already constructed Feeders/Dispensers into `components`,
+        // and every media-type predicate below has no deviceTypesList guard — so a dispenser
+        // sharing its parent's media type (e.g. a MAGCARD card-reader dispenser) would otherwise
+        // fall through to that predicate, overwrite its Dispenser in `components`, and hijack the
+        // top-level assignment (cuss2.cardReader binding to the dispenser).
+        if (isFeeder(component)) return;
+        if (isDispenser(component)) return;
+
         if (isAnnouncement(component)) {
           instance = this.announcement = new Announcement(component, this);
         }
@@ -379,9 +387,6 @@ export class Cuss2 extends EventEmitter {
         else if (isAEASBD(component)) {
           instance = this.aeasbd = new AEASBD(component, this);
         }
-        // subcomponents
-        else if (isFeeder(component)) return; // instance = new Feeder(component, this);
-        else if (isDispenser(component)) return; // instance = new Dispenser(component, this);
         else if (isIllumination(component)) {
           instance = this.illumination = new Illumination(component, this);
         }

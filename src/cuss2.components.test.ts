@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { Cuss2 } from "./cuss2.ts";
-import type { PlatformData } from "cuss2-typescript-models";
+import type { MediaTypes, PlatformData } from "cuss2-typescript-models";
 import { ComponentTypes, type EnvironmentComponent } from "./types/modelExtensions.ts";
 import { createMockCharacteristics, createMockComponent, MockConnection, mockDevice } from "./test-helpers.ts";
 
@@ -371,4 +371,51 @@ Deno.test("3.2 - Component type mapping should create generic UnknownComponent f
   const component = cuss2.components!["1"];
   assertEquals(component instanceof UnknownComponent, true);
   assertEquals(component.constructor.name, "UnknownComponent");
+});
+
+Deno.test("3.6 - a dispenser sharing its reader's media type stays a Dispenser (subcomponents win over media-type predicates)", async () => {
+  const { Dispenser, CardReader } = await import("./models/index.ts");
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  // A magnetic card reader with its dispenser, as bridge2to1 presents them: both advertise
+  // MAGCARD, only componentType distinguishes them. The dispenser is listed AFTER the reader —
+  // without the subcomponent early-return at the top of the identification pass, isCardReader
+  // (media-type-only, no deviceTypesList guard) would match it, overwrite the Dispenser in
+  // `components`, and rebind cuss2.cardReader to the dispenser.
+  const magcardCardReader = createMockComponent({
+    componentID: 4,
+    linkedComponentIDs: [11],
+    componentCharacteristics: [
+      createMockCharacteristics({ mediaTypesList: ["MAGCARD" as MediaTypes] }),
+    ],
+  });
+  const magcardDispenser = createMockComponent({
+    componentID: 11,
+    componentType: ComponentTypes.DISPENSER,
+    componentCharacteristics: [
+      createMockCharacteristics({ mediaTypesList: ["MAGCARD" as MediaTypes] }),
+    ],
+  });
+
+  mockConnection.sendAndGetResponse = (data: unknown) => {
+    const appData = data as { meta?: { directive?: string } };
+    if (appData.meta?.directive === "platform_components") {
+      return Promise.resolve({
+        meta: { messageCode: "OK" },
+        payload: { componentList: [magcardCardReader, magcardDispenser] },
+      } as unknown as PlatformData);
+    }
+    return Promise.resolve({
+      meta: { messageCode: "OK" },
+      payload: {},
+    } as unknown as PlatformData);
+  };
+
+  await cuss2.api.getComponents();
+
+  assertEquals(cuss2.components![11] instanceof Dispenser, true, "dispenser must stay a Dispenser");
+  assertEquals(cuss2.components![4] instanceof CardReader, true, "reader must become the CardReader");
+  assertEquals(cuss2.cardReader?.id, 4, "cuss2.cardReader must bind to the reader, not its dispenser");
 });

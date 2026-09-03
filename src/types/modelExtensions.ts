@@ -75,6 +75,7 @@ export { ComponentTypes, DeviceTypes };
 export type MediaTypes = _MediaTypes | string;
 export type CussDataTypes = _CussDataTypes | string;
 
-// Re-export the enum values under the same name using namespace merging
-export const MediaTypes = _MediaTypes;
+// Re-export the enum values under the same name using namespace merging.
+// MAGCARD (mag-stripe) is absent from the generated models but still advertised by platforms.
+export const MediaTypes = { ..._MediaTypes, MAGCARD: "MAGCARD" as _MediaTypes };
 export const CussDataTypes = _CussDataTypes;

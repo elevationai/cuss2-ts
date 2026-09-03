@@ -6,8 +6,8 @@ import {
   CussDataTypes,
   DeviceTypes,
   type EnvironmentComponent,
-  MediaTypes,
 } from "cuss2-typescript-models";
+import { MediaTypes } from "./types/modelExtensions.ts";
 
 // Helper function to create a mock EnvironmentComponent
 function createMockComponent(overrides: Partial<EnvironmentComponent> = {}): EnvironmentComponent {
@@ -196,8 +196,7 @@ Deno.test("ComponentInterrogation - isCardReader", () => {
     ],
   });
 
-  // Mag-stripe (MSR) readers advertise MAGCARD — CUSS1 platforms behind the bridge and the
-  // cloud sandbox still report it, and MSR remains supported in CUSS 2.4.
+  // MSR readers advertise MAGCARD (CUSS1 platforms behind the bridge, the cloud sandbox).
   const msrCardReader = createMockComponent({
     componentCharacteristics: [
       createMockCharacteristics({

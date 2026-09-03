@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@cuss/cuss2-typescript-models@2.4.0-nobrand": "2.4.0-nobrand",
     "jsr:@deno/cache-dir@0.13.2": "0.13.2",
     "jsr:@deno/cache-dir@0.8": "0.8.0",
     "jsr:@deno/emit@*": "0.46.0",
@@ -39,6 +40,9 @@
     "npm:ws@8": "8.20.0"
   },
   "jsr": {
+    "@cuss/cuss2-typescript-models@2.4.0-nobrand": {
+      "integrity": "c42cc48f150dda6a743642d81b03aba7fdddad0e0ac0a29a6dc72f466d46b859"
+    },
     "@deno/cache-dir@0.8.0": {
       "integrity": "e87e80a404958f6350d903e6238b72afb92468378b0b32111f7a1e4916ac7fe7",
       "dependencies": [
@@ -796,7 +800,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@cuss/cuss2-typescript-models@2.4.1-nobrand",
+      "jsr:@cuss/cuss2-typescript-models@2.4.0-nobrand",
       "jsr:@luca/esbuild-deno-loader@~0.11.1",
       "jsr:@std/assert@1",
       "jsr:@std/async@1",

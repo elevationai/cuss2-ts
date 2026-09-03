@@ -379,11 +379,8 @@ Deno.test("3.6 - a dispenser sharing its reader's media type stays a Dispenser (
   // @ts-ignore - accessing private constructor for testing
   const cuss2 = new Cuss2(mockConnection);
 
-  // A magnetic card reader with its dispenser, as bridge2to1 presents them: both advertise
-  // MAGCARD, only componentType distinguishes them. The dispenser is listed AFTER the reader —
-  // without the subcomponent early-return at the top of the identification pass, isCardReader
-  // (media-type-only, no deviceTypesList guard) would match it, overwrite the Dispenser in
-  // `components`, and rebind cuss2.cardReader to the dispenser.
+  // Reader + dispenser both advertise MAGCARD; dispenser listed last so a missing subcomponent
+  // guard would rebind cuss2.cardReader to it.
   const magcardCardReader = createMockComponent({
     componentID: 4,
     linkedComponentIDs: [11],

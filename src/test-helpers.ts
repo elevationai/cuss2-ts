@@ -259,6 +259,19 @@ export const mockDevice = {
     });
   },
 
+  createDipCardReader(componentID: number): EnvironmentComponent {
+    return createMockComponent({
+      componentID,
+      componentType: ComponentTypes.MEDIA_INPUT,
+      componentCharacteristics: [
+        createMockCharacteristics({
+          mediaTypesList: [MediaTypes.CARD],
+          deviceTypesList: [DeviceTypes.DIP],
+        }),
+      ],
+    });
+  },
+
   createAnnouncement(componentID: number): EnvironmentComponent {
     return createMockComponent({
       componentID,

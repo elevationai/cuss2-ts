@@ -204,10 +204,52 @@ Deno.test("ComponentInterrogation - isCardReader", () => {
     ],
   });
 
+  const dipCardReader = createMockComponent({
+    componentType: ComponentTypes.MEDIA_INPUT,
+    componentCharacteristics: [
+      createMockCharacteristics({
+        mediaTypesList: [MediaTypes.CARD],
+        deviceTypesList: [DeviceTypes.DIP],
+      }),
+    ],
+  });
+
+  const swipeCardReader = createMockComponent({
+    componentType: ComponentTypes.MEDIA_INPUT,
+    componentCharacteristics: [
+      createMockCharacteristics({
+        mediaTypesList: [MediaTypes.CARD],
+        deviceTypesList: [DeviceTypes.SWIPE],
+      }),
+    ],
+  });
+
+  const nonMediaInputCardDip = createMockComponent({
+    componentCharacteristics: [
+      createMockCharacteristics({
+        mediaTypesList: [MediaTypes.CARD],
+        deviceTypesList: [DeviceTypes.DIP],
+      }),
+    ],
+  });
+
+  const cardWithoutDipOrSwipe = createMockComponent({
+    componentType: ComponentTypes.MEDIA_INPUT,
+    componentCharacteristics: [
+      createMockCharacteristics({
+        mediaTypesList: [MediaTypes.CARD],
+      }),
+    ],
+  });
+
   const noCharacteristics = createMockComponent();
 
   assertEquals(!!ComponentInterrogation.isCardReader(cardReader), true);
+  assertEquals(!!ComponentInterrogation.isCardReader(dipCardReader), true);
+  assertEquals(!!ComponentInterrogation.isCardReader(swipeCardReader), true);
   assertEquals(!!ComponentInterrogation.isCardReader(nonCardReader), false);
+  assertEquals(!!ComponentInterrogation.isCardReader(nonMediaInputCardDip), false);
+  assertEquals(!!ComponentInterrogation.isCardReader(cardWithoutDipOrSwipe), false);
   assertEquals(ComponentInterrogation.isCardReader(noCharacteristics), false);
 });
 

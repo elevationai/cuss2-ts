@@ -67,7 +67,13 @@ export class ComponentInterrogation {
     const charac0 = component.componentCharacteristics[0];
     if (!charac0) return false;
     const mediaTypes = charac0.mediaTypesList;
-    return !!mediaTypesHas(mediaTypes, MediaTypes.CHIP);
+    if (mediaTypesHas(mediaTypes, MediaTypes.CHIP)) return true;
+    // MAGCARD was removed from MediaTypes; card readers present as MEDIA_INPUT
+    // with MediaType CARD and DeviceType DIP or SWIPE
+    return component.componentType === ComponentTypes.MEDIA_INPUT &&
+      !!mediaTypesHas(mediaTypes, MediaTypes.CARD) &&
+      (!!deviceTypesHas(charac0.deviceTypesList, DeviceTypes.DIP) ||
+        !!deviceTypesHas(charac0.deviceTypesList, DeviceTypes.SWIPE));
   };
 
   static isKeypad = (component: EnvironmentComponent): boolean => {

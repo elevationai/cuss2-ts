@@ -167,6 +167,30 @@ Deno.test("3.2 - Component type mapping should create correct component class fo
   }
 });
 
+Deno.test("3.2.1 - DIP/Swipe card reader (MEDIA_INPUT + CARD + DIP) should create CardReader instance", async () => {
+  const mockConnection = new MockConnection();
+  // @ts-ignore - accessing private constructor for testing
+  const cuss2 = new Cuss2(mockConnection);
+
+  const { CardReader } = await import("./models/index.ts");
+
+  mockConnection.sendAndGetResponse = (data: unknown) => {
+    const appData = data as { meta?: { directive?: string } };
+    if (appData.meta?.directive === "platform_components") {
+      return Promise.resolve({
+        meta: { messageCode: "OK" },
+        payload: { componentList: [mockDevice.createDipCardReader(1)] },
+      } as unknown as PlatformData);
+    }
+    return Promise.resolve({ payload: {} } as unknown as PlatformData);
+  };
+
+  await cuss2.api.getComponents();
+
+  assertEquals(cuss2.components!["1"] instanceof CardReader, true);
+  assertEquals(cuss2.cardReader === cuss2.components!["1"], true);
+});
+
 Deno.test("3.3 - Feeder/Dispenser linking should create feeders/dispensers before printers for proper linking", async () => {
   const mockConnection = new MockConnection();
   // @ts-ignore - accessing private constructor for testing

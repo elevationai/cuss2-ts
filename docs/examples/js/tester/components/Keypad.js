@@ -86,7 +86,10 @@ export default {
   template: `
     <div class="component-actions-row">
       <div class="component-action-column left-column">
-        <label class="component-action-label">Setup Mode</label>
+        <label class="component-action-label">
+          Setup Mode
+          <span class="device-help-tip" :title="$root.deviceHelpText(component)">?</span>
+        </label>
         <div class="component-action-buttons">
           <button class="component-action-btn"
                   :class="btnClasses('kp-key')"

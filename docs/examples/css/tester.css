@@ -902,6 +902,43 @@ input.field-problem {
   letter-spacing: 0.5px;
 }
 
+
+
+
+/* Round "?" badge inline with the label. */
+.device-help-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #0b0d17;
+  background: rgba(100, 255, 218, 0.75);
+  border-radius: 50%;
+  cursor: help;
+  text-transform: none;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .component-action-controls {
   display: flex;
   gap: 8px;
@@ -1882,3 +1919,4 @@ input.field-problem {
   border-color: rgba(211, 47, 47, 0.6);
   color: #fff;
 }
+

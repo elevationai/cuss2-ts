@@ -921,7 +921,7 @@ input.field-problem {
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
-.device-help-tip:hover{
+.device-help-tip:hover {
   background: #64ffda;
   transform: scale(1.08);
 }

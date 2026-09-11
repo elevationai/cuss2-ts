@@ -816,13 +816,18 @@ const app = createApp({
     /**
      * Find the Announcement (AAO) component linked to this headset.
      * Per CUSS2 §3.5.2.1 the AAO is a MediaInput linked to an Announcement
-     * via linkedComponentIDs.
+     * via linkedComponentIDs. The link is optional, and the platform's loadable plugins never set it,
+     * so fall back to any Announcement.
      */
     findLinkedAnnouncement(headset) {
       const linkedIds = headset?._component?.linkedComponentIDs || [];
       for (const lid of linkedIds) {
         const linked = cuss2?.components?.[lid];
         if (linked?.deviceType === 'ANNOUNCEMENT') return linked;
+      }
+      if (!cuss2?.components) return null;
+      for (const comp of Object.values(cuss2.components)) {
+        if (comp.deviceType === 'ANNOUNCEMENT') return comp;
       }
       return null;
     },
@@ -861,9 +866,7 @@ const app = createApp({
         return;
       }
       try {
-        if (typeof announcement.enable === 'function' && !announcement.enabled) {
-          await announcement.enable();
-        }
+        if (!announcement.enabled) await announcement.enable();
         this.logInfo(`Speaking headset device help (${ssmlElements.length} section(s))`);
         for (const ssml of ssmlElements) {
           await announcement.play(ssml);

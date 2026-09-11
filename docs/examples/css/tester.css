@@ -918,15 +918,9 @@ input.field-problem {
   text-transform: none;
   letter-spacing: 0;
   user-select: none;
-  transition: background 0.15s ease, transform 0.1s ease;
 }
 
-.device-help-tip:hover {
-  background: #64ffda;
-  transform: scale(1.08);
-}
 
-/* Popover anchored beneath the ? badge. Matches .char-popover aesthetic. */
 
 
 
@@ -1922,4 +1916,3 @@ input.field-problem {
   color: #fff;
 }
 
-/* ===== HEADSET ===== */

@@ -2,7 +2,6 @@ import { Cuss2, Models, criticalErrors } from '../../../dist/cuss2.esm.js';
 import { aeaCommandsData, loadCompanyLogo, NO_RECONNECT_CODES } from './data.js';
 import { extractStatusCodeFromError, validateURL, generateOAuthUrl } from './utils.js';
 import ToggleSwitch from './components/ToggleSwitch.js';
-import HelpTooltip from './components/HelpTooltip.js';
 import Keypad from './components/Keypad.js';
 import Headset from './components/Headset.js';
 import GenericComponent from './components/GenericComponent.js';
@@ -817,8 +816,7 @@ const app = createApp({
     /**
      * Find the Announcement (AAO) component linked to this headset.
      * Per CUSS2 §3.5.2.1 the AAO is a MediaInput linked to an Announcement
-     * via linkedComponentIDs. Fall back to any Announcement if linking is
-     * absent (dev/mock setups).
+     * via linkedComponentIDs.
      */
     findLinkedAnnouncement(headset) {
       const linkedIds = headset?._component?.linkedComponentIDs || [];
@@ -826,28 +824,29 @@ const app = createApp({
         const linked = cuss2?.components?.[lid];
         if (linked?.deviceType === 'ANNOUNCEMENT') return linked;
       }
-      if (!cuss2?.components) return null;
-      for (const comp of Object.values(cuss2.components)) {
-        if (comp.deviceType === 'ANNOUNCEMENT') return comp;
-      }
       return null;
     },
 
-    /** Collect the Headset's deviceHelpInstruction SSML elements in spec order. */
-    collectHeadsetHelpSsml(headset) {
-      const chars = headset?._component?.componentCharacteristics || [];
-      const order = ['deviceDescription', 'deviceLocation', 'deviceProfile', 'deviceUsage'];
+    /** A component's deviceHelpInstruction sections, in spec order: [{ label, ssml }]. */
+    deviceHelpSections(component) {
+      const order = [['deviceDescription', 'Description'], ['deviceLocation', 'Location'], ['deviceProfile', 'Profile'], ['deviceUsage', 'Usage']];
       const out = [];
-      for (const ch of chars) {
+      for (const ch of component?._component?.componentCharacteristics || []) {
         const instruction = ch?.deviceHelpInstruction?.instruction;
         if (!instruction) continue;
-        for (const key of order) {
-          const elements = instruction[key];
-          const first = Array.isArray(elements) ? elements[0] : null;
-          if (first?.ssmlElement) out.push(first.ssmlElement);
+        for (const [key, label] of order) {
+          const ssml = instruction[key]?.[0]?.ssmlElement;
+          if (ssml) out.push({ label, ssml });
         }
       }
       return out;
+    },
+
+    /** The same sections as plain text, one per line — the help tooltip's content. */
+    deviceHelpText(component) {
+      return this.deviceHelpSections(component)
+        .map(({ label, ssml }) => `${label}: ${ssml.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}`)
+        .join('\n');
     },
 
     async playHeadsetHelp(headset) {
@@ -856,7 +855,7 @@ const app = createApp({
         this.logError('Headset inserted but no ANNOUNCEMENT component available to speak device help');
         return;
       }
-      const ssmlElements = this.collectHeadsetHelpSsml(headset);
+      const ssmlElements = this.deviceHelpSections(headset).map((s) => s.ssml);
       if (!ssmlElements.length) {
         this.logInfo('Headset has no deviceHelpInstruction SSML to speak');
         return;
@@ -1164,7 +1163,6 @@ const app = createApp({
 });
 
 app.component('toggle-switch', ToggleSwitch);
-app.component('help-tooltip', HelpTooltip);
 app.component('keypad-component', Keypad);
 app.component('headset-component', Headset);
 app.component('generic-component', GenericComponent);
